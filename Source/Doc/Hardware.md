@@ -26,32 +26,32 @@ by RomWBW along with the standard pre-built ROM image(s).
 | [Zeta V2 Z80 SBC]^2^, ParPortProp                           | -       | ZETA2_std.rom                | 38400         |
 | [Mark IV Z180 SBC]^3^                                       | ECB     | MK4_std.rom                  | 38400         |
 | [RCBus Z80 CPU Module]^4^, 512K RAM/ROM                     | RCBus   | RCZ80_std.rom                | 115200        |
-| [RCBus Z80 CPU Module]^4^, 512K w/KIO                       | RCBus   | RCZ80_kio_std.rom            | 115200        |
-| [RCBus Z180 CPU Module]^4^ w/ ext banking                   | RCBus   | RCZ180_ext_std.rom           | 115200        |
-| [RCBus Z180 CPU Module]^4^ w/ native banking                | RCBus   | RCZ180_nat_std.rom           | 115200        |
-| [RCBus Z280 CPU Module]^4^ w/ ext banking                   | RCBus   | RCZ280_ext_std.rom           | 115200        |
-| [RCBus Z280 CPU Module]^4^ w/ native banking                | RCBus   | RCZ280_nat_std.rom           | 115200        |
+| [RCBus Z80 CPU Module (KIO)]^4^, 512K w/KIO                 | RCBus   | RCZ80_kio_std.rom            | 115200        |
+| [RCBus Z180 CPU Module (External)]^4^                       | RCBus   | RCZ180_ext_std.rom           | 115200        |
+| [RCBus Z180 CPU Module (Native)]^4^                         | RCBus   | RCZ180_nat_std.rom           | 115200        |
+| [RCBus Z280 CPU Module (External)]^4^                       | RCBus   | RCZ280_ext_std.rom           | 115200        |
+| [RCBus Z280 CPU Module (Native)]^4^                         | RCBus   | RCZ280_nat_std.rom           | 115200        |
 | [RCBus eZ80 CPU Module]^13^, 512K RAM/ROM                   | RCBus   | RCEZ80_std.rom               | 115200        |
 | [Easy Z80 SBC]^2^                                           | RCBus   | RCZ80_easy_std.rom           | 115200        |
 | [Tiny Z80 SBC]^2^                                           | RCBus   | RCZ80_tiny_std.rom           | 115200        |
 | [Z80-512K CPU/RAM/ROM Module]^2^                            | RCBus   | RCZ80_skz_std.rom            | 115200        |
-| [Small Computer SC126 Z180 SBC]^5^                          | BP80    | SCZ180_sc126_std.rom         | 115200        |
-| [Small Computer SC130 Z180 SBC]^5^                          | RCBus   | SCZ180_sc130_std.rom         | 115200        |
-| [Small Computer SC131 Z180 Pocket Comp]^5^                  | -       | SCZ180_sc131_std.rom         | 115200        |
-| [Small Computer SC140 Z180 CPU Module]^5^                   | Z50     | SCZ180_sc140_std.rom         | 115200        |
-| [Small Computer SC503 Z180 CPU Module]^5^                   | Z50     | SCZ180_sc503_std.rom         | 115200        |
-| [Small Computer SC700 Z180 CPU Module]^5^                   | RCBus   | SCZ180_sc700_std.rom         | 115200        |
+| [SC126 Z180 SBC]^5^                                         | BP80    | SCZ180_sc126_std.rom         | 115200        |
+| [SC130 Z180 SBC]^5^                                         | RCBus   | SCZ180_sc130_std.rom         | 115200        |
+| [SC131 Z180 Pocket Comp]^5^                                 | -       | SCZ180_sc131_std.rom         | 115200        |
+| [SC140 Z180 CPU Module]^5^                                  | Z50     | SCZ180_sc140_std.rom         | 115200        |
+| [SC503 Z180 CPU Module]^5^                                  | Z50     | SCZ180_sc503_std.rom         | 115200        |
+| [SC700 Z180 CPU Module]^5^                                  | RCBus   | SCZ180_sc700_std.rom         | 115200        |
 | [Dyno Z180 SBC]^6^                                          | Dyno    | DYNO_std.rom                 | 38400         |
 | [Nhyodyne Z80 MBC]^1^                                       | MBC     | MBC_std.rom                  | 38400         |
 | [Rhyophyre Z180 SBC]^1^                                     | -       | RPH_std.rom                  | 38400         |
 | [Z80 ZRC CPU Module]^7^                                     | RCBus   | RCZ80_zrc_std.rom            | 115200        |
-| [Z80 ZRC CPU Module]^7^ ROMless                             | RCBus   | RCZ80_zrc_ram_std.rom        | 115200        |
+| [Z80 ZRC CPU Module (RAM)]^7^                               | RCBus   | RCZ80_zrc_ram_std.rom        | 115200        |
 | [Z80 ZRC512 CPU Module]^7^                                  | RCBus   | RCZ80_zrc512_std.rom         | 115200        |
 | [Z80 EaZy80-512 CPU Module]^7^                              | RCBus   | RCZ80_ez512_std.rom          | 115200        |
 | [Z80 K80W CPU Module]^7^                                    | RCBus   | RCZ80_k80w_std.rom           | 115200        |
 | [Z180 Z1RCC CPU Module]^7^                                  | RCBus   | RCZ180_z1rcc_std.rom         | 115200        |
 | [Z280 ZZRCC CPU Module]^7^                                  | RCBus   | RCZ280_zzrcc_std.rom         | 115200        |
-| [Z280 ZZRCC CPU Module]^7^ ROMless                          | RCBus   | RCZ280_zzrcc_ram_std.rom     | 115200        |
+| [Z280 ZZRCC CPU Module (RAM)]^7^                            | RCBus   | RCZ280_zzrcc_ram_std.rom     | 115200        |
 | [Z280 ZZ80MB SBC]^7^                                        | RCBus   | RCZ280_zz80mb_std.rom        | 115200        |
 | [Z80-Retro SBC]^8^                                          | -       | Z80RETRO_std.rom             | 38400         |
 | [S100 Computers Z180]^9^                                    | S100    | S100_std.rom                 | 57600         |
@@ -59,7 +59,7 @@ by RomWBW along with the standard pre-built ROM image(s).
 | [Heath H8 Z80 System]^10^                                   | H8      | HEATH_std.rom                | 115200        |
 | [EP Mini-ITX Z180]^11^                                      | RCBus?  | EPITX_std.rom                | 115200        |
 | [NABU w/ RomWBW Option Board]^10^                           | NABU    | NABU_std.rom                 | 115200        |
-| [S100 FPGA Z80]^9^                                          | S100    | FZ80_std.rom                 | 9600          |
+| [FPGA Z80 S100]^9^                                          | S100    | FZ80_std.rom                 | 9600          |
 | [Genesis STD Z180]^12^                                      | STD     | GMZ180_std.rom               | 115200        |
 
 | ^1^Designed by Andrew Lynch
@@ -110,157 +110,15 @@ program the image into the first 512KB of the ROM for now.
 
 # Platform Configurations
 
-## RetroBrew Z80 SBC
+## Duodyne
 
-#### ROM Image File:  SBC_std.rom
+### Duodyne Z80 System
 
-|                   |               |
-|-------------------|---------------|
-| Default CPU Speed | 8.000 MHz     |
-| Interrupts        | None          |
-| System Timer      | None          |
-| Serial Default    | 38400 Baud    |
-| Memory Manager    | SBC           |
-| ROM Size          | 512 KB        |
-| RAM Size          | 512 KB        |
-
-#### Supported Hardware
-
-- DSRTC: MODE=STD, IO=112
-- UART: MODE=SBC, IO=104
-- UART: MODE=CAS, IO=128
-- UART: MODE=MFP, IO=104
-- UART: MODE=4UART, IO=192
-- UART: MODE=4UART, IO=200
-- UART: MODE=4UART, IO=208
-- UART: MODE=4UART, IO=216
-- VGA: IO=224, KBD MODE=PS/2, KBD IO=224
-- CVDU: MODE=ECB, IO=224, KBD MODE=PS/2, KBD IO=226
-- CVDU occupies 905 bytes.
-- KBD: ENABLED
-- PRP: IO=168
-- PRPCON: ENABLED
-- PRPSD: ENABLED
-- MD: TYPE=RAM
-- MD: TYPE=ROM
-- FD: MODE=DIO, IO=54, DRIVE 0, TYPE=3.5" HD
-- FD: MODE=DIO, IO=54, DRIVE 1, TYPE=3.5" HD
-- PPIDE: IO=96, MASTER
-- PPIDE: IO=96, SLAVE
-
-#### Notes:
-
-- CPU speed will be dynamically measured at startup if DSRTC is present
-
-`\clearpage`{=latex}
-
-## RetroBrew Z80 SimH
-
-#### ROM Image File:  SBC_simh.rom
+#### ROM Image File:  DUO_std.rom
 
 |                   |               |
 |-------------------|---------------|
 | Default CPU Speed | 8.000 MHz     |
-| Interrupts        | Mode 1        |
-| System Timer      | SimH          |
-| Serial Default    | 38400 Baud    |
-| Memory Manager    | SBC           |
-| ROM Size          | 512 KB        |
-| RAM Size          | 512 KB        |
-
-#### Supported Hardware
-
-- SIMRTC: IO=254
-- SSER: IO=109
-- MD: TYPE=RAM
-- MD: TYPE=ROM
-- HDSK: IO=253, DEVICE COUNT=2
-
-
-#### Notes:
-
-- Image for SimH emulator
-- CPU speed and Serial configuration not relevant in emulator
-
-`\clearpage`{=latex}
-
-## RetroBrew N8 Z180 SBC
-
-#### ROM Image File:  N8_std.rom
-
-|                   |               |
-|-------------------|---------------|
-| Default CPU Speed | 18.432 MHz    |
-| Interrupts        | Mode 2        |
-| System Timer      | Z180          |
-| Serial Default    | 38400 Baud    |
-| Memory Manager    | N8            |
-| ROM Size          | 512 KB        |
-| RAM Size          | 512 KB        |
-
-#### Supported Hardware
-
-- DSRTC: MODE=STD, IO=136
-- ASCI: IO=64, INTERRUPTS ENABLED
-- ASCI: IO=65, INTERRUPTS ENABLED
-- TMS: MODE=N8, IO=152, SCREEN=40X24, KEYBOARD=PPK
-- PPK: ENABLED
-- MD: TYPE=RAM
-- MD: TYPE=ROM
-- FD: MODE=N8, IO=140, DRIVE 0, TYPE=3.5" HD
-- FD: MODE=N8, IO=140, DRIVE 1, TYPE=3.5" HD
-- SD: MODE=CSIO, IO=136, UNITS=1
-- AY38910: MODE=N8, IO=156, CLOCK=1789772 HZ
-
-#### Notes:
-
-- CPU speed will be dynamically measured at startup if DSRTC is present
-- SD Card interface is configured for CSIO (N8 date code >= 2312)
-
-`\clearpage`{=latex}
-
-## Zeta Z80 SBC
-
-#### ROM Image File:  ZETA_std.rom
-
-|                   |               |
-|-------------------|---------------|
-| Default CPU Speed | 8.000  MHz    |
-| Interrupts        | None          |
-| System Timer      | None          |
-| Serial Default    | 38400 Baud    |
-| Memory Manager    | SBC           |
-| ROM Size          | 512 KB        |
-| RAM Size          | 512 KB        |
-
-#### Supported Hardware
-
-- DSRTC: MODE=STD, IO=112
-- UART: IO=104
-- PPP: IO=96
-- PPPCON: ENABLED
-- PPPSD: ENABLED
-- MD: TYPE=RAM
-- MD: TYPE=ROM
-- FD: MODE=DIO, IO=54, DRIVE 0, TYPE=3.5" HD
-
-#### Notes:
-
-- CPU speed will be dynamically measured at startup if DSRTC is present
-- If ParPortProp is installed, initial console output is
-  determined by JP1:
-  - Shorted: console to on-board serial port
-  - Open: console to ParPortProp video and keyboard
-
-`\clearpage`{=latex}
-
-## Zeta V2 Z80 SBC
-
-#### ROM Image File:  ZETA2_std.rom
-
-|                   |               |
-|-------------------|---------------|
-| Default CPU Speed | 8.000  MHz    |
 | Interrupts        | Mode 2        |
 | System Timer      | CTC           |
 | Serial Default    | 38400 Baud    |
@@ -270,29 +128,41 @@ program the image into the first 512KB of the ROM for now.
 
 #### Supported Hardware
 
-- DSRTC: MODE=STD, IO=112
-- UART: IO=104
-- PPP: IO=96
-- PPPCON: ENABLED
-- PPPSD: ENABLED
+- FP: LEDIO=66, SWIO=66
+- DSRTC: MODE=STD, IO=148
+- PCF: IO=86
+- UART: IO=88
+- UART: IO=168
+- UART: IO=112
+- UART: IO=120
+- SIO MODE=ZP, IO=96, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=ZP, IO=96, CHANNEL B, INTERRUPTS ENABLED
+- LPT: MODE=SPP, IO=72
+- DMA: MODE=DUO, IO=64
+- CH: IO=78
+- CHUSB: IO=78
+- CHSD: IO=78
 - MD: TYPE=RAM
 - MD: TYPE=ROM
-- FD: MODE=ZETA2, IO=48, DRIVE 0, TYPE=3.5" HD
-- CTC: IO=32, TIMER MODE=COUNTER, DIVISOR=18432, HI=256, LO=72, INTERRUPTS ENABLED
+- FD: MODE=DUO, IO=128, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=DUO, IO=128, DRIVE 1, TYPE=3.5" HD
+- PPIDE: IO=136, MASTER
+- PPIDE: IO=136, SLAVE
+- SD: MODE=MT, IO=140, UNITS=1
+- SPK: IO=148
+- CTC: IO=96, TIMER MODE=COUNTER, DIVISOR=18432, HI=256, LO=72, INTERRUPTS ENABLED
 
 #### Notes:
 
 - CPU speed will be dynamically measured at startup if DSRTC is present
-- If ParPortProp is installed, initial console output is
-  determined by JP1:
-  - Shorted: console to on-board serial port
-  - Open: console to ParPortProp video and keyboard
 
 `\clearpage`{=latex}
 
-## Mark IV Z180 SBC
+## Dyno
 
-#### ROM Image File:  MK4_std.rom
+### Dyno Z180 SBC
+
+#### ROM Image File:  DYNO_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -306,181 +176,25 @@ program the image into the first 512KB of the ROM for now.
 
 #### Supported Hardware
 
-- DSRTC: MODE=STD, IO=138
-- ASCI: IO=64, INTERRUPTS ENABLED
-- ASCI: IO=65, INTERRUPTS ENABLED
-- UART: IO=24
-- UART: IO=128
-- UART: IO=192
-- UART: IO=200
-- UART: IO=208
-- UART: IO=216
-- VGA: IO=224, KBD MODE=PS/2, KBD IO=224
-- CVDU: MODE=ECB, IO=224, KBD MODE=PS/2, KBD IO=226
-- KBD: ENABLED
-- PRP: IO=168
-- PRPCON: ENABLED
-- PRPSD: ENABLED
-- MD: TYPE=RAM
-- MD: TYPE=ROM
-- FD: MODE=DIDE, IO=42, DRIVE 0, TYPE=3.5" HD
-- FD: MODE=DIDE, IO=42, DRIVE 1, TYPE=3.5" HD
-- IDE: MODE=MK4, IO=128, MASTER
-- IDE: MODE=MK4, IO=128, SLAVE
-- SD: MODE=MK4, IO=137, UNITS=1
-
-#### Notes:
-
-- CPU speed will be dynamically measured at startup if DSRTC is present
-
-`\clearpage`{=latex}
-
-## RCBus Z80 CPU Module
-
-#### ROM Image File:  RCZ80_std.rom
-
-|                   |               |
-|-------------------|---------------|
-| Default CPU Speed | 7.372 MHz     |
-| Interrupts        | Mode 1        |
-| System Timer      | None          |
-| Serial Default    | 115200 Baud   |
-| Memory Manager    | Z2            |
-| ROM Size          | 512 KB        |
-| RAM Size          | 512 KB        |
-
-#### Supported Hardware
-
-- FP: LEDIO=0, SWIO=0
-- LCD: IO=218, SIZE=20X4
-- DSRTC: MODE=STD, IO=192
-- UART: IO=128
-- UART: IO=136
-- UART: IO=160
-- UART: IO=168
-- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
-- ACIA: IO=128, INTERRUPTS ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
-- MD: TYPE=RAM
-- MD: TYPE=ROM
-- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
-- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
-- IDE: MODE=RC, IO=16, MASTER
-- IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
-- SD: MODE=PIO, IO=105, UNITS=1
-
-#### Notes:
-
-- CPU speed will be dynamically measured at startup if DSRTC is present
-
-`\clearpage`{=latex}
-
-#### ROM Image File:  RCZ80_kio_std.rom
-
-|                   |               |
-|-------------------|---------------|
-| Default CPU Speed | 7.372 MHz     |
-| Interrupts        | Mode 2        |
-| System Timer      | CTC           |
-| Serial Default    | 115200 Baud   |
-| Memory Manager    | Z2            |
-| ROM Size          | 512 KB        |
-| RAM Size          | 512 KB        |
-
-#### Supported Hardware
-
-- FP: LEDIO=0, SWIO=0
-- LCD: IO=218, SIZE=20X4
-- DSRTC: MODE=STD, IO=192
-- INTRTC: ENABLED
-- UART: IO=128
-- UART: IO=136
-- UART: IO=160
-- UART: IO=168
-- SIO MODE=STD, IO=136, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=STD, IO=136, CHANNEL B, INTERRUPTS ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
-- MD: TYPE=RAM
-- MD: TYPE=ROM
-- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
-- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
-- IDE: MODE=RC, IO=16, MASTER
-- IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
-- SD: MODE=PIO, IO=105, UNITS=1
-- KIO: IO=128
-- CTC: IO=132, TIMER MODE=TIMER/16, DIVISOR=9216, HI=256, LO=36, INTERRUPTS ENABLED
-
-#### Notes:
-
-- CPU speed will be dynamically measured at startup if DSRTC is present
-- SIO Serial baud rate managed by CTC
-
-`\clearpage`{=latex}
-
-## RCBus Z180 CPU Module
-
-#### ROM Image File:  RCZ180_ext_std.rom
-
-|                   |               |
-|-------------------|---------------|
-| Default CPU Speed | 18.432 MHz    |
-| Interrupts        | Mode 2        |
-| System Timer      | Z180          |
-| Serial Default    | 115200 Baud   |
-| Memory Manager    | Z2            |
-| ROM Size          | 512 KB        |
-| RAM Size          | 512 KB        |
-
-#### Supported Hardware
-
-- FP: LEDIO=0, SWIO=0
-- DSRTC: MODE=STD, IO=12
-- INTRTC: ENABLED
+- BQRTC: IO=80
 - ASCI: IO=192, INTERRUPTS ENABLED
 - ASCI: IO=193, INTERRUPTS ENABLED
-- UART: IO=128
-- UART: IO=136
-- UART: IO=160
-- UART: IO=168
-- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
 - MD: TYPE=RAM
 - MD: TYPE=ROM
-- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
-- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
-- IDE: MODE=RC, IO=16, MASTER
-- IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
-- SD: MODE=PIO, IO=105, UNITS=1
+- FD: MODE=DYNO, IO=132, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=DYNO, IO=132, DRIVE 1, TYPE=3.5" HD
+- PPIDE: IO=76, MASTER
+- PPIDE: IO=76, SLAVE
 
 #### Notes:
 
-- For use with Z2 bank switched memory board (Z2 external memory management)
-- CPU speed will be dynamically measured at startup if DSRTC is present
-
 `\clearpage`{=latex}
 
-#### ROM Image File:  RCZ180_nat_std.rom
+## EP Mini-ITX
+
+### EP Mini-ITX Z180
+
+#### ROM Image File:  EPITX_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -494,177 +208,25 @@ program the image into the first 512KB of the ROM for now.
 
 #### Supported Hardware
 
-- FP: LEDIO=0, SWIO=0
-- DSRTC: MODE=STD, IO=12
 - INTRTC: ENABLED
 - ASCI: IO=192, INTERRUPTS ENABLED
 - ASCI: IO=193, INTERRUPTS ENABLED
-- UART: IO=128
-- UART: IO=136
 - UART: IO=160
 - UART: IO=168
-- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
+- TMS: MODE=MSX, IO=152, SCREEN=40X24, KEYBOARD=NONE
 - MD: TYPE=RAM
 - MD: TYPE=ROM
-- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
-- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
-- IDE: MODE=RC, IO=16, MASTER
-- IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
-- SD: MODE=PIO, IO=105, UNITS=1
-
-#### Notes:
-
-- For use with linear memory board (Z180 native memory management)
-- CPU speed will be dynamically measured at startup if DSRTC is present
-
-`\clearpage`{=latex}
-
-## RCBus Z280 CPU Module
-
-#### ROM Image File:  RCZ280_ext_std.rom
-
-|                   |               |
-|-------------------|---------------|
-| Default CPU Speed | 12.000 MHz    |
-| Interrupts        | Mode 1        |
-| System Timer      | None          |
-| Serial Default    | 115200 Baud   |
-| Memory Manager    | Z2            |
-| ROM Size          | 512 KB        |
-| RAM Size          | 512 KB        |
-
-#### Supported Hardware
-
-- FP: LEDIO=0, SWIO=0
-- LCD: IO=218, SIZE=20X4
-- DSRTC: MODE=STD, IO=192
-- INTRTC: ENABLED
-- Z2U: IO=16
-- UART: IO=128
-- UART: IO=136
-- UART: IO=160
-- UART: IO=168
-- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
-- ACIA: IO=128, INTERRUPTS ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
-- MD: TYPE=RAM
-- MD: TYPE=ROM
-- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
-- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
-- IDE: MODE=RC, IO=16, MASTER
-- IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
-- SD: MODE=PIO, IO=105, UNITS=1
-
-#### Notes:
-
-- For use with Z2 bank switched memory board (Z2 external memory management)
-
-`\clearpage`{=latex}
-
-#### ROM Image File:  RCZ280_nat_std.rom
-
-|                   |               |
-|-------------------|---------------|
-| Default CPU Speed | 12.000 MHz    |
-| Interrupts        | Mode 3        |
-| System Timer      | Z280          |
-| Serial Default    | 115200 Baud   |
-| Memory Manager    | Z280          |
-| ROM Size          | 512 KB        |
-| RAM Size          | 512 KB        |
-
-#### Supported Hardware
-
-- FP: LEDIO=0, SWIO=0
-- LCD: IO=218, SIZE=20X4
-- DSRTC: MODE=STD, IO=192
-- INTRTC: ENABLED
-- Z2U: IO=16, INTERRUPTS ENABLED
-- UART: IO=128
-- UART: IO=136
-- UART: IO=160
-- UART: IO=168
-- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
-- MD: TYPE=RAM
-- MD: TYPE=ROM
-- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
-- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
-- IDE: MODE=RC, IO=16, MASTER
-- IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
-- SD: MODE=PIO, IO=105, UNITS=1
-
-#### Notes:
-
-- For use with linear memory board (Z280 native memory management)
-
-`\clearpage`{=latex}
-
-## RCBus eZ80 CPU Module
-
-#### ROM Image File:  RCEZ80_std.rom
-
-|                   |               |
-|-------------------|---------------|
-| Default CPU Speed | 20.000 MHz    |
-| Interrupts        | Mode 1        |
-| System Timer      | EZ80          |
-| Serial Default    | 115200 Baud   |
-| Memory Manager    | Z2            |
-| ROM Size          | 512 KB        |
-| RAM Size          | 512 KB        |
-
-#### Supported Hardware
-
-- FP: LEDIO=0, SWIO=0
-- LCD: IO=218, SIZE=20X4
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
-- MD: TYPE=RAM
-- MD: TYPE=ROM
-- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
-- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
-- IDE: MODE=RC, IO=16, MASTER
-- IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
-- EZ80: CPU DRIVER
-- EZ80: SYS TIMER DRIVER
-- EZ80: RTC DRIVER
-- EZ80: UART DRIVER
+- FD: MODE=EPFDC, IO=72, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=EPFDC, IO=72, DRIVE 1, TYPE=3.5" HD
+- SD: MODE=EPITX, IO=66, UNITS=1
 
 #### Notes:
 
 `\clearpage`{=latex}
 
-## Easy Z80 SBC
+## Easy Z80
+
+### Easy Z80 SBC
 
 #### ROM Image File:  RCZ80_easy_std.rom
 
@@ -713,7 +275,7 @@ program the image into the first 512KB of the ROM for now.
 
 `\clearpage`{=latex}
 
-## Tiny Z80 SBC
+### Tiny Z80 SBC
 
 #### ROM Image File:  RCZ80_tiny_std.rom
 
@@ -762,13 +324,86 @@ program the image into the first 512KB of the ROM for now.
 
 `\clearpage`{=latex}
 
-## Z80-512K CPU/RAM/ROM Module
+## FPGA Z80
 
-#### ROM Image File:  RCZ80_skz_std.rom
+### FPGA Z80 S100
+
+#### ROM Image File:  FZ80_std.rom
 
 |                   |               |
 |-------------------|---------------|
-| Default CPU Speed | 7.372 MHz     |
+| Default CPU Speed | 8.000 MHz     |
+| Interrupts        | None          |
+| System Timer      | None          |
+| Serial Default    | 9600 Baud     |
+| Memory Manager    | Z2            |
+| ROM Size          | 0 KB          |
+| RAM Size          | 512 KB        |
+
+#### Supported Hardware
+
+- FP: LEDIO=255
+- DS5RTC: RTCIO=104, IO=104
+- SSER: IO=52
+- LPT: MODE=S100, IO=199
+- FV: IO=192, KBD MODE=FV, KBD IO=3
+- KBD: ENABLED
+- SCON: IO=0
+- MD: TYPE=RAM
+- PPIDE: IO=48, MASTER
+- PPIDE: IO=48, SLAVE
+- SD: MODE=FZ80, IO=108, UNITS=2
+
+#### Notes:
+
+- Requires matching FPGA code
+
+`\clearpage`{=latex}
+
+## Genesis
+
+### Genesis STD Z180
+
+#### ROM Image File:  GMZ180_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 18.432 MHz    |
+| Interrupts        | Mode 2        |
+| System Timer      | Z180          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z180          |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+#### Supported Hardware
+
+- GM7303: IO=48
+- DSRTC: MODE=STD, IO=132
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- IDE: MODE=GIDE, IO=32, MASTER
+- IDE: MODE=GIDE, IO=32, SLAVE
+- SD: MODE=GM, IO=132, UNITS=1
+
+#### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
+
+`\clearpage`{=latex}
+
+## Heathkit H8
+
+### Heath H8 Z80 System
+
+#### ROM Image File:  HEATH_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 16.384 MHz    |
 | Interrupts        | Mode 1        |
 | System Timer      | None          |
 | Serial Default    | 115200 Baud   |
@@ -778,316 +413,30 @@ program the image into the first 512KB of the ROM for now.
 
 #### Supported Hardware
 
-- FP: LEDIO=0, SWIO=0
-- LCD: IO=218, SIZE=20X4
-- DSRTC: MODE=STD, IO=192
-- UART: IO=128
-- UART: IO=136
-- UART: IO=160
-- UART: IO=168
-- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
-- ACIA: IO=128, INTERRUPTS ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
-- MD: TYPE=RAM
-- MD: TYPE=ROM
-- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
-- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
-- IDE: MODE=RC, IO=16, MASTER
-- IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
-- SD: MODE=PIO, IO=105, UNITS=1
-
-#### Notes:
-
-- CPU speed will be dynamically measured at startup if DSRTC is present
-
-`\clearpage`{=latex}
-
-## Small Computer SC126 Z180 SBC
-
-#### ROM Image File:  SCZ180_sc126_std.rom
-
-|                   |               |
-|-------------------|---------------|
-| Default CPU Speed | 18.432 MHz    |
-| Interrupts        | Mode 2        |
-| System Timer      | Z180          |
-| Serial Default    | 115200 Baud   |
-| Memory Manager    | Z180          |
-| ROM Size          | 512 KB        |
-| RAM Size          | 512 KB        |
-
-#### Supported Hardware
-
-- FP: LEDIO=13, SWIO=0
-- DSRTC: MODE=STD, IO=12
-- ASCI: IO=192, INTERRUPTS ENABLED
-- ASCI: IO=193, INTERRUPTS ENABLED
-- UART: IO=128
-- UART: IO=136
-- UART: IO=160
-- UART: IO=168
-- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
-- MD: TYPE=RAM
-- MD: TYPE=ROM
-- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
-- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
-- IDE: MODE=RC, IO=16, MASTER
-- IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
-- SD: MODE=SC, IO=12, UNITS=1
-
-#### Notes:
-
-- CPU speed will be dynamically measured at startup if DSRTC is present
-- When disabled, watchdog requires /IM to be pulsed.  If an RCBus module
-  holds the CPU in WAIT for more than this, the watchdog will fire when
-  disabled with random consequences.  The Pico SD does this at power-on.
-
-`\clearpage`{=latex}
-
-## Small Computer SC130 Z180 SBC
-
-#### ROM Image File:  SCZ180_sc130_std.rom
-
-|                   |               |
-|-------------------|---------------|
-| Default CPU Speed | 18.432 MHz    |
-| Interrupts        | Mode 2        |
-| System Timer      | Z180          |
-| Serial Default    | 115200 Baud   |
-| Memory Manager    | Z180          |
-| ROM Size          | 512 KB        |
-| RAM Size          | 512 KB        |
-
-#### Supported Hardware
-
-- FP: LEDIO=0, SWIO=0
-- DSRTC: MODE=STD, IO=12
+- H8P: IO=240
 - INTRTC: ENABLED
-- ASCI: IO=192, INTERRUPTS ENABLED
-- ASCI: IO=193, INTERRUPTS ENABLED
-- UART: IO=128
-- UART: IO=136
-- UART: IO=160
-- UART: IO=168
-- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
+- UART: IO=232
+- UART: IO=224
+- UART: IO=216
+- UART: IO=208
+- TMS: MODE=MSX, IO=152, SCREEN=80X24, KEYBOARD=NONE
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
-- IDE: MODE=RC, IO=16, MASTER
-- IDE: MODE=RC, IO=16, SLAVE
 - PPIDE: IO=32, MASTER
 - PPIDE: IO=32, SLAVE
-- SD: MODE=SC, IO=12, UNITS=1
-
-#### Notes:
-
-- CPU speed will be dynamically measured at startup if DSRTC is present
-
-`\clearpage`{=latex}
-
-## Small Computer SC131 Z180 Pocket Comp
-
-#### ROM Image File:  SCZ180_sc131_std.rom
-
-|                   |               |
-|-------------------|---------------|
-| Default CPU Speed | 18.432 MHz    |
-| Interrupts        | Mode 2        |
-| System Timer      | Z180          |
-| Serial Default    | 115200 Baud   |
-| Memory Manager    | Z180          |
-| ROM Size          | 512 KB        |
-| RAM Size          | 512 KB        |
-
-#### Supported Hardware
-
-- INTRTC: ENABLED
-- ASCI: IO=192, INTERRUPTS ENABLED
-- ASCI: IO=193, INTERRUPTS ENABLED
-- MD: TYPE=RAM
-- MD: TYPE=ROM
-- SD: MODE=SC, IO=12, UNITS=1
+- AY38910: MODE=MSX, IO=160, CLOCK=1789772 HZ
 
 #### Notes:
 
 `\clearpage`{=latex}
 
-## Small Computer SC140 Z180 CPU Module
+## Mark IV Z180 SBC
 
-#### ROM Image File:  SCZ180_sc140_std.rom
+### Mark IV Z180 SBC
 
-|                   |               |
-|-------------------|---------------|
-| Default CPU Speed | 18.432 MHz    |
-| Interrupts        | Mode 2        |
-| System Timer      | Z180          |
-| Serial Default    | 115200 Baud   |
-| Memory Manager    | Z180          |
-| ROM Size          | 512 KB        |
-| RAM Size          | 512 KB        |
-
-#### Supported Hardware
-
-- FP: LEDIO=160, SWIO=160
-- DSRTC: MODE=STD, IO=12
-- INTRTC: ENABLED
-- ASCI: IO=192, INTERRUPTS ENABLED
-- ASCI: IO=193, INTERRUPTS ENABLED
-- UART: IO=128
-- UART: IO=136
-- UART: IO=160
-- UART: IO=168
-- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
-- MD: TYPE=RAM
-- MD: TYPE=ROM
-- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
-- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
-- IDE: MODE=RC, IO=144, MASTER
-- IDE: MODE=RC, IO=144, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
-- SD: MODE=SC, IO=12, UNITS=1
-
-#### Notes:
-
-- CPU speed will be dynamically measured at startup if DSRTC is present
-
-`\clearpage`{=latex}
-
-## Small Computer SC503 Z180 CPU Module
-
-#### ROM Image File:  SCZ180_sc503_std.rom
-
-|                   |               |
-|-------------------|---------------|
-| Default CPU Speed | 18.432 MHz    |
-| Interrupts        | Mode 2        |
-| System Timer      | Z180          |
-| Serial Default    | 115200 Baud   |
-| Memory Manager    | Z180          |
-| ROM Size          | 512 KB        |
-| RAM Size          | 512 KB        |
-
-#### Supported Hardware
-
-- FP: LEDIO=160, SWIO=160
-- DSRTC: MODE=STD, IO=12
-- INTRTC: ENABLED
-- ASCI: IO=192, INTERRUPTS ENABLED
-- ASCI: IO=193, INTERRUPTS ENABLED
-- UART: IO=128
-- UART: IO=136
-- UART: IO=160
-- UART: IO=168
-- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
-- MD: TYPE=RAM
-- MD: TYPE=ROM
-- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
-- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
-- IDE: MODE=RC, IO=144, MASTER
-- IDE: MODE=RC, IO=144, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
-- SD: MODE=SC, IO=12, UNITS=1
-
-#### Notes:
-
-- CPU speed will be dynamically measured at startup if DSRTC is present
-
-`\clearpage`{=latex}
-
-## Small Computer SC700 Z180 CPU Module
-
-#### ROM Image File:  SCZ180_sc700_std.rom
-
-|                   |               |
-|-------------------|---------------|
-| Default CPU Speed | 18.432 MHz    |
-| Interrupts        | Mode 2        |
-| System Timer      | Z180          |
-| Serial Default    | 115200 Baud   |
-| Memory Manager    | Z180          |
-| ROM Size          | 512 KB        |
-| RAM Size          | 512 KB        |
-
-#### Supported Hardware
-
-- FP: LEDIO=0
-- LCD: IO=170, SIZE=20X4
-- DSRTC: MODE=STD, IO=12
-- INTRTC: ENABLED
-- ASCI: IO=192, INTERRUPTS ENABLED
-- ASCI: IO=193, INTERRUPTS ENABLED
-- UART: IO=128
-- UART: IO=136
-- UART: IO=160
-- UART: IO=168
-- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
-- MD: TYPE=RAM
-- MD: TYPE=ROM
-- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
-- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
-- IDE: MODE=RC, IO=16, MASTER
-- IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
-- SD: MODE=SC, IO=12, UNITS=1
-
-#### Notes:
-
-- CPU speed will be dynamically measured at startup if DSRTC is present
-
-`\clearpage`{=latex}
-
-## Dyno Z180 SBC
-
-#### ROM Image File:  DYNO_std.rom
+#### ROM Image File:  MK4_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -1101,21 +450,73 @@ program the image into the first 512KB of the ROM for now.
 
 #### Supported Hardware
 
-- BQRTC: IO=80
-- ASCI: IO=192, INTERRUPTS ENABLED
-- ASCI: IO=193, INTERRUPTS ENABLED
+- DSRTC: MODE=STD, IO=138
+- ASCI: IO=64, INTERRUPTS ENABLED
+- ASCI: IO=65, INTERRUPTS ENABLED
+- UART: IO=24
+- UART: IO=128
+- UART: IO=192
+- UART: IO=200
+- UART: IO=208
+- UART: IO=216
+- VGA: IO=224, KBD MODE=PS/2, KBD IO=224
+- CVDU: MODE=ECB, IO=224, KBD MODE=PS/2, KBD IO=226
+- KBD: ENABLED
+- PRP: IO=168
+- PRPCON: ENABLED
+- PRPSD: ENABLED
 - MD: TYPE=RAM
 - MD: TYPE=ROM
-- FD: MODE=DYNO, IO=132, DRIVE 0, TYPE=3.5" HD
-- FD: MODE=DYNO, IO=132, DRIVE 1, TYPE=3.5" HD
-- PPIDE: IO=76, MASTER
-- PPIDE: IO=76, SLAVE
+- FD: MODE=DIDE, IO=42, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=DIDE, IO=42, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=MK4, IO=128, MASTER
+- IDE: MODE=MK4, IO=128, SLAVE
+- SD: MODE=MK4, IO=137, UNITS=1
 
 #### Notes:
 
+- CPU speed will be dynamically measured at startup if DSRTC is present
+
 `\clearpage`{=latex}
 
-## Nhyodyne Z80 MBC
+## NABU
+
+### NABU w/ RomWBW Option Board
+
+#### ROM Image File:  NABU_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 3.580 MHz     |
+| Interrupts        | Mode 2        |
+| System Timer      | TMS           |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z2            |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+#### Supported Hardware
+
+- NABU: IO=64
+- INTRTC: ENABLED
+- UART: IO=72
+- TMS: MODE=NABU, IO=160, SCREEN=80X24, KEYBOARD=NABU, INTERRUPTS ENABLED
+- NABUKB: IO=144
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- PPIDE: IO=96, MASTER
+- PPIDE: IO=96, SLAVE
+- AY38910: MODE=NABU, IO=65, CLOCK=1789772 HZ
+
+#### Notes:
+
+- TMS video assumes F18A replacement for TMS9918
+
+`\clearpage`{=latex}
+
+## Nhyodyne
+
+### Nhyodyne Z80 MBC
 
 #### ROM Image File:  MBC_std.rom
 
@@ -1164,31 +565,45 @@ program the image into the first 512KB of the ROM for now.
 
 `\clearpage`{=latex}
 
-## Rhyophyre Z180 SBC
+## RetroBrew Z80
 
-#### ROM Image File:  RPH_std.rom
+### RetroBrew Z80 SBC
+
+#### ROM Image File:  SBC_std.rom
 
 |                   |               |
 |-------------------|---------------|
-| Default CPU Speed | 18.432 MHz    |
+| Default CPU Speed | 8.000 MHz     |
 | Interrupts        | None          |
 | System Timer      | None          |
 | Serial Default    | 38400 Baud    |
-| Memory Manager    | RPH           |
+| Memory Manager    | SBC           |
 | ROM Size          | 512 KB        |
 | RAM Size          | 512 KB        |
 
 #### Supported Hardware
 
-- DSRTC: MODE=STD, IO=132
-- ASCI: IO=64
-- ASCI: IO=65
-- GDC: MODE=RPH, DISPLAY=EGA, IO=144
+- DSRTC: MODE=STD, IO=112
+- UART: MODE=SBC, IO=104
+- UART: MODE=CAS, IO=128
+- UART: MODE=MFP, IO=104
+- UART: MODE=4UART, IO=192
+- UART: MODE=4UART, IO=200
+- UART: MODE=4UART, IO=208
+- UART: MODE=4UART, IO=216
+- VGA: IO=224, KBD MODE=PS/2, KBD IO=224
+- CVDU: MODE=ECB, IO=224, KBD MODE=PS/2, KBD IO=226
+- CVDU occupies 905 bytes.
 - KBD: ENABLED
+- PRP: IO=168
+- PRPCON: ENABLED
+- PRPSD: ENABLED
 - MD: TYPE=RAM
 - MD: TYPE=ROM
-- PPIDE: IO=136, MASTER
-- PPIDE: IO=136, SLAVE
+- FD: MODE=DIO, IO=54, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=DIO, IO=54, DRIVE 1, TYPE=3.5" HD
+- PPIDE: IO=96, MASTER
+- PPIDE: IO=96, SLAVE
 
 #### Notes:
 
@@ -1196,7 +611,221 @@ program the image into the first 512KB of the ROM for now.
 
 `\clearpage`{=latex}
 
-## Z80 ZRC CPU Module
+### RetroBrew Z80 SimH
+
+#### ROM Image File:  SBC_simh.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 8.000 MHz     |
+| Interrupts        | Mode 1        |
+| System Timer      | SimH          |
+| Serial Default    | 38400 Baud    |
+| Memory Manager    | SBC           |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+#### Supported Hardware
+
+- SIMRTC: IO=254
+- SSER: IO=109
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- HDSK: IO=253, DEVICE COUNT=2
+
+
+#### Notes:
+
+- Image for SimH emulator
+- CPU speed and Serial configuration not relevant in emulator
+
+`\clearpage`{=latex}
+
+## RetroBrew N8
+
+### RetroBrew N8 Z180 SBC
+
+#### ROM Image File:  N8_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 18.432 MHz    |
+| Interrupts        | Mode 2        |
+| System Timer      | Z180          |
+| Serial Default    | 38400 Baud    |
+| Memory Manager    | N8            |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+#### Supported Hardware
+
+- DSRTC: MODE=STD, IO=136
+- ASCI: IO=64, INTERRUPTS ENABLED
+- ASCI: IO=65, INTERRUPTS ENABLED
+- TMS: MODE=N8, IO=152, SCREEN=40X24, KEYBOARD=PPK
+- PPK: ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=N8, IO=140, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=N8, IO=140, DRIVE 1, TYPE=3.5" HD
+- SD: MODE=CSIO, IO=136, UNITS=1
+- AY38910: MODE=N8, IO=156, CLOCK=1789772 HZ
+
+#### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
+- SD Card interface is configured for CSIO (N8 date code >= 2312)
+
+`\clearpage`{=latex}
+
+## RCBus Z80
+
+### RCBus Z80 CPU Module
+
+#### ROM Image File:  RCZ80_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 7.372 MHz     |
+| Interrupts        | Mode 1        |
+| System Timer      | None          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z2            |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+#### Supported Hardware
+
+- FP: LEDIO=0, SWIO=0
+- LCD: IO=218, SIZE=20X4
+- DSRTC: MODE=STD, IO=192
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- ACIA: IO=128, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- SD: MODE=PIO, IO=105, UNITS=1
+
+#### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
+
+`\clearpage`{=latex}
+
+### RCBus Z80 CPU Module (KIO)
+
+#### ROM Image File:  RCZ80_kio_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 7.372 MHz     |
+| Interrupts        | Mode 2        |
+| System Timer      | CTC           |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z2            |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+#### Supported Hardware
+
+- FP: LEDIO=0, SWIO=0
+- LCD: IO=218, SIZE=20X4
+- DSRTC: MODE=STD, IO=192
+- INTRTC: ENABLED
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
+- SIO MODE=STD, IO=136, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=STD, IO=136, CHANNEL B, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- SD: MODE=PIO, IO=105, UNITS=1
+- KIO: IO=128
+- CTC: IO=132, TIMER MODE=TIMER/16, DIVISOR=9216, HI=256, LO=36, INTERRUPTS ENABLED
+
+#### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
+- SIO Serial baud rate managed by CTC
+
+`\clearpage`{=latex}
+
+### Z80-512K CPU/RAM/ROM Module
+
+#### ROM Image File:  RCZ80_skz_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 7.372 MHz     |
+| Interrupts        | Mode 1        |
+| System Timer      | None          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z2            |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+#### Supported Hardware
+
+- FP: LEDIO=0, SWIO=0
+- LCD: IO=218, SIZE=20X4
+- DSRTC: MODE=STD, IO=192
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- ACIA: IO=128, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- SD: MODE=PIO, IO=105, UNITS=1
+
+#### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
+
+`\clearpage`{=latex}
+
+### Z80 ZRC CPU Module
 
 #### ROM Image File:  RCZ80_zrc_std.rom
 
@@ -1248,6 +877,8 @@ program the image into the first 512KB of the ROM for now.
 
 `\clearpage`{=latex}
 
+### Z80 ZRC CPU Module (RAM)
+
 #### ROM Image File:  RCZ80_zrc_ram_std.rom
 
 |                   |               |
@@ -1296,7 +927,7 @@ program the image into the first 512KB of the ROM for now.
 
 `\clearpage`{=latex}
 
-## Z80 ZRC512 CPU Module
+### Z80 ZRC512 CPU Module
 
 #### ROM Image File:  RCZ80_zrc512_std.rom
 
@@ -1346,7 +977,7 @@ program the image into the first 512KB of the ROM for now.
 
 `\clearpage`{=latex}
 
-## Z80 EaZy80-512 CPU Module
+### Z80 EaZy80-512 CPU Module
 
 #### ROM Image File:  RCZ80_ez512_std.rom
 
@@ -1378,7 +1009,7 @@ program the image into the first 512KB of the ROM for now.
 
 `\clearpage`{=latex}
 
-## Z80 K80W CPU Module
+### Z80 K80W CPU Module
 
 #### ROM Image File:  RCZ80_k80w_std.rom
 
@@ -1427,7 +1058,109 @@ program the image into the first 512KB of the ROM for now.
 
 `\clearpage`{=latex}
 
-## Z180 Z1RCC CPU Module
+## RCBus Z180
+
+### RCBus Z180 CPU Module (External)
+
+#### ROM Image File:  RCZ180_ext_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 18.432 MHz    |
+| Interrupts        | Mode 2        |
+| System Timer      | Z180          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z2            |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+#### Supported Hardware
+
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- SD: MODE=PIO, IO=105, UNITS=1
+
+#### Notes:
+
+- For use with Z2 bank switched memory board (Z2 external memory management)
+- CPU speed will be dynamically measured at startup if DSRTC is present
+
+`\clearpage`{=latex}
+
+### RCBus Z180 CPU Module (Native)
+
+#### ROM Image File:  RCZ180_nat_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 18.432 MHz    |
+| Interrupts        | Mode 2        |
+| System Timer      | Z180          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z180          |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+#### Supported Hardware
+
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- SD: MODE=PIO, IO=105, UNITS=1
+
+#### Notes:
+
+- For use with linear memory board (Z180 native memory management)
+- CPU speed will be dynamically measured at startup if DSRTC is present
+
+`\clearpage`{=latex}
+
+### Z180 Z1RCC CPU Module
 
 #### ROM Image File:  RCZ180_z1rcc_std.rom
 
@@ -1476,7 +1209,108 @@ program the image into the first 512KB of the ROM for now.
 
 `\clearpage`{=latex}
 
-## Z280 ZZRCC CPU Module
+## RCBus Z280
+
+### RCBus Z280 CPU Module (External)
+
+#### ROM Image File:  RCZ280_ext_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 12.000 MHz    |
+| Interrupts        | Mode 1        |
+| System Timer      | None          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z2            |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+#### Supported Hardware
+
+- FP: LEDIO=0, SWIO=0
+- LCD: IO=218, SIZE=20X4
+- DSRTC: MODE=STD, IO=192
+- INTRTC: ENABLED
+- Z2U: IO=16
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- ACIA: IO=128, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- SD: MODE=PIO, IO=105, UNITS=1
+
+#### Notes:
+
+- For use with Z2 bank switched memory board (Z2 external memory management)
+
+`\clearpage`{=latex}
+
+### RCBus Z280 CPU Module (Native)
+
+#### ROM Image File:  RCZ280_nat_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 12.000 MHz    |
+| Interrupts        | Mode 3        |
+| System Timer      | Z280          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z280          |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+#### Supported Hardware
+
+- FP: LEDIO=0, SWIO=0
+- LCD: IO=218, SIZE=20X4
+- DSRTC: MODE=STD, IO=192
+- INTRTC: ENABLED
+- Z2U: IO=16, INTERRUPTS ENABLED
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- SD: MODE=PIO, IO=105, UNITS=1
+
+#### Notes:
+
+- For use with linear memory board (Z280 native memory management)
+
+`\clearpage`{=latex}
+
+### Z280 ZZRCC CPU Module
 
 #### ROM Image File:  RCZ280_zzrcc_std.rom
 
@@ -1528,6 +1362,8 @@ program the image into the first 512KB of the ROM for now.
 
 `\clearpage`{=latex}
 
+### Z280 ZZRCC CPU Module (RAM)
+
 #### ROM Image File:  RCZ280_zzrcc_ram_std.rom
 
 |                   |               |
@@ -1576,7 +1412,7 @@ program the image into the first 512KB of the ROM for now.
 
 `\clearpage`{=latex}
 
-## Z280 ZZ80MB SBC
+### Z280 ZZ80MB SBC
 
 #### ROM Image File:  RCZ280_zz80mb_std.rom
 
@@ -1626,33 +1462,84 @@ program the image into the first 512KB of the ROM for now.
 
 `\clearpage`{=latex}
 
-## Z80-Retro SBC
+## RCBus eZ80
 
-#### ROM Image File:  Z80RETRO_std.rom
+### RCBus eZ80 CPU Module
+
+#### ROM Image File:  RCEZ80_std.rom
 
 |                   |               |
 |-------------------|---------------|
-| Default CPU Speed | 14.745 MHz    |
-| Interrupts        | Mode 2        |
-| System Timer      | None          |
-| Serial Default    | 38400 Baud    |
+| Default CPU Speed | 20.000 MHz    |
+| Interrupts        | Mode 1        |
+| System Timer      | EZ80          |
+| Serial Default    | 115200 Baud   |
 | Memory Manager    | Z2            |
 | ROM Size          | 512 KB        |
 | RAM Size          | 512 KB        |
 
 #### Supported Hardware
 
-- SIO MODE=Z80R, IO=128, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=Z80R, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- FP: LEDIO=0, SWIO=0
+- LCD: IO=218, SIZE=20X4
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
 - MD: TYPE=RAM
 - MD: TYPE=ROM
-- SD: MODE=Z80R, IO=104, UNITS=1
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- EZ80: CPU DRIVER
+- EZ80: SYS TIMER DRIVER
+- EZ80: RTC DRIVER
+- EZ80: UART DRIVER
 
 #### Notes:
 
 `\clearpage`{=latex}
 
-## S100 Computers Z180
+## Rhyophyre
+
+### Rhyophyre Z180 SBC
+
+#### ROM Image File:  RPH_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 18.432 MHz    |
+| Interrupts        | None          |
+| System Timer      | None          |
+| Serial Default    | 38400 Baud    |
+| Memory Manager    | RPH           |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+#### Supported Hardware
+
+- DSRTC: MODE=STD, IO=132
+- ASCI: IO=64
+- ASCI: IO=65
+- GDC: MODE=RPH, DISPLAY=EGA, IO=144
+- KBD: ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- PPIDE: IO=136, MASTER
+- PPIDE: IO=136, SLAVE
+
+#### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
+
+`\clearpage`{=latex}
+
+## S100
+
+### S100 Computers Z180
 
 #### ROM Image File:  S100_std.rom
 
@@ -1690,13 +1577,357 @@ program the image into the first 512KB of the ROM for now.
 
 `\clearpage`{=latex}
 
-## Duodyne Z80 System
+## Small Computer Central Z180
 
-#### ROM Image File:  DUO_std.rom
+### SC126 Z180 SBC
+
+#### ROM Image File:  SCZ180_sc126_std.rom
 
 |                   |               |
 |-------------------|---------------|
-| Default CPU Speed | 8.000 MHz     |
+| Default CPU Speed | 18.432 MHz    |
+| Interrupts        | Mode 2        |
+| System Timer      | Z180          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z180          |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+#### Supported Hardware
+
+- FP: LEDIO=13, SWIO=0
+- DSRTC: MODE=STD, IO=12
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- SD: MODE=SC, IO=12, UNITS=1
+
+#### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
+- When disabled, watchdog requires /IM to be pulsed.  If an RCBus module
+  holds the CPU in WAIT for more than this, the watchdog will fire when
+  disabled with random consequences.  The Pico SD does this at power-on.
+
+`\clearpage`{=latex}
+
+### SC130 Z180 SBC
+
+#### ROM Image File:  SCZ180_sc130_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 18.432 MHz    |
+| Interrupts        | Mode 2        |
+| System Timer      | Z180          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z180          |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+#### Supported Hardware
+
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- SD: MODE=SC, IO=12, UNITS=1
+
+#### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
+
+`\clearpage`{=latex}
+
+### SC131 Z180 Pocket Comp
+
+#### ROM Image File:  SCZ180_sc131_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 18.432 MHz    |
+| Interrupts        | Mode 2        |
+| System Timer      | Z180          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z180          |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+#### Supported Hardware
+
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- SD: MODE=SC, IO=12, UNITS=1
+
+#### Notes:
+
+`\clearpage`{=latex}
+
+### SC140 Z180 CPU Module
+
+#### ROM Image File:  SCZ180_sc140_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 18.432 MHz    |
+| Interrupts        | Mode 2        |
+| System Timer      | Z180          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z180          |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+#### Supported Hardware
+
+- FP: LEDIO=160, SWIO=160
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=144, MASTER
+- IDE: MODE=RC, IO=144, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- SD: MODE=SC, IO=12, UNITS=1
+
+#### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
+
+`\clearpage`{=latex}
+
+### SC503 Z180 CPU Module
+
+#### ROM Image File:  SCZ180_sc503_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 18.432 MHz    |
+| Interrupts        | Mode 2        |
+| System Timer      | Z180          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z180          |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+#### Supported Hardware
+
+- FP: LEDIO=160, SWIO=160
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=144, MASTER
+- IDE: MODE=RC, IO=144, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- SD: MODE=SC, IO=12, UNITS=1
+
+#### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
+
+`\clearpage`{=latex}
+
+### SC700 Z180 CPU Module
+
+#### ROM Image File:  SCZ180_sc700_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 18.432 MHz    |
+| Interrupts        | Mode 2        |
+| System Timer      | Z180          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z180          |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+#### Supported Hardware
+
+- FP: LEDIO=0
+- LCD: IO=170, SIZE=20X4
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- SD: MODE=SC, IO=12, UNITS=1
+
+#### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
+
+\clearpage`{=latex}
+
+## Z80-Retro
+
+### Z80-Retro SBC
+
+#### ROM Image File:  Z80RETRO_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 14.745 MHz    |
+| Interrupts        | Mode 2        |
+| System Timer      | None          |
+| Serial Default    | 38400 Baud    |
+| Memory Manager    | Z2            |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+#### Supported Hardware
+
+- SIO MODE=Z80R, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=Z80R, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- SD: MODE=Z80R, IO=104, UNITS=1
+
+#### Notes:
+
+`\clearpage`{=latex}
+
+## Zeta
+
+### Zeta Z80 SBC
+
+#### ROM Image File:  ZETA_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 8.000  MHz    |
+| Interrupts        | None          |
+| System Timer      | None          |
+| Serial Default    | 38400 Baud    |
+| Memory Manager    | SBC           |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+#### Supported Hardware
+
+- DSRTC: MODE=STD, IO=112
+- UART: IO=104
+- PPP: IO=96
+- PPPCON: ENABLED
+- PPPSD: ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=DIO, IO=54, DRIVE 0, TYPE=3.5" HD
+
+#### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
+- If ParPortProp is installed, initial console output is
+  determined by JP1:
+  - Shorted: console to on-board serial port
+  - Open: console to ParPortProp video and keyboard
+
+`\clearpage`{=latex}
+
+## Zeta V2
+
+### Zeta V2 Z80 SBC
+
+#### ROM Image File:  ZETA2_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 8.000  MHz    |
 | Interrupts        | Mode 2        |
 | System Timer      | CTC           |
 | Serial Default    | 38400 Baud    |
@@ -1706,199 +1937,23 @@ program the image into the first 512KB of the ROM for now.
 
 #### Supported Hardware
 
-- FP: LEDIO=66, SWIO=66
-- DSRTC: MODE=STD, IO=148
-- PCF: IO=86
-- UART: IO=88
-- UART: IO=168
-- UART: IO=112
-- UART: IO=120
-- SIO MODE=ZP, IO=96, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=ZP, IO=96, CHANNEL B, INTERRUPTS ENABLED
-- LPT: MODE=SPP, IO=72
-- DMA: MODE=DUO, IO=64
-- CH: IO=78
-- CHUSB: IO=78
-- CHSD: IO=78
+- DSRTC: MODE=STD, IO=112
+- UART: IO=104
+- PPP: IO=96
+- PPPCON: ENABLED
+- PPPSD: ENABLED
 - MD: TYPE=RAM
 - MD: TYPE=ROM
-- FD: MODE=DUO, IO=128, DRIVE 0, TYPE=3.5" HD
-- FD: MODE=DUO, IO=128, DRIVE 1, TYPE=3.5" HD
-- PPIDE: IO=136, MASTER
-- PPIDE: IO=136, SLAVE
-- SD: MODE=MT, IO=140, UNITS=1
-- SPK: IO=148
-- CTC: IO=96, TIMER MODE=COUNTER, DIVISOR=18432, HI=256, LO=72, INTERRUPTS ENABLED
+- FD: MODE=ZETA2, IO=48, DRIVE 0, TYPE=3.5" HD
+- CTC: IO=32, TIMER MODE=COUNTER, DIVISOR=18432, HI=256, LO=72, INTERRUPTS ENABLED
 
 #### Notes:
 
 - CPU speed will be dynamically measured at startup if DSRTC is present
-
-`\clearpage`{=latex}
-
-## Heath H8 Z80 System
-
-#### ROM Image File:  HEATH_std.rom
-
-|                   |               |
-|-------------------|---------------|
-| Default CPU Speed | 16.384 MHz    |
-| Interrupts        | Mode 1        |
-| System Timer      | None          |
-| Serial Default    | 115200 Baud   |
-| Memory Manager    | Z2            |
-| ROM Size          | 512 KB        |
-| RAM Size          | 512 KB        |
-
-#### Supported Hardware
-
-- H8P: IO=240
-- INTRTC: ENABLED
-- UART: IO=232
-- UART: IO=224
-- UART: IO=216
-- UART: IO=208
-- TMS: MODE=MSX, IO=152, SCREEN=80X24, KEYBOARD=NONE
-- MD: TYPE=RAM
-- MD: TYPE=ROM
-- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
-- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
-- AY38910: MODE=MSX, IO=160, CLOCK=1789772 HZ
-
-#### Notes:
-
-`\clearpage`{=latex}
-
-## EP Mini-ITX Z180
-
-#### ROM Image File:  EPITX_std.rom
-
-|                   |               |
-|-------------------|---------------|
-| Default CPU Speed | 18.432 MHz    |
-| Interrupts        | Mode 2        |
-| System Timer      | Z180          |
-| Serial Default    | 115200 Baud   |
-| Memory Manager    | Z180          |
-| ROM Size          | 512 KB        |
-| RAM Size          | 512 KB        |
-
-#### Supported Hardware
-
-- INTRTC: ENABLED
-- ASCI: IO=192, INTERRUPTS ENABLED
-- ASCI: IO=193, INTERRUPTS ENABLED
-- UART: IO=160
-- UART: IO=168
-- TMS: MODE=MSX, IO=152, SCREEN=40X24, KEYBOARD=NONE
-- MD: TYPE=RAM
-- MD: TYPE=ROM
-- FD: MODE=EPFDC, IO=72, DRIVE 0, TYPE=3.5" HD
-- FD: MODE=EPFDC, IO=72, DRIVE 1, TYPE=3.5" HD
-- SD: MODE=EPITX, IO=66, UNITS=1
-
-#### Notes:
-
-`\clearpage`{=latex}
-
-## NABU w/ RomWBW Option Board
-
-#### ROM Image File:  NABU_std.rom
-
-|                   |               |
-|-------------------|---------------|
-| Default CPU Speed | 3.580 MHz     |
-| Interrupts        | Mode 2        |
-| System Timer      | TMS           |
-| Serial Default    | 115200 Baud   |
-| Memory Manager    | Z2            |
-| ROM Size          | 512 KB        |
-| RAM Size          | 512 KB        |
-
-#### Supported Hardware
-
-- NABU: IO=64
-- INTRTC: ENABLED
-- UART: IO=72
-- TMS: MODE=NABU, IO=160, SCREEN=80X24, KEYBOARD=NABU, INTERRUPTS ENABLED
-- NABUKB: IO=144
-- MD: TYPE=RAM
-- MD: TYPE=ROM
-- PPIDE: IO=96, MASTER
-- PPIDE: IO=96, SLAVE
-- AY38910: MODE=NABU, IO=65, CLOCK=1789772 HZ
-
-#### Notes:
-
-- TMS video assumes F18A replacement for TMS9918
-
-`\clearpage`{=latex}
-
-## S100 FPGA Z80
-
-#### ROM Image File:  FZ80_std.rom
-
-|                   |               |
-|-------------------|---------------|
-| Default CPU Speed | 8.000 MHz     |
-| Interrupts        | None          |
-| System Timer      | None          |
-| Serial Default    | 9600 Baud     |
-| Memory Manager    | Z2            |
-| ROM Size          | 0 KB          |
-| RAM Size          | 512 KB        |
-
-#### Supported Hardware
-
-- FP: LEDIO=255
-- DS5RTC: RTCIO=104, IO=104
-- SSER: IO=52
-- LPT: MODE=S100, IO=199
-- FV: IO=192, KBD MODE=FV, KBD IO=3
-- KBD: ENABLED
-- SCON: IO=0
-- MD: TYPE=RAM
-- PPIDE: IO=48, MASTER
-- PPIDE: IO=48, SLAVE
-- SD: MODE=FZ80, IO=108, UNITS=2
-
-#### Notes:
-
-- Requires matching FPGA code
-
-## Genesis STD Z180
-
-#### ROM Image File:  GMZ180_std.rom
-
-|                   |               |
-|-------------------|---------------|
-| Default CPU Speed | 18.432 MHz    |
-| Interrupts        | Mode 2        |
-| System Timer      | Z180          |
-| Serial Default    | 115200 Baud   |
-| Memory Manager    | Z180          |
-| ROM Size          | 512 KB        |
-| RAM Size          | 512 KB        |
-
-#### Supported Hardware
-
-- GM7303: IO=48
-- DSRTC: MODE=STD, IO=132
-- INTRTC: ENABLED
-- ASCI: IO=192, INTERRUPTS ENABLED
-- ASCI: IO=193, INTERRUPTS ENABLED
-- MD: TYPE=RAM
-- MD: TYPE=ROM
-- IDE: MODE=GIDE, IO=32, MASTER
-- IDE: MODE=GIDE, IO=32, SLAVE
-- SD: MODE=GM, IO=132, UNITS=1
-
-#### Notes:
-
-- CPU speed will be dynamically measured at startup if DSRTC is present
-
+- If ParPortProp is installed, initial console output is
+  determined by JP1:
+  - Shorted: console to on-board serial port
+  - Open: console to ParPortProp video and keyboard
 
 # Device Drivers
 
