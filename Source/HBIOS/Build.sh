@@ -21,8 +21,8 @@ if [ "${ROM_PLATFORM}" == "dist" ] ; then
 	ROM_PLATFORM="RCEZ80"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="RCZ80"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="RCZ80"; ROM_CONFIG="kio_std"; bash Build.sh
-	ROM_PLATFORM="RCZ80"; ROM_CONFIG="easy_std"; bash Build.sh
-	ROM_PLATFORM="RCZ80"; ROM_CONFIG="tiny_std"; bash Build.sh
+	ROM_PLATFORM="EZZ80"; ROM_CONFIG="easy_std"; bash Build.sh
+	ROM_PLATFORM="EZZ80"; ROM_CONFIG="tiny_std"; bash Build.sh
 	ROM_PLATFORM="RCZ80"; ROM_CONFIG="skz_std"; bash Build.sh
 	ROM_PLATFORM="RCZ80"; ROM_CONFIG="zrc_std"; bash Build.sh
 	ROM_PLATFORM="RCZ80"; ROM_CONFIG="zrc_ram_std"; bash Build.sh

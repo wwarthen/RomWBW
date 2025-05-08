@@ -32,8 +32,8 @@ by RomWBW along with the standard pre-built ROM image(s).
 | [RCBus Z280 CPU Module (External)]^4^                       | RCBus   | RCZ280_ext_std.rom           | 115200        |
 | [RCBus Z280 CPU Module (Native)]^4^                         | RCBus   | RCZ280_nat_std.rom           | 115200        |
 | [RCBus eZ80 CPU Module]^13^, 512K RAM/ROM                   | RCBus   | RCEZ80_std.rom               | 115200        |
-| [Easy Z80 SBC]^2^                                           | RCBus   | RCZ80_easy_std.rom           | 115200        |
-| [Tiny Z80 SBC]^2^                                           | RCBus   | RCZ80_tiny_std.rom           | 115200        |
+| [Easy Z80 SBC]^2^                                           | RCBus   | EZZ80_easy_std.rom           | 115200        |
+| [Tiny Z80 SBC]^2^                                           | RCBus   | EZZ80_tiny_std.rom           | 115200        |
 | [Z80-512K CPU/RAM/ROM Module]^2^                            | RCBus   | RCZ80_skz_std.rom            | 115200        |
 | [SC126 Z180 SBC]^5^                                         | BP80    | SCZ180_sc126_std.rom         | 115200        |
 | [SC130 Z180 SBC]^5^                                         | RCBus   | SCZ180_sc130_std.rom         | 115200        |
@@ -228,7 +228,7 @@ program the image into the first 512KB of the ROM for now.
 
 ### Easy Z80 SBC
 
-#### ROM Image File:  RCZ80_easy_std.rom
+#### ROM Image File:  EZZ80_easy_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -277,7 +277,7 @@ program the image into the first 512KB of the ROM for now.
 
 ### Tiny Z80 SBC
 
-#### ROM Image File:  RCZ80_tiny_std.rom
+#### ROM Image File:  EZZ80_tiny_std.rom
 
 |                   |               |
 |-------------------|---------------|
