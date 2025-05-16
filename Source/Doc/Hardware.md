@@ -439,7 +439,7 @@ An FPGA Z80 based S100 SBC
 
 ## Genesis Z180
 
-todo ???
+Not much is known about this
 
 * Creator: Doug Jackson
 
@@ -948,10 +948,9 @@ out, ZRC has an optional compact flash interface. The targeted software for ZRC 
 ZRC is actually contains no ROM and 2MB of RAM.  The first 512KB of RAM is loaded from 
 disk and then handled like ROM.
 
-TODO The differences in these 2 builds needs highlighting
-
 * Creator: Bill Shen
 * Retrobrew Wiki: [ZRC, Z80 RAM CPLD for ROMWBW](https://www.retrobrewcomputers.org/doku.php?id=builderpages:plasmo:zrc)
+* Google Groups: [ZRC, Z80/RAM/CPLD, minimal CP/M-ready, Z80 SBC](https://groups.google.com/g/retro-comp/c/L3W7TaDnX5A/m/ZxOgl8EIAQAJ)
 
 #### ROM Image File:  RCZ80_zrc_std.rom
 
@@ -1000,9 +999,9 @@ TODO The differences in these 2 builds needs highlighting
 
 ### ZRC Z80 CPU Module (RAM)
 
-ROMless boot -- HBIOS is loaded from disk at boot
+ROMless boot, HBIOS is loaded from disk at boot, there is no effective ROM, only 512KB RAM.
 
-TODO Unsure what he differences are ???
+The MD ROM driver is disabled for this build.
 
 #### ROM Image File:  RCZ80_zrc_ram_std.rom
 
@@ -1455,6 +1454,8 @@ and then handled like ROM.
 
 * Creator: Bill Shen
 * Retrobrew Wiki: [ZZRCC, a SBC for RC2014 based on Z280](https://www.retrobrewcomputers.org/doku.php?id=builderpages:plasmo:zzrcc)
+* Google Groups: [ZZRCC, Z280 SBC replacing ZZ80RC and ZZ80CF](https://groups.google.com/g/retro-comp/c/lt1t3JEoiCM/m/NYeZdrFuAAAJ)
+* Google Groups: [Help porting ROMWBW to ZZRCC](https://groups.google.com/g/retro-comp/c/mBIWW18WXTE/m/E_sehx5fAwAJ)
 
 #### ROM Image File:  RCZ280_zzrcc_std.rom
 
@@ -1503,9 +1504,9 @@ and then handled like ROM.
 
 ### ZZRCC Z280 CPU Module (RAM)
 
-todo need to clarify the differences in the RAM vs STD versions
+ROMless boot, HBIOS is loaded from disk at boot, there is no effective ROM, only 512KB RAM.
 
-ROMless boot -- HBIOS is loaded from disk at boot
+The MD ROM driver is disabled for this build.
 
 * Creator: Bill Shen
 * Retrobrew Wiki: [ZZRCC, a SBC for RC2014 based on Z280](https://www.retrobrewcomputers.org/doku.php?id=builderpages:plasmo:zzrcc)
@@ -2049,7 +2050,8 @@ Z180 CPU (eg. SC722) with 1MB linear memory (eg. SC721)
 The system comprises a Z80 retro computer board, and optonal VGA text video card, 
 and PIO Keyboard and Sound Card. The system uses a custom 60 pin bus on a standard header.
 
-(Not to be confused with a similar named project presented by John's Basement on youTube)
+(Not to be confused with a similar named project by 
+John Winans presented by John's Basement on youTube)
 
 * Creator: Peter Wilson
 * Github: [Z80-Retro](https://github.com/peterw8102/Z80-Retro)
