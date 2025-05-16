@@ -1748,9 +1748,9 @@ Small Computer Central provides an extensive range hardware based around the
 Zilog ecosystem. This section lists configurations specifically for the Z180 processor
 
 If you are using a Z80 processor you will probably be using the general `RCZ80_std`
-configuration - [RCBus Z80 CPU Module]. However please consult 
+configuration - [RCBus Z80 CPU Module]. However, please consult 
 [Firmware, RomWBW, RCZ80_std](https://smallcomputercentral.com/firmware/firmware-romwbw-rcz80_std/)
-for furher information and to ensure compatibility with your Z80 system. 
+for further information and to ensure compatibility with your Z80 system. 
 
 * Creator: Stephen Cousins
 * Website: [Small Computer Central](https://smallcomputercentral.com)
