@@ -1112,6 +1112,7 @@ HBIOS is loaded from disk at boot by ROM monitor
 * Creator: Bill Shen
 * VCF Forums: [Eazy80, a glue-less, CP/M capable Z80 SBC](https://forum.vcfed.org/index.php?threads/eazy80-a-glue-less-cp-m-capable-z80-sbc.1251160)
 * Retrobrew Wiki: [Eazy80 Rev2, Glue-less Configuration](https://www.retrobrewcomputers.org/doku.php?id=builderpages:plasmo:eazy80:eazy80rev2:eazy80rev2home)
+* Google Groups: [EaZy80, A Simple80 with KIO](https://groups.google.com/g/retro-comp/c/0cUDbZspHyQ)
 
 #### ROM Image File:  RCZ80_ez512_std.rom
 
