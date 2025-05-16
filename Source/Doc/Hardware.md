@@ -1814,7 +1814,7 @@ SC126 is a Z180 Motherboard.
 
 SC130 is an entry-level Z180 Motherboard designed primarily to run RomWBW (and CP/M)
 
-* Website: [SC136 – Z180 Motherboard](https://smallcomputercentral.com/rcbus/sc100-series/sc130-z180-motherboard)
+* Website: [SC130 – Z180 Motherboard](https://smallcomputercentral.com/rcbus/sc100-series/sc130-z180-motherboard)
 
 #### ROM Image File:  SCZ180_sc130_std.rom
 
