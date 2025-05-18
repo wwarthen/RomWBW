@@ -109,7 +109,7 @@ Others
 | [Dyno Z180 SBC]^6^                                          | Dyno     | DYNO_std.rom                |         38400 |
 | [EP Mini-ITX Z180]^11^                                      | UEXT     | EPITX_std.rom               |        115200 |
 | [eZ80 for RCBus Module]^13^, 512K RAM/ROM                   | RCBus    | RCEZ80_std.rom              |        115200 |
-| [Genesis Z180]^12^                                          | STD      | GMZ180_std.rom              |        115200 |
+| [Genesis Z180 System]^12^                                   | STD      | GMZ180_std.rom              |        115200 |
 | [Heath H8 Z80 System]^10^                                   | H8       | HEATH_std.rom               |        115200 |
 | [NABU w/ RomWBW Option Board]^10^                           | NABU     | NABU_std.rom                |        115200 |
 | [S100 Computers Z180 SBC]^9^                                | S100     | S100_std.rom                |         57600 |
@@ -149,6 +149,13 @@ of the ROM chip (address 0).  Most of the pre-built images are
 program the image into the first 512KB of the ROM for now.
 
 For this document port addresses `IO=xxx` are represented in decimal.
+
+The PropIO support is based on RomWBW specific firmware. Be sure to
+program/update your PropIO firmware with the corresponding firmware
+image provided in the Binary directory of the RomWBW distribution.
+
+The use of high density floppy disks requires a CPU speed of 8 MHz or
+greater.
 
 `\clearpage`{=latex}
 
@@ -437,11 +444,13 @@ An FPGA Z80 based S100 SBC
 
 `\clearpage`{=latex}
 
-## Genesis Z180
+## Genesis Z180 System
 
-Not much is known about this
+A Z180 based board with 512k ram, 512k rom, dual serial / parallel, RTC and SD Card, based on the STD bus.
+This was inspired on Pulsar Little Big board and some designs of Stephen Cousins
 
-* Creator: Doug Jackson
+* Creator: [Doug Jackson](https://www.vk1zdj.net/)
+* Specific Links not Available
 
 #### ROM Image File:  GMZ180_std.rom
 
@@ -754,8 +763,11 @@ all-in-one home computers with a usable set of features such as color graphics,
 audio, an assortment of mass storage options, a variety of ports, etc. Although 
 a bus expansion is supported no additional boards are required.
 
+This configuration is for the N8-2312 and latter (4314) revisions
+
 * Creator: Andrew Lynch
 * Retrobrew Wiki: [The N8](https://www.retrobrewcomputers.org/doku.php?id=boards:sbc:n8:n8)
+* Blog: [A Z180 based SBC](https://www.vk1zdj.net/?p=525)
 
 #### ROM Image File:  N8_std.rom
 
@@ -944,9 +956,10 @@ functionality of CPU, RAM, and ROM on a single module, thus saving space on the 
 ZRC is derived from the ZoRC experiment. The basic notion is that large RAM and fast 
 serial upload enable a diskless CP/M SBC. However, just in case that idea didn't work 
 out, ZRC has an optional compact flash interface. The targeted software for ZRC is ROMWBW.
+ZRC physically contains no ROM and 2MB of RAM.  
 
-ZRC is actually contains no ROM and 2MB of RAM.  The first 512KB of RAM is loaded from 
-disk and then handled like ROM.
+In the STD configuration the first 512KB of RAM is loaded with a ROM image from disk 
+storage and then handled like ROM. Essentially, an area of the RAM is reserved to act as ROM.
 
 * Creator: Bill Shen
 * Retrobrew Wiki: [ZRC, Z80 RAM CPLD for ROMWBW](https://www.retrobrewcomputers.org/doku.php?id=builderpages:plasmo:zrc)
@@ -999,9 +1012,17 @@ disk and then handled like ROM.
 
 ### ZRC Z80 CPU Module (RAM)
 
-ROMless boot, HBIOS is loaded from disk at boot, there is no effective ROM, only 512KB RAM.
+This profile differs (from STD) only in how the system boots, and how RAM is configured.
+Boot occurs directly to RAM, loading HBIOS directly from disk storage rather than via
+a pseudo ROM image copied into RAM.
 
-The MD ROM driver is disabled for this build.
+A RAM disk is configured preloaded with files that would normally be on the ROM disk.
+There is no ROM disk in this configuration.
+
+The RAM config is the newer approach and provides a more efficient bank layout. 
+The intent to replace the STD config with the RAM config.
+
+* Creator: Bill Shen
 
 #### ROM Image File:  RCZ80_zrc_ram_std.rom
 
@@ -1449,9 +1470,10 @@ Generic Rom Image. For use with linear memory board (Z280 native memory manageme
 ZZRCC follows the basic concept of ZRCC that uses a small CPLD to bootstrap from CF disk. 
 Because Z280 has a native serial-bootstrap capability, the CPLD is even simpler than that 
 of ZRCC. ZZRCC is Z280 operating in Z80-compatible mode. It is designed for RC2014 bus
+ZZRCC actually contains no ROM and 512KB of RAM.  
 
-ZZRCC actually contains no ROM and 512KB of RAM.  The first 256KB of RAM is loaded from disk 
-and then handled like ROM.
+In the STD configuration the first 256KB of RAM is loaded with a ROM image from disk 
+storage and then handled like ROM. Essentially, an area of the RAM is reserved to act as ROM.
 
 * Creator: Bill Shen
 * Retrobrew Wiki: [ZZRCC, a SBC for RC2014 based on Z280](https://www.retrobrewcomputers.org/doku.php?id=builderpages:plasmo:zzrcc)
@@ -1505,12 +1527,17 @@ and then handled like ROM.
 
 ### ZZRCC Z280 CPU Module (RAM)
 
-ROMless boot, HBIOS is loaded from disk at boot, there is no effective ROM, only 512KB RAM.
+This profile differs (from STD) only in how the system boots, and how RAM is configured.
+Boot occurs directly to RAM, loading HBIOS directly from disk storage rather than via
+a pseudo ROM image copied into RAM.
 
-The MD ROM driver is disabled for this build.
+A RAM disk is configured preloaded with files that would normally be on the ROM disk.
+There is no ROM disk in this configuration.
+
+The RAM config is the newer approach and provides a more efficient bank layout.
+The intent to replace the STD config with the RAM config.
 
 * Creator: Bill Shen
-* Retrobrew Wiki: [ZZRCC, a SBC for RC2014 based on Z280](https://www.retrobrewcomputers.org/doku.php?id=builderpages:plasmo:zzrcc)
 
 #### ROM Image File:  RCZ280_zzrcc_ram_std.rom
 
@@ -2217,7 +2244,7 @@ the active platform and configuration.
 |-----------|--------------------------------------------------------|
 | CHSD      | CH37x SD Card Interface                                |
 | CHUSB     | CH37x USB Drive Interface                              |
-| FD        | 8272 or compatible Floppy Disk Controller              |
+| FD        | Intel 8272 or compatible Floppy Disk Controller        |
 | HDSK      | SIMH Simulator Hard Disk                               |
 | IDE       | IDE/ATA/ATAPI Hard Disk Interface                      |
 | IMM       | Zip Drive on PPI (IMM variant)                         |
@@ -2239,9 +2266,17 @@ the active platform and configuration.
 | FV        | S100 FPGA Z80 Onboard VGA/Keyboard                     |
 | GDC       | uPD7220 Video Display Controller                       |
 | TMS       | TMS9918/38/58 Video Display Controller                 |
-| VDU       | MC6845 Family Video Display Controller                 |
+| VDU       | MC6845 Family Video Display Controller (*)             |
 | VGA       | HD6445CP4-based Video Display Controller               |
 | VRC       | VGARC Video Display Controller                         |
+
+Note:
+
+* Reading bytes from the video memory of the VDU board (not Color
+  VDU) appears to be problematic. This is only an issue when the driver
+  needs to scroll a portion of the screen which is done by applications
+  such as WordStar or ZDE. You are likely to see screen corruption in
+  this case.
 
 ## Keyboard
 
@@ -2296,7 +2331,7 @@ the active platform and configuration.
 | DMA       | Zilog DMA Controller                                   |
 | ESP       | ESP32 Firmware-based interface                         |
 | EZ80TIMER | eZ80 System Timer                                      |
-| KIO       | Zilog Serial/ Parallel Counter/Timer                   |
+| KIO       | Zilog Serial/ Parallel Counter/Timer (Z84C90)          |
 | PPP       | ParPortProp Host Interface Controller                  |
 | PRP       | PropIO Host Interface Controller                       |
 
@@ -2358,24 +2393,3 @@ for more information on UNA.
   CP/M 3, ZPM3, and p-System.
   
 - Some of the RomWBW-specific applications are not UNA compatible.
-
-# Errata
-
-The following errata apply to $doc_product$ $doc_ver$:
-
-* The use of high density floppy disks requires a CPU speed of 8 MHz or 
-  greater.
-
-* The PropIO support is based on RomWBW specific firmware. Be sure to 
-  program/update your PropIO firmware with the corresponding firmware 
-  image provided in the Binary directory of the RomWBW distribution.
-
-* Reading bytes from the video memory of the VDU board (not Color 
-  VDU) appears to be problematic. This is only an issue when the driver 
-  needs to scroll a portion of the screen which is done by applications 
-  such as WordStar or ZDE. You are likely to see screen corruption in 
-  this case.
-
-* The RomWBW `TUNE` application will detect an AY-3-8910/YM2149
-  Sound Module regardless of whether support for it is included in
-  the RomWBW HBIOS configuration.
