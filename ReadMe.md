@@ -7,7 +7,7 @@
 **RomWBW Introduction** \
 Version 3.5 \
 Wayne Warthen  ([wwarthen@gmail.com](mailto:wwarthen@gmail.com)) \
-03 May 2025
+18 May 2025
 
 # Overview
 
@@ -305,6 +305,7 @@ let me know if I missed you!
   - creation of the Introduction and Hardware documents
   - Z3PLUS operating system disk image
   - COPYSL utility
+  - SLABEL utility
   - a feature for RomWBW configuration by NVRAM
   - the /B bulk mode of disk assignment to the ASSIGN utility
 
