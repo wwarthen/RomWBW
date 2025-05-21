@@ -2423,6 +2423,9 @@ If your RomWBW system has a sound card based on either an AY-3-8190 or
 YM2149F sound chip, you can use the `TUNE` application to play PT or
 MYM sound files.
 
+Note: TUNE will detect an AY-3-8910/YM2149 Sound Module re-gardless of 
+whether support for it is included in the RomWBW HBIOS configuration
+
 #### Syntax
 
 `TUNE `*`<filename>`* `*`<options>`*`

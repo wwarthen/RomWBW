@@ -1,7 +1,7 @@
 DIST_OBJECTS := \
 	DYNO_std MK4_std N8_std RCZ180_ext RCZ180_nat RCZ180_z1rcc \
 	RCZ280_ext RCZ280_nat RCZ280_zz80mb RCZ280_zzrcc RCZ280_zzrcc_ram \
-	RCZ80_std RCZ80_kio RCZ80_easy RCZ80_tiny RCZ80_skz RCZ80_zrc \
+	RCZ80_std RCZ80_kio EZZ80_easy EZZ80_tiny RCZ80_skz RCZ80_zrc \
 	RCZ80_zrc_ram RCZ80_zrc512 RPH_std SBC_std SBC_simh MBC_std \
 	DUO_std SCZ180_sc126 SCZ180_sc130 SCZ180_sc131 SCZ180_sc140 \
 	SCZ180_sc503 SCZ180_sc700 S100_std UNA_std Z80RETRO_std \

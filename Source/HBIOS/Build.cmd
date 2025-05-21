@@ -229,8 +229,8 @@ call Build MK4 std || exit /b
 call Build RCZ80 std || exit /b
 call Build RCEZ80 std || exit /b
 call Build RCZ80 kio_std || exit /b
-call Build RCZ80 easy_std || exit /b
-call Build RCZ80 tiny_std || exit /b
+call Build EZZ80 easy_std || exit /b
+call Build EZZ80 tiny_std || exit /b
 call Build RCZ80 skz_std || exit /b
 call Build RCZ80 zrc_std || exit /b
 call Build RCZ80 zrc_ram_std || exit /b

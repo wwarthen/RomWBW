@@ -6,6 +6,7 @@ Version 3.5.1
 - WBW: Doc improvements (per Fraser and Rob Gowin)
 - WBW: Correct ZMP application crash
 - MAP: Contribution of the SLABEL.COM tool for displaying and changing slice labels.
+- MAP: Hardware documentation, Significant new content added with project links.
 
 Version 3.5
 -----------
