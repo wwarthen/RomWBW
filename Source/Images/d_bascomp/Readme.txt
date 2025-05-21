@@ -62,4 +62,5 @@ Hello World
 
 
 A> 
-
+BASCOM =HELLO /E
+L80 HELLO,HELLO/N/E

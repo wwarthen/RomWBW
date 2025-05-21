@@ -24,3 +24,7 @@ as-is.
 
 Bill Buckels
 bbuckels@mts.net
+
+cz hello
+as hello
+ln hello.o -lc

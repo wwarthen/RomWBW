@@ -13,3 +13,5 @@ be run easily on 8080, z-80 or 8085 systems.
 The user manual is available in the Doc/Language directory,
 Microsoft_COBOL-80_Manuals_1878.pdf
 
+cobol hello,hello=hello/r
+l80 hello/n,hello/e

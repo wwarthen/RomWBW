@@ -8,3 +8,6 @@ the 8080/Z80 platform, not the language specification version)
 
 The user manual is available in the Doc/Language directory,
 Microsoft_FORTRAN-80_Users_Manual_1977.pdf
+
+f80 hello,hello=hello
+l80 hello,forlib/s,hello/n,/e:hellow
