@@ -19,7 +19,7 @@ This is a patch release of v3.5.
 
 ### Fixes
 
-- Corrects an issue with the `CPMLDR.SYS` and 'ZPMLDR.SYS` files that
+- Corrects an issue with the `CPMLDR.SYS` and `ZPMLDR.SYS` files that
   caused `SYSCOPY` to fail when used with them.
 
 - Added missing `BCLOAD` file to the MS BASIC Compiler disk image.
