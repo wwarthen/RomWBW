@@ -52,8 +52,9 @@ call BuildDisk.cmd msxroms1 hd wbw_hd512 || exit /b
 call BuildDisk.cmd msxroms2 hd wbw_hd512 || exit /b
 
 echo.
-echo Building Combo Disk (512 directory entry format) Image...
+echo Building Combo Disk (512 directory entry format) Images...
 copy /b ..\..\Binary\hd512_cpm22.img + ..\..\Binary\hd512_zsdos.img + ..\..\Binary\hd512_nzcom.img + ..\..\Binary\hd512_cpm3.img + ..\..\Binary\hd512_zpm3.img + ..\..\Binary\hd512_ws4.img ..\..\Binary\hd512_combo.img || exit /b
+copy /b ..\..\Binary\hd512_cpm22.img + ..\..\Binary\hd512_ws4.img + ..\..\Binary\hd512_aztecc.img + ..\..\Binary\hd512_bascomp.img + ..\..\Binary\hd512_tpascal.img + ..\..\Binary\hd512_fortran.img + ..\..\Binary\hd512_cobol.img + ..\..\Binary\hd512_z80asm.img + ..\..\Binary\hd512_games.img ..\..\Binary\hd512_combo_demo.img || exit /b
 
 echo.
 echo Building Hard Disk Images (1024 directory entry format)...
@@ -84,6 +85,7 @@ if exist ..\BPBIOS\bp*.rel call BuildDisk.cmd bp hd wbw_hd1k ..\zsdos\zsys_wbw.s
 copy hd1k_prefix.dat ..\..\Binary\ || exit /b
 
 echo.
-echo Building Combo Disk (1024 directory entry format) Image...
+echo Building Combo Disk (1024 directory entry format) Images...
 copy /b hd1k_prefix.dat + ..\..\Binary\hd1k_cpm22.img + ..\..\Binary\hd1k_zsdos.img + ..\..\Binary\hd1k_nzcom.img + ..\..\Binary\hd1k_cpm3.img + ..\..\Binary\hd1k_zpm3.img + ..\..\Binary\hd1k_ws4.img ..\..\Binary\hd1k_combo.img || exit /b
-
+copy /b hd1k_prefix.dat + ..\..\Binary\hd1k_cpm22.img + ..\..\Binary\hd1k_ws4.img + ..\..\Binary\hd1k_aztecc.img + ..\..\Binary\hd1k_bascomp.img + ..\..\Binary\hd1k_tpascal.img + ..\..\Binary\hd1k_fortran.img + ..\..\Binary\hd1k_cobol.img + ..\..\Binary\hd1k_z80asm.img + ..\..\Binary\hd1k_games.img ..\..\Binary\hd1k_combo_demo.img || exit /b
+echo.
