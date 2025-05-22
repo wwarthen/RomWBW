@@ -21,6 +21,7 @@ call BuildDisk.cmd aztecc fd wbw_fd144 || exit /b
 call BuildDisk.cmd hitechc fd wbw_fd144 || exit /b
 call BuildDisk.cmd tpascal fd wbw_fd144 || exit /b
 call BuildDisk.cmd bascomp fd wbw_fd144 || exit /b
+call BuildDisk.cmd cobol fd wbw_fd144 || exit /b
 call BuildDisk.cmd fortran fd wbw_fd144 || exit /b
 call BuildDisk.cmd games fd wbw_fd144 || exit /b
 call BuildDisk.cmd cowgol fd wbw_fd144 || exit /b
@@ -43,6 +44,7 @@ call BuildDisk.cmd aztecc hd wbw_hd512 || exit /b
 call BuildDisk.cmd hitechc hd wbw_hd512 || exit /b
 call BuildDisk.cmd tpascal hd wbw_hd512 || exit /b
 call BuildDisk.cmd bascomp hd wbw_hd512 || exit /b
+call BuildDisk.cmd cobol hd wbw_hd512 || exit /b
 call BuildDisk.cmd fortran hd wbw_hd512 || exit /b
 call BuildDisk.cmd games hd wbw_hd512 || exit /b
 call BuildDisk.cmd cowgol hd wbw_hd512 || exit /b
@@ -70,6 +72,7 @@ call BuildDisk.cmd aztecc hd wbw_hd1k || exit /b
 call BuildDisk.cmd hitechc hd wbw_hd1k || exit /b
 call BuildDisk.cmd tpascal hd wbw_hd1k || exit /b
 call BuildDisk.cmd bascomp hd wbw_hd1k || exit /b
+call BuildDisk.cmd cobol hd wbw_hd1k || exit /b
 call BuildDisk.cmd fortran hd wbw_hd1k || exit /b
 call BuildDisk.cmd games hd wbw_hd1k || exit /b
 call BuildDisk.cmd cowgol hd wbw_hd1k || exit /b
@@ -83,3 +86,4 @@ copy hd1k_prefix.dat ..\..\Binary\ || exit /b
 echo.
 echo Building Combo Disk (1024 directory entry format) Image...
 copy /b hd1k_prefix.dat + ..\..\Binary\hd1k_cpm22.img + ..\..\Binary\hd1k_zsdos.img + ..\..\Binary\hd1k_nzcom.img + ..\..\Binary\hd1k_cpm3.img + ..\..\Binary\hd1k_zpm3.img + ..\..\Binary\hd1k_ws4.img ..\..\Binary\hd1k_combo.img || exit /b
+
