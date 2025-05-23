@@ -40,14 +40,19 @@ KIO refers to a Zilog specific Serial/Parallel Counter/Timer (Z84C90).
 The RCBus Z180 & Z280 require a separate RAM/ROM memory module. There are two types
 of these modules, you must pick the correct ROM for your type of memory module:
 
-* The RCBus Z180 & Z280 require a separate RAM/ROM memory module. There are two types
-  of these modules, you must pick the correct ROM for your type of memory module:
-* The second type of RAM/ROM module has no bank switching logic – this is called
-  (“Native”) because the CPU itself provides the bank switching logic.
+* The first type of RAM/ROM module includes Z2 style memory bank
+  switching on the memory module itself.  This is called "External" (ext)
+  because the bank switching is external from the CPU itself.
+
+* The second type of RAM/ROM module has no bank switching logic on the
+  memory module.  Bank switching is implemented via the Z180 or Z280
+  MMU – this is called “Native” (nat) because the CPU itself provides
+  the bank switching logic.
 
 Only Z180 and Z280 CPUs have the ability to do bank switching in the
 CPU, so the ext/nat selection only applies to them.  Z80 CPUs have no
-built-in bank switching logic, so they are always configured for
+built-in bank switching logic, so they always require a RAM/ROM module
+with Z2 style bank switching and the ROMs are always configured for
 external bank switching.
 
 `\clearpage`{=latex}

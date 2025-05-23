@@ -13,6 +13,24 @@ release of RomWBW.
   applications.  This is discussed in the "Upgrading" section of the
   RomWBW User Guide.
 
+## Version 3.5.1
+
+This is a patch release of v3.5.
+
+### Fixes
+
+- Corrects an issue with the `CPMLDR.SYS` and `ZPMLDR.SYS` files that
+  caused `SYSCOPY` to fail when used with them.
+
+- Added missing `BCLOAD` file to the MS BASIC Compiler disk image.
+  
+### New Features
+
+- Added `SLABEL` application (Mark Pruden).
+
+- Variety of documentation improvements, especially an overhaul of
+  the Hardware Document (Mark Pruden).
+
 ## Version 3.5
 
 ### Upgrade Notes
