@@ -2,6 +2,8 @@ Version 3.6
 -----------
 - MGG: Added COBOL language disk image
 - WDC: Added config options to PCF driver
+- WBW: Enabled dynamic CPU speed update on LCD screen
+- WBW: Improve LPT driver boot messaging when not detected (per Robb Bates)
 
 Version 3.5.1
 -------------
