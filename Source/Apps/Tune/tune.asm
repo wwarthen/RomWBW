@@ -53,6 +53,7 @@
 ;   2024-07-11 [WBW] Updated, Les Bird's module now uses same settings as EB6
 ;   2024-09-17 [WBW] Add support for HEATH H8 with Les Bird's MSX Card
 ;   2024-12-12 [WBW] Add options to force standard MSX or RC ports
+;   2025-05-28 [WBW] Add option to force delay mode
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -113,6 +114,7 @@ Id		.EQU	1	; 5) Insert official identificator
 	CALL	CLI_ABRT_IF_OPT_FIRST
 	CALL	CLI_PORTS
 	CALL	CLI_HAVE_HBIOS_SWITCH
+	CALL	CLI_HAVE_DELAY_SWITCH
 	CALL	CLI_OCTAVE_ADJST
 	JP	CONTINUE
 
@@ -703,15 +705,16 @@ FILTYP		.DB	0	; Sound file type (TYPPT2, TYPPT3, TYPMYM)
 TMP		.DB	0	; work around use of undocumented Z80
 
 HBIOSMD		.DB	0	; NON-ZERO IF USING HBIOS SOUND DRIVER, ZERO OTHERWISE
+DELAYMD		.DB	0	; FORCE DELAY MODE IF TRUE (NON-ZERO)
 OCTAVEADJ	.DB	0	; AMOUNT TO ADJUST OCTAVE UP OR DOWN
 
 USEPORTS	.DB	0	; AUDIO CHIP PORT SELECTION MODE
 
-MSGBAN		.DB	"Tune Player for RomWBW v3.12, 12-Dec-2024",0
-MSGUSE		.DB	"Copyright (C) 2024, Wayne Warthen, GNU GPL v3",13,10
+MSGBAN		.DB	"Tune Player for RomWBW v3.13, 28-May-2025",0
+MSGUSE		.DB	"Copyright (C) 2025, Wayne Warthen, GNU GPL v3",13,10
 		.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 		.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
-		.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM] [-msx|-rc] [--hbios] [+tn|-tn]",0
+		.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM] [-msx|-rc] [-delay] [--hbios] [+tn|-tn]",0
 MSGBIO		.DB	"Incompatible BIOS or version, "
 		.DB	"HBIOS v", '0' + RMJ, ".", '0' + RMN, " required",0
 MSGPLT		.DB	"Hardware error, system not supported!",0

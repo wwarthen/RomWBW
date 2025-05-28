@@ -142,6 +142,14 @@ currently selected.  The upper 32KB is "fixed".  This area of memory
 is never swapped out and is used to contain software and operating
 systems that must remain in the Z80 address space.
 
+Throughout this document, this mechanism of selecting banks of memory
+into the lower 32K is referred to as memory management.  Achieving
+this functionality requires some type of hardware which is generally
+referred to as the system's Memory Management Unit (MMU).  RomWBW
+supports a variety of MMUs -- but they all perform the same function
+of swapping in/out banks of memory in the lower 32K of CPU address
+space.
+
 Figure 4.1 depicts the memory layout for a system running the CP/M
 operating system.  Applications residing in TPA invoke BDOS services
 of CP/M, BDOS invokes the custom CBIOS APIs, and finally CBIOS
@@ -289,6 +297,54 @@ Common Bank:
 : This bank is mapped to the upper 32K of the processors memory space.
 It is a fixed mapping that is never changed in normal RomWBW operation
 hence the name "Common".
+
+## Memory Managers
+
+The following hardware memory managers are supported by RomWBW.  The
+operation of these memory managers is not documented here -- please
+refer to the documentation of your hardware provider for that.
+
+Z2:
+
+: Memory memory manager introduced by Sergey Kiselv in the Zeta 2 SBC.
+Popular in many RCBus systems.
+
+Z180:
+
+: Memory manager built into the Z180 CPU
+
+Z280:
+
+: Memory manager built into the Z280 CPU
+
+ZRC:
+
+: Memory manager onboard the ZRC series of computers by Bill Shen.
+
+SBC:
+
+: Memory manager onboard the N8VEM SBC series of computers by
+Andrew Lynch.
+
+MBC:
+
+: Memory manager onboard the Nhyodyne computer system by Andrew Lynch.
+
+N8:
+
+: Memory manager onboard the N8 SBC computer by Andrew Lynch.
+
+EZ512:
+
+: Memory manager onboard the EaZy80-512 Z80 CPU Module by Bill Shen.
+
+RPH:
+
+: Memory manager onboard the Rhyophyre computer system by Andrew Lynch.
+
+The memory manager used is determined by the configuration choices
+that are part of a RomWBW build process.  A given ROM can only have a
+single memory manager -- it is not selected dynamically.
 
 # Disk Layout
 

@@ -141,6 +141,11 @@ devices and peripherals that are on-board or frequently used with
 each platform.  If the device or peripheral is not detected at boot, 
 the ROM will simply bypass support appropriately.
 
+Each ROM will support a single memory manager.  This is determined
+by the build configuration and is not dynamically selected.  The use
+of the term Memory Manager is generally synonymous with Memory
+Management Unit (MMU).
+
 In some cases, support for multiple hardware components with potentially
 conflicting resource usage are handled by a single ROM image.  It is up
 to the user to ensure that no conflicting hardware is in use.

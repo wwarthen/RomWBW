@@ -2438,10 +2438,11 @@ whether support for it is included in the RomWBW HBIOS configuration
 |  `-MSX`     | Force MSX port addresses A0H/A1H (no PSG detection)    |
 |  `-RC`      | Force RCBus port addresses D8H/D0H (no PSG detection)  |
 |  `--HBIOS`  | Utilise HBIOS' sound driver                            |
-| `+T1`       | Play tune an octave higher                             |
-| `+T2`       | Play tune two octaves higher                           |
-| `-T1`       | Play tune an octave lower                              |
-| `-T2`       | Play tune two octaves lower                            |
+|  `-DELAY`   | Force delay mode (don't use hardware timer)            |
+|  `+T1`      | Play tune an octave higher                             |
+|  `+T2`      | Play tune two octaves higher                           |
+|  `-T1`      | Play tune an octave lower                              |
+|  `-T2`      | Play tune two octaves lower                            |
 
 The +t and -t options apply only to HBIOS mode operation.  The `-MSX`,
 `-RC`, and `--HBIOS` options are mutually exclusive.  See Notes below.
@@ -2465,7 +2466,7 @@ an error message.
 
 Some hardware (notably Why-Em-Ulator) cannot be detected due limitations
 of the emulation.  In such cases, you can force the use of the two
-most common port addresses using the `-msx` or `-rc` options.
+most common port addresses using the `-MSX` or `-RC` options.
 
 On Z180 systems, I/O wait states are added when writing to the sound
 chip to avoid exceeding its speed limitations. On Z80 systems, you
@@ -2473,9 +2474,13 @@ will need to ensure that the CPU clock speed of your system does not
 exceed the timing limitations of your sound chip.
 
 The application probes for an active system timer and uses it to
-accurately pace the sound file output. If no system timer is
+accurately pace the sound file playback. If no system timer is
 available, a delay loop is calculated instead. The delay loop will not
-be as accurate as the system timer.
+be as accurate as the system timer.  If the `-DELAY` options is
+specified on the command line, then the delay loop will be used
+regardless of whether the system has a hardware timer.  This is useful
+if the hardware timer does not run at the 50Hz desired for sound
+playback.
 
 There are two modes of operation.  A direct hardware interface for the
 AY-3-8910 or YM2149 chips, or a compatibility layer thru HBIOS supporting

@@ -3163,7 +3163,7 @@ floppy disk and hard disk images.
 | TUNE            | Play .PT2, .PT3, .MYM audio files.                                 |
 | INTTEST         | Test interrupt vector hooking.                                     |
 
-# Real Time Clock
+# Real Time Clock & Date/Time Stamping
 
 RomWBW supports a variety of real time clock hardware.  If your
 system has this hardware, then it will be able to maintain the
