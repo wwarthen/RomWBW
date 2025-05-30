@@ -1,0 +1,4575 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="auto">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Hardware - RomWBW Documentation V3.6</title>
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../css/fontawesome.min.css" rel="stylesheet">
+        <link href="../css/brands.min.css" rel="stylesheet">
+        <link href="../css/solid.min.css" rel="stylesheet">
+        <link href="../css/v4-font-face.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link id="hljs-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" disabled>
+        <link id="hljs-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css" disabled>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script>hljs.highlightAll();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="..">RomWBW Documentation V3.6</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="nav-item">
+                                <a href="../Introduction/" class="nav-link">Introduction</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../UserGuide/" class="nav-link">User Guide</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../SystemGuide/" class="nav-link">System Guide</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../Applications/" class="nav-link">Applications</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../Catalog/" class="nav-link">Catalog</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="./" class="nav-link active" aria-current="page">Hardware</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ms-md-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a rel="prev" href="../Catalog/" class="nav-link">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" class="nav-link disabled">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="https://github.com/wwarthen/RomWBW" class="nav-link"><i class="fa-brands fa-github"></i> GitHub</a>
+                            </li>
+                            <li class="nav-item dropdown">
+                              <button id="theme-menu" aria-expanded="false" data-bs-toggle="dropdown" data-bs-display="static" aria-label="Toggle theme" class="nav-link dropdown-toggle">
+                                <i class="fa-solid fa-circle-half-stroke fa-fw"></i>
+                                <span class="d-lg-none ms-2">Toggle theme</span>
+                              </button>
+                              <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                  <button class="dropdown-item d-flex align-items-center" data-bs-theme-value="light" aria-pressed="false">
+                                    <i class="fa-solid fa-sun fa-fw"></i>
+                                    <span class="ms-2">Light</span>
+                                    <i class="fa-solid fa-check ms-auto d-none"></i>
+                                  </button>
+                                </li>
+                                <li>
+                                  <button class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark" aria-pressed="false">
+                                    <i class="fa-solid fa-moon fa-fw"></i>
+                                    <span class="ms-2">Dark</span>
+                                    <i class="fa-solid fa-check ms-auto d-none"></i>
+                                  </button>
+                                </li>
+                                <li>
+                                  <button class="dropdown-item d-flex align-items-center" data-bs-theme-value="auto" aria-pressed="true">
+                                    <i class="fa-solid fa-circle-half-stroke fa-fw"></i>
+                                    <span class="ms-2">Auto</span>
+                                    <i class="fa-solid fa-check ms-auto"></i>
+                                  </button>
+                                </li>
+                              </ul>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <script src="../js/darkmode.js"></script>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-body-tertiary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-bs-level="1"><a href="#overview" class="nav-link">Overview</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="2"><a href="#supported-platforms" class="nav-link">Supported Platforms</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#general-guidance" class="nav-link">General Guidance</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-bs-level="1"><a href="#platform-configurations" class="nav-link">Platform Configurations</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="2"><a href="#duodyne-z80-system" class="nav-link">Duodyne Z80 System</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#dyno-z180-sbc" class="nav-link">Dyno Z180 SBC</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#ep-mini-itx-z180" class="nav-link">EP Mini-ITX Z180</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#easytiny-z80" class="nav-link">Easy/Tiny Z80</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#easy-z80-sbc" class="nav-link">Easy Z80 SBC</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#tiny-z80-sbc" class="nav-link">Tiny Z80 SBC</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#s100-computers-fpga-z80-sbc" class="nav-link">S100 Computers FPGA Z80 SBC</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#genesis-z180-system" class="nav-link">Genesis Z180 System</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#heath-h8-z80-system" class="nav-link">Heath H8 Z80 System</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#z180-mark-iv-sbc" class="nav-link">Z180 Mark IV SBC</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#nabu-w-romwbw-option-board" class="nav-link">NABU w/ RomWBW Option Board</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#nhyodyne-z80-mbc" class="nav-link">Nhyodyne Z80 MBC</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#retrobrew-z80" class="nav-link">RetroBrew Z80</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#retrobrew-z80-sbc-v2" class="nav-link">RetroBrew Z80 SBC V2</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#retrobrew-z80-simh" class="nav-link">RetroBrew Z80 SimH</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#n8-z180-sbc" class="nav-link">N8 Z180 SBC</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#rcbus-z80" class="nav-link">RCBus Z80</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#rcbus-z80-cpu-module" class="nav-link">RCBus Z80 CPU Module</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#rcbus-z80-cpu-module-kio" class="nav-link">RCBus Z80 CPU Module (KIO)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#z80-512k-cpuramrom-module" class="nav-link">Z80-512K CPU/RAM/ROM Module</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#zrc-z80-cpu-module" class="nav-link">ZRC Z80 CPU Module</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#zrc-z80-cpu-module-ram" class="nav-link">ZRC Z80 CPU Module (RAM)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#zrc512-z80-cpu-module" class="nav-link">ZRC512 Z80 CPU Module</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#eazy80-512-z80-cpu-module" class="nav-link">EaZy80-512 Z80 CPU Module</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#k80w-z80-cpu-module" class="nav-link">K80W Z80 CPU Module</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#rcbus-z180" class="nav-link">RCBus Z180</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#rcbus-z180-cpu-module-external" class="nav-link">RCBus Z180 CPU Module (External)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#rcbus-z180-cpu-module-native" class="nav-link">RCBus Z180 CPU Module (Native)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#z1rcc-z180-cpu-module" class="nav-link">Z1RCC Z180 CPU Module</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#rcbus-z280" class="nav-link">RCBus Z280</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#rcbus-z280-cpu-module-external" class="nav-link">RCBus Z280 CPU Module (External)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#rcbus-z280-cpu-module-native" class="nav-link">RCBus Z280 CPU Module (Native)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#zzrcc-z280-cpu-module" class="nav-link">ZZRCC Z280 CPU Module</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#zzrcc-z280-cpu-module-ram" class="nav-link">ZZRCC Z280 CPU Module (RAM)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#zz80mb-z280-sbc" class="nav-link">ZZ80MB Z280 SBC</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#ez80-for-rcbus-module" class="nav-link">eZ80 for RCBus Module</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#rhyophyre-z180-sbc" class="nav-link">Rhyophyre Z180 SBC</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#s100-computers-z180-sbc" class="nav-link">S100 Computers Z180 SBC</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#small-computer-central-z180" class="nav-link">Small Computer Central Z180</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#sc126-z180-sbc" class="nav-link">SC126 Z180 SBC</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#sc130-z180-sbc" class="nav-link">SC130 Z180 SBC</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#sc131-z180-pocket-comp" class="nav-link">SC131 Z180 Pocket Comp</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#sc140-z180-cpu-module" class="nav-link">SC140 Z180 CPU Module</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#sc503-z180-cpu-module" class="nav-link">SC503 Z180 CPU Module</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#sc700-z180-cpu-module" class="nav-link">SC700 Z180 CPU Module</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#z80-retro-sbc" class="nav-link">Z80-Retro SBC</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#zeta-z80-sbc" class="nav-link">Zeta Z80 SBC</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#zeta-v2-z80-sbc" class="nav-link">Zeta V2 Z80 SBC</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-bs-level="1"><a href="#device-drivers" class="nav-link">Device Drivers</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="2"><a href="#character" class="nav-link">Character</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#disk" class="nav-link">Disk</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#video" class="nav-link">Video</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#keyboard" class="nav-link">Keyboard</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#audio" class="nav-link">Audio</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#rtc-realtime-clock" class="nav-link">RTC (RealTime Clock)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#dsky-display-keypad" class="nav-link">DsKy (DiSplay KeYpad)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#system" class="nav-link">System</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-bs-level="1"><a href="#una-hardware-bios" class="nav-link">UNA Hardware BIOS</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="2"><a href="#una-usage-notes" class="nav-link">UNA Usage Notes</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<p><strong>RomWBW Hardware</strong> \
+Version 3.6 \
+Wayne Warthen  (<a href="mailto:wwarthen@gmail.com">wwarthen@gmail.com</a>) \
+30 May 2025</p>
+<h1 id="overview">Overview</h1>
+<h2 id="supported-platforms">Supported Platforms</h2>
+<p>This section contains a summary of the system configuration target for
+each of the pre-built ROM images included in the RomWBW distribution.</p>
+<p>It is intended to help you select the correct ROM image and understand
+the basic hardware components supported. Detailed hardware system
+configuration information should be obtained from your system
+provider/designer.</p>
+<p>The table below summarizes the hardware platforms currently supported by
+RomWBW along with the standard pre-built ROM image(s).</p>
+<h4 id="rcbus-general-configurations">RCBUS - General Configurations</h4>
+<p>RCBus refers to Spencer Owen’s RC2014 bus specification and derivatives
+including RC26, RC40, RC80, and BP80.</p>
+<table>
+<thead>
+<tr>
+<th><strong>Description</strong></th>
+<th><strong>Bus</strong></th>
+<th><strong>ROM Image File</strong></th>
+<th style="text-align: right;"><strong>Baud Rate</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="#rcbus-z80-cpu-module">RCBus Z80 CPU Module</a>, 512K RAM/ROM</td>
+<td>RCBus</td>
+<td>RCZ80_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+<tr>
+<td><a href="#rcbus-z80-cpu-module-kio">RCBus Z80 CPU Module (KIO)</a>, 512K w/KIO</td>
+<td>RCBus</td>
+<td>RCZ80_kio_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+<tr>
+<td><a href="#rcbus-z180-cpu-module-external">RCBus Z180 CPU Module (External)</a></td>
+<td>RCBus</td>
+<td>RCZ180_ext_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+<tr>
+<td><a href="#rcbus-z180-cpu-module-native">RCBus Z180 CPU Module (Native)</a></td>
+<td>RCBus</td>
+<td>RCZ180_nat_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+<tr>
+<td><a href="#rcbus-z280-cpu-module-external">RCBus Z280 CPU Module (External)</a></td>
+<td>RCBus</td>
+<td>RCZ280_ext_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+<tr>
+<td><a href="#rcbus-z280-cpu-module-native">RCBus Z280 CPU Module (Native)</a></td>
+<td>RCBus</td>
+<td>RCZ280_nat_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+</tbody>
+</table>
+<p>KIO refers to a Zilog specific Serial/Parallel Counter/Timer (Z84C90).</p>
+<p>The RCBus Z180 &amp; Z280 require a separate RAM/ROM memory module. There
+are two types of these modules, you must pick the correct ROM for your
+type of memory module:</p>
+<ul>
+<li>
+<p>The first type of RAM/ROM module includes Z2 style memory bank
+  switching on the memory module itself. This is called “External” (ext)
+  because the bank switching is external from the CPU itself.</p>
+</li>
+<li>
+<p>The second type of RAM/ROM module has no bank switching logic on the
+  memory module. Bank switching is implemented via the Z180 or Z280 MMU
+  – this is called “Native” (nat) because the CPU itself provides the
+  bank switching logic.</p>
+</li>
+</ul>
+<p>Only Z180 and Z280 CPUs have the ability to do bank switching in the
+CPU, so the ext/nat selection only applies to them. Z80 CPUs have no
+built-in bank switching logic, so they always require a RAM/ROM module
+with Z2 style bank switching and the ROMs are always configured for
+external bank switching.</p>
+<h4 id="custom-specific-configurations">Custom / Specific Configurations</h4>
+<p>Andrew Lynch</p>
+<table>
+<thead>
+<tr>
+<th><strong>Description</strong></th>
+<th><strong>Bus</strong></th>
+<th><strong>ROM Image File</strong></th>
+<th style="text-align: right;"><strong>Baud Rate</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="#retrobrew-z80-sbc-v2">RetroBrew Z80 SBC V2</a></td>
+<td>ECB</td>
+<td>SBC_std.rom</td>
+<td style="text-align: right;">38400</td>
+</tr>
+<tr>
+<td><a href="#retrobrew-z80-simh">RetroBrew Z80 SimH</a></td>
+<td>-</td>
+<td>SBC_simh.rom</td>
+<td style="text-align: right;">38400</td>
+</tr>
+<tr>
+<td><a href="#duodyne-z80-system">Duodyne Z80 System</a></td>
+<td>Duo</td>
+<td>DUO_std.rom</td>
+<td style="text-align: right;">38400</td>
+</tr>
+<tr>
+<td><a href="#nhyodyne-z80-mbc">Nhyodyne Z80 MBC</a></td>
+<td>MBC</td>
+<td>MBC_std.rom</td>
+<td style="text-align: right;">38400</td>
+</tr>
+<tr>
+<td><a href="#rhyophyre-z180-sbc">Rhyophyre Z180 SBC</a></td>
+<td>-</td>
+<td>RPH_std.rom</td>
+<td style="text-align: right;">38400</td>
+</tr>
+<tr>
+<td><a href="#n8-z180-sbc">N8 Z180 SBC</a> (date &gt;= 2312)</td>
+<td>ECB</td>
+<td>N8_std.rom</td>
+<td style="text-align: right;">38400</td>
+</tr>
+</tbody>
+</table>
+<p>Bill Shen</p>
+<table>
+<thead>
+<tr>
+<th><strong>Description</strong></th>
+<th><strong>Bus</strong></th>
+<th><strong>ROM Image File</strong></th>
+<th style="text-align: right;"><strong>Baud Rate</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="#eazy80-512-z80-cpu-module">EaZy80-512 Z80 CPU Module</a></td>
+<td>RCBus</td>
+<td>RCZ80_ez512_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+<tr>
+<td><a href="#k80w-z80-cpu-module">K80W Z80 CPU Module</a></td>
+<td>RCBus</td>
+<td>RCZ80_k80w_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+<tr>
+<td><a href="#zrc-z80-cpu-module">ZRC Z80 CPU Module</a></td>
+<td>RCBus</td>
+<td>RCZ80_zrc_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+<tr>
+<td><a href="#zrc-z80-cpu-module-ram">ZRC Z80 CPU Module (RAM)</a></td>
+<td>RCBus</td>
+<td>RCZ80_zrc_ram_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+<tr>
+<td><a href="#zrc512-z80-cpu-module">ZRC512 Z80 CPU Module</a></td>
+<td>RCBus</td>
+<td>RCZ80_zrc512_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+<tr>
+<td><a href="#z1rcc-z180-cpu-module">Z1RCC Z180 CPU Module</a></td>
+<td>RCBus</td>
+<td>RCZ180_z1rcc_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+<tr>
+<td><a href="#zzrcc-z280-cpu-module">ZZRCC Z280 CPU Module</a></td>
+<td>RCBus</td>
+<td>RCZ280_zzrcc_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+<tr>
+<td><a href="#zzrcc-z280-cpu-module-ram">ZZRCC Z280 CPU Module (RAM)</a></td>
+<td>RCBus</td>
+<td>RCZ280_zzrcc_ram_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+<tr>
+<td><a href="#zz80mb-z280-sbc">ZZ80MB Z280 SBC</a></td>
+<td>RCBus</td>
+<td>RCZ280_zz80mb_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+</tbody>
+</table>
+<p>Sergey Kiselev</p>
+<table>
+<thead>
+<tr>
+<th><strong>Description</strong></th>
+<th><strong>Bus</strong></th>
+<th><strong>ROM Image File</strong></th>
+<th style="text-align: right;"><strong>Baud Rate</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="#easy-z80-sbc">Easy Z80 SBC</a></td>
+<td>RCBus</td>
+<td>EZZ80_easy_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+<tr>
+<td><a href="#tiny-z80-sbc">Tiny Z80 SBC</a></td>
+<td>RCBus</td>
+<td>EZZ80_tiny_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+<tr>
+<td><a href="#z80-512k-cpuramrom-module">Z80-512K CPU/RAM/ROM Module</a></td>
+<td>RCBus</td>
+<td>RCZ80_skz_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+<tr>
+<td><a href="#zeta-z80-sbc">Zeta Z80 SBC</a> , ParPortProp</td>
+<td>-</td>
+<td>ZETA_std.rom</td>
+<td style="text-align: right;">38400</td>
+</tr>
+<tr>
+<td><a href="#zeta-v2-z80-sbc">Zeta V2 Z80 SBC</a> , ParPortProp</td>
+<td>-</td>
+<td>ZETA2_std.rom</td>
+<td style="text-align: right;">38400</td>
+</tr>
+</tbody>
+</table>
+<p>Stephen Cousins</p>
+<table>
+<thead>
+<tr>
+<th><strong>Description</strong></th>
+<th><strong>Bus</strong></th>
+<th><strong>ROM Image File</strong></th>
+<th style="text-align: right;"><strong>Baud Rate</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="#sc126-z180-sbc">SC126 Z180 SBC</a></td>
+<td>BP80</td>
+<td>SCZ180_sc126_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+<tr>
+<td><a href="#sc130-z180-sbc">SC130 Z180 SBC</a></td>
+<td>RCBus</td>
+<td>SCZ180_sc130_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+<tr>
+<td><a href="#sc131-z180-pocket-comp">SC131 Z180 Pocket Comp</a></td>
+<td>-</td>
+<td>SCZ180_sc131_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+<tr>
+<td><a href="#sc140-z180-cpu-module">SC140 Z180 CPU Module</a></td>
+<td>Z50</td>
+<td>SCZ180_sc140_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+<tr>
+<td><a href="#sc503-z180-cpu-module">SC503 Z180 CPU Module</a></td>
+<td>Z50</td>
+<td>SCZ180_sc503_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+<tr>
+<td><a href="#sc700-z180-cpu-module">SC700 Z180 CPU Module</a></td>
+<td>RCBus</td>
+<td>SCZ180_sc700_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+</tbody>
+</table>
+<p>Others</p>
+<table>
+<thead>
+<tr>
+<th><strong>Description</strong></th>
+<th><strong>Bus</strong></th>
+<th><strong>ROM Image File</strong></th>
+<th style="text-align: right;"><strong>Baud Rate</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="#dyno-z180-sbc">Dyno Z180 SBC</a><sup>6</sup></td>
+<td>Dyno</td>
+<td>DYNO_std.rom</td>
+<td style="text-align: right;">38400</td>
+</tr>
+<tr>
+<td><a href="#ep-mini-itx-z180">EP Mini-ITX Z180</a><sup>11</sup></td>
+<td>UEXT</td>
+<td>EPITX_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+<tr>
+<td><a href="#ez80-for-rcbus-module">eZ80 for RCBus Module</a><sup>13</sup>, 512K RAM/ROM</td>
+<td>RCBus</td>
+<td>RCEZ80_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+<tr>
+<td><a href="#genesis-z180-system">Genesis Z180 System</a><sup>12</sup></td>
+<td>STD</td>
+<td>GMZ180_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+<tr>
+<td><a href="#heath-h8-z80-system">Heath H8 Z80 System</a><sup>10</sup></td>
+<td>H8</td>
+<td>HEATH_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+<tr>
+<td><a href="#nabu-w-romwbw-option-board">NABU w/ RomWBW Option Board</a><sup>10</sup></td>
+<td>NABU</td>
+<td>NABU_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+<tr>
+<td><a href="#s100-computers-z180-sbc">S100 Computers Z180 SBC</a><sup>9</sup></td>
+<td>S100</td>
+<td>S100_std.rom</td>
+<td style="text-align: right;">57600</td>
+</tr>
+<tr>
+<td><a href="#s100-computers-fpga-z80-sbc">S100 Computers FPGA Z80 SBC</a><sup>9</sup></td>
+<td>S100</td>
+<td>FZ80_std.rom</td>
+<td style="text-align: right;">9600</td>
+</tr>
+<tr>
+<td><a href="#una-hardware-bios">UNA Hardware BIOS</a><sup>3</sup></td>
+<td>-</td>
+<td>UNA_std.rom</td>
+<td style="text-align: right;">-</td>
+</tr>
+<tr>
+<td><a href="#z80-retro-sbc">Z80-Retro SBC</a><sup>8</sup></td>
+<td>-</td>
+<td>Z80RETRO_std.rom</td>
+<td style="text-align: right;">38400</td>
+</tr>
+<tr>
+<td><a href="#z180-mark-iv-sbc">Z180 Mark IV SBC</a><sup>3</sup></td>
+<td>ECB</td>
+<td>MK4_std.rom</td>
+<td style="text-align: right;">38400</td>
+</tr>
+</tbody>
+</table>
+<p><sup>3</sup>Designed by John Coffman<br />
+<sup>6</sup>Designed by Steve Garcia<br />
+<sup>8</sup>Designed by Peter Wilson<br />
+<sup>9</sup>Designed by John Monahan<br />
+<sup>10</sup>Designed by Les Bird<br />
+<sup>11</sup>Designed by Alan Cox<br />
+<sup>12</sup>Designed by Doug Jackson<br />
+<sup>13</sup>Designed by Dean Netherton</p>
+<h2 id="general-guidance">General Guidance</h2>
+<p>The standard ROM images will detect and install support for certain
+devices and peripherals that are on-board or frequently used with each
+platform. If the device or peripheral is not detected at boot, the ROM
+will simply bypass support appropriately.</p>
+<p>Each ROM will support a single memory manager. This is determined by the
+build configuration and is not dynamically selected. The use of the term
+Memory Manager is generally synonymous with Memory Management Unit
+(MMU).</p>
+<p>In some cases, support for multiple hardware components with potentially
+conflicting resource usage are handled by a single ROM image. It is up
+to the user to ensure that no conflicting hardware is in use.</p>
+<p>CPU speed will be dynamically measured at startup if DSRTC is present</p>
+<p>All pre-built ROM images are pure binary files (they are not “hex”
+files). They are intended to be programmed starting at the very start of
+the ROM chip (address 0). Most of the pre-built images are 512KB in
+size. If your system utilizes a larger ROM, you can just program the
+image into the first 512KB of the ROM for now.</p>
+<p>For this document port addresses <code>IO=xxx</code> are represented in decimal.</p>
+<p>The PropIO support is based on RomWBW specific firmware. Be sure to
+program/update your PropIO firmware with the corresponding firmware
+image provided in the Binary directory of the RomWBW distribution.</p>
+<p>The use of high density floppy disks requires a CPU speed of 8 MHz or
+greater.</p>
+<h1 id="platform-configurations">Platform Configurations</h1>
+<h2 id="duodyne-z80-system">Duodyne Z80 System</h2>
+<p>Duodyne is a third generation ROMWBW focused retrocomputer incorporating
+lessons learned and improvements from my original ECB Z80 SBC (aka
+N8VEM) and the nhyodyne modular computer. It is literally designed
+around ROMWBW from the start for a robust OS and software environment.</p>
+<p>Duodyne is a new design which integrates many functions into larger,
+modular boards on a backplane. The intent is to create a powerful and
+capable system like an SBC, but with modularity and an expandable
+backplane.</p>
+<ul>
+<li>Creator: Andrew Lynch</li>
+<li>Retrobrew Forums: <a href="https://www.retrobrewcomputers.org/forum/index.php?t=msg&amp;th=765">Introducing duodyne
+  retrocomputer</a></li>
+<li>Github: <a href="https://github.com/lynchaj/duodyne">DuoDyne</a></li>
+</ul>
+<h4 id="rom-image-file-duo_stdrom">ROM Image File: DUO_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>Duo</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>8.000 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 2</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>CTC</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>38400 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z2</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware">Supported Hardware</h4>
+<ul>
+<li>FP: LEDIO=66, SWIO=66</li>
+<li>DSRTC: MODE=STD, IO=148</li>
+<li>PCF: IO=86</li>
+<li>UART: IO=88</li>
+<li>UART: IO=168</li>
+<li>UART: IO=112</li>
+<li>UART: IO=120</li>
+<li>SIO MODE=ZP, IO=96, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=ZP, IO=96, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>LPT: MODE=SPP, IO=72</li>
+<li>DMA: MODE=DUO, IO=64</li>
+<li>CH: IO=78</li>
+<li>CHUSB: IO=78</li>
+<li>CHSD: IO=78</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=DUO, IO=128, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=DUO, IO=128, DRIVE 1, TYPE=3.5” HD</li>
+<li>PPIDE: IO=136, MASTER</li>
+<li>PPIDE: IO=136, SLAVE</li>
+<li>SD: MODE=MT, IO=140, UNITS=1</li>
+<li>SPK: IO=148</li>
+<li>CTC: IO=96, TIMER MODE=COUNTER, DIVISOR=18432, HI=256, LO=72,
+  INTERRUPTS ENABLED</li>
+</ul>
+<h2 id="dyno-z180-sbc">Dyno Z180 SBC</h2>
+<p>The Dyno Computer is a Zilog Z180-based computer initially designed to
+run Wayne Warthen’s ROMWBW</p>
+<ul>
+<li>Creator: Steve García</li>
+<li>Google Groups: <a href="https://groups.google.com/g/retro-comp/c/niwPLsuc8R0">An
+  Introduction</a></li>
+<li>Website: <a href="http://dynocomputer.fun/">Dyno Computer</a></li>
+</ul>
+<h4 id="rom-image-file-dyno_stdrom">ROM Image File: DYNO_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>Dyno•Bus</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>18.432 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 2</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>Z180</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>38400 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z180</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_1">Supported Hardware</h4>
+<ul>
+<li>BQRTC: IO=80</li>
+<li>ASCI: IO=192, INTERRUPTS ENABLED</li>
+<li>ASCI: IO=193, INTERRUPTS ENABLED</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=DYNO, IO=132, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=DYNO, IO=132, DRIVE 1, TYPE=3.5” HD</li>
+<li>PPIDE: IO=76, MASTER</li>
+<li>PPIDE: IO=76, SLAVE</li>
+</ul>
+<h2 id="ep-mini-itx-z180">EP Mini-ITX Z180</h2>
+<p>EtchedPixels Z180 Mini-ITX. The SC126 was almost my ideal retrobrew
+Z80/Z180 system but with a couple of niggles and lack of a convenient
+case option. This is the same core Z180 CPU/RAM/ROM design taken the
+other direction, of expandability.</p>
+<ul>
+<li>Creator: Alan Cox</li>
+<li>Google Groups: <a href="https://groups.google.com/g/rc2014-z80/c/rhXBX9ff184">Another new
+  board</a></li>
+<li>Github: <a href="https://github.com/EtchedPixels/Z180MiniITX">Z180MiniITX</a></li>
+</ul>
+<h4 id="rom-image-file-epitx_stdrom">ROM Image File: EPITX_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>RCBus + UEXT</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>18.432 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 2</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>Z180</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z180</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_2">Supported Hardware</h4>
+<ul>
+<li>INTRTC: ENABLED</li>
+<li>ASCI: IO=192, INTERRUPTS ENABLED</li>
+<li>ASCI: IO=193, INTERRUPTS ENABLED</li>
+<li>UART: IO=160</li>
+<li>UART: IO=168</li>
+<li>TMS: MODE=MSX, IO=152, SCREEN=40X24, KEYBOARD=NONE</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=EPFDC, IO=72, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=EPFDC, IO=72, DRIVE 1, TYPE=3.5” HD</li>
+<li>SD: MODE=EPITX, IO=66, UNITS=1</li>
+</ul>
+<h2 id="easytiny-z80">Easy/Tiny Z80</h2>
+<h3 id="easy-z80-sbc">Easy Z80 SBC</h3>
+<p>This project is a simple, easy to understand, yet capable single board
+computer. It reuses the same memory paging mechanism I’ve implemented in
+Zeta SBC V2. It uses Zilog Z80 SIO/O and Z80 CTC peripheral ICs and
+implements daisy chain mode 2 interrupt configuration</p>
+<p>(Not to be confused with EaZy80)</p>
+<ul>
+<li>Creator: Sergey Kiselev</li>
+<li>Google Groups: <a href="https://groups.google.com/g/rc2014-z80/c/UfWIoJgm9Gs">Easy Z80 - Single Board
+  Computer</a></li>
+<li>Github: <a href="https://github.com/skiselev/easy_z80">Easy_Z80</a></li>
+</ul>
+<h4 id="rom-image-file-ezz80_easy_stdrom">ROM Image File: EZZ80_easy_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>RCBus</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>10.000 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 2</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>CTC</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z2</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_3">Supported Hardware</h4>
+<ul>
+<li>FP: LEDIO=0, SWIO=0</li>
+<li>LCD: IO=218, SIZE=20X4</li>
+<li>DSRTC: MODE=STD, IO=192</li>
+<li>INTRTC: ENABLED</li>
+<li>UART: IO=128</li>
+<li>UART: IO=136</li>
+<li>UART: IO=160</li>
+<li>UART: IO=168</li>
+<li>SIO MODE=STD, IO=128, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=STD, IO=128, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>CH: IO=62</li>
+<li>CH: IO=60</li>
+<li>CHUSB: IO=62</li>
+<li>CHUSB: IO=60</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5” HD</li>
+<li>IDE: MODE=RC, IO=16, MASTER</li>
+<li>IDE: MODE=RC, IO=16, SLAVE</li>
+<li>PPIDE: IO=32, MASTER</li>
+<li>PPIDE: IO=32, SLAVE</li>
+<li>SD: MODE=PIO, IO=105, UNITS=1</li>
+<li>CTC: IO=136, TIMER MODE=COUNTER, DIVISOR=18432, HI=256, LO=72,
+  INTERRUPTS ENABLED</li>
+</ul>
+<h3 id="tiny-z80-sbc">Tiny Z80 SBC</h3>
+<p>Tiny Z80 is a business card sized (size?!) single board computer (SBC).
+It is mostly compatible with Easy Z80, and offers similar capabilities
+Tiny Z80 includes a USB to Serial converter IC on board connected to one
+of the SIO ports, for ease of use with modern computers.</p>
+<ul>
+<li>Creator: Sergey Kiselev</li>
+<li>Github: <a href="https://github.com/skiselev/tiny_z80">Tiny_Z80</a></li>
+</ul>
+<h4 id="rom-image-file-ezz80_tiny_stdrom">ROM Image File: EZZ80_tiny_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>RCBus</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>16.000 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 2</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>CTC</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z2</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_4">Supported Hardware</h4>
+<ul>
+<li>FP: LEDIO=0, SWIO=0</li>
+<li>LCD: IO=218, SIZE=20X4</li>
+<li>DSRTC: MODE=STD, IO=192</li>
+<li>INTRTC: ENABLED</li>
+<li>UART: IO=128</li>
+<li>UART: IO=136</li>
+<li>UART: IO=160</li>
+<li>UART: IO=168</li>
+<li>SIO MODE=STD, IO=24, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=STD, IO=24, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>CH: IO=62</li>
+<li>CH: IO=60</li>
+<li>CHUSB: IO=62</li>
+<li>CHUSB: IO=60</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5” HD</li>
+<li>IDE: MODE=RC, IO=144, MASTER</li>
+<li>IDE: MODE=RC, IO=144, SLAVE</li>
+<li>PPIDE: IO=32, MASTER</li>
+<li>PPIDE: IO=32, SLAVE</li>
+<li>SD: MODE=PIO, IO=105, UNITS=1</li>
+<li>CTC: IO=16, TIMER MODE=COUNTER, DIVISOR=18432, HI=256, LO=72,
+  INTERRUPTS ENABLED</li>
+</ul>
+<h2 id="s100-computers-fpga-z80-sbc">S100 Computers FPGA Z80 SBC</h2>
+<p>An FPGA Z80 based S100 SBC</p>
+<ul>
+<li>Creator: John Monahan |</li>
+<li>Website: <a href="http://www.s100computers.com/My%20System%20Pages/FPGA%20Z80%20SBC/FPGA%20Z80%20SBC.htm">S100 Computers FPGA Z80
+  SBC</a></li>
+</ul>
+<h4 id="rom-image-file-fz80_stdrom">ROM Image File: FZ80_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>S100</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>8.000 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>None</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>9600 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z2</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>0 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_5">Supported Hardware</h4>
+<ul>
+<li>FP: LEDIO=255</li>
+<li>DS5RTC: RTCIO=104, IO=104</li>
+<li>SSER: IO=52</li>
+<li>LPT: MODE=S100, IO=199</li>
+<li>FV: IO=192, KBD MODE=FV, KBD IO=3</li>
+<li>KBD: ENABLED</li>
+<li>SCON: IO=0</li>
+<li>MD: TYPE=RAM</li>
+<li>PPIDE: IO=48, MASTER</li>
+<li>PPIDE: IO=48, SLAVE</li>
+<li>SD: MODE=FZ80, IO=108, UNITS=2</li>
+</ul>
+<h4 id="notes">Notes:</h4>
+<ul>
+<li>Requires matching FPGA code</li>
+</ul>
+<h2 id="genesis-z180-system">Genesis Z180 System</h2>
+<p>A Z180 based board with 512k ram, 512k rom, dual serial / parallel, RTC
+and SD Card, based on the STD bus. This was inspired on Pulsar Little
+Big board and some designs of Stephen Cousins</p>
+<ul>
+<li>Creator: <a href="https://www.vk1zdj.net/">Doug Jackson</a></li>
+<li>Specific Links not Available</li>
+</ul>
+<h4 id="rom-image-file-gmz180_stdrom">ROM Image File: GMZ180_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>STD</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>18.432 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 2</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>Z180</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z180</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_6">Supported Hardware</h4>
+<ul>
+<li>GM7303: IO=48</li>
+<li>DSRTC: MODE=STD, IO=132</li>
+<li>INTRTC: ENABLED</li>
+<li>ASCI: IO=192, INTERRUPTS ENABLED</li>
+<li>ASCI: IO=193, INTERRUPTS ENABLED</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>IDE: MODE=GIDE, IO=32, MASTER</li>
+<li>IDE: MODE=GIDE, IO=32, SLAVE</li>
+<li>SD: MODE=GM, IO=132, UNITS=1</li>
+</ul>
+<h2 id="heath-h8-z80-system">Heath H8 Z80 System</h2>
+<p>Turn your H8 into a RomWBW CP/M computer</p>
+<ul>
+<li>Creator: Les Bird</li>
+<li>Github Wiki:
+  <a href="https://github.com/sebhc/sebhc/wiki/H8-Z80-ROMWBW-V1.0">H8-Z80-ROMWBW-V1.0</a></li>
+</ul>
+<h4 id="rom-image-file-heath_stdrom">ROM Image File: HEATH_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>H8</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>16.384 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 1</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z2</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_7">Supported Hardware</h4>
+<ul>
+<li>H8P: IO=240</li>
+<li>INTRTC: ENABLED</li>
+<li>UART: IO=232</li>
+<li>UART: IO=224</li>
+<li>UART: IO=216</li>
+<li>UART: IO=208</li>
+<li>TMS: MODE=MSX, IO=152, SCREEN=80X24, KEYBOARD=NONE</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5” HD</li>
+<li>PPIDE: IO=32, MASTER</li>
+<li>PPIDE: IO=32, SLAVE</li>
+<li>AY38910: MODE=MSX, IO=160, CLOCK=1789772 HZ</li>
+</ul>
+<h2 id="z180-mark-iv-sbc">Z180 Mark IV SBC</h2>
+<p>The Z180 Mark IV is a single board computer, meaning it may run
+stand-alone. It also has an interface to the RetroBrew bus (ECB) for
+access to additional peripheral boards.</p>
+<ul>
+<li>Creator: John Coffman</li>
+<li>Retrobrew Wiki: <a href="https://www.retrobrewcomputers.org/doku.php?id=boards:sbc:z180_mark_iv:z180_mark_iv">Z180 Mark
+  IV</a></li>
+</ul>
+<h4 id="rom-image-file-mk4_stdrom">ROM Image File: MK4_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>ECB</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>18.432 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 2</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>Z180</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>38400 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z180</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_8">Supported Hardware</h4>
+<ul>
+<li>DSRTC: MODE=STD, IO=138</li>
+<li>ASCI: IO=64, INTERRUPTS ENABLED</li>
+<li>ASCI: IO=65, INTERRUPTS ENABLED</li>
+<li>UART: IO=24</li>
+<li>UART: IO=128</li>
+<li>UART: IO=192</li>
+<li>UART: IO=200</li>
+<li>UART: IO=208</li>
+<li>UART: IO=216</li>
+<li>VGA: IO=224, KBD MODE=PS/2, KBD IO=224</li>
+<li>CVDU: MODE=ECB, IO=224, KBD MODE=PS/2, KBD IO=226</li>
+<li>KBD: ENABLED</li>
+<li>PRP: IO=168</li>
+<li>PRPCON: ENABLED</li>
+<li>PRPSD: ENABLED</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=DIDE, IO=42, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=DIDE, IO=42, DRIVE 1, TYPE=3.5” HD</li>
+<li>IDE: MODE=MK4, IO=128, MASTER</li>
+<li>IDE: MODE=MK4, IO=128, SLAVE</li>
+<li>SD: MODE=MK4, IO=137, UNITS=1</li>
+</ul>
+<h2 id="nabu-w-romwbw-option-board">NABU w/ RomWBW Option Board</h2>
+<p>No modifications to the NABU motherboard needed. Leave the standard NABU
+ROM in its socket on the motherboard, no need to remove it. You can
+switch back to standard NABU mode by changing one jumper on the Option
+Card</p>
+<ul>
+<li>Creator: Les Bird</li>
+<li>Github Wiki: <a href="https://github.com/sebhc/sebhc/wiki/NABU#nabu-romwbw-option-card">NABU RomWBW Option
+  Card</a></li>
+</ul>
+<h4 id="rom-image-file-nabu_stdrom">ROM Image File: NABU_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>NABU</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>3.580 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 2</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>TMS</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z2</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_9">Supported Hardware</h4>
+<ul>
+<li>NABU: IO=64</li>
+<li>INTRTC: ENABLED</li>
+<li>UART: IO=72</li>
+<li>TMS: MODE=NABU, IO=160, SCREEN=80X24, KEYBOARD=NABU, INTERRUPTS
+  ENABLED</li>
+<li>NABUKB: IO=144</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>PPIDE: IO=96, MASTER</li>
+<li>PPIDE: IO=96, SLAVE</li>
+<li>AY38910: MODE=NABU, IO=65, CLOCK=1789772 HZ</li>
+</ul>
+<h4 id="notes_1">Notes:</h4>
+<ul>
+<li>TMS video assumes F18A replacement for TMS9918</li>
+</ul>
+<h2 id="nhyodyne-z80-mbc">Nhyodyne Z80 MBC</h2>
+<p>Nhyodyne: A Modular Backplane Computer (MBC).</p>
+<p>The purpose of this project is to revisit the design concepts behind my
+original Z80 SBC (aka test prototype) which has evolved into the SBC
+V2-005 over several years. Attempt to introduce some new concepts to
+make the design more modular, flexible, and less expensive.</p>
+<p>The MBC consists of four core boards: Z80 backplane, Z80 processor, Z80
+clock, and Z80 ROM. These are sufficient to build a working system of
+minimum capability.</p>
+<ul>
+<li>Creator: Andrew Lynch</li>
+<li>Retrobrew Forums: <a href="https://www.retrobrewcomputers.org/forum/index.php?t=msg&amp;th=568">Z80 Multi Board
+  Computer</a></li>
+<li>Github: <a href="https://github.com/lynchaj/nhyodyne">NhyoDyne</a></li>
+<li>Retrobrew Wiki: <a href="https://www.retrobrewcomputers.org/doku.php?id=builderpages:lynchaj:start">Z80 Modular Backplane
+  Computer</a></li>
+</ul>
+<h4 id="rom-image-file-mbc_stdrom">ROM Image File: MBC_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>MBC</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>8.000 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>None</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>38400 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>MBC</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_10">Supported Hardware</h4>
+<ul>
+<li>PKD: IO=96, SIZE=8X1</li>
+<li>DSRTC: MODE=STD, IO=112</li>
+<li>UART: IO=104</li>
+<li>UART: IO=128</li>
+<li>UART: IO=136</li>
+<li>SIO MODE=ZP, IO=176, CHANNEL A</li>
+<li>SIO MODE=ZP, IO=176, CHANNEL B</li>
+<li>PIO: IO=184, CHANNEL A</li>
+<li>PIO: IO=184, CHANNEL B</li>
+<li>PIO: IO=188, CHANNEL A</li>
+<li>PIO: IO=188, CHANNEL B</li>
+<li>LPT: MODE=SPP, IO=232</li>
+<li>CVDU: MODE=MBC, IO=224, KBD MODE=PS/2, KBD IO=226</li>
+<li>TMS: MODE=MBC, IO=152, SCREEN=80X24, KEYBOARD=KBD</li>
+<li>KBD: ENABLED</li>
+<li>ESP: IO=156</li>
+<li>ESPCON: ENABLED</li>
+<li>ESPSER: DEVICE=0</li>
+<li>ESPSER: DEVICE=1</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=MBC, IO=48, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=MBC, IO=48, DRIVE 1, TYPE=3.5” HD</li>
+<li>PPIDE: IO=96, MASTER</li>
+<li>PPIDE: IO=96, SLAVE</li>
+<li>SPK: IO=112</li>
+</ul>
+<h2 id="retrobrew-z80">RetroBrew Z80</h2>
+<h3 id="retrobrew-z80-sbc-v2">RetroBrew Z80 SBC V2</h3>
+<p>The SBC V2 is a Zilog Z80 processor board. It’s a 100x160mm board that
+is capable of functioning both as a standalone SBC or as attached to the
+ECB bus.</p>
+<p>Previously known as the N8VEM SBC, after Andrews Ham radio call sign,
+development began in 2006 wth V1 and is currently still in development,
+it launched a tsunami of developments based on the Euro Card Bus (ECB)
+standard.</p>
+<ul>
+<li>Creator: Andrew Lynch</li>
+<li>Github: <a href="https://github.com/b1ackmai1er/SBC-V2-005">SBC-V2-005</a> (May
+  not be official)</li>
+<li>Github: <a href="https://github.com/b1ackmai1er/SBC-V2-004">SBC-V2-004</a></li>
+<li>Retrobrew Wiki: <a href="https://www.retrobrewcomputers.org/doku.php?id=boards:sbc:sbc_v2:start">SBC
+  V2</a></li>
+<li>Blog: <a href="https://simmohacks.com/wordpress/2018/11/17/building-the-retrobrew-computers-ecb-sbcv2-z80-computer">Building the SBCV2
+  Z80</a></li>
+</ul>
+<h4 id="rom-image-file-sbc_stdrom">ROM Image File: SBC_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>ECB</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>8.000 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>None</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>38400 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>SBC</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_11">Supported Hardware</h4>
+<ul>
+<li>DSRTC: MODE=STD, IO=112</li>
+<li>UART: MODE=SBC, IO=104</li>
+<li>UART: MODE=CAS, IO=128</li>
+<li>UART: MODE=MFP, IO=104</li>
+<li>UART: MODE=4UART, IO=192</li>
+<li>UART: MODE=4UART, IO=200</li>
+<li>UART: MODE=4UART, IO=208</li>
+<li>UART: MODE=4UART, IO=216</li>
+<li>VGA: IO=224, KBD MODE=PS/2, KBD IO=224</li>
+<li>CVDU: MODE=ECB, IO=224, KBD MODE=PS/2, KBD IO=226</li>
+<li>CVDU occupies 905 bytes.</li>
+<li>KBD: ENABLED</li>
+<li>PRP: IO=168</li>
+<li>PRPCON: ENABLED</li>
+<li>PRPSD: ENABLED</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=DIO, IO=54, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=DIO, IO=54, DRIVE 1, TYPE=3.5” HD</li>
+<li>PPIDE: IO=96, MASTER</li>
+<li>PPIDE: IO=96, SLAVE</li>
+</ul>
+<h3 id="retrobrew-z80-simh">RetroBrew Z80 SimH</h3>
+<p>Image for Altair Z80 SimH emulator</p>
+<h4 id="rom-image-file-sbc_simhrom">ROM Image File: SBC_simh.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>-</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>8.000 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 1</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>SimH</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>38400 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>SBC</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_12">Supported Hardware</h4>
+<ul>
+<li>SIMRTC: IO=254</li>
+<li>SSER: IO=109</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>HDSK: IO=253, DEVICE COUNT=2</li>
+</ul>
+<h4 id="notes_2">Notes:</h4>
+<ul>
+<li>CPU speed and Serial configuration not relevant in emulator</li>
+</ul>
+<h2 id="n8-z180-sbc">N8 Z180 SBC</h2>
+<p>The N8 is intended to be a “home brew” style computer in the style of
+early 1980’s all-in-one home computers with a usable set of features
+such as color graphics, audio, an assortment of mass storage options, a
+variety of ports, etc. Although a bus expansion is supported no
+additional boards are required.</p>
+<p>This configuration is for the N8-2312 and latter (4314) revisions</p>
+<ul>
+<li>Creator: Andrew Lynch</li>
+<li>Retrobrew Wiki: <a href="https://www.retrobrewcomputers.org/doku.php?id=boards:sbc:n8:n8">The
+  N8</a></li>
+<li>Blog: <a href="https://www.vk1zdj.net/?p=525">A Z180 based SBC</a></li>
+</ul>
+<h4 id="rom-image-file-n8_stdrom">ROM Image File: N8_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>ECB</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>18.432 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 2</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>Z180</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>38400 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>N8</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_13">Supported Hardware</h4>
+<ul>
+<li>DSRTC: MODE=STD, IO=136</li>
+<li>ASCI: IO=64, INTERRUPTS ENABLED</li>
+<li>ASCI: IO=65, INTERRUPTS ENABLED</li>
+<li>TMS: MODE=N8, IO=152, SCREEN=40X24, KEYBOARD=PPK</li>
+<li>PPK: ENABLED</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=N8, IO=140, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=N8, IO=140, DRIVE 1, TYPE=3.5” HD</li>
+<li>SD: MODE=CSIO, IO=136, UNITS=1</li>
+<li>AY38910: MODE=N8, IO=156, CLOCK=1789772 HZ</li>
+</ul>
+<h4 id="notes_3">Notes:</h4>
+<ul>
+<li>SD Card interface is configured for CSIO (N8 date code &gt;= 2312)</li>
+</ul>
+<h2 id="rcbus-z80">RCBus Z80</h2>
+<h3 id="rcbus-z80-cpu-module">RCBus Z80 CPU Module</h3>
+<p>Generic Rom Image.</p>
+<h4 id="rom-image-file-rcz80_stdrom">ROM Image File: RCZ80_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>RCBus</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>7.372 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 1</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z2</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_14">Supported Hardware</h4>
+<ul>
+<li>FP: LEDIO=0, SWIO=0</li>
+<li>LCD: IO=218, SIZE=20X4</li>
+<li>DSRTC: MODE=STD, IO=192</li>
+<li>UART: IO=128</li>
+<li>UART: IO=136</li>
+<li>UART: IO=160</li>
+<li>UART: IO=168</li>
+<li>SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>ACIA: IO=128, INTERRUPTS ENABLED</li>
+<li>CH: IO=62</li>
+<li>CH: IO=60</li>
+<li>CHUSB: IO=62</li>
+<li>CHUSB: IO=60</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5” HD</li>
+<li>IDE: MODE=RC, IO=16, MASTER</li>
+<li>IDE: MODE=RC, IO=16, SLAVE</li>
+<li>PPIDE: IO=32, MASTER</li>
+<li>PPIDE: IO=32, SLAVE</li>
+<li>SD: MODE=PIO, IO=105, UNITS=1</li>
+</ul>
+<h3 id="rcbus-z80-cpu-module-kio">RCBus Z80 CPU Module (KIO)</h3>
+<p>Generic Rom Image. SIO Serial baud rate managed by CTC</p>
+<h4 id="rom-image-file-rcz80_kio_stdrom">ROM Image File: RCZ80_kio_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>RCBus</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>7.372 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 2</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>CTC</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z2</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_15">Supported Hardware</h4>
+<ul>
+<li>FP: LEDIO=0, SWIO=0</li>
+<li>LCD: IO=218, SIZE=20X4</li>
+<li>DSRTC: MODE=STD, IO=192</li>
+<li>INTRTC: ENABLED</li>
+<li>UART: IO=128</li>
+<li>UART: IO=136</li>
+<li>UART: IO=160</li>
+<li>UART: IO=168</li>
+<li>SIO MODE=STD, IO=136, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=STD, IO=136, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>CH: IO=62</li>
+<li>CH: IO=60</li>
+<li>CHUSB: IO=62</li>
+<li>CHUSB: IO=60</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5” HD</li>
+<li>IDE: MODE=RC, IO=16, MASTER</li>
+<li>IDE: MODE=RC, IO=16, SLAVE</li>
+<li>PPIDE: IO=32, MASTER</li>
+<li>PPIDE: IO=32, SLAVE</li>
+<li>SD: MODE=PIO, IO=105, UNITS=1</li>
+<li>KIO: IO=128</li>
+<li>CTC: IO=132, TIMER MODE=TIMER/16, DIVISOR=9216, HI=256, LO=36,
+  INTERRUPTS ENABLED</li>
+</ul>
+<h3 id="z80-512k-cpuramrom-module">Z80-512K CPU/RAM/ROM Module</h3>
+<p>Z80-512K is an RCBus and RC2014* compatible module, designed to run
+RomWBW firmware including CP/M, ZSDOS, and various applications under
+these OSes. Z80-512K combines functionality of CPU, RAM, and ROM on a
+single module, thus saving space on the backplane.</p>
+<ul>
+<li>Creator: Sergey Kiselev</li>
+<li>Google Groups:
+  <a href="https://groups.google.com/g/rc2014-z80/c/SkOqm_LX910">Z80-512K</a></li>
+<li>Github: <a href="https://github.com/skiselev/Z80-512K">Z80-512K</a></li>
+</ul>
+<h4 id="rom-image-file-rcz80_skz_stdrom">ROM Image File: RCZ80_skz_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>RCBus</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>7.372 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 1</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z2</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_16">Supported Hardware</h4>
+<ul>
+<li>FP: LEDIO=0, SWIO=0</li>
+<li>LCD: IO=218, SIZE=20X4</li>
+<li>DSRTC: MODE=STD, IO=192</li>
+<li>UART: IO=128</li>
+<li>UART: IO=136</li>
+<li>UART: IO=160</li>
+<li>UART: IO=168</li>
+<li>SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>ACIA: IO=128, INTERRUPTS ENABLED</li>
+<li>CH: IO=62</li>
+<li>CH: IO=60</li>
+<li>CHUSB: IO=62</li>
+<li>CHUSB: IO=60</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5” HD</li>
+<li>IDE: MODE=RC, IO=16, MASTER</li>
+<li>IDE: MODE=RC, IO=16, SLAVE</li>
+<li>PPIDE: IO=32, MASTER</li>
+<li>PPIDE: IO=32, SLAVE</li>
+<li>SD: MODE=PIO, IO=105, UNITS=1</li>
+</ul>
+<h3 id="zrc-z80-cpu-module">ZRC Z80 CPU Module</h3>
+<p>ZRC is derived from the ZoRC experiment. The basic notion is that large
+RAM and fast serial upload enable a diskless CP/M SBC. However, just in
+case that idea didn’t work out, ZRC has an optional compact flash
+interface. The targeted software for ZRC is ROMWBW. ZRC physically
+contains no ROM and 2MB of RAM.</p>
+<p>In the STD configuration the first 512KB of RAM is loaded with a ROM
+image from disk storage and then handled like ROM. Essentially, an area
+of the RAM is reserved to act as ROM.</p>
+<ul>
+<li>Creator: Bill Shen</li>
+<li>Retrobrew Wiki: <a href="https://www.retrobrewcomputers.org/doku.php?id=builderpages:plasmo:zrc">ZRC, Z80 RAM CPLD for
+  ROMWBW</a></li>
+<li>Google Groups: <a href="https://groups.google.com/g/retro-comp/c/L3W7TaDnX5A/m/ZxOgl8EIAQAJ">ZRC, Z80/RAM/CPLD, minimal CP/M-ready, Z80
+  SBC</a></li>
+</ul>
+<h4 id="rom-image-file-rcz80_zrc_stdrom">ROM Image File: RCZ80_zrc_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>RCBus</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>14.745 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 1</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>ZRC</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>1536 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_17">Supported Hardware</h4>
+<ul>
+<li>FP: LEDIO=0, SWIO=0</li>
+<li>LCD: IO=218, SIZE=20X4</li>
+<li>DSRTC: MODE=STD, IO=192</li>
+<li>UART: IO=128</li>
+<li>UART: IO=136</li>
+<li>UART: IO=160</li>
+<li>UART: IO=168</li>
+<li>SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>ACIA: IO=128, INTERRUPTS ENABLED</li>
+<li>VRC: IO=0, KBD MODE=VRC, KBD IO=244</li>
+<li>KBD: ENABLED</li>
+<li>CH: IO=62</li>
+<li>CH: IO=60</li>
+<li>CHUSB: IO=62</li>
+<li>CHUSB: IO=60</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5” HD</li>
+<li>IDE: MODE=RC, IO=16, MASTER</li>
+<li>IDE: MODE=RC, IO=16, SLAVE</li>
+<li>PPIDE: IO=32, MASTER</li>
+<li>PPIDE: IO=32, SLAVE</li>
+<li>SD: MODE=PIO, IO=105, UNITS=1</li>
+</ul>
+<h3 id="zrc-z80-cpu-module-ram">ZRC Z80 CPU Module (RAM)</h3>
+<p>This profile differs (from STD) only in how the system boots, and how
+RAM is configured. Boot occurs directly to RAM, loading HBIOS directly
+from disk storage rather than via a pseudo ROM image copied into RAM.</p>
+<p>A RAM disk is configured preloaded with files that would normally be on
+the ROM disk. There is no ROM disk in this configuration.</p>
+<p>The RAM config is the newer approach and provides a more efficient bank
+layout. The intent to replace the STD config with the RAM config.</p>
+<ul>
+<li>Creator: Bill Shen</li>
+</ul>
+<h4 id="rom-image-file-rcz80_zrc_ram_stdrom">ROM Image File: RCZ80_zrc_ram_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>RCBus</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>14.745 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 1</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>ZRC</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>0 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_18">Supported Hardware</h4>
+<ul>
+<li>FP: LEDIO=0, SWIO=0</li>
+<li>LCD: IO=218, SIZE=20X4</li>
+<li>DSRTC: MODE=STD, IO=192</li>
+<li>UART: IO=128</li>
+<li>UART: IO=136</li>
+<li>UART: IO=160</li>
+<li>UART: IO=168</li>
+<li>SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>ACIA: IO=128, INTERRUPTS ENABLED</li>
+<li>VRC: IO=0, KBD MODE=VRC, KBD IO=244</li>
+<li>KBD: ENABLED</li>
+<li>CH: IO=62</li>
+<li>CH: IO=60</li>
+<li>CHUSB: IO=62</li>
+<li>CHUSB: IO=60</li>
+<li>MD: TYPE=RAM</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5” HD</li>
+<li>IDE: MODE=RC, IO=16, MASTER</li>
+<li>IDE: MODE=RC, IO=16, SLAVE</li>
+<li>PPIDE: IO=32, MASTER</li>
+<li>PPIDE: IO=32, SLAVE</li>
+<li>SD: MODE=PIO, IO=105, UNITS=1</li>
+</ul>
+<h3 id="zrc512-z80-cpu-module">ZRC512 Z80 CPU Module</h3>
+<p>ZRC512 is a faster and hobbyist-friendly variant of ZRC. It is designed
+specifically for ROM-less RomWBW. HBIOS is loaded from disk at boot</p>
+<ul>
+<li>Creator: Bill Shen</li>
+<li>Google Groups: <a href="https://groups.google.com/g/retro-comp/c/bILDMVI97vo">Bill Shen’s ZRC512 SBC / RC2014
+  board</a></li>
+<li>Retrobrew Wiki: <a href="https://www.retrobrewcomputers.org/doku.php?id=builderpages:plasmo:zrc512:zrc512home">ZRC512, A Hobbyist-friendly Z80 SBC for ROM-less
+  RomWBW</a></li>
+</ul>
+<h4 id="rom-image-file-rcz80_zrc512_stdrom">ROM Image File: RCZ80_zrc512_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>RCBus</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>22.000 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 1</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>ZRC</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>0 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_19">Supported Hardware</h4>
+<ul>
+<li>FP: LEDIO=0, SWIO=0</li>
+<li>LCD: IO=218, SIZE=20X4</li>
+<li>DSRTC: MODE=STD, IO=192</li>
+<li>UART: IO=128</li>
+<li>UART: IO=136</li>
+<li>UART: IO=160</li>
+<li>UART: IO=168</li>
+<li>SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>ACIA: IO=128, INTERRUPTS ENABLED</li>
+<li>VRC: IO=0, KBD MODE=VRC, KBD IO=244</li>
+<li>KBD: ENABLED</li>
+<li>CH: IO=62</li>
+<li>CH: IO=60</li>
+<li>CHUSB: IO=62</li>
+<li>CHUSB: IO=60</li>
+<li>MD: TYPE=RAM</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5” HD</li>
+<li>IDE: MODE=RC, IO=16, MASTER</li>
+<li>IDE: MODE=RC, IO=16, SLAVE</li>
+<li>PPIDE: IO=32, MASTER</li>
+<li>PPIDE: IO=32, SLAVE</li>
+<li>SD: MODE=PIO, IO=105, UNITS=1</li>
+</ul>
+<h3 id="eazy80-512-z80-cpu-module">EaZy80-512 Z80 CPU Module</h3>
+<p>Eazy80-512 is Eazy80 rev2 pc board configured with 512K RAM to run
+RomWBW. The design was derived from modifications to Eazy80 Rev1 that
+supported RomWBW.</p>
+<p>HBIOS is loaded from disk at boot by ROM monitor</p>
+<p>(Not to be confused with EasyZ80)</p>
+<ul>
+<li>Creator: Bill Shen</li>
+<li>VCF Forums: <a href="https://forum.vcfed.org/index.php?threads/eazy80-a-glue-less-cp-m-capable-z80-sbc.1251160">Eazy80, a glue-less, CP/M capable Z80
+  SBC</a></li>
+<li>Retrobrew Wiki: <a href="https://www.retrobrewcomputers.org/doku.php?id=builderpages:plasmo:eazy80:eazy80rev2:eazy80rev2home">Eazy80 Rev2, Glue-less
+  Configuration</a></li>
+<li>Google Groups: <a href="https://groups.google.com/g/retro-comp/c/0cUDbZspHyQ">EaZy80, A Simple80 with
+  KIO</a></li>
+</ul>
+<h4 id="rom-image-file-rcz80_ez512_stdrom">ROM Image File: RCZ80_ez512_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>RCBus</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>22.000 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 2</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>EZ512</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>0 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_20">Supported Hardware</h4>
+<ul>
+<li>DSRTC: MODE=STD, IO=192</li>
+<li>SIO MODE=STD, IO=8, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=STD, IO=8, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>MD: TYPE=RAM</li>
+<li>MD occupies 409 bytes.</li>
+<li>SD: MODE=EZ512, IO=2, UNITS=1</li>
+<li>KIO: IO=0</li>
+<li>CTC: IO=4</li>
+</ul>
+<h3 id="k80w-z80-cpu-module">K80W Z80 CPU Module</h3>
+<p>K80W is similar to K80. It is a 22MHz Z80 SBC with KIO (Z84C90) as the
+I/O device. It is designed to run RomWBW. The current version is rev 2.1
+replacing the older K80W rev 1</p>
+<ul>
+<li>Creator: Bill Shen</li>
+<li>Retrobrew Wiki: <a href="https://www.retrobrewcomputers.org/doku.php?id=builderpages:plasmo:k80:k80w_r21">K80W Rev2.1, A RomWBW-capable Z80
+  SBC</a></li>
+</ul>
+<h4 id="rom-image-file-rcz80_k80w_stdrom">ROM Image File: RCZ80_k80w_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>RCBus</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>22.000 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 2</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z2</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_21">Supported Hardware</h4>
+<ul>
+<li>FP: LEDIO=0, SWIO=0</li>
+<li>LCD: IO=218, SIZE=20X4</li>
+<li>DSRTC: MODE=K80W, IO=192</li>
+<li>UART: IO=128</li>
+<li>UART: IO=136</li>
+<li>UART: IO=160</li>
+<li>UART: IO=168</li>
+<li>SIO MODE=STD, IO=136, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=STD, IO=136, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>VRC: IO=0, KBD MODE=VRC, KBD IO=244</li>
+<li>KBD: ENABLED</li>
+<li>CH: IO=62</li>
+<li>CH: IO=60</li>
+<li>CHUSB: IO=62</li>
+<li>CHUSB: IO=60</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5” HD</li>
+<li>IDE: MODE=RC, IO=16, MASTER</li>
+<li>IDE: MODE=RC, IO=16, SLAVE</li>
+<li>PPIDE: IO=32, MASTER</li>
+<li>PPIDE: IO=32, SLAVE</li>
+<li>SD: MODE=EZ512, IO=130, UNITS=1</li>
+<li>KIO: IO=128</li>
+<li>CTC: IO=132</li>
+</ul>
+<h2 id="rcbus-z180">RCBus Z180</h2>
+<h3 id="rcbus-z180-cpu-module-external">RCBus Z180 CPU Module (External)</h3>
+<p>Generic Rom Image. For use with Z2 bank switched memory board (Z2
+external memory management)</p>
+<h4 id="rom-image-file-rcz180_ext_stdrom">ROM Image File: RCZ180_ext_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>RCBus</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>18.432 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 2</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>Z180</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z2</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_22">Supported Hardware</h4>
+<ul>
+<li>FP: LEDIO=0, SWIO=0</li>
+<li>DSRTC: MODE=STD, IO=12</li>
+<li>INTRTC: ENABLED</li>
+<li>ASCI: IO=192, INTERRUPTS ENABLED</li>
+<li>ASCI: IO=193, INTERRUPTS ENABLED</li>
+<li>UART: IO=128</li>
+<li>UART: IO=136</li>
+<li>UART: IO=160</li>
+<li>UART: IO=168</li>
+<li>SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>CH: IO=62</li>
+<li>CH: IO=60</li>
+<li>CHUSB: IO=62</li>
+<li>CHUSB: IO=60</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5” HD</li>
+<li>IDE: MODE=RC, IO=16, MASTER</li>
+<li>IDE: MODE=RC, IO=16, SLAVE</li>
+<li>PPIDE: IO=32, MASTER</li>
+<li>PPIDE: IO=32, SLAVE</li>
+<li>SD: MODE=PIO, IO=105, UNITS=1</li>
+</ul>
+<h3 id="rcbus-z180-cpu-module-native">RCBus Z180 CPU Module (Native)</h3>
+<p>Generic Rom Image. For use with linear memory board (Z180 native memory
+management)</p>
+<h4 id="rom-image-file-rcz180_nat_stdrom">ROM Image File: RCZ180_nat_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>RCBus</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>18.432 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 2</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>Z180</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z180</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_23">Supported Hardware</h4>
+<ul>
+<li>FP: LEDIO=0, SWIO=0</li>
+<li>DSRTC: MODE=STD, IO=12</li>
+<li>INTRTC: ENABLED</li>
+<li>ASCI: IO=192, INTERRUPTS ENABLED</li>
+<li>ASCI: IO=193, INTERRUPTS ENABLED</li>
+<li>UART: IO=128</li>
+<li>UART: IO=136</li>
+<li>UART: IO=160</li>
+<li>UART: IO=168</li>
+<li>SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>CH: IO=62</li>
+<li>CH: IO=60</li>
+<li>CHUSB: IO=62</li>
+<li>CHUSB: IO=60</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5” HD</li>
+<li>IDE: MODE=RC, IO=16, MASTER</li>
+<li>IDE: MODE=RC, IO=16, SLAVE</li>
+<li>PPIDE: IO=32, MASTER</li>
+<li>PPIDE: IO=32, SLAVE</li>
+<li>SD: MODE=PIO, IO=105, UNITS=1</li>
+</ul>
+<h3 id="z1rcc-z180-cpu-module">Z1RCC Z180 CPU Module</h3>
+<p>Z1RCC is a 2“x4” RomWBW-capable Z180 SBC.</p>
+<p>Z1RCC has no flash memory on board but has a small (64 bytes) bootstrap
+ROM in CPLD so that Z180 boots from this bootstrap ROM, copies a loader
+from CF disk to top 32K of RAM, runs the loader to bring in the 480K
+RomWBW image from CF disk, then start RomWBW from 0x0</p>
+<ul>
+<li>Creator: Bill Shen</li>
+<li>Google Groups: <a href="https://groups.google.com/g/retro-comp/c/29DOV4eO6MU">RomWBW for Z80 with 512K RAM 0K
+  ROM</a></li>
+<li>Retrobrew Wiki: <a href="https://www.retrobrewcomputers.org/doku.php?id=builderpages:plasmo:z1rcc:rev0:home">Z1RCC, A RC2014-Compatible, RomWBW-Capable Z180
+  SBC</a></li>
+</ul>
+<h4 id="rom-image-file-rcz180_z1rcc_stdrom">ROM Image File: RCZ180_z1rcc_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>RCBus</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>18.432 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 2</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>Z180</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z180</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>0 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_24">Supported Hardware</h4>
+<ul>
+<li>FP: LEDIO=0, SWIO=0</li>
+<li>DSRTC: MODE=STD, IO=12</li>
+<li>INTRTC: ENABLED</li>
+<li>ASCI: IO=192, INTERRUPTS ENABLED</li>
+<li>ASCI: IO=193, INTERRUPTS ENABLED</li>
+<li>UART: IO=128</li>
+<li>UART: IO=136</li>
+<li>UART: IO=160</li>
+<li>UART: IO=168</li>
+<li>SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>CH: IO=62</li>
+<li>CH: IO=60</li>
+<li>CHUSB: IO=62</li>
+<li>CHUSB: IO=60</li>
+<li>MD: TYPE=RAM</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5” HD</li>
+<li>IDE: MODE=RC, IO=16, MASTER</li>
+<li>IDE: MODE=RC, IO=16, SLAVE</li>
+<li>PPIDE: IO=32, MASTER</li>
+<li>PPIDE: IO=32, SLAVE</li>
+<li>SD: MODE=PIO, IO=105, UNITS=1</li>
+</ul>
+<h2 id="rcbus-z280">RCBus Z280</h2>
+<h3 id="rcbus-z280-cpu-module-external">RCBus Z280 CPU Module (External)</h3>
+<p>Generic Rom Image. For use with Z2 bank switched memory board (Z2
+external memory management)</p>
+<h4 id="rom-image-file-rcz280_ext_stdrom">ROM Image File: RCZ280_ext_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>RCBus</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>12.000 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 1</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z2</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_25">Supported Hardware</h4>
+<ul>
+<li>FP: LEDIO=0, SWIO=0</li>
+<li>LCD: IO=218, SIZE=20X4</li>
+<li>DSRTC: MODE=STD, IO=192</li>
+<li>INTRTC: ENABLED</li>
+<li>Z2U: IO=16</li>
+<li>UART: IO=128</li>
+<li>UART: IO=136</li>
+<li>UART: IO=160</li>
+<li>UART: IO=168</li>
+<li>SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>ACIA: IO=128, INTERRUPTS ENABLED</li>
+<li>CH: IO=62</li>
+<li>CH: IO=60</li>
+<li>CHUSB: IO=62</li>
+<li>CHUSB: IO=60</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5” HD</li>
+<li>IDE: MODE=RC, IO=16, MASTER</li>
+<li>IDE: MODE=RC, IO=16, SLAVE</li>
+<li>PPIDE: IO=32, MASTER</li>
+<li>PPIDE: IO=32, SLAVE</li>
+<li>SD: MODE=PIO, IO=105, UNITS=1</li>
+</ul>
+<h3 id="rcbus-z280-cpu-module-native">RCBus Z280 CPU Module (Native)</h3>
+<p>Generic Rom Image. For use with linear memory board (Z280 native memory
+management)</p>
+<h4 id="rom-image-file-rcz280_nat_stdrom">ROM Image File: RCZ280_nat_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>RCBus</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>12.000 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 3</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>Z280</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z280</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_26">Supported Hardware</h4>
+<ul>
+<li>FP: LEDIO=0, SWIO=0</li>
+<li>LCD: IO=218, SIZE=20X4</li>
+<li>DSRTC: MODE=STD, IO=192</li>
+<li>INTRTC: ENABLED</li>
+<li>Z2U: IO=16, INTERRUPTS ENABLED</li>
+<li>UART: IO=128</li>
+<li>UART: IO=136</li>
+<li>UART: IO=160</li>
+<li>UART: IO=168</li>
+<li>SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>CH: IO=62</li>
+<li>CH: IO=60</li>
+<li>CHUSB: IO=62</li>
+<li>CHUSB: IO=60</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5” HD</li>
+<li>IDE: MODE=RC, IO=16, MASTER</li>
+<li>IDE: MODE=RC, IO=16, SLAVE</li>
+<li>PPIDE: IO=32, MASTER</li>
+<li>PPIDE: IO=32, SLAVE</li>
+<li>SD: MODE=PIO, IO=105, UNITS=1</li>
+</ul>
+<h3 id="zzrcc-z280-cpu-module">ZZRCC Z280 CPU Module</h3>
+<p>ZZRCC follows the basic concept of ZRCC that uses a small CPLD to
+bootstrap from CF disk. Because Z280 has a native serial-bootstrap
+capability, the CPLD is even simpler than that of ZRCC. ZZRCC is Z280
+operating in Z80-compatible mode. It is designed for RC2014 bus ZZRCC
+actually contains no ROM and 512KB of RAM.</p>
+<p>In the STD configuration the first 256KB of RAM is loaded with a ROM
+image from disk storage and then handled like ROM. Essentially, an area
+of the RAM is reserved to act as ROM.</p>
+<ul>
+<li>Creator: Bill Shen</li>
+<li>Retrobrew Wiki: <a href="https://www.retrobrewcomputers.org/doku.php?id=builderpages:plasmo:zzrcc">ZZRCC, a SBC for RC2014 based on
+  Z280</a></li>
+<li>Google Groups: <a href="https://groups.google.com/g/retro-comp/c/lt1t3JEoiCM/m/NYeZdrFuAAAJ">ZZRCC, Z280 SBC replacing ZZ80RC and
+  ZZ80CF</a></li>
+<li>Google Groups: <a href="https://groups.google.com/g/retro-comp/c/mBIWW18WXTE/m/E_sehx5fAwAJ">Help porting ROMWBW to
+  ZZRCC</a></li>
+</ul>
+<h4 id="rom-image-file-rcz280_zzrcc_stdrom">ROM Image File: RCZ280_zzrcc_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>RCBus</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>14.745 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 3</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>Z280</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z280</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>256 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>256 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_27">Supported Hardware</h4>
+<ul>
+<li>FP: LEDIO=0, SWIO=0</li>
+<li>LCD: IO=218, SIZE=20X4</li>
+<li>DSRTC: MODE=STD, IO=192</li>
+<li>INTRTC: ENABLED</li>
+<li>Z2U: IO=16, INTERRUPTS ENABLED</li>
+<li>UART: IO=128</li>
+<li>UART: IO=136</li>
+<li>UART: IO=160</li>
+<li>UART: IO=168</li>
+<li>SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>VRC: IO=0, KBD MODE=VRC, KBD IO=244</li>
+<li>KBD: ENABLED</li>
+<li>CH: IO=62</li>
+<li>CH: IO=60</li>
+<li>CHUSB: IO=62</li>
+<li>CHUSB: IO=60</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5” HD</li>
+<li>IDE: MODE=RC, IO=16, MASTER</li>
+<li>IDE: MODE=RC, IO=16, SLAVE</li>
+<li>PPIDE: IO=32, MASTER</li>
+<li>PPIDE: IO=32, SLAVE</li>
+</ul>
+<h3 id="zzrcc-z280-cpu-module-ram">ZZRCC Z280 CPU Module (RAM)</h3>
+<p>This profile differs (from STD) only in how the system boots, and how
+RAM is configured. Boot occurs directly to RAM, loading HBIOS directly
+from disk storage rather than via a pseudo ROM image copied into RAM.</p>
+<p>A RAM disk is configured preloaded with files that would normally be on
+the ROM disk. There is no ROM disk in this configuration.</p>
+<p>The RAM config is the newer approach and provides a more efficient bank
+layout. The intent to replace the STD config with the RAM config.</p>
+<ul>
+<li>Creator: Bill Shen</li>
+</ul>
+<h4 id="rom-image-file-rcz280_zzrcc_ram_stdrom">ROM Image File: RCZ280_zzrcc_ram_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>RCBus</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>14.745 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 3</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>Z280</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z280</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>0 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_28">Supported Hardware</h4>
+<ul>
+<li>FP: LEDIO=0, SWIO=0</li>
+<li>LCD: IO=218, SIZE=20X4</li>
+<li>DSRTC: MODE=STD, IO=192</li>
+<li>INTRTC: ENABLED</li>
+<li>Z2U: IO=16, INTERRUPTS ENABLED</li>
+<li>UART: IO=128</li>
+<li>UART: IO=136</li>
+<li>UART: IO=160</li>
+<li>UART: IO=168</li>
+<li>SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>VRC: IO=0, KBD MODE=VRC, KBD IO=244</li>
+<li>KBD: ENABLED</li>
+<li>CH: IO=62</li>
+<li>CH: IO=60</li>
+<li>CHUSB: IO=62</li>
+<li>CHUSB: IO=60</li>
+<li>MD: TYPE=RAM</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5” HD</li>
+<li>IDE: MODE=RC, IO=16, MASTER</li>
+<li>IDE: MODE=RC, IO=16, SLAVE</li>
+<li>PPIDE: IO=32, MASTER</li>
+<li>PPIDE: IO=32, SLAVE</li>
+</ul>
+<h3 id="zz80mb-z280-sbc">ZZ80MB Z280 SBC</h3>
+<p>ZZ80MB is a Z280-based motherboard with RC2014 expansion slots. It is
+based on the ZZ80RC-CF design, but with two additional expansion slots
+added. ZZ80MB is designed with an EPROM programmer function such that it
+can boot from serial port, load EPROM programming image through the
+serial port and program an EPROM. This feature can be used to program
+EPROM for other computers</p>
+<ul>
+<li>Creator: Bill Shen</li>
+<li>Retrobrew Wiki: <a href="https://www.retrobrewcomputers.org/doku.php?id=builderpages:plasmo:zz80mb:zz80mbr3">ZZ80MB, A Z280-based SBC with RC2014
+  Expansion</a></li>
+</ul>
+<h4 id="rom-image-file-rcz280_zz80mb_stdrom">ROM Image File: RCZ280_zz80mb_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>RCBus</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>12.000 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 3</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>Z280</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z280</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_29">Supported Hardware</h4>
+<ul>
+<li>FP: LEDIO=0, SWIO=0</li>
+<li>LCD: IO=218, SIZE=20X4</li>
+<li>DSRTC: MODE=STD, IO=192</li>
+<li>INTRTC: ENABLED</li>
+<li>Z2U: IO=16, INTERRUPTS ENABLED</li>
+<li>UART: IO=128</li>
+<li>UART: IO=136</li>
+<li>UART: IO=160</li>
+<li>UART: IO=168</li>
+<li>SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>VRC: IO=0, KBD MODE=VRC, KBD IO=244</li>
+<li>KBD: ENABLED</li>
+<li>CH: IO=62</li>
+<li>CH: IO=60</li>
+<li>CHUSB: IO=62</li>
+<li>CHUSB: IO=60</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5” HD</li>
+<li>IDE: MODE=RC, IO=16, MASTER</li>
+<li>IDE: MODE=RC, IO=16, SLAVE</li>
+<li>PPIDE: IO=32, MASTER</li>
+<li>PPIDE: IO=32, SLAVE</li>
+</ul>
+<h2 id="ez80-for-rcbus-module">eZ80 for RCBus Module</h2>
+<p>The eZ80 for RCBus/RC2014 is a module designed for the RCBus and RC2014
+backplanes.</p>
+<p>Its designed as a ‘compatible upgrade’ to the stock Z80 CPU. The eZ80 is
+a CPU that was first released by Zilog about 20 years ago, and still
+available from the manufacturer today</p>
+<ul>
+<li>Creator: Dean Netherton</li>
+<li>Github: <a href="https://github.com/dinoboards/ez80-for-rc">eZ80 for the
+  RCBus/RC2014</a></li>
+<li>Hackaday: <a href="https://hackaday.io/project/196330-ez80-cpu-for-rc2014-and-other-backplanes">eZ80 CPU for RC2014 and other
+  backplanes</a></li>
+</ul>
+<h4 id="rom-image-file-rcez80_stdrom">ROM Image File: RCEZ80_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>RCBus</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>20.000 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 1</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>EZ80</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z2</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_30">Supported Hardware</h4>
+<ul>
+<li>FP: LEDIO=0, SWIO=0</li>
+<li>LCD: IO=218, SIZE=20X4</li>
+<li>CH: IO=62</li>
+<li>CH: IO=60</li>
+<li>CHUSB: IO=62</li>
+<li>CHUSB: IO=60</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5” HD</li>
+<li>IDE: MODE=RC, IO=16, MASTER</li>
+<li>IDE: MODE=RC, IO=16, SLAVE</li>
+<li>PPIDE: IO=32, MASTER</li>
+<li>PPIDE: IO=32, SLAVE</li>
+<li>EZ80: CPU DRIVER</li>
+<li>EZ80: SYS TIMER DRIVER</li>
+<li>EZ80: RTC DRIVER</li>
+<li>EZ80: UART DRIVER</li>
+</ul>
+<h2 id="rhyophyre-z180-sbc">Rhyophyre Z180 SBC</h2>
+<p>Single Board Computer featuring Zilog Z180 processor and NEC µPD7220
+Graphics Display Controller</p>
+<ul>
+<li>Creator: Andrew Lynch</li>
+<li>Retrobrew Forums: <a href="https://www.retrobrewcomputers.org/forum/index.php?t=msg&amp;th=699">Z180 upd7220 GDC
+  SBC</a></li>
+<li>Github: <a href="https://github.com/lynchaj/rhyophyre">rhyophyre</a></li>
+</ul>
+<h4 id="rom-image-file-rph_stdrom">ROM Image File: RPH_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>-</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>18.432 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>None</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>38400 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>RPH</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_31">Supported Hardware</h4>
+<ul>
+<li>DSRTC: MODE=STD, IO=132</li>
+<li>ASCI: IO=64</li>
+<li>ASCI: IO=65</li>
+<li>GDC: MODE=RPH, DISPLAY=EGA, IO=144</li>
+<li>KBD: ENABLED</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>PPIDE: IO=136, MASTER</li>
+<li>PPIDE: IO=136, SLAVE</li>
+</ul>
+<h2 id="s100-computers-z180-sbc">S100 Computers Z180 SBC</h2>
+<p>A Z180 board which contains a flash RAM, a USB port interface and an SD
+Card that can immediately boot up CPM. While it is on an S100 Bus board,
+initially that board has only 8 significant chips and works as a self
+contained computer outside the bus with a simple 9V power supply.</p>
+<p>Later on it can be built up further with more chips, placed in an S100
+bus and one by one programed to interface with the 100’s of S100 bus
+cards that are out there. It can in fact behave as a S100 bus master or
+slave as defined by the IEEE-696 specs.</p>
+<ul>
+<li>Creator: John Monahan |</li>
+<li>Website: <a href="http://www.s100computers.com/My%20System%20Pages/Z180%20SBC/Z180%20SBC.htm">S100 Computers Z180
+  SBC</a></li>
+</ul>
+<h4 id="rom-image-file-s100_stdrom">ROM Image File: S100_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>S100</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>18.432 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 2</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>Z180</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>57600 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z180</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_32">Supported Hardware</h4>
+<ul>
+<li>INTRTC: ENABLED</li>
+<li>ASCI: IO=192, INTERRUPTS ENABLED</li>
+<li>ASCI: IO=193, INTERRUPTS ENABLED</li>
+<li>SCON: IO=0</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>SD: MODE=SC, IO=12, UNITS=1</li>
+</ul>
+<h4 id="notes_4">Notes:</h4>
+<ul>
+<li>Z180 SBC SW2 (IOBYTE) Dip Switches:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Bit</th>
+<th>Setting</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Off</td>
+<td>Use Z180 ASCI Channel A for console</td>
+</tr>
+<tr>
+<td></td>
+<td>On</td>
+<td>Use Propeller Console</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>1</td>
+<td>Off</td>
+<td>Boot to RomWBW Boot Loader</td>
+</tr>
+<tr>
+<td></td>
+<td>On</td>
+<td>Boot to S100 Monitor</td>
+</tr>
+</tbody>
+</table>
+<h2 id="small-computer-central-z180">Small Computer Central Z180</h2>
+<p>Small Computer Central provides an extensive range hardware based around
+the Zilog ecosystem. This section lists configurations specifically for
+the Z180 processor</p>
+<p>If you are using a Z80 processor you will probably be using the general
+<code>RCZ80_std</code> configuration - <a href="#rcbus-z80-cpu-module">RCBus Z80 CPU
+Module</a>. However, please consult <a href="https://smallcomputercentral.com/firmware/firmware-romwbw-rcz80_std/">Firmware,
+RomWBW,
+RCZ80_std</a>
+for further information and to ensure compatibility with your Z80
+system.</p>
+<ul>
+<li>Creator: Stephen Cousins</li>
+<li>Website: <a href="https://smallcomputercentral.com">Small Computer Central</a></li>
+</ul>
+<h3 id="sc126-z180-sbc">SC126 Z180 SBC</h3>
+<p>SC126 is a Z180 Motherboard.</p>
+<ul>
+<li>Website: <a href="https://smallcomputercentral.com/rcbus/sc100-series/sc126-z180-motherboard-rc2014/">SC126 – Z180
+  Motherboard</a></li>
+</ul>
+<h4 id="rom-image-file-scz180_sc126_stdrom">ROM Image File: SCZ180_sc126_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>BP80</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>18.432 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 2</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>Z180</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z180</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_33">Supported Hardware</h4>
+<ul>
+<li>FP: LEDIO=13, SWIO=0</li>
+<li>DSRTC: MODE=STD, IO=12</li>
+<li>ASCI: IO=192, INTERRUPTS ENABLED</li>
+<li>ASCI: IO=193, INTERRUPTS ENABLED</li>
+<li>UART: IO=128</li>
+<li>UART: IO=136</li>
+<li>UART: IO=160</li>
+<li>UART: IO=168</li>
+<li>SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>CH: IO=62</li>
+<li>CH: IO=60</li>
+<li>CHUSB: IO=62</li>
+<li>CHUSB: IO=60</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5” HD</li>
+<li>IDE: MODE=RC, IO=16, MASTER</li>
+<li>IDE: MODE=RC, IO=16, SLAVE</li>
+<li>PPIDE: IO=32, MASTER</li>
+<li>PPIDE: IO=32, SLAVE</li>
+<li>SD: MODE=SC, IO=12, UNITS=1</li>
+</ul>
+<h4 id="notes_5">Notes:</h4>
+<ul>
+<li>When disabled, watchdog requires /IM to be pulsed. If an RCBus module
+  holds the CPU in WAIT for more than this, the watchdog will fire when
+  disabled with random consequences. The Pico SD does this at power-on.</li>
+</ul>
+<h3 id="sc130-z180-sbc">SC130 Z180 SBC</h3>
+<p>SC130 is an entry-level Z180 Motherboard designed primarily to run
+RomWBW (and CP/M)</p>
+<ul>
+<li>Website: <a href="https://smallcomputercentral.com/rcbus/sc100-series/sc130-z180-motherboard">SC130 – Z180
+  Motherboard</a></li>
+</ul>
+<h4 id="rom-image-file-scz180_sc130_stdrom">ROM Image File: SCZ180_sc130_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>RCBus</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>18.432 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 2</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>Z180</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z180</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_34">Supported Hardware</h4>
+<ul>
+<li>FP: LEDIO=0, SWIO=0</li>
+<li>DSRTC: MODE=STD, IO=12</li>
+<li>INTRTC: ENABLED</li>
+<li>ASCI: IO=192, INTERRUPTS ENABLED</li>
+<li>ASCI: IO=193, INTERRUPTS ENABLED</li>
+<li>UART: IO=128</li>
+<li>UART: IO=136</li>
+<li>UART: IO=160</li>
+<li>UART: IO=168</li>
+<li>SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>CH: IO=62</li>
+<li>CH: IO=60</li>
+<li>CHUSB: IO=62</li>
+<li>CHUSB: IO=60</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5” HD</li>
+<li>IDE: MODE=RC, IO=16, MASTER</li>
+<li>IDE: MODE=RC, IO=16, SLAVE</li>
+<li>PPIDE: IO=32, MASTER</li>
+<li>PPIDE: IO=32, SLAVE</li>
+<li>SD: MODE=SC, IO=12, UNITS=1</li>
+</ul>
+<h3 id="sc131-z180-pocket-comp">SC131 Z180 Pocket Comp</h3>
+<p>SC131 is a pocket-sized Z180 RomWBW CP/M computer.</p>
+<ul>
+<li>Website: <a href="https://smallcomputercentral.com/sc131-z180-pocket-computer/">SC131 – Z180 Pocket
+  Computer</a></li>
+</ul>
+<h4 id="rom-image-file-scz180_sc131_stdrom">ROM Image File: SCZ180_sc131_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>-</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>18.432 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 2</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>Z180</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z180</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_35">Supported Hardware</h4>
+<ul>
+<li>INTRTC: ENABLED</li>
+<li>ASCI: IO=192, INTERRUPTS ENABLED</li>
+<li>ASCI: IO=193, INTERRUPTS ENABLED</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>SD: MODE=SC, IO=12, UNITS=1</li>
+</ul>
+<h3 id="sc140-z180-cpu-module">SC140 Z180 CPU Module</h3>
+<p>SC140 is a Z180 SBC / Z50Bus Card card.</p>
+<ul>
+<li>Website: <a href="https://smallcomputercentral.com/z50bus-4/sc140-z180-sbc-z50bus-card/">SC140 – Z180 SBC / Z50Bus
+  Card</a></li>
+</ul>
+<h4 id="rom-image-file-scz180_sc140_stdrom">ROM Image File: SCZ180_sc140_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>Z50</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>18.432 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 2</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>Z180</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z180</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_36">Supported Hardware</h4>
+<ul>
+<li>FP: LEDIO=160, SWIO=160</li>
+<li>DSRTC: MODE=STD, IO=12</li>
+<li>INTRTC: ENABLED</li>
+<li>ASCI: IO=192, INTERRUPTS ENABLED</li>
+<li>ASCI: IO=193, INTERRUPTS ENABLED</li>
+<li>UART: IO=128</li>
+<li>UART: IO=136</li>
+<li>UART: IO=160</li>
+<li>UART: IO=168</li>
+<li>SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>CH: IO=62</li>
+<li>CH: IO=60</li>
+<li>CHUSB: IO=62</li>
+<li>CHUSB: IO=60</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5” HD</li>
+<li>IDE: MODE=RC, IO=144, MASTER</li>
+<li>IDE: MODE=RC, IO=144, SLAVE</li>
+<li>PPIDE: IO=32, MASTER</li>
+<li>PPIDE: IO=32, SLAVE</li>
+<li>SD: MODE=SC, IO=12, UNITS=1</li>
+</ul>
+<h3 id="sc503-z180-cpu-module">SC503 Z180 CPU Module</h3>
+<p>SC503 is a Z180 Processor card designed for Z50Bus.</p>
+<ul>
+<li>Website: <a href="https://smallcomputercentral.com/z50bus-4/sc503-z180-processor-z50bus/">SC503 – Z180 Processor
+  (Z50Bus)</a></li>
+</ul>
+<h4 id="rom-image-file-scz180_sc503_stdrom">ROM Image File: SCZ180_sc503_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>Z50</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>18.432 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 2</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>Z180</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z180</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_37">Supported Hardware</h4>
+<ul>
+<li>FP: LEDIO=160, SWIO=160</li>
+<li>DSRTC: MODE=STD, IO=12</li>
+<li>INTRTC: ENABLED</li>
+<li>ASCI: IO=192, INTERRUPTS ENABLED</li>
+<li>ASCI: IO=193, INTERRUPTS ENABLED</li>
+<li>UART: IO=128</li>
+<li>UART: IO=136</li>
+<li>UART: IO=160</li>
+<li>UART: IO=168</li>
+<li>SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>CH: IO=62</li>
+<li>CH: IO=60</li>
+<li>CHUSB: IO=62</li>
+<li>CHUSB: IO=60</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5” HD</li>
+<li>IDE: MODE=RC, IO=144, MASTER</li>
+<li>IDE: MODE=RC, IO=144, SLAVE</li>
+<li>PPIDE: IO=32, MASTER</li>
+<li>PPIDE: IO=32, SLAVE</li>
+<li>SD: MODE=SC, IO=12, UNITS=1</li>
+</ul>
+<h3 id="sc700-z180-cpu-module">SC700 Z180 CPU Module</h3>
+<p>This configuration is specifically for systems based on the Z180 CPU
+(eg. SC722) with 1MB linear memory (eg. SC721)</p>
+<ul>
+<li>Website: <a href="https://smallcomputercentral.com/rcbus/sc700-series/">SC700
+  Series</a></li>
+<li>Website: <a href="https://smallcomputercentral.com/rcbus/sc700-series/sc721-rcbus-memory-module/">SC721 – RCBus Memory
+  Module</a></li>
+<li>Website: <a href="https://smallcomputercentral.com/rcbus/sc700-series/sc722-rcbus-z180-cpu-module/">SC722 – RCBus Z180 CPU
+  Module</a></li>
+</ul>
+<h4 id="rom-image-file-scz180_sc700_stdrom">ROM Image File: SCZ180_sc700_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>RCBus</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>18.432 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 2</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>Z180</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z180</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_38">Supported Hardware</h4>
+<ul>
+<li>FP: LEDIO=0</li>
+<li>LCD: IO=170, SIZE=20X4</li>
+<li>DSRTC: MODE=STD, IO=12</li>
+<li>INTRTC: ENABLED</li>
+<li>ASCI: IO=192, INTERRUPTS ENABLED</li>
+<li>ASCI: IO=193, INTERRUPTS ENABLED</li>
+<li>UART: IO=128</li>
+<li>UART: IO=136</li>
+<li>UART: IO=160</li>
+<li>UART: IO=168</li>
+<li>SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>CH: IO=62</li>
+<li>CH: IO=60</li>
+<li>CHUSB: IO=62</li>
+<li>CHUSB: IO=60</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5” HD</li>
+<li>IDE: MODE=RC, IO=16, MASTER</li>
+<li>IDE: MODE=RC, IO=16, SLAVE</li>
+<li>PPIDE: IO=32, MASTER</li>
+<li>PPIDE: IO=32, SLAVE</li>
+<li>SD: MODE=SC, IO=12, UNITS=1</li>
+</ul>
+<p>`{=latex}</p>
+<h2 id="z80-retro-sbc">Z80-Retro SBC</h2>
+<p>The system comprises a Z80 retro computer board, and optonal VGA text
+video card, and PIO Keyboard and Sound Card. The system uses a custom 60
+pin bus on a standard header.</p>
+<p>(Not to be confused with a similar named project by John Winans
+presented by John’s Basement on youTube)</p>
+<ul>
+<li>Creator: Peter Wilson</li>
+<li>Github: <a href="https://github.com/peterw8102/Z80-Retro">Z80-Retro</a></li>
+<li>Github Wiki: <a href="https://github.com/peterw8102/Z80-Retro/wiki">Welcome to the Z80-Retro
+  wiki!</a></li>
+<li>OSHWLab: <a href="https://oshwlab.com/peterw8102/simple-z80">Simple Z80 SBC</a></li>
+</ul>
+<h4 id="rom-image-file-z80retro_stdrom">ROM Image File: Z80RETRO_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>60 pin</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>14.745 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 2</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>38400 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z2</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_39">Supported Hardware</h4>
+<ul>
+<li>SIO MODE=Z80R, IO=128, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=Z80R, IO=128, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>SD: MODE=Z80R, IO=104, UNITS=1</li>
+</ul>
+<h2 id="zeta-z80-sbc">Zeta Z80 SBC</h2>
+<p>Zeta SBC is an Zilog Z80 based single board computer. It is inspired by
+Ampro Little Board Z80 and N8VEM project. Zeta SBC is software
+compatible with N8VEM SBC and Disk I/O boards.</p>
+<ul>
+<li>Creator: Sergey Kiselev</li>
+<li>Retrobrew Wiki: <a href="https://www.retrobrewcomputers.org/doku.php?id=boards:sbc:zeta:start">Zeta
+  SBC</a></li>
+</ul>
+<h4 id="rom-image-file-zeta_stdrom">ROM Image File: ZETA_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>-</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>8.000 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>None</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>38400 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>SBC</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_40">Supported Hardware</h4>
+<ul>
+<li>DSRTC: MODE=STD, IO=112</li>
+<li>UART: IO=104</li>
+<li>PPP: IO=96</li>
+<li>PPPCON: ENABLED</li>
+<li>PPPSD: ENABLED</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=DIO, IO=54, DRIVE 0, TYPE=3.5” HD</li>
+</ul>
+<h4 id="notes_6">Notes:</h4>
+<ul>
+<li>If ParPortProp is installed, initial console output is determined by
+  JP1:</li>
+<li>Shorted: console to on-board serial port</li>
+<li>Open: console to ParPortProp video and keyboard</li>
+</ul>
+<h2 id="zeta-v2-z80-sbc">Zeta V2 Z80 SBC</h2>
+<p>Zeta SBC V2 is a redesigned version of Zeta SBC.</p>
+<p>Compared to the first version this version features updated MMU with
+four banks, each one of those banks can be mapped to any 16 KiB page in
+1 MiB on-board memory. It adds Z80 CTC which is used for generating
+periodic interrupts and as a vectored interrupt controller for UART and
+PPI. The FDC is replaced with 37C65. Compared to FDC9266 used in Zeta
+SBC it integrates input/output buffers and floppy disk control latch.
+Additionally 37C65 FDC is easier to obtain than FDC9266. And lastly it
+is made using CMOS technology and more power efficient than FDC9266</p>
+<ul>
+<li>Creator: Sergey Kiselev</li>
+<li>Github: <a href="https://github.com/skiselev/zeta_sbc">Zeta SBC V2</a></li>
+<li>Retrobrew Wiki: <a href="https://www.retrobrewcomputers.org/doku.php?id=boards:sbc:zetav2:start">Zeta SBC
+  V2</a></li>
+</ul>
+<h4 id="rom-image-file-zeta2_stdrom">ROM Image File: ZETA2_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>-</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>8.000 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 2</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>CTC</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>38400 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z2</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_41">Supported Hardware</h4>
+<ul>
+<li>DSRTC: MODE=STD, IO=112</li>
+<li>UART: IO=104</li>
+<li>PPP: IO=96</li>
+<li>PPPCON: ENABLED</li>
+<li>PPPSD: ENABLED</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=ZETA2, IO=48, DRIVE 0, TYPE=3.5” HD</li>
+<li>CTC: IO=32, TIMER MODE=COUNTER, DIVISOR=18432, HI=256, LO=72,
+  INTERRUPTS ENABLED</li>
+</ul>
+<h4 id="notes_7">Notes:</h4>
+<ul>
+<li>If ParPortProp is installed, initial console output is determined by
+  JP1:</li>
+<li>Shorted: console to on-board serial port</li>
+<li>Open: console to ParPortProp video and keyboard</li>
+</ul>
+<h1 id="device-drivers">Device Drivers</h1>
+<p>This section briefly describes each of the possible devices that may be
+discovered by RomWBW in your system.</p>
+<h2 id="character">Character</h2>
+<table>
+<thead>
+<tr>
+<th><strong>ID</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ACIA</td>
+<td>MC68B50 Asynchronous Communications Interface Adapter</td>
+</tr>
+<tr>
+<td>ASCI</td>
+<td>Zilog Z180 CPU Built-in Serial Ports</td>
+</tr>
+<tr>
+<td>DUART</td>
+<td>SCC2681 or compatible Dual UART</td>
+</tr>
+<tr>
+<td>ESPCON</td>
+<td>ESP32 Firmware-based Video Console</td>
+</tr>
+<tr>
+<td>ESPSER</td>
+<td>ESP32 Firmware-based Serial Interface</td>
+</tr>
+<tr>
+<td>EZ80UART</td>
+<td>eZ80 Serial Interface</td>
+</tr>
+<tr>
+<td>LPT</td>
+<td>Parallel I/O Controller</td>
+</tr>
+<tr>
+<td>PIO</td>
+<td>Zilog Parallel Interface Controller</td>
+</tr>
+<tr>
+<td>PPPCON</td>
+<td>ParPortProp Serial Console Interface</td>
+</tr>
+<tr>
+<td>PRPCON</td>
+<td>PropIO Serial Console Interface</td>
+</tr>
+<tr>
+<td>SCON</td>
+<td>S100 Console</td>
+</tr>
+<tr>
+<td>SIO</td>
+<td>Zilog Serial Port Interface</td>
+</tr>
+<tr>
+<td>SSER</td>
+<td>Simple Serial Interface</td>
+</tr>
+<tr>
+<td>UART</td>
+<td>16C550 Family Serial Interface</td>
+</tr>
+<tr>
+<td>USB-FIFO</td>
+<td>FT232H-based ECB USB FIFO</td>
+</tr>
+<tr>
+<td>Z2U</td>
+<td>Zilog Z280 CPU Built-in Serial Ports</td>
+</tr>
+</tbody>
+</table>
+<p>By default, RomWBW will use the first available character device it
+discovers for the initial console. The following character devices are
+scanned in the order shown. The available character devices depend on
+the active platform and configuration.</p>
+<ol>
+<li>SSER: Simple Serial Interface</li>
+<li>ASCI: Zilog Z180 CPU Built-in Serial Ports</li>
+<li>Z2U: Zilog Z280 CPU Built-in Serial Ports</li>
+<li>UART: 16C550 Family Serial Interface</li>
+<li>DUART: SCC2681 or compatible Dual UART</li>
+<li>SIO: Zilog Serial Port Interface</li>
+<li>EZ80UART: eZ80 Serial Port Interface</li>
+<li>ACIA: MC68B50 Asynchronous Communications Interface Adapter</li>
+<li>USB-FIFO: FT232H-based ECB USB FIFO</li>
+</ol>
+<h2 id="disk">Disk</h2>
+<table>
+<thead>
+<tr>
+<th><strong>ID</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CHSD</td>
+<td>CH37x SD Card Interface</td>
+</tr>
+<tr>
+<td>CHUSB</td>
+<td>CH37x USB Drive Interface</td>
+</tr>
+<tr>
+<td>FD</td>
+<td>Intel 8272 or compatible Floppy Disk Controller</td>
+</tr>
+<tr>
+<td>HDSK</td>
+<td>SIMH Simulator Hard Disk</td>
+</tr>
+<tr>
+<td>IDE</td>
+<td>IDE/ATA/ATAPI Hard Disk Interface</td>
+</tr>
+<tr>
+<td>IMM</td>
+<td>Zip Drive on PPI (IMM variant)</td>
+</tr>
+<tr>
+<td>MD</td>
+<td>ROM/RAM Disk</td>
+</tr>
+<tr>
+<td>PPA</td>
+<td>Zip Drive on PPI (PPA variant)</td>
+</tr>
+<tr>
+<td>PPIDE</td>
+<td>8255 IDE/ATA/ATAPI Hard Disk Interface</td>
+</tr>
+<tr>
+<td>PPPSD</td>
+<td>ParPortProp SD Card Interface</td>
+</tr>
+<tr>
+<td>PRPSD</td>
+<td>PropIO SD Card Interface</td>
+</tr>
+<tr>
+<td>RF</td>
+<td>RAM Floppy Disk Interface</td>
+</tr>
+<tr>
+<td>SD</td>
+<td>SD Card Interface</td>
+</tr>
+<tr>
+<td>SYQ</td>
+<td>Iomega SparQ Drive on PPI</td>
+</tr>
+</tbody>
+</table>
+<h2 id="video">Video</h2>
+<table>
+<thead>
+<tr>
+<th><strong>ID</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CVDU</td>
+<td>MC8563-based Video Display Controller</td>
+</tr>
+<tr>
+<td>EF</td>
+<td>EF9345 Video Display Controller</td>
+</tr>
+<tr>
+<td>FV</td>
+<td>S100 FPGA Z80 Onboard VGA/Keyboard</td>
+</tr>
+<tr>
+<td>GDC</td>
+<td>uPD7220 Video Display Controller</td>
+</tr>
+<tr>
+<td>TMS</td>
+<td>TMS9918/38/58 Video Display Controller</td>
+</tr>
+<tr>
+<td>VDU</td>
+<td>MC6845 Family Video Display Controller (*)</td>
+</tr>
+<tr>
+<td>VGA</td>
+<td>HD6445CP4-based Video Display Controller</td>
+</tr>
+<tr>
+<td>VRC</td>
+<td>VGARC Video Display Controller</td>
+</tr>
+</tbody>
+</table>
+<p>Note:</p>
+<ul>
+<li>Reading bytes from the video memory of the VDU board (not Color VDU)
+  appears to be problematic. This is only an issue when the driver needs
+  to scroll a portion of the screen which is done by applications such
+  as WordStar or ZDE. You are likely to see screen corruption in this
+  case.</li>
+</ul>
+<h2 id="keyboard">Keyboard</h2>
+<table>
+<thead>
+<tr>
+<th><strong>ID</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>KBD</td>
+<td>8242 PS/2 Keyboard Controller</td>
+</tr>
+<tr>
+<td>MSXKYB</td>
+<td>MSX Compliant Matrix Keyboard</td>
+</tr>
+<tr>
+<td>NABUKB</td>
+<td>NABU Keyboard</td>
+</tr>
+<tr>
+<td>PPK</td>
+<td>Matrix Keyboard</td>
+</tr>
+</tbody>
+</table>
+<h2 id="audio">Audio</h2>
+<table>
+<thead>
+<tr>
+<th><strong>ID</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AY</td>
+<td>AY-3-8910/YM2149 Programmable Sound Generator</td>
+</tr>
+<tr>
+<td>SN76489</td>
+<td>SN76489 Programmable Sound Generator</td>
+</tr>
+<tr>
+<td>SPK</td>
+<td>Bit-bang Speaker</td>
+</tr>
+<tr>
+<td>YM</td>
+<td>YM2612 Programmable Sound Generator</td>
+</tr>
+</tbody>
+</table>
+<h2 id="rtc-realtime-clock">RTC (RealTime Clock)</h2>
+<table>
+<thead>
+<tr>
+<th><strong>ID</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BQRTC</td>
+<td>BQ4845P Real Time Clock</td>
+</tr>
+<tr>
+<td>DS5RTC</td>
+<td>Maxim DS1305 SPI Real-Time Clock w/ NVRAM</td>
+</tr>
+<tr>
+<td>DS7RTC</td>
+<td>Maxim DS1307 PCF I2C Real-Time Clock w/ NVRAM</td>
+</tr>
+<tr>
+<td>DS1501RTC</td>
+<td>Maxim DS1501/DS1511 Watchdog Real-Time Clock</td>
+</tr>
+<tr>
+<td>DSRTC</td>
+<td>Maxim DS1302 Real-Time Clock w/ NVRAM</td>
+</tr>
+<tr>
+<td>EZ80RTC</td>
+<td>eZ80 Real-Time Clock</td>
+</tr>
+<tr>
+<td>INTRTC</td>
+<td>Interrupt-based Real Time Clock</td>
+</tr>
+<tr>
+<td>PCF</td>
+<td>PCF8584-based I2C Real-Time Clock</td>
+</tr>
+<tr>
+<td>RP5C01</td>
+<td>Ricoh RPC01A Real-Time Clock w/ NVRAM</td>
+</tr>
+<tr>
+<td>SIMRTC</td>
+<td>SIMH Simulator Real-Time Clock</td>
+</tr>
+</tbody>
+</table>
+<h2 id="dsky-display-keypad">DsKy (DiSplay KeYpad)</h2>
+<table>
+<thead>
+<tr>
+<th><strong>ID</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FP</td>
+<td>Simple LED &amp; Switch Front Panel</td>
+</tr>
+<tr>
+<td>GM7303</td>
+<td>Prolog 7303 derived Display/Keypad</td>
+</tr>
+<tr>
+<td>H8P</td>
+<td>Heath H8 Display/Keypad</td>
+</tr>
+<tr>
+<td>ICM</td>
+<td>ICM7218-based Display/Keypad on PPI</td>
+</tr>
+<tr>
+<td>LCD</td>
+<td>Hitachi HD44780-based LCD Display</td>
+</tr>
+<tr>
+<td>PKD</td>
+<td>P8279-based Display/Keypad on PPI</td>
+</tr>
+</tbody>
+</table>
+<h2 id="system">System</h2>
+<table>
+<thead>
+<tr>
+<th><strong>ID</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CH</td>
+<td>CH375/376 USB Interface Controller</td>
+</tr>
+<tr>
+<td>CTC</td>
+<td>Zilog Clock/Timer</td>
+</tr>
+<tr>
+<td>DMA</td>
+<td>Zilog DMA Controller</td>
+</tr>
+<tr>
+<td>ESP</td>
+<td>ESP32 Firmware-based interface</td>
+</tr>
+<tr>
+<td>EZ80TIMER</td>
+<td>eZ80 System Timer</td>
+</tr>
+<tr>
+<td>KIO</td>
+<td>Zilog Serial/ Parallel Counter/Timer (Z84C90)</td>
+</tr>
+<tr>
+<td>PPP</td>
+<td>ParPortProp Host Interface Controller</td>
+</tr>
+<tr>
+<td>PRP</td>
+<td>PropIO Host Interface Controller</td>
+</tr>
+</tbody>
+</table>
+<h1 id="una-hardware-bios">UNA Hardware BIOS</h1>
+<p>John Coffman has produced a new generation of hardware BIOS called UNA.
+The standard RomWBW distribution includes its own hardware BIOS.
+However, RomWBW can alternatively be constructed with UNA as the
+hardware BIOS portion of the ROM. If you wish to use the UNA variant of
+RomWBW, then just program your ROM with the ROM image called
+“UNA_std.rom” in the Binary directory. This one image is suitable on
+<strong>all</strong> of the platforms and hardware UNA supports.</p>
+<p>UNA is customized dynamically using a ROM based setup routine and the
+setup is persisted in the system NVRAM of the RTC chip. This means that
+the single UNA-based ROM image can be used on most of the RetroBrew
+platforms and is easily customized. UNA also supports FAT file system
+access that can be used for in-situ ROM programming and loading system
+images.</p>
+<p>While John is likely to enhance UNA over time, there are currently a few
+things that UNA does not support:</p>
+<ul>
+<li>Floppy Drives</li>
+<li>Terminal Emulation</li>
+<li>Zeta 1, N8, RCBus, Easy Z80, and Dyno Systems</li>
+<li>Some older support boards</li>
+</ul>
+<p>The UNA version embedded in RomWBW is the latest production release of
+UNA. RomWBW will be updated with John’s upcoming UNA release with
+support for VGA3 as soon as it reaches production status.</p>
+<p>Please refer to the <a href="https://www.retrobrewcomputers.org/doku.php?id=software:firmwareos:una:start">UNA BIOS Firmware
+Page</a>
+for more information on UNA.</p>
+<h2 id="una-usage-notes">UNA Usage Notes</h2>
+<ul>
+<li>At startup, UNA will display a prompt similar to this:</li>
+</ul>
+<p><code>Boot UNA unit number or ROM? [R,X,0..3] (R):</code></p>
+<p>You generally want to choose ‘R’ which will then launch the RomWBW
+  loader. Attempting to boot from a disk using a number at the UNA
+  prompt will only work for the legacy (hd512) disk format. However, if
+  you go to the RomWBW loader, you will be able to perform a disk boot
+  on either disk format.</p>
+<ul>
+<li>
+<p>The disk images created and distributed with RomWBW do not have the
+  correct system track code for UNA. In order to boot to disk under UNA,
+  you must first use <code>SYSCOPY</code> to update the system track of the target
+  disk. The UNA ROM disk has the correct system track files for UNA:
+  <code>CPM.SYS</code> and <code>ZSYS.SYS</code>. So, you can boot a ROM OS and then use one
+  of these files to update the system track.</p>
+</li>
+<li>
+<p>The only operating systems supported at this time are CP/M 2 and
+  ZSDOS. NZ-COM is also supported because it uses the ZSDOS CBIOS. None
+  of the other RomWBW operating systems are supported such as CP/M 3,
+  ZPM3, and p-System.</p>
+</li>
+<li>
+<p>Some of the RomWBW-specific applications are not UNA compatible.</p>
+</li>
+</ul></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script src="../js/bootstrap.bundle.min.js"></script>
+        <script>
+            var base_url = "..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../js/base.js"></script>
+        <script src="../search/main.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

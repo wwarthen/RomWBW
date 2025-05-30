@@ -1,0 +1,3750 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="auto">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Applications - RomWBW Documentation V3.6</title>
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../css/fontawesome.min.css" rel="stylesheet">
+        <link href="../css/brands.min.css" rel="stylesheet">
+        <link href="../css/solid.min.css" rel="stylesheet">
+        <link href="../css/v4-font-face.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link id="hljs-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" disabled>
+        <link id="hljs-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css" disabled>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script>hljs.highlightAll();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="..">RomWBW Documentation V3.6</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="nav-item">
+                                <a href="../Introduction/" class="nav-link">Introduction</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../UserGuide/" class="nav-link">User Guide</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../SystemGuide/" class="nav-link">System Guide</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="./" class="nav-link active" aria-current="page">Applications</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../Catalog/" class="nav-link">Catalog</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../Hardware/" class="nav-link">Hardware</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ms-md-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a rel="prev" href="../SystemGuide/" class="nav-link">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" href="../Catalog/" class="nav-link">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="https://github.com/wwarthen/RomWBW" class="nav-link"><i class="fa-brands fa-github"></i> GitHub</a>
+                            </li>
+                            <li class="nav-item dropdown">
+                              <button id="theme-menu" aria-expanded="false" data-bs-toggle="dropdown" data-bs-display="static" aria-label="Toggle theme" class="nav-link dropdown-toggle">
+                                <i class="fa-solid fa-circle-half-stroke fa-fw"></i>
+                                <span class="d-lg-none ms-2">Toggle theme</span>
+                              </button>
+                              <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                  <button class="dropdown-item d-flex align-items-center" data-bs-theme-value="light" aria-pressed="false">
+                                    <i class="fa-solid fa-sun fa-fw"></i>
+                                    <span class="ms-2">Light</span>
+                                    <i class="fa-solid fa-check ms-auto d-none"></i>
+                                  </button>
+                                </li>
+                                <li>
+                                  <button class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark" aria-pressed="false">
+                                    <i class="fa-solid fa-moon fa-fw"></i>
+                                    <span class="ms-2">Dark</span>
+                                    <i class="fa-solid fa-check ms-auto d-none"></i>
+                                  </button>
+                                </li>
+                                <li>
+                                  <button class="dropdown-item d-flex align-items-center" data-bs-theme-value="auto" aria-pressed="true">
+                                    <i class="fa-solid fa-circle-half-stroke fa-fw"></i>
+                                    <span class="ms-2">Auto</span>
+                                    <i class="fa-solid fa-check ms-auto"></i>
+                                  </button>
+                                </li>
+                              </ul>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <script src="../js/darkmode.js"></script>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-body-tertiary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-bs-level="1"><a href="#summary" class="nav-link">Summary</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-bs-level="1"><a href="#boot-menu" class="nav-link">Boot Menu</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="2"><a href="#help" class="nav-link">Help</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#list-rom-applications" class="nav-link">List ROM Applications</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-bs-level="1"><a href="#rom-applications" class="nav-link">ROM Applications</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="2"><a href="#monitor" class="nav-link">Monitor</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#command-summary" class="nav-link">Command Summary</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#cold-boot" class="nav-link">Cold Boot</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#dump-memory" class="nav-link">Dump Memory</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#fill-memory" class="nav-link">Fill Memory</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#halt-system" class="nav-link">Halt System</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#input-from-port" class="nav-link">Input from Port</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#keyboard-echo" class="nav-link">Keyboard Echo</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#load-hex" class="nav-link">Load Hex</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#move-memory" class="nav-link">Move Memory</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#output-to-port" class="nav-link">Output to Port</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#program-memory" class="nav-link">Program Memory</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#run-program" class="nav-link">Run Program</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#set-bank" class="nav-link">Set Bank</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#undo-bank" class="nav-link">Undo Bank</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#x-modem-transfer" class="nav-link">X-Modem Transfer</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#exit-monitor" class="nav-link">Exit Monitor</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#romwbw-system-configuration" class="nav-link">RomWBW System Configuration</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#basic-operation" class="nav-link">Basic Operation</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#commands-and-syntax" class="nav-link">Commands and Syntax</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#switch-options" class="nav-link">Switch Options</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#cpm-22" class="nav-link">CP/M 2.2</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#z-system" class="nav-link">Z-System</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#basic" class="nav-link">BASIC</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#romwbw-specific-features" class="nav-link">RomWBW specific features</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#romwbw-unsupported-features" class="nav-link">RomWBW unsupported features</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#tastybasic" class="nav-link">TastyBASIC</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#features-limitations" class="nav-link">Features / Limitations</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#direct-commands" class="nav-link">Direct Commands</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#statements" class="nav-link">Statements</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#functions" class="nav-link">Functions</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#operators" class="nav-link">Operators</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#forth" class="nav-link">FORTH</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#important-things-to-know" class="nav-link">Important things to know</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#structure-of-forth-source-files" class="nav-link">Structure of Forth source files</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#romwbw-additions" class="nav-link">RomWBW Additions</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#play-a-game" class="nav-link">Play a Game</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#2048" class="nav-link">2048</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#network-boot" class="nav-link">Network Boot</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#xmodem-flash-updater" class="nav-link">Xmodem Flash Updater</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#usage" class="nav-link">Usage</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#console-options" class="nav-link">Console Options</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#programming-options" class="nav-link">Programming options</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#exit-options" class="nav-link">Exit options</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#crc-utility-options" class="nav-link">CRC Utility options</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#tera-term-macro-configuration" class="nav-link">Tera Term macro configuration</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#serial-speed-guidelines" class="nav-link">Serial speed guidelines</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#notes" class="nav-link">Notes</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#user-application" class="nav-link">User Application</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-bs-level="1"><a href="#cpm-applications-rom-based-disk-based" class="nav-link">CP/M Applications - ROM-Based &amp; Disk-Based</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="2"><a href="#assign" class="nav-link">ASSIGN</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#bbcbasic-bbc-basic" class="nav-link">BBCBASIC (BBC BASIC)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#clrdir-clear-directory" class="nav-link">CLRDIR (Clear Directory)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#cpuspd-cpu-speed" class="nav-link">CPUSPD (CPU Speed)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#copysl-copy-slice" class="nav-link">COPYSL (Copy Slice)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#fat-fat-utility" class="nav-link">FAT (FAT Utility)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#fdisk80" class="nav-link">FDISK80</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#fdu-floppy-disk-utility" class="nav-link">FDU (Floppy Disk Utility)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#flash-flash-eeprom" class="nav-link">FLASH (Flash EEPROM)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#format" class="nav-link">FORMAT</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#htalk-hbios-talk" class="nav-link">HTALK (HBIOS Talk)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#mode" class="nav-link">MODE</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#reboot" class="nav-link">REBOOT</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#rtc-real-time-clock" class="nav-link">RTC (Real Time Clock)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#slabel-slice-label" class="nav-link">SLABEL (Slice Label)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#survey" class="nav-link">SURVEY</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#syscopy-system-copy" class="nav-link">SYSCOPY (System Copy)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#talk" class="nav-link">TALK</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#tbasic-tasty-basic" class="nav-link">TBASIC (Tasty BASIC)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#timer" class="nav-link">TIMER</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#tune" class="nav-link">TUNE</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#vgmplay-video-game-music-play" class="nav-link">VGMPLAY (Video Game Music Play)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#wdate-wbw-date" class="nav-link">WDATE (WBW DATE)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#xm-x-modem" class="nav-link">XM (X-Modem)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#zmd-z-modem" class="nav-link">ZMD (Z-Modem)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#zmp-z-modem-program" class="nav-link">ZMP (Z-Modem Program)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<p><strong>RomWBW Applications Guide</strong> \
+Version 3.6 \
+MartinR \&amp; Phillip Summers  (<a href="mailto:"></a>) \
+30 May 2025</p>
+<h1 id="summary">Summary</h1>
+<p>RomWBW is supplied with a suite of software applications that enhance
+the use of the system. Some of these applications have been written
+entirely from scratch for RomWBW. Others are pre-existing software that
+has been customized for the RomWBW environment. This document serves as
+a reference for these RomWBW-specific applications.</p>
+<p>The primary usage documentation for RomWBW is the <a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20User%20Guide.pdf">RomWBW User
+Guide</a>.
+It is assumed that the reader is generally familiar with this document.</p>
+<p>RomWBW also includes many generic software applications that have not
+been modified for RomWBW (e.g., MSBASIC). These generic applications are
+not documented here. Please refer to the application specific
+documentation for these generic applications. The documentation for some
+of these generic applications is included in the Doc folder of the
+RomWBW distribution.</p>
+<p>The applications described in this document fall into two general
+categories.</p>
+<ol>
+<li>
+<p><strong>ROM Applications</strong> are software applications that are loaded from
+    the the ROM memory of your RomWBW system.</p>
+</li>
+<li>
+<p><strong>CP/M Applications</strong> are software applications that are loaded from
+    disk using a previously loaded CP/M (or CP/M like) operating system
+    using its command line.</p>
+</li>
+</ol>
+<p>Note that some applications are available in both forms. For example,
+Microsoft BASIC is available as a ROM application and as an application
+that runs under CP/M. Only the ROM variant is documented here because
+the CP/M variant is not RomWBW-specific.</p>
+<p>You will see that two of the RomWBW operating systems are included here
+as ROM Applications. Although operating systems are normally loaded from
+disk, RomWBW does include a way to launch CP/M 2.2 and Z-System directly
+from ROM.</p>
+<p>Most RomWBW systems include a ROM disk. A running operating system can
+load applications from the ROM disk just like a floppy or hard disk.
+Applications loaded from the ROM disk by CP/M are considered to be CP/M
+applications, <strong>not</strong> ROM applications.</p>
+<h1 id="boot-menu">Boot Menu</h1>
+<p>The system start-up process is described in some detail in the RomWBW
+User Guide, and for the sake of completeness there is some overlap here.</p>
+<p>When a RomWBW system is started the user is presented with a sign-on
+message at the default console detailing the RomWBW version and build
+date. The system follows this with the list of hardware that it has
+discovered, a list of devices and the system units assigned to them,
+before finally inviting the to select a boot device with the prompt:</p>
+<pre><code>Boot [H=Help]:
+</code></pre>
+<p>At this point, the user may specify a unit, optionally with a slice, to
+boot from. Note that it is not possible to boot from from the serial
+(ASCI) or memory disk (MD) devices.</p>
+<p>Alternatively the user may select one of the built-in Boot Loader
+commands. A menu of which may be displayed by pressing the H or ? keys
+(for Help). Furthermore, a ROM application may also be started from this
+prompt.</p>
+<p>This start-up process is described in some detailed in the RomWBW User
+Guide, and there is some overlap here.</p>
+<h2 id="help">Help</h2>
+<p>After pressing H or ? at the boot prompt the user will be presented with
+the following list of available commands:</p>
+<pre><code>L           - List ROM Applications
+D           - Device Inventory
+R           - Reboot System
+I &lt;u&gt; [&lt;c&gt;] - Set Console Interface/Baud code
+V [&lt;n&gt;]     - View/Set HBIOS Diagnostic Verbosity
+&lt;u&gt;[.&lt;s&gt;]   - Boot Disk Unit/Slice
+</code></pre>
+<p>The function performed by each command is described below:</p>
+<p>L:<br />
+Lists the applications and operating systems that are built into the
+RomWBW ROM - e.g., low-level monitor utility, CP/M, or BASIC.</p>
+<p>D:<br />
+Displays the list of system devices that was first displayed when the
+system was started.</p>
+<p>R:<br />
+Will restart the system. Note that this does not reset hardware devices
+in the same way that power-on or pressing the reset button would.</p>
+<p>I:<br />
+Allows the user to select the interface connected to the console, and
+optionally the Baud rate. This could be used to allow the system to be
+operated from a second console.</p>
+<p>V:<br />
+Enables the display of invalid RomWBW HBIOS API calls. This option is
+very unlikely to be used by a user and is used for development purposes.</p>
+<p>And, finally, the system may be booted by specifying the unit number,
+and optional slice, separated by a period(‘.’), of where the disk
+operating system software is located - eg 2, 4.1, 5.3</p>
+<p>Alternatively, a RomWBW ROM application may be started by pressing the
+appropriate key from the applications menu, shown in the following
+section.</p>
+<h2 id="list-rom-applications">List ROM Applications</h2>
+<p>If the user presses the L key at the Boot Loader prompt then the system
+will display the list of ROM applications that are built into RomWBW. If
+a command letter is known, then it may be entered directly at the prompt
+rather than first displaying the menu.</p>
+<p>The ROM applications available from the boot prompt are:</p>
+<pre><code>M: Monitor
+C: CP/M 2.2
+Z: Z-System
+B: BASIC
+T: Tasty BASIC
+F: Forth
+P: Play a Game
+N: Network Boot
+X: XModem Flash Updater
+U: User App
+</code></pre>
+<p>Each of these will now be described in greater detail.</p>
+<h1 id="rom-applications">ROM Applications</h1>
+<h2 id="monitor">Monitor</h2>
+<p>The Monitor program is a low-level utility that can be used for testing
+and programming. It allows programs to be entered, memory to be examined
+and modified, and input/output devices to be read or written to.</p>
+<p>It’s key advantage is that is available at boot up.</p>
+<p>Its key disadvantages are that code cannot be entered in assembly
+language and there is no ability to save to persistent storage (disks).</p>
+<p>The available memory area for programming is <code>0100h-EDFFh</code>. The
+following areas are reserved:</p>
+<table>
+<thead>
+<tr>
+<th>Memory Area</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0000-00FFh</code></td>
+<td>Jump and restart (RST) vectors</td>
+</tr>
+<tr>
+<td><code>EE00-FDFFh</code></td>
+<td>Monitor</td>
+</tr>
+<tr>
+<td><code>FE00-FFFFh</code></td>
+<td>HBIOS proxy</td>
+</tr>
+</tbody>
+</table>
+<p>The monitor uses a prompt in the format of <code>xx&gt;</code> where xx is the RomWBW
+bank id number. For example, the prompt may look like this and means
+that Bank Id 0x8E is currently mapped into the low 32K of processor
+memory.</p>
+<p><code>8E&gt;</code></p>
+<p>Please refer to Section 4 of the \$doc_sys# for a description of the
+RomWBW Bank Id and how it relates to the physical bank of memory being
+mapped to the lower 32K of the processor. The method of assigning banks
+for specific RomWBW functions is also described.</p>
+<p>Commands can be entered at the command prompt. Automatic case conversion
+takes place on command entry and all numeric arguments are expected to
+be in hex format.</p>
+<p>The Monitor allows access to all memory locations but ROM and Flash
+memory cannot be written to. At startup, the Monitor will select the
+default “User” bank. The <code>S</code> command is provided to allow selecting
+alternate banks.</p>
+<p>There now follows a more detailed guide to using the RomWBW Monitor
+program:</p>
+<h3 id="command-summary">Command Summary</h3>
+<p><strong><code>?</code></strong> - Will display a summary of the available commands.</p>
+<pre><code>Monitor Commands (all values in hex):
+B                    - Boot system
+D xxxx [yyyy]        - Dump memory from xxxx to yyyy
+F xxxx yyyy zz       - Fill memory from xxxx to yyyy with zz
+H                    - Halt system
+I xxxx               - Input from port xxxx
+K                    - Keyboard echo
+L                    - Load Intel hex data
+M xxxx yyyy zzzz     - Move memory block xxxx-yyyy to zzzz
+O xxxx yy            - Output value yy to port xxxx
+P xxxx               - Program RAM at address xxxx
+R xxxx [[yy] [zzzz]] - Run code at address xxxx
+                       Pass yy and zzzz to register A and BC
+S xx                 - Set bank to xx
+U                    - Set bank to previous bank
+T xxxx               - X-modem transfer to memory location xxxx
+X                    - Exit monitor
+</code></pre>
+<h3 id="cold-boot">Cold Boot</h3>
+<p><strong><code>B</code></strong> - Performs a cold boot of the RomWBW system. A complete
+re-initialization of the system is performed and the system returns to
+the Boot Loader prompt.</p>
+<h3 id="dump-memory">Dump Memory</h3>
+<p><strong><code>D xxxx [yyyy]</code></strong> - Dump memory from hex location xxxx to yyyy on the
+screen as lines of 16 hexadecimal bytes with their ASCII equivalents (if
+within a set range, else a ‘.’ is printed). If the end address is
+omitted then 256 bytes are displayed.</p>
+<p>A good tool to see where code is located, check for version id, obtain
+details for chip configurations and execution paths.</p>
+<p>Example: <code>D 100 1FF</code></p>
+<pre><code>0100: 10 0B 01 5A 33 45 4E 56 01 00 00 2A 06 00 F9 11  ...Z3ENV...*..ù.
+0110: DE 38 37 ED 52 4D 44 0B 6B 62 13 36 00 ED B0 21  Þ87íRMD.kb.6.í°!
+0120: 7D 32 E5 21 80 00 4E 23 06 00 09 36 00 21 81 00  }2å!..N#...6.!..
+0130: E5 CD 6C 1F C1 C1 E5 2A C9 8C E5 CD 45 05 E5 CD  åÍl.ÁÁå*É.åÍE.åÍ
+0140: 59 1F C3 00 00 C3 AE 01 C3 51 04 C3 4C 02 C3 57  Y.Ã..î.ÃQ.ÃL.ÃW
+0150: 02 C3 64 02 C3 75 02 C3 88 02 C3 B2 03 C3 0D 04  .Ãd.Ãu.Ã..ò.Ã..
+0160: C3 19 04 C3 22 04 C3 2A 04 C3 35 04 C3 40 04 C3  Ã..Ã".Ã*.Ã5.Ã@.Ã
+0170: 48 04 C3 50 04 C3 50 04 C3 50 04 C3 8F 02 C3 93  H.ÃP.ÃP.ÃP.Ã..Ã.
+0180: 02 C3 94 02 C3 95 02 C3 85 04 C3 C7 04 C3 D1 01  .Ã..Ã..Ã..ÃÇ.ÃÑ.
+0190: C3 48 02 C3 E7 04 C3 56 03 C3 D0 01 C3 D0 01 C3  ÃH.Ãç.ÃV.ÃÐ.ÃÐ.Ã
+01A0: D0 01 C3 D0 01 C3 D0 01 C3 D0 01 01 02 01 CD 6B  Ð.ÃÐ.ÃÐ.ÃÐ....Ík
+01B0: 04 54 68 69 73 20 66 75 6E 63 74 69 6F 6E 20 6E  .This function n
+01C0: 6F 74 20 73 75 70 70 6F 72 74 65 64 2E 0D 0A 00  ot supported....
+01D0: C9 3E FF 32 3C 00 3A 5D 00 FE 20 28 14 D6 30 32  É&gt;ÿ2&lt;.:].þ (.Ö02
+01E0: AB 01 32 AD 01 3A 5E 00 FE 20 28 05 D6 30 32 AC  «.2­.:^.þ (.Ö02¬
+01F0: 01 C5 01 F0 F8 CF E5 26 00 0E 0A CD 39 02 7D 3C  .Å.ðøÏå&amp;...Í9.}&lt;
+</code></pre>
+<h3 id="fill-memory">Fill Memory</h3>
+<p><strong><code>F xxxx yyyy zz</code></strong> - Fill memory from hex xxxx to yyyy with a single
+value of zz over the full range. The Dump command can be used to confirm
+that the fill completed as expected. A good way to zero out memory areas
+before writing machine data for debug purposes.</p>
+<h3 id="halt-system">Halt System</h3>
+<p><strong><code>H</code></strong> - Halt system. A Z80 HALT instruction is executed. The system
+remains in the halt state until the system is physically rebooted.
+Interrupts will not restart the system. On systems that support a HALT
+status LED, the LED will be illuminated.</p>
+<h3 id="input-from-port">Input from Port</h3>
+<p><strong><code>I xxxx</code></strong> - Input data from port xxxx and display to the screen. This
+command is used to read values from hardware I/O ports and display the
+contents in hexadecimal.</p>
+<h3 id="keyboard-echo">Keyboard Echo</h3>
+<p><strong><code>K</code></strong> - Echo any key-presses from the terminal. Press ‘ESC’ key to
+quit. This facility provides that any key stroke sent to the computer
+will be echoed back to the terminal. File down loads will be echoed as
+well while this facility is ‘on’.</p>
+<h3 id="load-hex">Load Hex</h3>
+<p><strong><code>L</code></strong> - Load a Intel Hex data via the terminal program. The load
+address is defined in the hex file of the assembled code.</p>
+<p>The terminal emulator program should be configured to give a delay at
+the end of each line to allow the monitor enough time to parse the line
+and move the data to memory.</p>
+<p>Keep in mind that this will be transient unless the system supports
+battery backed memory. Saving to memory drive is not supported.</p>
+<h3 id="move-memory">Move Memory</h3>
+<p><strong><code>M xxxx yyyy zzzz</code></strong> - Move hex memory block xxxx to yyyy to memory
+starting at hex location zzzz. Care should be taken to insure that there
+is enough memory at the destination so that code does not get
+over-written or memory wrapped around.</p>
+<h3 id="output-to-port">Output to Port</h3>
+<p><strong><code>O xxxx yy</code></strong> - Output data byte xx to port xxxx. This command is used
+to send hexadecimal values to hardware I/O ports to verify their
+operation and is the companion to the I operation. Use clip leaded LEDs
+to confirm the data written.</p>
+<h3 id="program-memory">Program Memory</h3>
+<p><strong><code>P xxxx</code></strong> - Program memory location xxxx. This routine will allow you
+to program a hexadecimal value ‘into memory starting at location xxxx.
+Press ’Enter’ on a blank line to return to the Monitor prompt.</p>
+<p>The limitation around programming memory is that it must be entered in
+hexadecimal. An alternative is to use the L command to load a program
+that has been assembled to a hex file on the remote computer.</p>
+<p>An excellent online resource for looking up opcodes for entry can be
+found here: <a href="https://clrhome.org/table">https://clrhome.org/table</a>.</p>
+<h3 id="run-program">Run Program</h3>
+<p><strong><code>R xxxx [[yy] [zzzz]]</code></strong> - Run program at location xxxx. If optional
+arguments yy and zzzz are entered they are loaded into the A and BC
+register respectively. The return address of the Monitor is saved on the
+stack so the program can return to the monitor. On return to the
+monitor, the contents of the A, HL, DE and BC registers are displayed.</p>
+<h3 id="set-bank">Set Bank</h3>
+<p><strong><code>S xx</code></strong> - Set the physical memory bank to the RomWBW Bank Id
+indicated by xx. Memory addresses 0x0000-0x7FFF (i.e. bottom 32k) are
+affected. Because the interrupt vectors are stored in the bottom page of
+this range, this function is disabled when interrupt mode 1 is being
+used (IM1). Interrupt mode 2 is not affected as the associated jump
+vectors are stored in high memory.</p>
+<p>Changing the bank also impacts the restart vectors (RST), so executing
+code that calls the HBIOS using the <code>RST 08</code> assembly code will not
+work.</p>
+<p>The monitor stack resides in high memory and is not affected but any
+code that changes the stack to low memory will be affected.</p>
+<p>The U command may be used to undo the change and return the selected
+memory bank back to the previously selected one.</p>
+<p>Section 4 of the <a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20System%20Guide.pdf">RomWBW System
+Guide</a>
+provides detail on how Bank Ids map to the physical memory of the system
+and also how specific banks are utilized by RomWBW.</p>
+<h3 id="undo-bank">Undo Bank</h3>
+<p><strong><code>U</code></strong> - Change the bank in memory back to the previously selected
+bank. This command should be used in conjunction with the S command.</p>
+<h3 id="x-modem-transfer">X-Modem Transfer</h3>
+<p><strong><code>T xxxx</code></strong> - Receive an X-modem file transfer and load it into memory
+starting at location xxxx.</p>
+<p>128 byte blocks and checksum mode is the only supported protocol.</p>
+<h3 id="exit-monitor">Exit Monitor</h3>
+<p><strong><code>X</code></strong> - Exit the monitor program back to the main boot menu.</p>
+<h2 id="romwbw-system-configuration">RomWBW System Configuration</h2>
+<p>System Configuration (<code>SYSCONF</code>) is a utility that allows system
+configuration to be set, dynamically and stored in NVRAM provided by an
+RTC chip.</p>
+<p>(<code>SYSCONF</code>) is both a ROM application (‘W’ Menu option), and a CP/M
+utility. Noting however the CP/M utility is not included on an disk
+image, it is found in the <code>Binary/Applications</code> folder of the RomWBW
+distribution.</p>
+<p>The <a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20User%20Guide.pdf">RomWBW User
+Guide</a>
+has additional information on the use of NVRAM to set your system
+configuration.</p>
+<h3 id="basic-operation">Basic Operation</h3>
+<p>The application is an interactive application; it does not have a
+command line syntax. Instead commands are executed from within the
+application in a command line structure.</p>
+<p>When you first start the (<code>SYSCONF</code>) utility it will display the current
+switches followed by a command listing.</p>
+<p>When you first run the (<code>SYSCONF</code>) utility the NVRAM will be
+uninitialised, and can be initialised using the (R)eset command, which
+writes default values to NVRAM.</p>
+<p>Updates are done immediately to NVRAM as you enter them, i.e. there is
+no confirm changes step. If you make any incorrect changes, you simply
+need to enter a new command to set the Switch value correctly.</p>
+<p>Once a change has been made it is available, however it may not take
+effect until the next system reboot. This is dependent on the Switch
+itself.</p>
+<p>If no NVRAM is provided by your hardware, then running this application
+will just report the missing hardware and exit immediately.</p>
+<p>To exit from the application use the (Q)uit command.</p>
+<h3 id="commands-and-syntax">Commands and Syntax</h3>
+<p>The following are the accepted commands, unless otherwise specified a
+“Space” character is used to delimit parameters in the command.</p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Argument(s)</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(P)rint</td>
+<td>-none-</td>
+<td>Display a list of the current switch value(s)</td>
+</tr>
+<tr>
+<td>(S)et</td>
+<td>{SW} {val},…</td>
+<td>Sets an Switch {SW} with specific values(s)</td>
+</tr>
+<tr>
+<td>(R)eset</td>
+<td>-none-</td>
+<td>Reset all setting to default</td>
+</tr>
+<tr>
+<td>(H)elp</td>
+<td>{SW}</td>
+<td>Provides help on the syntax (values)</td>
+</tr>
+<tr>
+<td>(Q)uit</td>
+<td>-none-</td>
+<td>Exit the application</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Where</strong></p>
+<table>
+<thead>
+<tr>
+<th>Argument</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>{SW}</td>
+<td>Switch ID, typically this is 2 character name to identify the switch</td>
+</tr>
+<tr>
+<td>{val},…</td>
+<td>a “Comma” separated list of values to set into the switch</td>
+</tr>
+</tbody>
+</table>
+<h3 id="switch-options">Switch Options</h3>
+<h4 id="auto-boot-ab">Auto Boot (AB)</h4>
+<p>This switch will define if the system will perform auto boot at the
+RomWBW boot prompt. Enabling this will not prevent a user from typing a
+boot command, so long as the timeout is not exceeded. When configured
+this replaces the (<code>AUTO_CMD</code>) variable defined in build configuration.</p>
+<p>Making changes to auto boot has no affect until the next reboot.</p>
+<p><strong>Arguments</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Arguments</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Enable</td>
+<td>‘E’</td>
+<td>Auto Boot. eg. “E,10” will auto boot, after 10 seconds</td>
+</tr>
+<tr>
+<td></td>
+<td>Timout</td>
+<td>Timeout in seconds in the range 0-15, 0 = immediate</td>
+</tr>
+<tr>
+<td>Disabled</td>
+<td>‘D’</td>
+<td>No Auto Boot. e.g. “D” will disable autoboot</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Examples</strong></p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S AB E,10</td>
+<td>Enable Auto Boot with 10 second delay</td>
+</tr>
+<tr>
+<td>S AB D</td>
+<td>Disable Auto Boot</td>
+</tr>
+</tbody>
+</table>
+<h4 id="boot-options-bo">Boot Options (BO)</h4>
+<p>This switch will define the boot command to be executed when auto boot
+is enabled. When configured this replaces the (<code>AUTO_CMD</code>) variable
+defined in the ROM build configuration.</p>
+<p>Making changes to boot options has no affect until the next reboot.</p>
+<p><strong>Arguments</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Arguments</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Disk</td>
+<td>‘D’</td>
+<td>Disk Boot. eg. “D,2,14” will boot, disk unit 2, slice 14</td>
+</tr>
+<tr>
+<td></td>
+<td>Disk Unit Number</td>
+<td>Unit number in the range 0-127</td>
+</tr>
+<tr>
+<td></td>
+<td>Disk Slice</td>
+<td>Slice in the range 0-255, use 0 for floppy boot</td>
+</tr>
+<tr>
+<td>ROM</td>
+<td>‘R’</td>
+<td>ROM App. e.g. “R,M” will boot the Monitor App</td>
+</tr>
+<tr>
+<td></td>
+<td>Rom App Name</td>
+<td>single character used on the Menu to identify the app</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Examples</strong></p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S BO D,2,14</td>
+<td>Set the default boot from Disk; Unit 2, Slice 14</td>
+</tr>
+<tr>
+<td>S BO R,M</td>
+<td>Set the default boot to be the (M)onitor Rom Application</td>
+</tr>
+</tbody>
+</table>
+<h2 id="cpm-22">CP/M 2.2</h2>
+<p>This option will boot the CP/M 2.2 disk operating system from an image
+contained within the ROM. Please refer to the CPM User Manual in the
+Doc/CPM folder of the distribution for CP/M usage. There are also many
+online resources.</p>
+<p>During the build process the system will create a ROM disk containing a
+number of curated CP/M applications, and also a RAM drive. The capacity
+of each will depend upon the size of the ROM and RAM available to the
+system. A more complete set of utilities are provided within the disk
+image files provided as part of RomWBW.</p>
+<p>A number of the applications provided are generic to CP/M, while others
+rely on particular hardware or aspects of RomWBW itself.</p>
+<p>Those that are written specific to RomWBW include: ASSIGN, CPUSPD, FDU,
+FORMAT, FLASH, FDISK80, MODE, REBOOT, RTC, SYSCOPY, TALK, TIMER, XM, and
+COPYSL.</p>
+<p>The CP/M utilities supplied with RomWBW warrant more detailed
+descriptions, and so are described in some detail in their own section
+of this user guide. In summary they provide the initial capability to
+manage and update your RomWBW system, to create other bootable media
+(hardware dependent) and to write/debug code using assembler and BASIC.</p>
+<h2 id="z-system">Z-System</h2>
+<p>Z-System is a complete alternative, but entirely compatible, disk
+operating system to CP/M.</p>
+<p>Z-System is comprised of ZSDOS 1.1 which is a replacement for CP/M’s
+Basic Disk Operating System (BDOS), and ZCPR which is a replacement for
+the Console Command Processor (CCP). Either or both may be used,
+although using both together will allow ZCPR to make use of specific
+ZSDOS features.</p>
+<p>Documentation for Z-System may be found in the Doc/CPM folder of the
+RomWBW distribution and the reader is referred to those.</p>
+<h2 id="basic">BASIC</h2>
+<p>For those who are not familiar with BASIC, it stands for Beginners All
+Purpose Symbolic Instruction Code.</p>
+<p>RomWBW contains two versions of ROM BASIC, a full implementation and a
+“tiny” BASIC.</p>
+<p>The full implementation is a version of Microsoft BASIC from the NASCOM
+Computer.</p>
+<p>A comprehensive instruction manual is available in the Doc/Contrib
+directory.</p>
+<h3 id="romwbw-specific-features">RomWBW specific features</h3>
+<ul>
+<li>Sound</li>
+<li>Graphics</li>
+<li>Terminal Support</li>
+</ul>
+<h3 id="romwbw-unsupported-features">RomWBW unsupported features</h3>
+<ul>
+<li>Cassette loading</li>
+<li>Cassette saving</li>
+</ul>
+<h2 id="tastybasic">TastyBASIC</h2>
+<p>TastyBASIC offers a minimal implementation of BASIC that is only 2304
+bytes in size. It originates from Li-Chen Wang’s Palo Alto Tiny BASIC
+from around 1976. It’s small size is suited the tiny memory capacities
+of the time. This implementation is by Dimitri Theulings and his
+original source can be found at
+<a href="https://github.com/dimitrit/tastybasic">https://github.com/dimitrit/tastybasic</a>.</p>
+<h3 id="features-limitations">Features / Limitations</h3>
+<ul>
+<li>Integer arithmetic, numbers -32767 to 32767</li>
+<li>Singles letter variables A-Z</li>
+<li>1-dimensional array support</li>
+<li>Strings are not supported</li>
+</ul>
+<h3 id="direct-commands">Direct Commands</h3>
+<ul>
+<li><code>LIST</code>,<code>RUN</code>, <code>NEW</code>, <code>CLEAR</code>, <code>BYE</code></li>
+</ul>
+<h3 id="statements">Statements</h3>
+<ul>
+<li><code>LET</code>, <code>IF</code>, <code>GOTO</code>, <code>GOSUB RETURN</code>, <code>REM</code>, <code>FOR TO NEXT STEP</code>,
+  <code>INPUT</code>, <code>PRINT</code>, <code>POKE</code>, <code>END</code></li>
+</ul>
+<h3 id="functions">Functions</h3>
+<ul>
+<li><code>PEEK</code>, <code>RND</code>, <code>ABS</code>, <code>USR</code>, <code>SIZE</code></li>
+</ul>
+<h3 id="operators">Operators</h3>
+<ul>
+<li>
+<p><code>&gt;=</code>, <code>#</code>, <code>&gt;</code>, <code>=</code>, <code>&lt;=</code>, <code>&lt;</code></p>
+</li>
+<li>
+<p>Operator precedence is supported.</p>
+</li>
+</ul>
+<p>Type <strong><em>BYE</em></strong> to return to the boot menu.</p>
+<h2 id="forth">FORTH</h2>
+<p>CamelForth is the version of Forth included as part of the boot ROM in
+RomWBW. It has been converted from the Z80 CP/M version published at
+<a href="https://www.camelforth.com/page.php?5">https://www.camelforth.com/page.php?5</a>. The author is Brad Rodriguez
+who is a prolific Forth enthusiast, whose work can be found here:
+<a href="https://www.bradrodriguez.com/papers">https://www.bradrodriguez.com/papers</a>.</p>
+<p>For those are who are not familiar with Forth, I recommend the wikipedia
+article <a href="https://en.wikipedia.org/wiki/Forth_(programming_language)">https://en.wikipedia.org/wiki/Forth_(programming_language)</a> and
+the Forth Interest Group website <a href="https://www.forth.org/">https://www.forth.org/</a>.</p>
+<h3 id="important-things-to-know">Important things to know</h3>
+<p>Forth is case sensitive.</p>
+<p>To exit back to the boot loader type <strong><em>bye</em></strong></p>
+<p>To get a list of available words type <strong><em>WORDS</em></strong></p>
+<p>To reset Forth to its initial state type <strong><em>COLD</em></strong></p>
+<p>Most of the code you find on the internet will not run unless modified
+or additional Forth words are added to the dictionary.</p>
+<p>This implementation does not support loading or saving of programs. All
+programs need to be typed in. Additionally, screen editing and code
+blocks are not supported.</p>
+<p>A CP/M version is not provided with RomWBW, this is only a ROM
+application. If you need to run it under CP/M you would need to download
+it from the camelforth web site, the link is above.</p>
+<h3 id="structure-of-forth-source-files">Structure of Forth source files</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>camel80.azm</td>
+<td>Code Primitives</td>
+</tr>
+<tr>
+<td>camel80d.azm</td>
+<td>CPU Dependencies</td>
+</tr>
+<tr>
+<td>camel80h.azm</td>
+<td>High Level words</td>
+</tr>
+<tr>
+<td>camel80r.azm</td>
+<td>RomWBW additions</td>
+</tr>
+<tr>
+<td>glosshi.txt</td>
+<td>Glossary of high level words</td>
+</tr>
+<tr>
+<td>glosslo.txt</td>
+<td>Glossary of low level words</td>
+</tr>
+<tr>
+<td>glossr.txt</td>
+<td>Glossary of RomWBW additions</td>
+</tr>
+</tbody>
+</table>
+<h3 id="romwbw-additions">RomWBW Additions</h3>
+<p>Extensions and changes to this implementation compared to the original
+distribution are:</p>
+<ul>
+<li>
+<p>The source code has been converted from Z80mr assembler to Hector
+  Peraza’s zsm.</p>
+</li>
+<li>
+<p>An additional file camel80r.azm has been added for including
+  additional words to the dictionary at build time. However, as
+  currently configured there is very little space allocated for addition
+  words. Exceeding the allocated ROM space will generate an error
+  message when building.</p>
+</li>
+<li>
+<p>James Bowman’s double precision words have been added from his RC2014
+  version: <a href="https://github.com/jamesbowman/camelforth-z80">https://github.com/jamesbowman/camelforth-z80</a>.</p>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Word</th>
+<th>Syntax</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D+</td>
+<td>d1 d2 – d1+d2</td>
+<td>Add double numbers</td>
+</tr>
+<tr>
+<td>2&gt;R</td>
+<td>d –</td>
+<td>2 to R</td>
+</tr>
+<tr>
+<td>2R&gt;</td>
+<td>d –</td>
+<td>fetch 2 from R</td>
+</tr>
+<tr>
+<td>M*/</td>
+<td>d1 n2 u3 – d=(d1*n2)/u3</td>
+<td>double precision mult. div</td>
+</tr>
+<tr>
+<td>SVC</td>
+<td>hl de bc n – hl de bc af</td>
+<td>Execute a RomWBW function</td>
+</tr>
+<tr>
+<td>P!</td>
+<td>n p –</td>
+<td>Write a byte to a I/O port</td>
+</tr>
+<tr>
+<td>P@</td>
+<td>p – n</td>
+<td>Read a byte from and I/O port</td>
+</tr>
+</tbody>
+</table>
+<h2 id="play-a-game">Play a Game</h2>
+<h3 id="2048">2048</h3>
+<p>2048 is a puzzle game that can be both mindless and challenging. It
+appears deceptively simple but failure can creep up on you suddenly.</p>
+<p>It requires an ANSI/VT-100 compatible colour terminal to play.</p>
+<p>2048 is like a sliding puzzle game except the puzzle tiles are numbers
+instead of pictures. Instead of moving a single tile all tiles are moved
+simultaneously in the same direction. Where two tiles of the same number
+collide, they are reduced to one tile with the combined value. After
+every move a new tile is added with a starting value of 2.</p>
+<p>The goal is to create a tile of 2048 before all tile locations are
+occupied. Reaching the highest points score, which is the sum of all the
+tiles is a secondary goal. The game will automatically end when there
+are no more possible moves.</p>
+<p>Play consists of entering a direction to move. Directions can be entered
+using any of three different keyboard direction sets.</p>
+<pre><code>Direction | Keys
+----------|----------
+Up        | w ^E 8
+Down      | s ^X 2
+Left      | a ^S 4
+Right     | d ^D 6
+</code></pre>
+<p>The puzzle board is a 4x4 grid. At start, the grid will be populated
+with two 2 tiles. An example game sequence is shown below with new tiles
+to the game shown in brackets.</p>
+<pre><code>Start             Move 1 - Up       Move 2 - Left     Move 3 - Left
++---+---+---+---+ +---+---+---+---+ +---+---+---+---+ +---+---+---+---+
+|   |   |   |(2)| |   |   |   | 4 | | 4 |   |   |   | | 4 |   |   |   |
++---+---+---+---+ +---+---+---+---+ +---+---+---+---+ +---+---+---+---+
+|   |   |   |   | |   |   |   |   | |   |   |   |(4)| | 4 |   |   |   |
++---+---+---+---+ +---+---+---+---+ +---+---+---+---+ +---+---+---+---+
+|   |   |   |(2)| |   |   |   |   | |   |   |   |   | |   |   |   |   |
++---+---+---+---+ +---+---+---+---+ +---+---+---+---+ +---+---+---+---+
+|   |   |   |   | |   |   |(2)|   | | 2 |   |   |   | | 2 |   |(2)|   |
++---+---+---+---+ +---+---+---+---+ +---+---+---+---+ +---+---+---+---+
+
+Move 4 - Left     Move 5 - Up       Move 6 - Right    Move 7 - Up
++---+---+---+---+ +---+---+---+---+ +---+---+---+---+ +---+---+---+---+
+| 4 |   |   |   | | 8 |   |   | 4 | |   |   | 8 | 4 | |   |   | 8 | 8 |
++---+---+---+---+ +---+---+---+---+ +---+---+---+---+ +---+---+---+---+
+| 4 |   |   |(4)| | 4 |   |   |   | |   |   |   | 4 | |   |   |   | 2 |
++---+---+---+---+ +---+---+---+---+ +---+---+---+---+ +---+---+---+---+
+|   |   |   |   | |   |   |   |   | |   |   |   |   | |   |   |   |   |
++---+---+---+---+ +---+---+---+---+ +---+---+---+---+ +---+---+---+---+
+| 4 |   |   |   | |(2)|   |   |   | |(2)|   |   | 2 | |(2)|   |   |   |
++---+---+---+---+ +---+---+---+---+ +---+---+---+---+ +---+---+---+---+
+</code></pre>
+<p>This is how I lost this game:</p>
+<pre><code>+---+---+---+---+
+| 4 | 2 | 16| 4 |
++---+---+---+---+
+| 32| 64| 8 | 2 |
++---+---+---+---+
+| 4 | 8 |128| 32|
++---+---+---+---+
+|(2)| 16| 8 | 4 |
++---+---+---+---+
+</code></pre>
+<p>Press Q at any time to bring up the option to Quit or Restart the game.</p>
+<h2 id="network-boot">Network Boot</h2>
+<p>If your RomWBW system is equipped with an RCBus MT011 module, it is
+possible to boot into CP/M 2.2 directly from a CP/NET network server.
+This means that the operating system will be loaded directly from the
+network server and all of your drive letters will be provided by the
+network server.</p>
+<p>This function requires substantial knowledge of CP/NET and it’s
+implementation within RomWBW. Section 10 of the <a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20User%20Guide.pdf">RomWBW User
+Guide</a>
+provides complete instructions for setting up a CP/NET based network
+under RomWBW including a section on network booting.</p>
+<h2 id="xmodem-flash-updater">Xmodem Flash Updater</h2>
+<p>The RomWBW Xmodem flash updater provides the capability to update RomWBW
+from the boot loader using an x-modem file transfer. It offers similar
+capabilities to Will Sowerbutts FLASH4 utility except that the flashing
+process occurs during the file transfer.</p>
+<p>These are the key differences between the two methods are:</p>
+<table>
+<thead>
+<tr>
+<th>Xmodem Flash Updater</th>
+<th>FLASH.COM (aka FLASH4)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Available from the boot loader</td>
+<td>Well proven and tested</td>
+</tr>
+<tr>
+<td>Xmodem transfer is integrated</td>
+<td>Wider range of supported chips and hardware</td>
+</tr>
+<tr>
+<td>Integrated checksum utilities</td>
+<td>Wider range of supported platforms</td>
+</tr>
+<tr>
+<td>Capability to copy a ROM image</td>
+<td>Only reprograms sectors that have changed</td>
+</tr>
+<tr>
+<td>More convenient one step process</td>
+<td>Ability save and verify ROM images</td>
+</tr>
+<tr>
+<td>No intermediate storage required</td>
+<td>Progress display while flashing</td>
+</tr>
+<tr>
+<td>.</td>
+<td>Displays chip identification information</td>
+</tr>
+<tr>
+<td>.</td>
+<td>Faster file transfer</td>
+</tr>
+</tbody>
+</table>
+<p>The major disadvantages of the Updater is that it is new and relatively
+untested. There is the risk that a failed transfer will result in a
+partially flashed and unbootable ROM. There are some limitations on
+serial transfer speeds.</p>
+<p>The updater utility was initially intended to support the Retrobrew
+SBC-V2-005 platform using Atmel 39SF040 flash chips but has now been
+extended to be more generic in operation.</p>
+<p>Supported flash chips are 39SF040, 29F040, AT49F040, AT29C040, M29F040 ,
+MX29F040, A29010B, A29040B</p>
+<p>The Atmel 39SF040 chip is recommended as it can erase and write 4Kb
+sectors. Other chips require the whole chip to be erased.</p>
+<h3 id="usage">Usage</h3>
+<p>In most cases, completing a ROM update is a simple as:</p>
+<ol>
+<li>Booting to the boot loader prompt</li>
+<li>Selecting option X - Xmodem Flash Updater</li>
+<li>Selecting option U - Update</li>
+<li>Initiating an X-modem transfer of your ROM image on your console
+    device</li>
+<li>Selecting option R - Reboot</li>
+</ol>
+<p>If your console device is not able to transfer a ROM image i.e. your
+console is a VDU then you will have to use the console options to
+identify which character-input/output device is to be used as the serial
+device for transfer.</p>
+<p>When your console is the serial device used for the transfer, no
+progress information is displayed as this would disrupt the x-modem file
+transfer. If you use an alternate character-input/output devices as the
+serial device for the transfer then progress information will be
+displayed on the console device.</p>
+<p>Due to different platform processor speeds, serials speeds and flow
+control capabilities the default console or serial device speed may need
+to be reduced for a successful transfer and flash to occur. The <strong>Set
+Console Interface/Baud code</strong> option at the Boot Loader can be used to
+change the speed if required. Additionally, the Updater has options to
+set to and revert from a recommended speed.</p>
+<p>See the RomWBW Applications guide for additional information on
+performing upgrades.</p>
+<h3 id="console-options">Console Options</h3>
+<p>Option ( C ) - Set Console Device</p>
+<p>Option ( S ) - Set Serial Device</p>
+<p>By default the updater assumes that the current console is a serial
+device and that the ROM file to be flashed will also be transferred
+across this device, so the Console and Serial device are both the same.</p>
+<p>Either device can be can be change to another character-input/output
+device but the updater will always expect to receive the x-modem
+transfer on the <strong>Serial Device</strong></p>
+<p>The advantage of transferring on a different device to the console is
+that progress information can be displayed during the transfer.</p>
+<p>Option ( &gt; ) - Set Recommended Baud Rate</p>
+<p>Option ( \&lt; ) - Revert to Original Baud Rate</p>
+<h3 id="programming-options">Programming options</h3>
+<p>Option ( U ) - Begin Update</p>
+<p>The will begin the update process. The updater will expect to start
+receiving an x-modem file on the serial device unit.</p>
+<p>X-modem sends the file in packets of 128 bytes. The updater will cache
+32 packets which is 1 flash sector and then write that sector to the
+flash device.</p>
+<p>If using separate console, bank and sector progress information will
+shown</p>
+<pre><code>BANK 00 s00 s01 s02 s03 s04 s05 s06 s06 s07
+BANK 01 s00 s01 s02 s03 s04 s05 s06 s06 s07
+BANK 02 s00 s01 s02 s03 s04 s05 s06 s06 s07 etc
+</code></pre>
+<p>The x-modem file transfer protocol does not provide any filename or size
+information for the transfer so the updater does not perform any checks
+on the file suitability.</p>
+<p>The updater expects the file size to be a multiple of 4 kilobytes and
+will write all data received to the flash device. A system update file
+(128kb .img) or complete ROM can be received and written (512kb or
+1024kb .rom)</p>
+<p>If the update fails it is recommended that you retry before rebooting or
+exiting to the Boot loader as your machine may not be bootable.</p>
+<p>Option ( D ) - Duplicate flash #1 to flash #2</p>
+<p>This option will make a copy of flash #1 onto flash #2. The purpose of
+this is to enable making a backup copy of the current flash. Intended
+for systems using 2x512Kb Flash devices.</p>
+<p>Option ( V ) - Toggle Write Verify</p>
+<p>By default each flash sector will be verified after being written.
+Slight performance improvements can be gained if turned off and could be
+used if you are experiencing reliable transfers and flashing.</p>
+<h3 id="exit-options">Exit options</h3>
+<p>Option ( R ) - Reboot</p>
+<p>Execute a cold reboot. This should be done after a successful update. If
+you perform a cold reboot after a failed update then it is likely that
+your system will be unusable and removing and reprogramming the flash
+will be required.</p>
+<p>Option ( Q ) - Quit to boot loader.</p>
+<p>The SBC Boot Loader is reloaded from ROM and executed. After a
+successful update a Reboot should be performed. However, in the case of
+a failed update this option could be used to attempt to load CP/M and
+perform the normal x-modem / flash process to recover.</p>
+<h3 id="crc-utility-options">CRC Utility options</h3>
+<p>Option ( 1 ) and ( 2 ) - Calculate and display CRC32 of 1st or 2nd 512k
+ROM. Option ( 3 ) - Calculate and display CRC32 of a 1024k (2x512Kb)
+ROM.</p>
+<p>Can be used to verify if a ROM image has been transferred and flashed
+correctly. Refer to the Tera Term section below for details on
+configuring the automatic display of a files CRC after it has been
+transferred.</p>
+<p>In Windows, right clicking on a file should also give you a context menu
+option CRC SHA which will allow you to select a CRC32 calculation to be
+done on the selected file.</p>
+<h3 id="tera-term-macro-configuration">Tera Term macro configuration</h3>
+<p>Macros are a useful tool for automatic common tasks. There are a number
+of instances where using macros to facilitate the update process could
+be worthwhile if you are:</p>
+<ul>
+<li>Following the RomWBW development builds.</li>
+<li>Doing lots of configuration changes.</li>
+<li>Doing development on RomWBW drivers</li>
+</ul>
+<p>Macros can be used to automate sending ROM updates or images and for my
+own purposed I have set up a separate macro for transferring each of the
+standard build ROM, my own custom configuration ROM and update ROM.</p>
+<p>An example macro file to send an *.upd file, using checksum mode and
+display the crc32 value of the transmitted file:</p>
+<pre><code>Xmodem send, checksum, display crc32
+xmodemsend '\\desktop\users\phillip\documents\github\romwbw\binary\sbc_std_cust.upd' 1
+crc32file crc '\\desktop\users\phillip\documents\github\romwbw\binary\sbc_std_cust.rom'
+sprintf '0x%08x' crc
+messagebox inputstr 'crc32'
+</code></pre>
+<h3 id="serial-speed-guidelines">Serial speed guidelines</h3>
+<p>As identified in the introduction, there are limitations on serial speed
+depending on processor speed and flow control settings. Listed below are
+some of the results identified during testing.</p>
+<table>
+<thead>
+<tr>
+<th>Configuration</th>
+<th>Processor Speed</th>
+<th>Maximum Serial Speed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UART no flow control</td>
+<td>2MHz</td>
+<td>9600</td>
+</tr>
+<tr>
+<td>UART no flow control</td>
+<td>4MHz</td>
+<td>19200</td>
+</tr>
+<tr>
+<td>UART no flow control</td>
+<td>5MHz</td>
+<td>19200</td>
+</tr>
+<tr>
+<td>UART no flow control</td>
+<td>8MHz</td>
+<td>38400</td>
+</tr>
+<tr>
+<td>UART no flow control</td>
+<td>10MHz</td>
+<td>38400</td>
+</tr>
+<tr>
+<td>USB-fifo 2MHz+</td>
+<td></td>
+<td>n/a</td>
+</tr>
+<tr>
+<td>ASCI no flow control</td>
+<td>18.432MHz</td>
+<td>9600</td>
+</tr>
+<tr>
+<td>ASCI with flow control</td>
+<td>18.432MHz</td>
+<td>38400</td>
+</tr>
+</tbody>
+</table>
+<p>The <strong>Set Recommend Baud Rate</strong> option in the Updater menu follows the
+following guidelines.</p>
+<table>
+<thead>
+<tr>
+<th>Processor Speed</th>
+<th>Baud Rate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1MHz</td>
+<td>4800</td>
+</tr>
+<tr>
+<td>2-3MHz</td>
+<td>9600</td>
+</tr>
+<tr>
+<td>4-7MHz</td>
+<td>19200</td>
+</tr>
+<tr>
+<td>8-20MHz</td>
+<td>38400</td>
+</tr>
+</tbody>
+</table>
+<p>These can be customized in the updater.asm source code in the CLKTBL
+table if desired. Feedback to the RomWBW developers on these guidelines
+would be appreciated.</p>
+<h3 id="notes">Notes</h3>
+<p>All testing was done with Tera Term x-modem, Forcing checksum mode using
+macros was found to give the most reliable transfer. Partial writes can
+be completed with 39SF040 chips. Other chips require entire flash to be
+erased before being written. An SBC V2-005 MegaFlash or Z80 MBC required
+for 1mb flash support. The Updater assumes both chips are same type
+Failure handling has not been tested. Timing broadly calibrated on a Z80
+SBC-v2 Unabios not supported</p>
+<h2 id="user-application">User Application</h2>
+<p>RomWBW provides the facility for a user to build, include and execute
+their own custom application directly from the applications menu at
+boot-up. All that’s needed is for the user to create their custom code
+ready for inclusion, recognising that there are certain constraints in
+doing this.</p>
+<p>In order to build properly, the build process requires that the file
+<code>usrrom.asm</code> be found in the /Source/HBIOS folder of the RomWBW tree.</p>
+<p>This source file needs to assemble using TASM and it must start at (ORG)
+address 00100H as the RomWBW HBIOS reserves locations 00000H to 000FFH
+for internal use. Further, the user application must assemble to a
+maximum of <code>USR-SIZ</code> bytes.</p>
+<p>During execution, the user application may make use of HBIOS calls as
+necessary, and at exit it should return to the RomWBW boot loader using
+the HBIOS warm reset. Note that no disk operating system (eg CP/M)
+functions will be available as no disk operating system will have been
+loaded.</p>
+<p>There is a sample <code>usrrom.asm</code> supplied in Source/HBIOS and it is
+recommended that, at least initially, users create their own application
+based on this as a template because it already creates the necessary
+variables, starts at (ORG) 00100H, and ensures that the assembled file
+is padded to create a file <code>USR-SIZ</code> in length. Equally, should the the
+user’s application prove too large for the space available then assembly
+will be terminated with an error. Users should not remove this check
+from the templated code.</p>
+<p>If required, the user application may make use of the Z80 interrupt
+system but if the user application wishes to rely on HBIOS functionality
+then it must adhere to the HBIOS framework for managing interupts.
+Alternatively, if the user appliction has no need for the HBIOS then it
+may use its own custom code for handling interrupts. In that case, a
+hard reset, rather than an HBIOS warm start, would be necessary to
+return control to RomWBW.</p>
+<h1 id="cpm-applications-rom-based-disk-based">CP/M Applications - ROM-Based &amp; Disk-Based</h1>
+<p>There now follows a more detailed guide to using the small suite of
+custom applications included with RomWBW. In general, these applications
+are operating system agnostic – they run under any of the included
+operating systems. However, they all require RomWBW – they are not
+generic CP/M applications.</p>
+<p>Most of the applications are custom written for RomWBW. However, some
+are standard CP/M applications that have been adapted to run under
+RomWBW (e.g. XM/XModem). The applications are generally matched to the
+version of RomWBW they are distributed with. So, if you upgrade the
+version of RomWBW in your system ROM, you will want to copy the
+corresponding applications to any storage devices you are using.</p>
+<p>Most of the applications are included on the RomWBW ROM disk, so they
+are easy to access.</p>
+<p>The applications are also included with all of the operating system disk
+images provided with RomWBW. So, a simple way to ensure you have
+matching applications is to write the disk images onto your disk media
+when upgrading your ROM. Of course, this will destroy any existing data
+on your disk media, so don’t do this if you are saving any data on the
+media.</p>
+<p>Most of the applications are included as source code in the RomWBW
+distribution and are built during the normal build process. The source
+code is found in the Source/Apps directory of the distribution. The
+binary executable applications are found in the Binary/Apps directory.</p>
+<p>The table below clarifies where each of the applications may be found.
+It is not an exhaustive list, with further applications existing on both
+the ROM-based and disk-based versions of CP/M. All of the Applications
+included within RomWBW may be found within the Binary/Apps directory.</p>
+<table>
+<thead>
+<tr>
+<th>Application</th>
+<th style="text-align: center;">ROM Disk</th>
+<th style="text-align: center;">Boot Disks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ASSIGN</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+<tr>
+<td>BBCBASIC</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+<tr>
+<td>CLRDIR</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+<tr>
+<td>COPYSL</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+<tr>
+<td>CPUSPD</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+<tr>
+<td>FAT</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+<tr>
+<td>FDISK80</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+<tr>
+<td>FDU</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+<tr>
+<td>FLASH</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+<tr>
+<td>FORMAT</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+<tr>
+<td>HTALK</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+<tr>
+<td>MODE</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+<tr>
+<td>REBOOT</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+<tr>
+<td>RTC</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+<tr>
+<td>SURVEY</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+<tr>
+<td>SYSCOPY</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+<tr>
+<td>TALK</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+<tr>
+<td>TBASIC</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+<tr>
+<td>TIMER</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+<tr>
+<td>TUNE</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+<tr>
+<td>VGMPLAY</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+<tr>
+<td>WDATE</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+<tr>
+<td>XM</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+<tr>
+<td>ZMD</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+<tr>
+<td>ZMP</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+</tbody>
+</table>
+<p>All of the CP/M applications may be found in the RomWBW Binary/Apps
+directory and a user may copy those they need to their own customized
+disk/slice.</p>
+<p>Independently of whether the CP/M system was started from ROM or a boot
+disk, such as a floppy disk or a slice on a CF or uSD memory card,
+applications may be located on and executed from either the ROM-disk
+itself or from other media. There are multiple disk images available for
+CP/M (eg floppy, legacy hard-disk and new hard-disk formats) and they
+all contain essentially the same set of applications.</p>
+<p>There are particular advantages for each method of booting into CP/M.</p>
+<p>ROM-based CP/M:</p>
+<ul>
+<li>A clean and reliable copy of CP/M with no possibility of corruption</li>
+<li>No additional hardware required</li>
+<li>Fast to boot</li>
+<li>Rolled forward with new releases of RomWBW</li>
+</ul>
+<p>Disk-based CP/M:</p>
+<ul>
+<li>Greater capacity allows for a larger number of applications</li>
+<li>Allows for user-customisation of applications available</li>
+<li>Allows individual disks to be tailored to a particular purpose, eg
+  word processor</li>
+</ul>
+<p>For systems starting CP/M from a disk created from an image file, there
+are a small number of additional applications stored in the <code>USER 2</code>
+area of the disk. These applications do not form part of CP/M, but
+rather are small utilities used for test purposes during develpment
+work. They may, or may not, fuction correctly with any given hardware or
+software configuration. Documentation for these untilities is very
+limited, though the source files maybe found in the /Source folder. Note
+that these utiltites are not available when starting CP/M from the ROM
+image or from a floppy disk.</p>
+<p>A number of the CP/M applications available are described in more detail
+in the following sections, each with an indication as to whether that
+application may be found on the ROM-disk, a boot-disk, or both.</p>
+<h2 id="assign">ASSIGN</h2>
+<table>
+<thead>
+<tr>
+<th>ASSIGN</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROM-based</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Disk-based</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>RomWBW includes a flexible mechanism for associating the operating
+system drive letters (A: - P:) to the physical devices in the system.
+Drive letter assignments can be changed on a running operating system
+without rebooting. The ASSIGN command facilitates this by allowing you
+to display, assign, reassign, or remove the drive letter assignments.</p>
+<h4 id="syntax">Syntax</h4>
+<p><code>ASSIGN /?</code><br />
+<code>ASSIGN /L</code><br />
+<code>ASSIGN</code> <em><code>&lt;drv&gt;</code></em><code>=</code><br />
+<code>ASSIGN</code><br />
+<code>ASSIGN [</code><em><code>&lt;drv&gt;</code></em><code>],...</code><br />
+<code>ASSIGN</code> <em><code>&lt;drv&gt;</code></em><code>=[</code><em><code>&lt;device&gt;</code></em><code>:[</code><em><code>&lt;slice&gt;</code></em><code>]],...</code><br />
+<code>ASSIGN</code> <em><code>&lt;tgtdrv&gt;</code></em><code>=</code><em><code>&lt;srcdrv&gt;</code></em><code>,...</code><br />
+<code>ASSIGN /B='*'&lt;option&gt;'*'['*'&lt;option&gt;'*'['*'&lt;option&gt;'*'...]]</code></p>
+<h4 id="usage_1">Usage</h4>
+<p><code>ASSIGN /?</code> will display brief command usage and version information.</p>
+<p><code>ASSIGN /L</code> will display a list of all the devices available to be used
+in drive assignments in the running system. The devices listed may or
+may not contain media. Although some device types support the use of
+slices, the list does not indicate this.</p>
+<p><code>ASSIGN A:</code> just specifying the drive letter will display the assignment
+for the drive letter</p>
+<p><code>ASSIGN</code> with no parameters will list all of the current drive
+assignments.</p>
+<h4 id="usage-specific">Usage (Specific)</h4>
+<p>The following describes how to assign drive specifically by identifing
+each drive by its unique device and slice id’s</p>
+<p><code>ASSIGN</code> <em><code>&lt;drv&gt;</code></em> will display the assignment for the specific drive
+For example, <code>ASSIGN C:</code> will display the assignment for drive C:.</p>
+<p><code>ASSIGN</code> <em><code>&lt;drv&gt;</code></em><code>=</code><em><code>&lt;device&gt;</code></em><code>[:</code><em><code>&lt;slice&gt;</code></em><code>]</code> will assign (or
+reassign) a drive letter to a new device and (optionally) slice. If no
+slice is specified, then slice 0 is assumed. For example,
+<code>ASSIGN C:=IDE0</code> will assign drive letter C: to device IDE0, slice 0.
+<code>ASSIGN D:=IDE0:3</code> will assign drive letter D: to device IDE0 slice 3.</p>
+<p>The <code>ASSIGN</code> command will not allow you to specify a slice (other than
+zero) for devices that do not support slices. A slice should only be
+specified for hard disk devices (SD, IDE, PPIDE). Floppy disk drives and
+RAM/ROM drives do not have slices.</p>
+<p><code>ASSIGN</code> <em><code>&lt;drv&gt;</code></em><code>=</code> can be used to remove the assignment from a drive
+letter. So, <code>ASSIGN E:=</code> will remove the association of drive letter E:
+from any previous device.</p>
+<p><code>ASSIGN</code> <em><code>&lt;tgtdrv&gt;</code></em><code>=</code><em><code>&lt;srcdrv&gt;</code></em> is used to swap the assignments of
+two drive letters. For example, <code>ASSIGN C:=D:</code> will swap the device
+assignments of C: and D:.</p>
+<p>The <code>ASSIGN</code> command supports “stacking” of instructions. For example,
+<code>ASSIGN C:=IDE0:0,D:=IDE0:1,E:=</code> will assign C: and D: to the first two
+slices of IDE 0 and will unassign E:.</p>
+<p>When the command runs it will echo the resultant assignments to the
+console to confirm its actions. It will also display the remaining space
+available in disk buffers.</p>
+<h4 id="usage-bulk">Usage (Bulk)</h4>
+<p>The following describes how to assign drives in bulk without having to
+specify the identifiers of each drive being mapped. Instead bulk mode
+has a predefined set options (identified by single letter) which will
+map drives. Bulk mode works by assigning drives sequentially starting at
+A: until all drives are used, or there are no more options to process.
+Each option will typically map between 0 and N drives depending on the
+option and the available hardware in your system.</p>
+<p><code>ASSIGN /B=</code><em><code>&lt;option&gt;&lt;option&gt;</code></em>… will perform bulk assignment .</p>
+<p>The following options will assign a small number of devices, typically
+you would place at beginning of an option list.</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Name</th>
+<th>Description</th>
+<th>Assigned</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B</td>
+<td>Boot</td>
+<td>The boot device</td>
+<td>1</td>
+</tr>
+<tr>
+<td>A</td>
+<td>RAM</td>
+<td>Ram drive</td>
+<td>0,1</td>
+</tr>
+<tr>
+<td>O</td>
+<td>ROM</td>
+<td>Rom drive</td>
+<td>0,1</td>
+</tr>
+<tr>
+<td>F</td>
+<td>Floppy</td>
+<td>All floppy devices, with/without media</td>
+<td>0,1,2,..</td>
+</tr>
+<tr>
+<td>P</td>
+<td>Preserve</td>
+<td>Skip and preserve the next drive assignment</td>
+<td>1</td>
+</tr>
+<tr>
+<td>X</td>
+<td>Exclude</td>
+<td>Un-assign / Exclude the next drive</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p>A drive e.g. RAM, ROM, FLOPPY can only be assigned if it exists. if you
+system doesn’t have the hardware that supports the device, then no
+devices will be assigned, and the next option will be processed.</p>
+<p><code>B</code> assigns the boot device. If used the <code>B</code>oot drive should typically
+be assigned first.</p>
+<p><code>P</code> will not make any changes to the next drive, it will skip over it.
+While the <code>X</code> option will un-assign the next drive, leaving a gap.</p>
+<p>The remaining options will fill drives mostly to end, from hard drive
+slices, generally choose 1 of the following:</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Name</th>
+<th>Description</th>
+<th>Assigned</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S</td>
+<td>Slices</td>
+<td>Assign slices from boot hard drive</td>
+<td>…max</td>
+</tr>
+<tr>
+<td>H</td>
+<td>Hard Drive</td>
+<td>Assign slices evenly from all hard drives</td>
+<td>…max</td>
+</tr>
+<tr>
+<td>L</td>
+<td>Legacy HD</td>
+<td>Assign slices from all hard drives (legacy)</td>
+<td>6,…max</td>
+</tr>
+<tr>
+<td>Z</td>
+<td>Exclude All</td>
+<td>Un-assign all remaining drives</td>
+<td>…max</td>
+</tr>
+</tbody>
+</table>
+<p><code>S</code>lices assignment will map all remaining drives to slices from the
+boot device. If I have other hard drives present these will not be
+mapped by this option.</p>
+<p>e.g. <code>ASSIGN /B=BAOS</code></p>
+<p>Will first assign drives <code>A:(Boot), B:(RAM), C:(ROM)</code> this leaves 13
+drives which will be assigned to slices from the boot hard drive (D:
+thru P:), leaving no unused drives.</p>
+<p>’H’ard drive assignment will attempt to fill all remaining drive letters
+by splitting the number of drives remaining evenly across all.</p>
+<p>e.g. <code>ASSIGN /B=BAOH</code></p>
+<p>Will first assign drives <code>A:(Boot), B:(RAM), C:(ROM)</code> this leaves 13
+drives available. If I have 3 hard disks then (13/3) = 4 slices from
+each hard drive will be assigned to drives (D: thru O:), leaving a
+single unused drive (P:).</p>
+<p><code>L</code>egacy hard drive assignment is identical to how the startup hard disk
+assignment works. ie. Attempt to assign up to 8 hard drives split across
+hard drives detected at boot.</p>
+<p>e.g. <code>ASSIGN /B=BAOL</code></p>
+<p>Will first assign drives <code>A:(Boot), B:(RAM), C:(ROM)</code>. If I have 3 hard
+disks then (8/3) = 2 slices from each hard drive will be assigned to
+drives (D: thru I:), leaving 7 unused drives (J: thru P:).</p>
+<h4 id="notes_1">Notes</h4>
+<p>If the <code>ASSIGN</code> command encounters any rule violations or errors, it
+will abort with an error and <strong>none</strong> of the drive assignments will be
+implemented. In other words, the command is atomic and will either
+completely succeed or completely fail.</p>
+<p>All assigned drives utilize disk buffer space from a limited pool. The
+ASSIGN command will display the amount of buffer space remaining after
+an assign command is executed. Buffer space is freed if a drive is
+unassigned. If the total assignments exceed the available disk buffer
+space available, the command will abort with an error message.</p>
+<p>The <code>ASSIGN</code> command does not check to see if the device and slice being
+assigned actually contains readable media. If the assigned device has no
+media, you will receive an I/O error when you attempt to use the drive
+letter.</p>
+<p>The <code>ASSIGN</code> command does not check that the media is large enough to
+support the slice you specify. In other words, you could potentially
+assign a drive letter to a slice that is beyond the end of the media in
+a device. In this case, subsequent attempts to use that drive letter
+will result in an I/O error.</p>
+<p>Additionally, the <code>ASSIGN</code> command does not check to see if the slice
+specified refers to an area on your media that is occupied by other data
+(such as a FAT filesystem).</p>
+<p>You will not be allowed to assign multiple drive letters to a single
+device and slice. In other words, only one drive letter may refer to a
+single filesystem at a time.</p>
+<p>Attempts to assign a duplicate drive letter will fail and display an
+error. If you wish to assign a different drive letter to a
+device/unit/slice, unassign the existing drive letter first.</p>
+<p>Drive letter A: must always be assigned to a device and slice. The
+<code>ASSIGN</code> command will enforce this.</p>
+<p>The changes made by this command are not permanent. The assignments will
+persist through a warm start, but when you reboot your system, all drive
+letters will return to their default assignments. A SUBMIT batch file
+can be used to setup desired drive assignments automatically at boot.</p>
+<p>Be aware that this command will allow you to reassign or remove the
+assignment of your system drive letter. This can cause your operating
+system to fail and force you to reboot.</p>
+<p>The <code>ASSIGN</code> command does <strong>not</strong> prevent you from assigning a drive
+letter to a slice that does not fit on the physical media. However, any
+subsequent attempt to refer to that drive letter will result in an
+immediate OS error of “no disk”. Refer to “Hard Disk Capacity” in the
+<a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20User%20Guide.pdf">RomWBW User
+Guide</a>
+for a discussion of the exact number of slices that will fit on a
+specific physical disk size.</p>
+<p>This command is particularly sensitive to being matched to the
+appropriate version of the RomWBW ROM you are using. Be very careful to
+keep all copies of <code>ASSIGN.COM</code> up to date with your ROM.</p>
+<p>Additionally, the <code>ASSIGN</code> command must be able to adjust to CP/M 2.2
+vs. CP/M 3. If you utilize an RSX that modifies the BDOS version
+returned, you are likely to have serious problems. In this case, be sure
+to use <code>ASSIGN</code> prior to loading the RSX or after it is unloaded.</p>
+<h4 id="etymology">Etymology</h4>
+<p>The <code>ASSIGN</code> command is an original product and the source code is
+provided in the RomWBW distribution.</p>
+<h2 id="bbcbasic-bbc-basic">BBCBASIC (BBC BASIC)</h2>
+<table>
+<thead>
+<tr>
+<th>BBCBASIC</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROM-based</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Disk-based</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>BBC BASIC is an interpreted version of the BASIC programming language
+originally developed by Acorn Computers for the 6502 CPU. Compared to
+other BASIC implementations, BBC BASIC adds structured programming as
+well as a built-in Z80 assembler.</p>
+<h4 id="syntax_1">Syntax</h4>
+<p><code>BBCBASIC</code> [<em>\&lt;filename&gt;</em>]</p>
+<h4 id="usage_2">Usage</h4>
+<p>The full documentation for BBC BASIC (Z80) is found online at
+<a href="https://www.bbcbasic.co.uk/bbcbasic/mancpm/index.html">https://www.bbcbasic.co.uk/bbcbasic/mancpm/index.html</a>.</p>
+<h4 id="notes_2">Notes</h4>
+<p>The cursor and screen management assumes the use of an ANSI/VT-100
+terminal which is generally correct for RomWBW. Support for a hardware
+system timer is also implemented. If your system does not have a
+hardware timer, the TIME function will always return 0 and the timeout
+parameter of the INKEY(n) function will not be observed (will never
+timeout).</p>
+<h4 id="etymology_1">Etymology</h4>
+<p>This is a RomWBW HBIOS adaptation of BBCBASIC v5.00 by R.T.Russell. This
+implementation was adapted from the source code found at
+<a href="https://github.com/rtrussell/BBCZ80">https://github.com/rtrussell/BBCZ80</a>.</p>
+<p>The adaptation to RomWBW was minimal and includes:</p>
+<ul>
+<li>
+<p>VT100 terminal control</p>
+</li>
+<li>
+<p>TIME function</p>
+</li>
+</ul>
+<h2 id="clrdir-clear-directory">CLRDIR (Clear Directory)</h2>
+<table>
+<thead>
+<tr>
+<th>CLRDIR</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROM-based</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Disk-based</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>CLRDIR</code> command is used to initialise the directory area of a
+drive.</p>
+<h4 id="syntax_2">Syntax</h4>
+<p><code>CLRDIR</code><em><code>&lt;drv&gt;</code></em></p>
+<h4 id="usage_3">Usage</h4>
+<p><code>CLRDIR</code><em><code>&lt;drv&gt;</code></em> will initialise the directory area of the specified
+drive. The drive may take any form - eg floppy disk, hard-disk, CF, uSD
+etc.</p>
+<p>The use of FDISK80 to reserve space, or slices, for CP/M use as drives
+will not initialise the directory areas of those slices. The resultant
+directory areas will contain garbage left over from a previous use of
+the disk (or media) and using them in this state with CP/M will very
+likely lead to failed or corrupted data storage. Use <code>CLRDIR</code> to
+initialise the directory properly.</p>
+<p>FDU will initialise the directory of a floppy disk as part of the
+formatting process and so <code>CLRDIR</code> is unnecessary for a floppy disk.
+<code>CLRDIR</code> is, therefore, primarily used with other types such as
+hard-disk, CF and uSD.</p>
+<p>The <code>CLRDIR</code> command may also be used to effectively ‘reformat’ a used
+disk by reinitialising its directory area and effectively making it
+blank again.</p>
+<p>Use <code>CLRDIR</code> with caution as changes made to disks by <code>CLRDIR</code> cannot be
+undone.</p>
+<h4 id="notes_3">Notes</h4>
+<p>If <code>CLRDIR</code> is used on disk containing data then the directory area will
+be reinitialised and the data previously stored will be lost.</p>
+<h2 id="cpuspd-cpu-speed">CPUSPD (CPU Speed)</h2>
+<table>
+<thead>
+<tr>
+<th>CPUSPD</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROM-based</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Disk-based</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>CPUSPD</code> application is used to change the running speed and wait
+states of a RomWBW system. It can also be used to invoke a warm or cold
+reboot of the system.</p>
+<p>The functionality is highly dependent on the capabilities of your
+system.</p>
+<h4 id="syntax_3">Syntax</h4>
+<p><code>CPUSPD [</code><em><code>&lt;speed&gt;</code></em><code>[,[</code><em><code>&lt;memws&gt;</code></em><code>][,[</code><em><code>&lt;iows&gt;</code></em><code>]]]</code><br />
+<code>CPUSPD (W)armBoot</code><br />
+<code>CPUSPD (C)oldBoot</code></p>
+<p><em><code>&lt;speed&gt;</code></em> is one of (H)alf, (F)ull, (D)ouble, or (Q)uad. <em><code>&lt;memws&gt;</code></em>
+is a number specifying the desired memory wait states. <em><code>&lt;iows&gt;</code></em> is a
+number specifying the desired I/O wait states.</p>
+<h4 id="usage_4">Usage</h4>
+<p>Entering <code>CPUSPD</code> with no parameters will display the current CPU speed
+and wait state information of the running system. Wait state information
+is not available for all systems.</p>
+<p>To modify the running speed of a system, you can specify the
+<code>*</code><speed><code>*</code> parameter. To modify either or both of the wait states,
+you can enter the desired number. Either or both of the wait state
+parameters may be omitted and the current wait state settings will
+remain in effect.</p>
+<h4 id="notes_4">Notes</h4>
+<p>The ability to modify the running speed and wait states of a system
+varies widely depending on the hardware capabilities and the HBIOS
+configuration settings.</p>
+<p>Note that it is frequently impossible to tell if a system is capable of
+dynamic speed changes. This function makes the changes blindly. If an
+attempt is made to change the speed of a system that is definitely
+incapable of doing so, then an error result is returned.</p>
+<p>Z180-based systems will be able to adjust their CPU speed depending on
+the specific variant of the Z180 chip being used:</p>
+<table>
+<thead>
+<tr>
+<th>Z180 Variant</th>
+<th>Capability</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Z80180 (original)</td>
+<td>Half</td>
+</tr>
+<tr>
+<td>Z8S180 Rev. K</td>
+<td>Half, Full</td>
+</tr>
+<tr>
+<td>Z8S180 Rev. N</td>
+<td>Half, Full, Double</td>
+</tr>
+</tbody>
+</table>
+<p>SBC and MBC systems may be able to change their CPU speed if the
+hardware supports it and it is enabled in the HBIOS configuration.</p>
+<p>The <code>CPUSPD</code> command makes no attempt to ensure that the new CPU speed
+will actually work on the current hardware. Setting a CPU speed that
+exceeds the capabilities of the system will result in unstable operation
+or a system stall.</p>
+<p>In the case of Z180 CPUs, it is frequently necessary to add memory wait
+states when increasing the CPU speed.</p>
+<p>Some peripherals are dependent on the CPU speed. For example, the Z180
+ASCI baud rate and system timer are derived from the CPU speed. The
+CPUSPD application will attempt to adjust these peripherals for correct
+operation after modifying the CPU speed. However, in some cases this may
+not be possible. The baud rate of ASCI ports have a limited set of
+divisors. If there is no satisfactory divisor to retain the existing
+baud rate under the new CPU speed, then the baud rate of the ASCI
+port(s) will be affected.</p>
+<h4 id="etymology_2">Etymology</h4>
+<p>The <code>CPUSPD</code> application was custom written for RomWBW. All of the
+hardware interface code is specific to RomWBW and the application will
+not operate correctly on non-RomWBW systems.</p>
+<p>The source code is provided in the RomWBW distribution.</p>
+<h2 id="copysl-copy-slice">COPYSL (Copy Slice)</h2>
+<table>
+<thead>
+<tr>
+<th>COPYSL</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROM-based</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Disk-based</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>The purpose of this utility is to allow the copying of whole disk slices
+from one disk slice to another slice</p>
+<p>This tool is only supported by RomWBW HBIOS, it uses HDIOS for all its
+disk IO. UNA UBIOS is not supported by this tool.</p>
+<p>This tool is running on CP/M 2.2 or 3.0 and has access to full 64kb of
+RAM, with a minimum of 48kb TPA</p>
+<p>This tool only works with hard disk devices, other media types like
+floppy, are not supported at this time. This tool works across different
+hard disk device types, even of different physical type</p>
+<p>Both hd1k and hd512 are fully supported, however copying from one layout
+type to the other is not supported.</p>
+<p>During operation data is copied in a single read/write pass, data is not
+verified by default. If there is a write error, it will be reported, and
+operation will stop.</p>
+<h4 id="syntax_4">Syntax</h4>
+<p>This tool operates at the disk level via RomWBW, thus all disk
+identifiers are in the RomWBW \&lt;disk&gt;.\&lt;unit&gt; format.</p>
+<p>The syntax (similar to copy) for the command is:</p>
+<p><code>COPYSL</code><em>\&lt;destunit&gt;</em>[<code>.</code><em>\&lt;slice&gt;</em>]<code>=</code><em>\&lt;srcunit&gt;</em>[<code>.</code><em>\&lt;slice&gt;</em>]
+[<code>/</code><em>\&lt;options&gt;</em>]</p>
+<p>E.g.</p>
+<p>COPYSL 3.3=2.10 /U</p>
+<p>Means copy from slice 10 on disk 2, onto disk 3 slice 3. This is in
+unattended mode, so you will not be asked to confirm the copy operation.</p>
+<h4 id="options">Options</h4>
+<p>F - Full disk copy. Copies the complete disk slice, all sectors.<br />
+U - Unattended. Will complete copy without confirmation from the user.<br />
+V - Verify. Does an additional read and verify after write.</p>
+<h4 id="usage_5">Usage</h4>
+<p>When run COPYSL will perform command line argument validation and
+display an error if they are illegal. Also any disk IO errors will cause
+COPYSL to exit.</p>
+<p>When specifying slice number(s) a check is made that the slice number is
+valid, i.e. not too large that it would extend past the end of the
+partition (hd1k), or the end of the media (hd512). For hd512 a check is
+also performed to ensure that the slice would not extend into the first
+defined partition.</p>
+<p>The copy operation will be faster if the source disk has been formatted
+with the CP/M file system, since during copy the CP/M directory is
+scanned, and unused blocks are not copied.</p>
+<p>If a filesystem is not found, (or the /F option is chosen) all data is
+copied.</p>
+<p>Verification (if option chosen) will do an aditional read (after write)
+and compare the data read matches what was written. This compare is only
+on every 32’nd byte. This is done for efficiency.</p>
+<p>During copy dots “.” will be displayed to indicate progress of the copy.
+Each “.” represents 16 kBytes of data. Each line of “.” ’s is 1 mBytes.</p>
+<h4 id="notes_5">Notes</h4>
+<p>This tool has been tested on both SD and CF media types and with hd1k
+and hd512 formatted media.</p>
+<p>You cannot copy slices between different hard disk formats (hd512 and
+hd1k) because the slices are incompatible.</p>
+<h4 id="etymology_3">Etymology</h4>
+<p>The <code>COPYSL</code> application was custom written for RomWBW and contributed
+by Mark Pruden.</p>
+<h2 id="fat-fat-utility">FAT (FAT Utility)</h2>
+<table>
+<thead>
+<tr>
+<th>FAT</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROM-based</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Disk-based</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>The operating systems included with RomWBW do not have any native
+ability to access MS-DOS FAT filesystems. The FAT application can be
+used overcome this. It will allow you to transfer files between CP/M and
+FAT filesystems (wildcards supported). It can also erase files, format,
+and list directories of FAT filesystems.</p>
+<h4 id="syntax_5">Syntax</h4>
+<p><code>FAT DIR</code><em><code>&lt;path&gt;</code></em><br />
+<code>FAT COPY</code><em><code>&lt;src&gt; &lt;dst&gt;</code></em><br />
+<code>FAT REN</code><em><code>&lt;from&gt; &lt;to&gt;</code></em><br />
+<code>FAT DEL</code><em><code>&lt;path&gt;[&lt;file&gt;|&lt;dir&gt;]</code></em><br />
+<code>FAT MD</code><em><code>&lt;path&gt;</code></em><br />
+<code>FAT FORMAT</code><em><code>&lt;drv&gt;</code></em></p>
+<p><em><code>&lt;path&gt;</code></em> is a FAT path<br />
+<em><code>&lt;src&gt;</code></em>, <em><code>&lt;dst&gt;</code></em> are FAT or CP/M filenames<br />
+<em><code>&lt;from&gt;</code></em>, <em><code>&lt;to&gt;</code></em> are FAT filenames<br />
+<em><code>&lt;file&gt;</code></em> is a FAT filename<br />
+<em><code>&lt;dir&gt;</code></em> is a FAT directory name<br />
+<em><code>&lt;drv&gt;</code></em> is a RomWBW disk unit number</p>
+<p>CP/M filespec: <em><code>&lt;d&gt;</code></em><code>:FILENAME.EXT</code> (<em><code>&lt;d&gt;</code></em> is CP/M drive letter
+A-P)<br />
+FAT filespec: <em><code>&lt;u&gt;</code></em><code>:/DIR/FILENAME.EXT</code> (<em><code>&lt;u&gt;</code></em> is RomWBW disk unit
+#)</p>
+<h4 id="usage_6">Usage</h4>
+<p>The <code>FAT</code> application determines whether you are referring to a CP/M
+filesystem or a FAT filesystem based on the way you specify the file or
+path. If the file or path is prefixed with a number (n:), then it is
+assumed this is a FAT filesystem reference and is referring to the FAT
+filesystem on RomWBW disk unit ‘n’. Otherwise, the file specification is
+assumed to be a normal CP/M file specification.</p>
+<p>If you wanted to list the directory of the FAT filesystem on RomWBW disk
+unit 2, you would use <code>FAT DIR 2:</code>. If you only wanted to see the “.TXT”
+files, you would use <code>FAT DIR 2:*.TXT</code>.</p>
+<p>If you wanted to copy all of the files on CP/M drive B: to the FAT
+filesystem on RomWBW disk unit 4, you would use the command
+<code>FAT COPY B:*.* 4:</code> If you wanted to copy the files to the “FOO”
+directory, then you would use <code>FAT COPY B:*.* 4:\FOO</code>. To copy files in
+the opposite direction, you just reverse the parameters.</p>
+<p>To rename the file “XXX.DAT” to “YYY.DAT” on a FAT filesystem, you could
+use a command like “FAT REN 2:XXX.DAT 2:YYY.DAT”.</p>
+<p>To delete a file “XXX.DAT” on a FAT filesystem in directory “FOO”, you
+would use a command like <code>FAT DEL 2:\FOO\XXX.DAT</code>.</p>
+<p>To make a directory called “FOO2” on a FAT filesystem, you would use a
+command line <code>FAT MD 2:\FOO2</code>.</p>
+<p>To format the filesystem on a FAT partition, you would use a command
+like <code>FAT FORMAT 2:</code>. Use this with caution because it will destroy all
+data on any pre-existing FAT filesystem on disk unit 2.</p>
+<h4 id="notes_6">Notes</h4>
+<p>Partitioned or non-partitioned media is handled automatically. A floppy
+drive is a good example of a non-partitioned FAT filesystem and will be
+recognized. Larger media will typically have a partition table which
+will be recognized by the application to find the FAT filesystem.</p>
+<p>Although RomWBW-style CP/M media does not know anything about partition
+tables, it is entirely possible to have media that has both CP/M and FAT
+file systems on it. This is accomplished by creating a FAT filesystem on
+the media that starts on a track beyond the last track used by CP/M.
+Each CP/M slice can occupy up to 8MB. So, make sure to start your FAT
+partition beyond (slice count) * 9MB.</p>
+<p>The application infers whether you are attempting to reference a FAT or
+CP/M filesystem via the drive specifier (char before ‘:’). A numeric
+drive character specifies the HBIOS disk unit number for FAT access. An
+alpha (A-P) character indicates a CP/M file system access targeting the
+specified drive letter. If there is no drive character specified, the
+current CP/M filesystem and current CP/M drive is assumed. For example:</p>
+<p><code>2:README.TXT</code> refers to FAT file “README.TXT” on disk unit #2<br />
+<code>C:README.TXT</code> refers to CP/M file “README.TXT” on CP/M drive C<br />
+<code>README.TXT</code> refers to CP/M file “README.TXT” on the current CP/M drive</p>
+<p>Files with SYS, HIDDEN, or R/O only attributes are not given any special
+treatment. Such files are found and processed like any other file.
+However, any attempt to write to a read-only file will fail and the
+application will abort.</p>
+<p>It is not currently possible to reference CP/M user areas other than the
+current user. To copy files to alternate user areas, you must switch to
+the desired user number first or use an additional step to copy the file
+to the desired user area.</p>
+<p>Accessing FAT filesystems on a floppy requires the use of RomWBW HBIOS
+v2.9.1-pre.13 or greater.</p>
+<p>Only the first 8 RomWBW disk units (0-7) can be referenced.</p>
+<p>Files written are not verified.</p>
+<p>Wildcard matching in FAT filesystems is a bit unusual as implemented by
+FatFs. See FatFs documentation.</p>
+<h4 id="etymology_4">Etymology</h4>
+<p>The <code>FAT</code> application is an original RomWBW work, but utilizes the FsFat
+library for all of the FAT filesystem work. This application is written
+in C and requires SDCC to compile. As such it is not part of the RomWBW
+build process. However, the full project and source code is found in the
+<a href="https://github.com/wwarthen/FAT">FAT GitHub Repository</a>.</p>
+<h4 id="known-issues">Known Issues</h4>
+<p>CP/M (and workalike) OSes have significant restrictions on filename
+characters. The FAT application will block any attempt to create a file
+on the CP/M filesystem containing any of these prohibited characters:</p>
+<p><code>&lt; &gt; . , ; : ? * [ ] |/ \</code></p>
+<p>The operation will be aborted with “<code>Error: Invalid Path Name</code>” if such
+a filename character is encountered.</p>
+<p>Since MS-DOS does allow some of these characters, you can have issues
+when copying files from MS-DOS to CP/M if the MS-DOS filenames use these
+characters. Unfortunately, FAT is not yet smart enough to substitute
+illegal characters with legal ones. So, you will need to clean the
+filenames before trying to copy them to CP/M.</p>
+<p>The FAT application does try to detect the scenario where you are
+copying a file to itself. However, this detection is not perfect and can
+corrupt a file if it occurs. Be careful to avoid this.</p>
+<h2 id="fdisk80">FDISK80</h2>
+<table>
+<thead>
+<tr>
+<th>FDISK80</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROM-based</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Disk-based</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p><code>FDISK80</code> allows you to create and manage traditional partitions on your
+hard disk media. Depending on the hard disk format and features you are
+using, RomWBW may need hard disk partitions defined.</p>
+<p>Please refer to the <a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20User%20Guide.pdf">RomWBW User
+Guide</a>
+for more information on the use of partitions within RomWBW. It is very
+important to understand that RomWBW slices are completely different from
+disk partitions.</p>
+<p>This application is provided by John Coffman. The primary documentation
+is in the file “FDisk Manual.pdf” found in the Doc directory of the
+RomWBW distribution.</p>
+<h4 id="usage_7">Usage</h4>
+<p><code>FDISK80</code> is an interactive application. At startup it will ask you for
+the disk unit that you want to partition. When your RomWBW system boots,
+it will display a table with the disk unit numbers. Use the disk unit
+numbers from that table to enter the desired disk unit to partition.</p>
+<p><code>FDISK80</code> operates very much like other FDISK disk partitioning
+applications. Please refer to the file called “FDisk Manual.pdf” in the
+Doc directory of the RomWBW distribution for further instructions.</p>
+<p>If ‘slices’ for CP/M have been created using <code>FDISK80</code>, then these will
+need to have their directory areas initialised properly using <code>CLRDIR</code>.
+Failure to do this will likely result in corrupted data.</p>
+<p>There is also more information on using FAT partitions with RomWBW in
+the <a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20User%20Guide.pdf">RomWBW User
+Guide</a>
+document in the Doc directory of the distribution.</p>
+<h4 id="notes_7">Notes</h4>
+<p>Hard disk partition tables allow a maximum of 1024 cylinders when
+defining partitions. However, RomWBW uses exclusively Logical Block
+Addressing (LBA) which does not have this limitation. When defining
+partitions is usually best to define the start and size of of the
+partition using bytes or sectors.</p>
+<h4 id="etymology_5">Etymology</h4>
+<p>The source for this application was provided directly by John Coffman.
+It is a C program and requires a build environment that includes the
+SDCC compiler. As such, it is not included in the RomWBW build process,
+only the binary executable is included.</p>
+<p>Please contact John Coffman if you would like a copy of the source.</p>
+<h2 id="fdu-floppy-disk-utility">FDU (Floppy Disk Utility)</h2>
+<table>
+<thead>
+<tr>
+<th>FDU</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROM-based</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Disk-based</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>The FDU application is a Floppy Disk Utility that provides functions to
+format and test floppy disk media.</p>
+<h4 id="syntax_6">Syntax</h4>
+<p><code>FDU</code></p>
+<h4 id="usage_8">Usage</h4>
+<p>This application has an interactive user interface. At startup, you will
+be prompted to select the floppy interface hardware in your system.
+Following this, you will see the main menu of the program with many
+functions to manage floppy disk drives.</p>
+<p>The primary documentation for this application is in a file called
+“FDU.txt” in the Doc directory of the RomWBW distribution. Please
+consult this file for usage information.</p>
+<h4 id="notes_8">Notes</h4>
+<p>This application interfaces directly to the floppy hardware in your
+system. It does not use the RomWBW HBIOS. This means that even if your
+system is not configured for floppy drives, you can still use <code>FDU</code> to
+test your floppy drives and format floppy media. This also means it is
+critical that you choose the correct hardware interface from the initial
+selection when starting the application.</p>
+<h4 id="etymology_6">Etymology</h4>
+<p>The <code>FDU</code> command is an original product and the source code is provided
+in the RomWBW distribution.</p>
+<h2 id="flash-flash-eeprom">FLASH (Flash EEPROM)</h2>
+<table>
+<thead>
+<tr>
+<th>FLASH</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROM-based</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Disk-based</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>Most of the hardware platforms that run RomWBW support the use of
+EEPROMs – Electronically Erasable Programmable ROMs. The <code>FLASH</code>
+application can be used to reprogram such ROMS in-situ (in-place), thus
+making it possible to upgrade ROMs without a programmer or even removing
+the ROM from your system.</p>
+<p>This application is provided by Will Sowerbutts.</p>
+<h4 id="syntax_7">Syntax</h4>
+<p><code>FLASH READ</code><em><code>&lt;filename&gt;</code></em><code>[options]</code><br />
+<code>FLASH VERIFY</code><em><code>&lt;filename&gt;</code></em><code>[options]</code><br />
+<code>FLASH WRITE</code><em><code>&lt;filename&gt;</code></em><code>[options]</code></p>
+<p><em><code>&lt;filename&gt;</code></em> is the filename of the ROM image file</p>
+<p>FLASH4 will auto-detect most parameters so additional options should not
+normally be required.</p>
+<p>Options:</p>
+<p><code>/V</code>: Enable verbose output (one line per sector)<br />
+<code>/P</code> or <code>/PARTIAL</code>: Allow flashing a large ROM from a smaller image
+file<br />
+<code>/ROM</code>: Allow read-only use of unknown chip types<br />
+<code>/Z180DMA</code>: Force Z180 DMA engine<br />
+<code>/UNABIOS</code>: Force UNA BIOS bank switching<br />
+<code>/ROMWBW</code>: Force RomWBW (v2.6+) bank switching<br />
+<code>/ROMWBWOLD</code>: Force RomWBW (v2.5 and earlier) bank switching<br />
+<code>/P112</code>: Force P112 bank switching<br />
+<code>/N8VEMSBC</code>: Force N8VEM SBC (v1, v2), Zeta (v1) SBC bank switching</p>
+<h4 id="usage_9">Usage</h4>
+<p>To program your EEPROM ROM chip, first transfer the file to your RomWBW
+system. Then use the command <code>FLASH WRITE *</code><filename>`*. The
+application will auto-detect the type of EEPROM chip you have, program
+it, and verify it.</p>
+<p>You can use the <code>FLASH READ</code> form of the command to read the ROM image
+from your system into a file. This is useful if you want to save a copy
+of your current ROM before reprogramming it.</p>
+<p>Although <code>FLASH WRITE</code> automatically performs a verification, you can
+manually perform a verification function with the <code>FLASH VERIFY</code> form of
+the command.</p>
+<p>The author’s documentation for the application is found in the RomWBW
+distribution in the Doc/Contrib directory.</p>
+<h4 id="notes_9">Notes</h4>
+<p>The application supports a significant number of EEPROM parts. It should
+automatically detect your part. If it does not recognize your chip, make
+sure that you do not have a write protect jumper set – this jumper can
+prevent the ROM chip from being recognized.</p>
+<p>Reprogramming a ROM chip in-place is inherently dangerous. If anything
+goes wrong, you will be left with a non-functional system and no ability
+to run the <code>FLASH</code> application again. Use this application with caution
+and be prepared to use a hardware ROM programmer to restore your system
+if needed.</p>
+<h4 id="etymology_7">Etymology</h4>
+<p>This application was written and provided by Will Sowerbutts. He
+provides it in binary format and is included in the RomWBW distribution
+as a binary file.</p>
+<p>The source code for this application can be found at the <a href="https://github.com/willsowerbutts/flash4">FLASH4 GitHub
+repository</a>.</p>
+<h2 id="format">FORMAT</h2>
+<table>
+<thead>
+<tr>
+<th>FORMAT</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROM-based</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Disk-based</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>This application is just a placeholder for a future version that will
+make it simpler to format media including floppy disks.</p>
+<h4 id="syntax_8">Syntax</h4>
+<p><code>FORMAT</code></p>
+<h4 id="notes_10">Notes</h4>
+<p>This application currently just displays a few lines of information
+briefly instructing a user how to format media. It performs no actual
+function beyond this display currently.</p>
+<h4 id="etymology_8">Etymology</h4>
+<p>The <code>FORMAT</code> command is an original product and the source code is
+provided in the RomWBW distribution.</p>
+<h2 id="htalk-hbios-talk">HTALK (HBIOS Talk)</h2>
+<table>
+<thead>
+<tr>
+<th>HTALK</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROM-based</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Disk-based</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p><code>HTALK</code> is a variation of the <code>TALK</code> utility, but it works directly
+against HBIOS Character Units.</p>
+<h4 id="syntax_9">Syntax</h4>
+<p><code>HTALK COMn:</code></p>
+<h4 id="usage_10">Usage</h4>
+<p><code>HTALK</code> operates at the HBIOS level.</p>
+<p>The parameter to <code>TALK</code> refers to a HBIOS character unit. Upon execution
+all characters typed at the console will be sent to the device specified
+and all characters received by the specified device will be echoed on
+the console.</p>
+<p>Press Control+Z on the console to terminate the application.</p>
+<h4 id="notes_11">Notes</h4>
+<h4 id="etymology_9">Etymology</h4>
+<p>The <code>TALK</code> command was created and donated to RomWBW by Tom Plano. It is
+an original product designed specifically for RomWBW.</p>
+<h2 id="mode">MODE</h2>
+<table>
+<thead>
+<tr>
+<th>MODE</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROM-based</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Disk-based</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>The MODE command allows you to adjust the operating characteristics such
+as baud rate, data bits, stop bits, and parity bits of serial ports
+dynamically.</p>
+<h4 id="syntax_10">Syntax</h4>
+<p><code>MODE /?</code>
+<code>MODE COM</code><em><code>&lt;n&gt;</code></em><code>: [</code><em><code>&lt;baud&gt;</code></em><code>[,</code><em><code>&lt;parity&gt;</code></em><code>[,</code><em><code>&lt;databits&gt;</code></em><code>[,</code><em><code>&lt;stopbits&gt;</code></em><code>]]]] [/P]</code></p>
+<p><code>/?</code> displays command usage and version information</p>
+<p><em><code>&lt;n&gt;</code></em> is the character device unit number</p>
+<p><em><code>&lt;baud&gt;</code></em> is numerical baudrate</p>
+<p><em><code>&lt;parity&gt;</code></em> is (N)one, (O)dd, (E)ven, (M)ark, or (S)pace</p>
+<p><em><code>&lt;databits&gt;</code></em> is number of data bits, typically 7 or 8</p>
+<p><em><code>&lt;stopbits&gt;</code></em> is number of stop bits, typically 1 or 2</p>
+<p><code>/P</code> prompts user prior to setting new configuration</p>
+<h4 id="usage_11">Usage</h4>
+<p><code>MODE /?</code> will display basic command usage and version information.</p>
+<p><code>MODE</code> with no parameters will list all devices and their current
+configuration.</p>
+<p><code>MODE &lt;</code><em>n</em><code>&gt;</code> will display the current configuration of the specified
+character device unit.</p>
+<p><code>MODE COM</code><em><code>&lt;n&gt;</code></em><code>: [</code><em><code>&lt;baud&gt;</code></em><code>[,</code><em><code>&lt;parity&gt;</code></em><code>[,</code><em><code>&lt;databits&gt;</code></em><code>[,</code>
+<em><code>&lt;stopbits&gt;</code></em><code>]]]] [/P]</code> requests that the specified configuration be
+set on the character device unit. You can use commas with no values to
+leave some values unchanged. As an example, <code>MODE COM0: 9600,,,2</code> will
+setup character device unit 0 for 9600 baud and 2 stop bits while
+leaving data bits and stop bits as is.</p>
+<p>Appending <code>/P</code> in a command specifying a new configuration will cause
+the terminal output to pause and wait for the user to press a key. This
+allows the user to change the local terminal setup before continuing.</p>
+<h4 id="notes_12">Notes</h4>
+<p>Specified baud rate and line characteristics must be supported by the
+serial unit. Any parameters not specified will remain unchanged.</p>
+<p>Changes are not persisted and will revert to system defaults at next
+system boot.</p>
+<p>Not all character devices support all <code>MODE</code> options. Some devices
+(notably ASCI devices) have limited baud rate divisors. An attempt to
+set a baud rate that the device cannot support will fail with an error
+message.</p>
+<h4 id="etymology_10">Etymology</h4>
+<p>The <code>MODE</code> command is an original product and the source code is
+provided in the RomWBW distribution.</p>
+<h2 id="reboot">REBOOT</h2>
+<table>
+<thead>
+<tr>
+<th>REBOOT</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROM-based</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Disk-based</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>REBOOT</code> application is used to restart a running system from an
+operating system prompt. It can invoke either a warm or cold restart via
+command line switches.</p>
+<h4 id="syntax_11">Syntax</h4>
+<p><code>REBOOT /W</code><br />
+<code>REBOOT /C</code><br />
+<code>REBOOT /?</code></p>
+<ul>
+<li>/C initiates a cold restart</li>
+<li>/W initiates a warm restart</li>
+<li>/? displays command line usage</li>
+</ul>
+<h4 id="usage_12">Usage</h4>
+<p>Entering <code>REBOOT</code> with no parameters will display the usage and version
+information. Use /C or /W to immediately initiate a cold or warm
+restart.</p>
+<h4 id="notes_13">Notes</h4>
+<p>A warm restart just returns to the Boot Loader menu.</p>
+<p>A cold restart will reinitialize the system as though power had been
+recycled.</p>
+<h4 id="etymology_11">Etymology</h4>
+<p>The <code>REBOOT</code> application was custom written for RomWBW by MartinR. All
+of the hardware interface code is specific to RomWBW and the application
+will not operate correctly on non-RomWBW systems.</p>
+<p>The source code is provided in the RomWBW distribution.</p>
+<h2 id="rtc-real-time-clock">RTC (Real Time Clock)</h2>
+<table>
+<thead>
+<tr>
+<th>RTC</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROM-based</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Disk-based</td>
+<td>yes</td>
+</tr>
+</tbody>
+</table>
+<p>Many RomWBW systems provide real time clock hardware. The RTC
+application is a simple, interactive program allowing you to display and
+set the time and registers of the RTC.</p>
+<h4 id="syntax_12">Syntax</h4>
+<p><code>RTC</code></p>
+<h4 id="usage_13">Usage</h4>
+<p>After startup, the application provides the following options:</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>E)xit</code></td>
+<td>will terminate the application.</td>
+</tr>
+<tr>
+<td><code>T)ime</code></td>
+<td>will display the time as read from the RTC hardware.</td>
+</tr>
+<tr>
+<td><code>st(A)rt</code></td>
+<td>will restart the clock running if it is stopped.</td>
+</tr>
+<tr>
+<td><code>S)et</code></td>
+<td>will program the RTC clock with the date/time previously entered using the I)nit option.</td>
+</tr>
+<tr>
+<td><code>R)aw</code></td>
+<td>will read the minute/second of the RTC clock iteratively every time the space key is pressed. Press enter to end.</td>
+</tr>
+<tr>
+<td><code>L)oop</code></td>
+<td>will read the full date/time of the RTC clock iteratively every time the space key is pressed. Press enter to end.</td>
+</tr>
+<tr>
+<td><code>C)harge</code></td>
+<td>will enable the battery charging function of the RTC.</td>
+</tr>
+<tr>
+<td><code>N)ocharge</code></td>
+<td>will disable the battery charging function of the RTC.</td>
+</tr>
+<tr>
+<td><code>D)elay</code></td>
+<td>allows you to test the built-in timing delay in the program. It is not unusual for it to be wrong.</td>
+</tr>
+<tr>
+<td><code>I)nit</code></td>
+<td>allows you to enter a date/time value for subsequent programming of the RTC using the S)et option.</td>
+</tr>
+<tr>
+<td><code>G)et</code></td>
+<td>allows you to read the value of a non-volatile register in the RTC.</td>
+</tr>
+<tr>
+<td><code>P)ut</code></td>
+<td>allows you to write the value of a non-volatile register in the RTC.</td>
+</tr>
+<tr>
+<td><code>B)oot</code></td>
+<td>will reboot your system.</td>
+</tr>
+<tr>
+<td><code>H)elp</code></td>
+<td>displays brief help.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="notes_14">Notes</h4>
+<p>When using Get and Put options, the register number to read/write is
+entered in hex. The non-volatile ram register numbers are 0x20-0x3F.</p>
+<p>When entering values, you must enter exactly two hex characters. The
+backspace key is not supported. You do not use enter after entering the
+two hex characters. Yes, this should be improved.</p>
+<p>The <code>RTC</code> application interacts directly with the RTC hardware bypassing
+HBIOS.</p>
+<h4 id="etymology_12">Etymology</h4>
+<p>The <code>RTC</code> application was originally written by Andrew Lynch as part of
+the original ECB SBC board development. It has since been modified to
+support most of the hardware variations included with RomWBW.</p>
+<h2 id="slabel-slice-label">SLABEL (Slice Label)</h2>
+<table>
+<thead>
+<tr>
+<th>SLABEL</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROM-based</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Disk-based</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>Display or change the label of a disk slice.</p>
+<p>The label applied is only used as informational purposes, displayed by
+RomWBW when an OS is booted. It has no correlation with any OS volume
+label scheme that may exist. i.e. It does not affect the CP/M 3 disk
+label as applied by the <code>SET</code> command</p>
+<h4 id="syntax_13">Syntax</h4>
+<p><code>SLABEL [unit.slice=label] [/?]</code></p>
+<p><code>unit.slice</code> the disk unit and slice number to apply the new label to.
+This is in the same format as when booting the system to a disk</p>
+<p><code>label</code> is the new disk label to apply to the disk</p>
+<h4 id="usage_14">Usage</h4>
+<p><code>SLABEL</code> with no arguments will list All existing labels across All
+disks</p>
+<p><code>SLABEL 2.5=MYDRIVE</code> will set the disk label of the 6th slice of disk
+unit 2</p>
+<p><code>SLABEL /?</code> (or other unrecognised parameters) will display a usage
+message.</p>
+<h4 id="notes_15">Notes</h4>
+<p>There is no capability to update a label onto media that currently does
+not have existing media information in the third sector, typically this
+means only bootable media.</p>
+<p>This will only display labels for the first 64 slices of any device.
+Slices higher than this are currently ignored.</p>
+<p>Only bootable RomWBW disk images have a label, which is defined by the
+OS which is booted. i.e. NZ-COM has a label of “ZSDOS 1.1” since that is
+the booted OS. Prior to RomWBW 3.5 all disk images were defined with the
+label “Unlabeled”.</p>
+<h4 id="etymology_13">Etymology</h4>
+<p>The <code>SLABEL</code> application was custom written for RomWBW and contributed
+by Mark Pruden.</p>
+<h2 id="survey">SURVEY</h2>
+<table>
+<thead>
+<tr>
+<th>SURVEY</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROM-based</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Disk-based</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>SURVEY</code> command interrogates the system for information on disk
+usage, memory usage and I/O ports used, and reports it to the user.</p>
+<h4 id="syntax_14">Syntax</h4>
+<p>The <code>SURVEY</code> command takes no arguments.</p>
+<p><code>SURVEY</code></p>
+<h4 id="usage_15">Usage</h4>
+<p>The results presented by <code>SURVEY</code> include:</p>
+<ol>
+<li>
+<p>Information about any drives, within the first eight (ie A: to H:),
+    which have been logged by the system. This includes: the total
+    number of files; the storage capacity occupied by those files; and
+    the capacity remaining on that drive.</p>
+</li>
+<li>
+<p>Information about the the 64KByte CP/M memory map, which is shown
+    diagramatically, and includes: locations and sizes of the TPA
+    (Transient Program Area), CP/M’s CCP (Console Command Processor),and
+    BDOS (Basic Disk Operating System).</p>
+</li>
+<li>
+<p>The addresses of active CPU I/O ports.</p>
+</li>
+</ol>
+<h4 id="notes_16">Notes</h4>
+<p>The mechanism by which <code>SURVEY</code> discovers I/O ports is very conservative
+and therefore the list returned may not be exhaustive. In particular, it
+may fail to discover ports that are ‘write-only’.</p>
+<h2 id="syscopy-system-copy">SYSCOPY (System Copy)</h2>
+<table>
+<thead>
+<tr>
+<th>SYSCOPY</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROM-based</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Disk-based</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>To make disk media bootable, you must write a system boot image onto the
+system tracks of the of the media. The <code>SYSCOPY</code> allows you to read or
+write the system boot image of disk media.</p>
+<h4 id="syntax_15">Syntax</h4>
+<p><code>SYSCOPY</code><em><code>&lt;dest&gt;</code></em><code>=</code><em><code>&lt;src&gt;</code></em></p>
+<p><em><code>&lt;dest&gt;</code></em> is the drive to receive the operating system image or
+alternatively a filename to save the operating system image</p>
+<p><em><code>&lt;src&gt;</code></em> is the drive containing an operating system image or
+alternatively a filename containing the system image to be placed on the
+destination</p>
+<h4 id="usage_16">Usage</h4>
+<p>Both <em><code>&lt;dest&gt;</code></em> and <em><code>&lt;src&gt;</code></em> can refer to either a drive letter or a
+file. If a drive letter is specified, the system boot image will be read
+or written to the system tracks of the drive. If a filename is
+specified, the system boot image will be read or written to the
+specified filename.</p>
+<p><code>SYSCOPY C:=ZSYS.SYS</code> will read a system boot image from the file
+ZSYS.SYS and write it onto the system tracks of drive C:.</p>
+<p><code>SYSCOPY A:OS.SYS=C:</code> will capture the system boot image from the system
+tracks of drive C: and store it in the file A:OS.SYS.</p>
+<p><code>SYSCOPY D:=C:</code> will copy the system tracks from drive C: onto the
+system tracks of drive D:.</p>
+<h4 id="notes_17">Notes</h4>
+<p>The RomWBW ROM disk contains files with the system boot image for
+Z-System and CP/M 2.2. These files are called CPM.SYS and ZSYS.SYS
+respectively. These files can be used as the source of a <code>SYSCOPY</code>
+command to make a disk bootable with the corresponding operating system.</p>
+<p>CP/M 3 uses a two phase boot process. To make a CP/M 3 drive bootable,
+you need to put “CPMLDR.SYS” on the boot tracks of the disk and be sure
+that the drive also contains the “CPM.SYS” file. The “CPMLDR.SYS” file
+is not included on the ROM disk, but is found on the CP/M 3 disk image.</p>
+<p>ZPM3 is similar to CP/M 3. You also put “CPMLDR.SYS” on the system
+tracks of the drive to make it bootable. The ZPM3 operating system is in
+the file called “CPM3.SYS” on the ZPM3 disk image. It may seem confusing
+that ZPM3 is in the file called CPM3.SYS, but it is normal for ZPM3.</p>
+<p>For the purposes of booting an operating system, each disk slice is
+considered its own operating system. Each slice can be made bootable
+with its own system tracks.</p>
+<p><code>SYSCOPY</code> uses drive letters to specify where to read/write the system
+boot images. However, at startup, the boot loaded will require you to
+enter the actual disk device and slice to boot from. So, you need to be
+careful to pay attention to the device and slice that is assigned to a
+drive letter so you will know what to enter at the boot loader prompt.
+By way of explanation, the boot loader does not know about drive letters
+because the operating system is not loaded yet.</p>
+<p>If you want to put a boot system image on a device and slice that is not
+currently assigned to a drive letter, you will need to assign a drive
+letter first.</p>
+<p>Not all disk formats include space for system tracks. Such disk formats
+cannot contains a system boot image and, therefore, cannot be made
+bootable. The best example of such disk formats are the ROM and RAM
+disks. To maximize usable file space on these drives, they do not have
+system tracks. Obviously, ROM operating system is supported by choosing
+a ROM operating system at the boot loader prompt. Any attempt to write a
+system boot image to disk media with no system tracks will cause SYSCOPY
+to fail with an error message.</p>
+<p>The system boot images are paired with the ROM version in your system.
+So, you must take care to update the system tracks of any bootable disk
+when you upgrade your ROM firmware.</p>
+<p>The system boot images are <strong>not</strong> tied to specific hardware
+configurations. System boot images and operating systems provided with
+RomWBW will work with any supported RomWBW platform or hardware as long
+as they are the same version as the RomWBW firmware.</p>
+<h4 id="etymology_14">Etymology</h4>
+<p>The <code>SYSCOPY</code> command is an original product and the source code is
+provided in the RomWBW distribution.</p>
+<h2 id="talk">TALK</h2>
+<table>
+<thead>
+<tr>
+<th>TALK</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROM-based</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Disk-based</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>It is sometimes useful to direct your console input/output to a
+designated serial port. For example, if you were to connect a modem to
+your second serial port, you might want to connect directly to it and
+have everything you type sent to it and everything it sends be shown on
+your console. The <code>TALK</code> application does this.</p>
+<h4 id="syntax_16">Syntax</h4>
+<p><code>TALK [TTY:|CRT:|BAT:UC1:]</code></p>
+<h4 id="usage_17">Usage</h4>
+<p><code>TALK</code> operates at the operating system level (not HBIOS).</p>
+<p>The parameter to <code>TALK</code> refers to logical CP/M serial devices. Upon
+execution all characters typed at the console will be sent to the device
+specified and all characters received by the specified device will be
+echoed on the console.</p>
+<p>Press Control+Z on the console to terminate the application.</p>
+<h4 id="notes_18">Notes</h4>
+<p>This application is designed for CP/M 2.2 or Z-System. Use on later
+operating systems such as CP/M 3 is not supported.</p>
+<h4 id="etymology_15">Etymology</h4>
+<p>The <code>TALK</code> command is an original product and the source code is
+provided in the RomWBW distribution.</p>
+<h2 id="tbasic-tasty-basic">TBASIC (Tasty BASIC)</h2>
+<table>
+<thead>
+<tr>
+<th>TBASIC</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROM-based</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Disk-based</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>Tasty Basic is a basic interpreter for CP/M and RomWBW based on the Z80
+port of Palo Alto Tiny Basic.</p>
+<h4 id="syntax_17">Syntax</h4>
+<p><code>TBASIC</code> [<em>\&lt;filename&gt;</em>]</p>
+<h4 id="usage_18">Usage</h4>
+<h4 id="notes_19">Notes</h4>
+<p>Tasty Basic is provided on RomWBW as both a ROM implementation and as a
+CP/M application. The CP/M version should be used if you wish to save
+Tasty Basic files.</p>
+<h4 id="etymology_16">Etymology</h4>
+<p>The implementation of Tasty Basic included in RomWBW is the work of
+Dimitri Theulings. The primary distribution site for this work is
+<a href="https://github.com/dimitrit/tastybasic">https://github.com/dimitrit/tastybasic</a>.</p>
+<h2 id="timer">TIMER</h2>
+<table>
+<thead>
+<tr>
+<th>TIMER</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROM-based</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Disk-based</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>Most RomWBW systems have a 50Hz periodic system timer. A counter is
+incremented every time a timer tick occurs. The <code>TIMER</code> application
+displays the value of the counter.</p>
+<h4 id="syntax_18">Syntax</h4>
+<p><code>TIMER</code> <code>TIMER /?</code> <code>TIMER /C</code></p>
+<h4 id="usage_19">Usage</h4>
+<p>Use <code>TIMER</code> to display the current value of the counter.</p>
+<p>Use <code>TIMER /C</code> to display the value of the counter continuously.</p>
+<p>The display of the counter will be something like this:</p>
+<p><code>13426 Ticks     268.52 Seconds</code></p>
+<p>The first number is the total number of ticks since system startup,
+where there are 50 ticks per second. The second number is the total
+number of seconds since system startup. Numbers are displayed in decimal
+format.</p>
+<h4 id="notes_20">Notes</h4>
+<p>The seconds value is displayed with a fractional value which is not a an
+actual fraction, but rather the number of ticks past the seconds
+rollover. All values are in hex.</p>
+<p>The primary use of the <code>TIMER</code> application is to test the system timer
+functionality of your system.</p>
+<p>In theory, you could capture the value before and after some process you
+want to time.</p>
+<h4 id="etymology_17">Etymology</h4>
+<p>The <code>TIMER</code> command is an original product and the source code is
+provided in the RomWBW distribution.</p>
+<h2 id="tune">TUNE</h2>
+<table>
+<thead>
+<tr>
+<th>TUNE</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROM-based</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Disk-based</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>If your RomWBW system has a sound card based on either an AY-3-8190 or
+YM2149F sound chip, you can use the <code>TUNE</code> application to play PT or MYM
+sound files.</p>
+<p>Note: TUNE will detect an AY-3-8910/YM2149 Sound Module re-gardless of
+whether support for it is included in the RomWBW HBIOS configuration</p>
+<h4 id="syntax_19">Syntax</h4>
+<p><code>TUNE</code><em><code>&lt;filename&gt;</code></em> <code>*</code><options><code>*</code></p>
+<p><em><code>&lt;filename&gt;</code></em> is the name of a sound file ending in .PT2, .PT3, or .MYM</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>-MSX</code></td>
+<td>Force MSX port addresses A0H/A1H (no PSG detection)</td>
+</tr>
+<tr>
+<td><code>-RC</code></td>
+<td>Force RCBus port addresses D8H/D0H (no PSG detection)</td>
+</tr>
+<tr>
+<td><code>--HBIOS</code></td>
+<td>Utilise HBIOS’ sound driver</td>
+</tr>
+<tr>
+<td><code>-DELAY</code></td>
+<td>Force delay mode (don’t use hardware timer)</td>
+</tr>
+<tr>
+<td><code>+T1</code></td>
+<td>Play tune an octave higher</td>
+</tr>
+<tr>
+<td><code>+T2</code></td>
+<td>Play tune two octaves higher</td>
+</tr>
+<tr>
+<td><code>-T1</code></td>
+<td>Play tune an octave lower</td>
+</tr>
+<tr>
+<td><code>-T2</code></td>
+<td>Play tune two octaves lower</td>
+</tr>
+</tbody>
+</table>
+<p>The +t and -t options apply only to HBIOS mode operation. The <code>-MSX</code>,
+<code>-RC</code>, and <code>--HBIOS</code> options are mutually exclusive. See Notes below.</p>
+<h4 id="usage_20">Usage</h4>
+<p>The TUNE application supports PT and YM sound file formats. It
+determines the format of the file from the extension of the file, so
+your tune filenames should end in .PT2, .PT3, or .MYM.</p>
+<p>To play a sound file, just use the command and specify the file to play
+after the command. So, for example, <code>TUNE ATTACK.PT2</code> will immediately
+begin playing the PT sound file “ATTACK.PT2”.</p>
+<h4 id="notes_21">Notes</h4>
+<p>The <code>TUNE</code> application automatically probes for compatible hardware at
+well known port addresses at startup. It will auto-configure itself for
+the hardware found. If no hardware is detected, it will abort with an
+error message.</p>
+<p>Some hardware (notably Why-Em-Ulator) cannot be detected due limitations
+of the emulation. In such cases, you can force the use of the two most
+common port addresses using the <code>-MSX</code> or <code>-RC</code> options.</p>
+<p>On Z180 systems, I/O wait states are added when writing to the sound
+chip to avoid exceeding its speed limitations. On Z80 systems, you will
+need to ensure that the CPU clock speed of your system does not exceed
+the timing limitations of your sound chip.</p>
+<p>The application probes for an active system timer and uses it to
+accurately pace the sound file playback. If no system timer is
+available, a delay loop is calculated instead. The delay loop will not
+be as accurate as the system timer. If the <code>-DELAY</code> options is specified
+on the command line, then the delay loop will be used regardless of
+whether the system has a hardware timer. This is useful if the hardware
+timer does not run at the 50Hz desired for sound playback.</p>
+<p>There are two modes of operation. A direct hardware interface for the
+AY-3-8910 or YM2149 chips, or a compatibility layer thru HBIOS
+supporting both the AY-3-8910 and the SN76489 chip.</p>
+<p>By default the application will attempt to interface directly to the
+sound chip. The optional argument <code>--HBIOS</code> supplied after the filename,
+will enable the application to use the HBIOS sound driver.</p>
+<p>The following summarizes the different modes of operation for the
+application:</p>
+<ul>
+<li>
+<p>If you use <code>TUNE</code> with no options, it will use it’s original behavior
+  of searching for and detecting a sound chip. <code>TUNE</code> will play sound
+  files directly to the PSG hardware. In this mode it does not matter if
+  HBIOS does or does not know about the sound chip.</p>
+</li>
+<li>
+<p>If you use <code>TUNE</code> with the <code>--HBIOS</code> option, it will not detect a
+  sound chip and will use the RomWBW HBIOS interface. This will only
+  work if HBIOS was configured for the installed sound card and HBIOS
+  detects the sound chip.</p>
+</li>
+<li>
+<p>If you use <code>TUNE</code> with <code>-RC</code> or <code>-MSX</code>, it will play tunes directly to
+  the PSG hardware (not via HBIOS) and will bypass detection. In this
+  mode it does not matter if HBIOS does or does not know about the sound
+  chip.</p>
+</li>
+</ul>
+<p>Note that the HBIOS API for sound cards is pretty good, but does not
+implement everything that the sound card can do. For best fidelity, use
+<code>TUNE</code> without the <code>--HBIOS</code> option.</p>
+<p>All RomWBW operating system boot disks include a selection of sound
+files in user area 3.</p>
+<h4 id="etymology_18">Etymology</h4>
+<p>The <code>TUNE</code> application was custom written for RomWBW. All of the
+hardware interface code is specific to RomWBW. The sound file decoding
+software was adapted and embedded from pre-existing sources. The YM
+player code is from MYMPLAY 0.4 by Lieves!Tuore and the PT player code
+is (c)2004-2007 S.V.Bulba <a href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#118;&#111;&#114;&#111;&#98;&#101;&#121;&#64;&#109;&#97;&#105;&#108;&#46;&#107;&#104;&#115;&#116;&#117;&#46;&#114;&#117;">&#118;&#111;&#114;&#111;&#98;&#101;&#121;&#64;&#109;&#97;&#105;&#108;&#46;&#107;&#104;&#115;&#116;&#117;&#46;&#114;&#117;</a>.</p>
+<p>The source code is provided in the RomWBW distribution.</p>
+<h2 id="vgmplay-video-game-music-play">VGMPLAY (Video Game Music Play)</h2>
+<table>
+<thead>
+<tr>
+<th>VGMPLAY</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROM-based</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Disk-based</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>This application will allow you to play Video Game Music files. VGM
+files contain music samples from a range of different sound chips that
+were used in arcade games, game consoles and personal computer systems.</p>
+<p>Video Game Music files have a .VGM file extension and each file contains
+an embedded header that identifies the hardware it is intended for and
+also the title of the music.</p>
+<p>All RomWBW operating system boot disks include a selection of sound
+files in user area 3. Additional music files can be found at:</p>
+<p><a href="https://vgmrips.net">VGMRIPS website</a></p>
+<p><a href="https://project2612.org/">PROJECT2612 website</a></p>
+<p>Sound files are loaded into memory for playback, so the maximum size
+file that can be played is around 52Kb.</p>
+<p>Sound chips currently supported are:</p>
+<ul>
+<li>AY-3-8190 (and equivalent YM2149)</li>
+<li>YM2612 (and equivalent YM3848)</li>
+<li>SN76489 (single chip mono and dual chip stereo)</li>
+<li>YM2151</li>
+</ul>
+<p>VGMPLAY supports playback of files with multiple combinations of these
+chips.</p>
+<h4 id="syntax_20">Syntax</h4>
+<p><code>VGMPLAY</code><em><code>&lt;filename&gt;</code></em></p>
+<p><em><code>&lt;filename&gt;</code></em> is the name of a sound file ending in .VGM</p>
+<h4 id="usage_21">Usage</h4>
+<p>VGMPLAY does not automatically detect the hardware platform or sound
+hardware that you are using. This means a version customized for your
+system must be assembled before use. However, the version as distributed
+will work with ECB bus SBC systems.</p>
+<p>To play a sound file, just use the VGMPLAY command and specify the file
+to play after the command. So, for example, <code>VGMPLAY TEDDY</code> will load
+the TEDDY.VGM sound file into memory and begin playing it.</p>
+<p>Playback can be stopped by pressing a key. There may be a delay before
+playback stops.</p>
+<h4 id="notes_22">Notes</h4>
+<p>The default build configuration for VGMPLAY is:</p>
+<p>CPU speed: Autodetected</p>
+<table>
+<thead>
+<tr>
+<th>chip</th>
+<th>number</th>
+<th>port</th>
+<th>notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AY-3-8910</td>
+<td>1st</td>
+<td>09ah</td>
+<td>stereo</td>
+</tr>
+<tr>
+<td>AY-3-8910</td>
+<td>2nd</td>
+<td>not set</td>
+<td>stereo</td>
+</tr>
+<tr>
+<td>YM2612</td>
+<td>1st</td>
+<td>0c0h</td>
+<td>stereo</td>
+</tr>
+<tr>
+<td>YM2612</td>
+<td>2nd</td>
+<td>0c4h</td>
+<td>stereo</td>
+</tr>
+<tr>
+<td>SN76489</td>
+<td>1st</td>
+<td>0c8h</td>
+<td>mono/left</td>
+</tr>
+<tr>
+<td>SN76489</td>
+<td>2nd</td>
+<td>0c9h</td>
+<td>mono/right</td>
+</tr>
+<tr>
+<td>YM2151</td>
+<td>1st</td>
+<td>0cah</td>
+<td>stereo</td>
+</tr>
+<tr>
+<td>YM2151</td>
+<td>2nd</td>
+<td>0cbh</td>
+<td>stereo</td>
+</tr>
+</tbody>
+</table>
+<p>Inconsistant, garbled or distorted playback can be an indication that
+your CPU clock speed is too high for your sound chip. In this case, if
+your platform supports speed switching, then the CPUSPD application can
+be used to reduce your processor speed.</p>
+<p>VGMPLAY is still under development. The source code is provided in the
+RomWBW distribution.</p>
+<h2 id="wdate-wbw-date">WDATE (WBW DATE)</h2>
+<table>
+<thead>
+<tr>
+<th>WDATE</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROM-based</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Disk-based</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p><code>wdate</code> is a utility for CP/M systems that have Wayne Warthen’s RomWBW
+firmware. It reads or sets the real-time clock, using function calls in
+the BIOS. It should work on any RTC device that is supported by RomWBW,
+including the internal interrupt-driven timer that is is available on
+some systems.</p>
+<p><code>wdate</code> differs from the <code>rtc.com</code> utility that is provided with the
+RomWBW version of CP/M in that it only gets and sets the date/time.
+<code>rtc.com</code> can also manipulate the nonvolatile RAM in certain clock
+devices, and modify the charge controller. However, <code>wdate</code> is (I would
+argue) easier to use, as it takes its input from the command line, which
+can be edited, and it’s less fussy about the format. It doesn’t require
+the date to be set if you only want to change the time, for example. In
+addition, <code>wdate</code> has at least some error checking.</p>
+<p><code>wdate</code> displays the day-of-week and month as English text, not numbers.
+It calculates the day-of-week from the year, month, and day. RTC chips
+usually store a day-of-week value, but it’s useless in this application
+for two reasons: first, the BIOS does not expose it. Second, there is no
+universally-accepted way to interpret it (which day does the week start
+on? Is ‘0’ a valid day of the week?)</p>
+<h4 id="syntax_21">Syntax</h4>
+<p><code>WDATE</code><br />
+<code>WDATE</code> <em><code>&lt;hr&gt; &lt;min&gt;</code></em><br />
+<code>WDATE</code> <em><code>&lt;hr&gt; &lt;min&gt; &lt;sec&gt;</code></em><br />
+<code>WDATE</code> <em><code>&lt;year&gt; &lt;month&gt; &lt;day&gt; &lt;hr&gt; &lt;min&gt; &lt;sec&gt;</code></em></p>
+<h4 id="usage_22">Usage</h4>
+<pre><code>A&gt; wdate
+Saturday 27 May 13:14:39 2023
+</code></pre>
+<p>With no arguments, displays the current date and time.</p>
+<pre><code>A&gt; wdate hr min
+</code></pre>
+<p>With two arguments, sets the time in hours and minutes, without changing
+date or seconds</p>
+<pre><code>A&gt; wdate hr min sec
+</code></pre>
+<p>With three arguments, sets the time in hours, minutes, and seconds,
+without changing date</p>
+<pre><code>A&gt; wdate year month day hr min sec
+</code></pre>
+<p>With six arguments, sets date and time. All numbers are one or two
+digits. The two-digit year starts at 2000.</p>
+<pre><code>A&gt; wdate /?
+</code></pre>
+<p>Show a summary of the command-line usage.</p>
+<h4 id="notes_23">Notes</h4>
+<p>I’ve tested this utility with the DS1302 clock board designed by Ed
+Brindly, and on the interrupt-driven timer built into my Z180 board.
+However, it does not interact with hardware, only BIOS; I would expect
+it to work with other hardware.</p>
+<p>wdate checks for the non-existence of RomWBW, and also for failing
+operations on the RTC. It will display the terse “No RTC” message in
+both cases.</p>
+<p>The RomWBW functions that manipulate the date and time operate on BCD
+numbers, as RTC chips themselves usually do. wdate works in decimal, so
+that it can check that the user input makes sense. A substantial part of
+the program’s code is taken up by number format conversion and range
+checking.</p>
+<h4 id="etymology_19">Etymology</h4>
+<p>The <code>WDATE</code> application was written and contributed by Kevin Boone. The
+source code is available on GitHub at
+<a href="https://github.com/kevinboone/wdate-cpm">https://github.com/kevinboone/wdate-cpm</a>.</p>
+<h2 id="xm-x-modem">XM (X-Modem)</h2>
+<table>
+<thead>
+<tr>
+<th>XM</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROM-based</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Disk-based</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>An adaptation of Ward Christensen’s X-Modem protocol for transferring
+files between systems using a serial port.</p>
+<h4 id="syntax_22">Syntax</h4>
+<p><code>XM S</code><em><code>&lt;filename&gt;</code></em><br />
+<code>XM SK</code><em><code>&lt;filename&gt;</code></em><br />
+<code>XM L</code><em><code>&lt;library&gt; &lt;filename&gt;</code></em><br />
+<code>XM LK</code><em><code>&lt;library&gt; &lt;filename&gt;</code></em><br />
+<code>XM R</code><em><code>&lt;filename&gt;</code></em></p>
+<p>The following may be added to the action codes: | <code>S</code>: Send a file |
+<code>L</code>: Send a file from a library | <code>R</code>: Receive a file | <code>K</code>: Use 1K
+blocksize (send operations) | <code>C</code>: Force use of checksum (receive
+operations) | <code>X</code>: Force 128-byte protocol (receive operations) |
+<code>0</code>-<code>9</code>: Specifies HBIOS character unit for transfers</p>
+<p><em><code>&lt;filename&gt;</code></em> is the name of a file to send or receive</p>
+<p><em><code>&lt;library&gt;</code></em> is the name of a library (.lbr) to extract a file to send</p>
+<p>For example, the following command will receive a file using checksums
+on HBIOS character unit 3 and will name the received file <code>MYFILE.TXT</code>.</p>
+<p><code>XM RC3 MYFILE.TXT</code></p>
+<h4 id="usage_23">Usage</h4>
+<p>To transfer a file from your host computer to your RomWBW computer, do
+the following:</p>
+<ol>
+<li>
+<p>Enter one of the <code>XM</code> receive commands specifying the name you want
+    to give to the received file.</p>
+</li>
+<li>
+<p>On your host computer select a file to send and initiate the XModem
+    send operation.</p>
+</li>
+</ol>
+<p>To transfer a file from your RomWBW computer to your host computer, do
+the following:</p>
+<ol>
+<li>
+<p>Enter one of the <code>XM</code> send commands specifying the name of the file
+    to be sent.</p>
+</li>
+<li>
+<p>On your host computer, specify the name to assign to the received
+    file and initiate and XModem receive operation.</p>
+</li>
+</ol>
+<p>Please refer to the documentation of your host computer’s terminal
+emulation software for specific instructions on how to use XModem.</p>
+<h4 id="notes_24">Notes</h4>
+<p>The XModem adaptation that comes with RomWBW will default to using the
+current HBIOS console port for transfers. Note that if you change your
+console port at the OS level (e.g., STAT CON:=UC1:), this does not
+change the HBIOS console.</p>
+<p><code>XM</code> attempts to determine the best way to drive the serial port based
+on your hardware configuration. When possible, it will bypass the HBIOS
+for faster operation. However, in many cases, it will use HBIOS so that
+flow control can be used.</p>
+<p><code>XM</code> is dependent on a reliable communications channel. You must ensure
+that the serial port can be serviced fast enough by either using a baud
+rate that is low enough or ensuring that hardware flow control is fully
+functional (end to end).</p>
+<h4 id="etymology_20">Etymology</h4>
+<p>The <code>XM</code> application provided in RomWBW is an adaptation of a
+pre-existing XModem application. Based on the source code comments, it
+was originally adapted from Ward Christensen’s MODEM2 by Keith Petersen
+and is labeled version 12.5.</p>
+<p>The original source of the application was found on the Walnut Creek
+CD-ROM and is called XMDM125.ARK dated 7/15/86.</p>
+<p>The actual application is virtually untouched in the RomWBW adaptation.
+The majority of the work was in the modem driver which was enhanced to
+detect the hardware being used and dynamically choose the appropriate
+driver.</p>
+<p>The source code is provided in the RomWBW distribution.</p>
+<h2 id="zmd-z-modem">ZMD (Z-Modem)</h2>
+<table>
+<thead>
+<tr>
+<th>ZMD</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROM-based</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Disk-based</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>An adaptation of Robert Kramer’s Remote CP/M File Transfer Program with
+support for XModem and YModem transfers.</p>
+<p><strong>NOTE</strong>: ZMD does not do ZModem transfers. The Z in ZMD refers to
+Z-System compatibility.</p>
+<h4 id="syntax_23">Syntax</h4>
+<p><code>ZMD</code> <em>\&lt;mode&gt;\&lt;protocol&gt;\&lt;unit&gt;</em> [<em>\&lt;filename&gt;</em>]</p>
+<p>where <em>\&lt;mode&gt;</em> can be:<br />
+<strong><code>S  -</code></strong> Send file from BBS<br />
+<strong><code>SP -</code></strong> Send from private area<br />
+<strong><code>A  -</code></strong> Send ARK/ARC/LBR member<br />
+<strong><code>R  -</code></strong> Receive file from YOU<br />
+<strong><code>RP -</code></strong> Receive in private area<br />
+<strong><code>RW -</code></strong> Receive without description(s)<br />
+<strong><code>F  -</code></strong> Displays available upload space</p>
+<p><em>\&lt;protocol&gt;</em> can be:<br />
+<strong><code>X  -</code></strong> Xmodem 128 byte blocks (CRC)<br />
+<strong><code>C  -</code></strong> Xmodem 128 byte blocks (Checksum)<br />
+<strong><code>K  -</code></strong> Ymodem 1024 byte blocks (CRC only)</p>
+<p>and <em>\&lt;unit&gt;</em> can specify a single digit (0-9) that specifies the
+RomWBW Character Unit to use for the file transfer.</p>
+<h4 id="usage_24">Usage</h4>
+<p>To transfer a file from your host computer to your RomWBW computer, do
+the following:</p>
+<ol>
+<li>
+<p>Enter one of the <code>ZMD</code> receive commands specifying the name you want
+    to give to the received file (no filename required for ZModem
+    transfers).</p>
+</li>
+<li>
+<p>On your host computer select a file to send and initiate an XModem
+    or YModem send operation.</p>
+</li>
+</ol>
+<p>To transfer a file from your RomWBW computer to your host computer, do
+the following:</p>
+<ol>
+<li>
+<p>Enter one of the <code>ZMD</code> send commands specifying the name of the file
+    to be sent.</p>
+</li>
+<li>
+<p>On your host computer, specify the name to assign to the received
+    file and initiate an XModem or YModem receive operation.</p>
+</li>
+</ol>
+<p>Please refer to the documentation of your host computer’s terminal
+emulation software for specific instructions on how to use XModem.</p>
+<h4 id="notes_25">Notes</h4>
+<p>The ZMP adaptation that comes with RomWBW will default to using the
+current HBIOS console port for transfers. Note that if you change your
+console port at the OS level (e.g., STAT CON:=UC1:), this does not
+change the HBIOS console.</p>
+<p><code>ZMP</code> attempts to determine the best way to drive the serial port based
+on your hardware configuration. When possible, it will bypass the HBIOS
+for faster operation. However, in many cases, it will use HBIOS so that
+flow control can be used.</p>
+<p><code>ZMP</code> is dependent on a reliable communications channel. You must ensure
+that the serial port can be serviced fast enough by either using a baud
+rate that is low enough or ensuring that hardware flow control is fully
+functional (end to end).</p>
+<h4 id="etymology_21">Etymology</h4>
+<p>ZMD v1.50 was produced by Robert Kramer. The RomWBW adaptation just uses
+the RomWBW HBIOS serial API.</p>
+<h2 id="zmp-z-modem-program">ZMP (Z-Modem Program)</h2>
+<table>
+<thead>
+<tr>
+<th>ZMP</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROM-based</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Disk-based</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p><code>ZMP</code> is a terminal program for interacting with a modem attached to
+your system. It includes X/Y/ZModem file transfer protocols. An actual
+modem is not required, but you must have a port for ZMP to use that is
+independent of the console running <code>ZMP</code>.</p>
+<h4 id="syntax_24">Syntax</h4>
+<p><code>ZMD</code> <em>[\&lt;unit&gt;]</em></p>
+<p><em>\&lt;unit&gt;</em> can specify a single digit (0-9) indicating the RomWBW
+Character Unit to use for the modem port.</p>
+<h4 id="usage_25">Usage</h4>
+<p>Refer to the file <code>ZMP.DOC</code> found on all disk images that include the
+<code>ZMP</code> application.</p>
+<h4 id="notes_26">Notes</h4>
+<p><code>ZMP</code> requires access to multiple overlay and configuration files to
+run. It will look for these on the default driver and user area.
+Depending the operating system used, you may be able to set up a search
+path and locate these files in other locations. The files used by <code>ZMP</code>
+are:</p>
+<ul>
+<li><code>ZMP.HLP</code></li>
+<li><code>ZMP.DOC</code></li>
+<li><code>ZMP.CFG</code></li>
+<li><code>ZMP.FON</code></li>
+<li><code>ZMXFER.OVR</code></li>
+<li><code>ZMTERM.OVR</code></li>
+<li><code>ZMINIT.OVR</code></li>
+<li><code>ZMCONFIG.OVR</code></li>
+</ul>
+<p>The <code>ZMP</code> console is always the active OS console. If no <em>\&lt;unit&gt;</em> is
+specified on the command line, <code>ZMP</code> will default to using HBIOS
+Character Unit 1 as the modem port. Take care to avoid using the same
+HBIOS Character Unit as both the console and the modem or various
+strangeness will occur.</p>
+<p><code>ZMP</code> is a full screen application and is configured to use ANSI/VT-100
+screen control.</p>
+<p><code>ZMP</code> does not support the range of port configurations provided by
+RomWBW. The RomWBW adaptation of <code>ZMP</code> ignores the port configuration
+options within <code>ZMP</code>. Instead, you should configure the HBIOS Character
+Unit using the RomWBW MODE command before launching <code>ZMP</code>.</p>
+<p><code>ZMP</code> is written in C. As a result, file transfers will be noticeably
+slower than other assembly language file transfer tools.</p>
+<h4 id="etymology_22">Etymology</h4>
+<p>ZMP was produced by Ron Murray and was based on HMODEM II. Wayne
+Hortensius updated the source to compile with the latest version of
+Hi-Tech C and implemented a few enhancements.</p>
+<p>The RomWBW overlay was developed by Phil Summers.</p></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script src="../js/bootstrap.bundle.min.js"></script>
+        <script>
+            var base_url = "..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../js/base.js"></script>
+        <script src="../search/main.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
