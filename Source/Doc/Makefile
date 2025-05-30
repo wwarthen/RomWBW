@@ -31,12 +31,12 @@ all :: deploy
 	pandoc $< -f markdown -t dokuwiki -s -o $@ --default-image-extension=pdf
 
 %.gfm : %.tmp
-	pandoc $< -f markdown -t gfm-yaml_metadata_block -s -o $@ --default-image-extension=pdf
+	pandoc $< -f markdown -t gfm-yaml_metadata_block -s -o $@ --default-image-extension=svg
 
 %.txt : %.tmp
 	pandoc $< -f markdown -t plain -s -o $@ --default-image-extension=pdf
 
-deploy :
+deploy : deploy_mkdocs
 	cp Introduction.gfm      "../../ReadMe.md"
 	cp Introduction.txt      "../../ReadMe.txt"
 	cp Introduction.pdf      "../../Doc/RomWBW Introduction.pdf"
@@ -45,3 +45,16 @@ deploy :
 	cp Applications.pdf      "../../Doc/RomWBW Applications.pdf"
 	cp Catalog.pdf           "../../Doc/RomWBW Disk Catalog.pdf"
 	cp Hardware.pdf          "../../Doc/RomWBW Hardware.pdf"
+
+deploy_mkdocs : Introduction.gfm UserGuide.gfm SystemGuide.gfm Applications.gfm Catalog.gfm Hardware.gfm
+	rm -rf mkdocs
+	mkdir -p mkdocs/UserGuide/Graphics mkdocs/SystemGuide/Graphics
+	cp Introduction.gfm      mkdocs/Introduction.md
+	cp UserGuide.gfm         mkdocs/UserGuide.md
+	cp SystemGuide.gfm       mkdocs/SystemGuide.md
+	cp Applications.gfm      mkdocs/Applications.md
+	cp Catalog.gfm           mkdocs/Catalog.md
+	cp Hardware.gfm          mkdocs/Hardware.md
+	cp ReadMe.md             mkdocs/README.md
+	cp Graphics/*.svg        mkdocs/UserGuide/Graphics
+	cp Graphics/*.svg        mkdocs/SystemGuide/Graphics
