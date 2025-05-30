@@ -1,0 +1,16 @@
+site_name: RomWBW Documentation V3.6
+repo_url: https://github.com/wwarthen/RomWBW
+edit_uri: ""
+docs_dir: mkdocs
+nav:
+  - Introduction: Introduction.md
+  - User Guide: UserGuide.md
+  - System Guide: SystemGuide.md
+  - Applications: Applications.md
+  - Catalog: Catalog.md
+  - Hardware: Hardware.md
+theme:
+  name: mkdocs
+  color_mode: auto
+  user_color_mode_toggle: true
+  navigation_depth: 3
