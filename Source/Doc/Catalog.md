@@ -573,7 +573,7 @@ This is a generic ZPM3 adaptation for RomWBW.
 
 The following files came from from Microcode Consulting. The official
 distribution files can be found on the Microcode Consulting website at
-[https://www.microcodeconsulting.com/z80/qpm.htm].
+<https://www.microcodeconsulting.com/z80/qpm.htm>.
 Also included in this image are debugz, and linkz frm the same company.
 
 This disk includes the standard DRI CP/M 2.2 files in addition to the
@@ -651,7 +651,7 @@ look a little strange depending on the terminal emulation you are using.
 
 User area 4 contains a full implementation of the CP/NET 1.2 client 
 provided by Doug Miller. Please refer to
-[https://github.com/durgadas311/cpnet-z80] for more information, 
+<https://github.com/durgadas311/cpnet-z80> for more information, 
 complete documentation and the latest source code.
 
 Please refer to the RomWBW User Guide for instructions on installing
@@ -979,7 +979,7 @@ The following files are found in
 | `ZEXDOC.COM`        | Z80 Instruction Set Exerciser                           |
 
 And The following CPU Tests - Which are probably originally from this source. 
-[https://github.com/raxoft/z80test]
+<https://github.com/raxoft/z80test>
 
 | **File**       | **Description**                                               |
 |----------------|---------------------------------------------------------------|
@@ -1002,7 +1002,7 @@ including MS-DOS, Apple II DOS 3.3 and PRoDOS, Commodore 64, Macintosh and
 Amiga. This disk contains the CP/M version of that compiler. A cross-compiler
 for MS-DOS or Windows XP is also available.
 
-For full documentation, see [https://www.aztecmuseum.ca] 
+For full documentation, see <https://www.aztecmuseum.ca> 
 The user manual is available in the Doc/Language directory
 Aztec_C_1.06_User_Manual_Mar84.pdf
 
@@ -1048,10 +1048,10 @@ NOTE : The above is incomplete
 
 The Cowgol 2.0 compiler and related tools.
 These files were provided by Ladislau Szilagyi and were sourced
-from his GitHub repository at [https://github.com/Laci1953/Cowgol_on_CP_M].
+from his GitHub repository at <https://github.com/Laci1953/Cowgol_on_CP_M>.
 
 The primary distribution site for Cowgol 2.0 is at
-[https://github.com/davidgiven/cowgol].
+<https://github.com/davidgiven/cowgol>.
 The user manual is available in the Doc/Language directory
 Cowgol Language.pdf
 
@@ -1114,12 +1114,12 @@ Zork 1 through 3, Planetfall and Hitchhiker's Guide to the Galaxy.
 Nemesis and Dungeon Master is a Rogue-like game released in 1981. It is playable
 on a text terminal using ASCII graphics to represent the dungeon. Only a few
 thousand copies of the game were ever made, making it very rare. See
-[http://crpgaddict.blogspot.com/2019/03/game-322-nemesis-1981.html]
+<http://crpgaddict.blogspot.com/2019/03/game-322-nemesis-1981.html>
 
 Colossal Cave Adventure is a CP/M port of the 1976 classic game originally
 written by Will Crowther for the PDP-10 mainframe. See
-[https://en.wikipedia.org/wiki/Colossal_Cave_Adventure] and
-[https://if50.substack.com/p/1976-adventure]
+<https://en.wikipedia.org/wiki/Colossal_Cave_Adventure> and
+<https://if50.substack.com/p/1976-adventure>
 
 The following files are found in
 
@@ -1144,13 +1144,32 @@ which produce programs for  execution  in  embedded  systems
 without an operating system.
 
 This is the Mar 21, 2023 update 17 released by Tony Nicholson who currently
-maintains HI-TECH C at [https://github.com/agn453/HI-TECH-Z80-C]
+maintains HI-TECH C at <https://github.com/agn453/HI-TECH-Z80-C>
 
 The manual is available in the Doc/Language directory,
 HI-TECH Z80 C Compiler Manual.txt
 
 A good blog post about the HI-TECH C Compiler is available at
-[https://techtinkering.com/2008/10/22/installing-the-hi-tech-z80-c-compiler-for-cpm]
+<https://techtinkering.com/2008/10/22/installing-the-hi-tech-z80-c-compiler-for-cpm>
+
+User area 1 contains another complete copy of the HI-TECH C Compiler.
+It is identical to the copy in user area 0 except for the following files
+which were enhanced by Ladislau Szilagyi from his GitHub Repository at
+<https://github.com/Laci1953/HiTech-C-compiler-enhanced>.  The files
+take advantage of additional banked memory using the RomWBW HBIOS API.
+As such, they require RomWBW to operate.  They should be compatible with
+all CP/M and compatible operations systems provided in RomWBW.
+
+The enhanced files are:
+
+- CGEN.COM
+- CPP.COM
+- OPTIM.COM
+- P1.COM
+- ZAS.COM (replaced with Z80AS)
+
+A thread discussing this enhanced version of HI-TECH C is found at
+<https://groups.google.com/g/rc2014-z80/c/sBCCIpOnnGg>.
 
 The following files are found in
 
@@ -1170,7 +1189,7 @@ NOTE : The above is incomplete
 The collection of MSX ROMs (2 disks) as provided by Les Bird.  
 These ROMs are "run" by using the
 appropriate variant of Les' MSX8 ROM loader.  You can download the
-loader binaries from [https://github.com/lesbird/MSX8].  You will need
+loader binaries from <https://github.com/lesbird/MSX8>.  You will need
 appropriate hardware to run the loader.
 
 Please review the file ROMLIST.TXT for information on the current
@@ -1206,7 +1225,7 @@ The manual can be found in the Docs/Language directory,
 Turbo_Pascal_Version_3.0_Reference_Manual_1986.pdf
 
 A good overview of using Turbo Pascal in CP/M is available at
-[https://techtinkering.com/2013/03/05/turbo-pascal-a-great-choice-for-programming-under-cpm]
+<https://techtinkering.com/2013/03/05/turbo-pascal-a-great-choice-for-programming-under-cpm>
 
 The following files are found in
 
@@ -1358,10 +1377,10 @@ The manual(s) are available in the Doc/Language directory,
 * Z80DIS User Manual (1985).pdf
 
 A run through of using the assembler is available at
-[https://8bitlabs.ca/Posts/2023/05/20/learning-z80-asm]
+<https://8bitlabs.ca/Posts/2023/05/20/learning-z80-asm>
 
 And another shorter, but shows linker usage guide
-[https://pollmyfinger.wordpress.com/2022/01/10/modular-retro-z80-assembly-language-programming-using-slr-systems-z80asm-and-srlnk/]
+<https://pollmyfinger.wordpress.com/2022/01/10/modular-retro-z80-assembly-language-programming-using-slr-systems-z80asm-and-srlnk/>
 
 The following files are found in
 

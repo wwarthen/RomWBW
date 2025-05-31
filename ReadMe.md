@@ -7,7 +7,7 @@
 **RomWBW Introduction** \
 Version 3.6 \
 Wayne Warthen  ([wwarthen@gmail.com](mailto:wwarthen@gmail.com)) \
-30 May 2025
+31 May 2025
 
 # Overview
 
@@ -339,6 +339,8 @@ let me know if I missed you!
   that leverages RomWBW memory banking.
 
 - Les Bird has contributed support for the NABU w/ Option Board
+
+- Rob Gowin created an online documentation site via MkDocs.
 
 ## Related Projects
 

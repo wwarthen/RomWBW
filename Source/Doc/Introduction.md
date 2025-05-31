@@ -324,6 +324,8 @@ please let me know if I missed you!
 
 * Les Bird has contributed support for the NABU w/ Option Board
 
+* Rob Gowin created an online documentation site via MkDocs.
+
 `\clearpage`{=latex}
 
 ## Related Projects

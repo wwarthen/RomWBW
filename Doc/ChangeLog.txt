@@ -6,6 +6,8 @@ Version 3.6
 - WBW: Improve LPT driver boot messaging when not detected (per Robb Bates)
 - WBW: Correct DS1307 boot date/time display (per Tadeusz Pycio)
 - WBW: Add -DELAY option to TUNE app (per Robb Bates)
+- R?G: Add online documentation site
+- WBW: Added enhanced Hi-Tech C Compiler files from Ladislau Szilagyi
 
 Version 3.5.1
 -------------

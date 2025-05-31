@@ -24,3 +24,24 @@ support is offered or implied.
 
 You may use this software for whatever you like, providing you acknowledge
 that the copyright to this software remains with HI-TECH Software.
+
+== Enhanced Version ==
+
+User area 1 contains another complete copy of the HI-TECH C Compiler.
+It is identical to the copy in user area 0 except for the following files
+which were enhanced by Ladislau Szilagyi from his GitHub Repository at
+https://github.com/Laci1953/HiTech-C-compiler-enhanced.  The files
+take advantage of additional banked memory using the RomWBW HBIOS API.
+As such, they require RomWBW to operate.  They should be compatible with
+all CP/M and compatible operations systems provided in RomWBW.
+
+The enhanced files are:
+
+- CGEN.COM
+- CPP.COM
+- OPTIM.COM
+- P1.COM
+- ZAS.COM (replaced with Z80AS)
+
+A thread discussing this enhanced version of HI-TECH C is found at
+https://groups.google.com/g/rc2014-z80/c/sBCCIpOnnGg.
