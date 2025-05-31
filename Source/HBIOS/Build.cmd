@@ -17,8 +17,8 @@ set CPMDIR80=%TOOLS%/cpm/
 
 ::
 :: This PowerShell script validates the build variables passed in.  If
-:: necessary, the user is prmopted to pick the variables.  It then creates
-:: an include file that is imbedded in the HBIOS assembly (build.inc).
+:: necessary, the user is prompted to pick the variables.  It then creates
+:: an include file that is embedded in the HBIOS assembly (build.inc).
 :: It also creates a batch command file that sets environment variables
 :: for use by the remainder of this batch file (build_env.cmd).
 ::
@@ -97,7 +97,6 @@ call :asm nascom || exit /b
 call :asm game || exit /b
 call :asm usrrom || exit /b
 call :asm updater || exit /b
-call :asm imgpad2 || exit /b
 
 :: Sysconf builds as both BIN and COM files
 tasm -t%CPUType% -g3 -fFF -dROMWBW sysconf.asm sysconf.bin sysconf_bin.lst || exit /b
@@ -106,30 +105,32 @@ tasm -t%CPUType% -g3 -fFF -dCPM sysconf.asm sysconf.com sysconf_com.lst || exit 
 ::
 :: Create additional ROM bank images by assembling components into
 :: 32K chunks which can be concatenated later.  Note that
-:: osimg_small is a special case because it is 20K in size.  This
+:: appboot is a special case because it is 20K in size.  This
 :: image is subsequently used to generate the .com loadable file.
 ::
 
-copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_wbw.bin + ..\cpm22\cpm_wbw.bin osimg.bin || exit /b
-copy /b ..\Forth\camel80.bin + nascom.bin + ..\tastybasic\src\tastybasic.bin + game.bin + eastaegg.bin + %NETBOOT% + updater.bin + sysconf.bin + usrrom.bin osimg1.bin || exit /b
+copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_wbw.bin + ..\cpm22\cpm_wbw.bin rom1.bin || exit /b
+copy /b ..\Forth\camel80.bin + nascom.bin + ..\tastybasic\src\tastybasic.bin + game.bin + eastaegg.bin + %NETBOOT% + updater.bin + sysconf.bin + usrrom.bin rom2.bin || exit /b
 
 if %Platform%==S100 (
     zxcc slr180 -s100mon/fh
     zxcc mload25 -s100mon || exit /b
-    copy /b s100mon.com osimg2.bin || exit /b
+    copy /b s100mon.com rom3.bin || exit /b
 ) else (
-    copy /b imgpad2.bin osimg2.bin || exit /b
+    copy nul rom3.bin
 )
 
-copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_wbw.bin osimg_small.bin || exit /b
+copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_wbw.bin appboot.bin || exit /b
 
 ::
 :: Inject one byte checksum at the last byte of all 4 ROM bank image files.
-:: This means that computing a checksum over any of the 32K osimg banks
-:: should yield a result of zero.
+:: This means that computing a checksum over any of the 32K rom banks
+:: should yield a result of zero.  Any bank image file that is not
+:: 32K will be automatically normalized to 32K by the srec_cat
+:: formula (extended or truncated)!!!
 ::
 
-for %%f in (hbios_rom.bin osimg.bin osimg1.bin osimg2.bin) do (
+for %%f in (hbios_rom.bin rom1.bin rom2.bin rom3.bin) do (
   "%TOOLS%\srecord\srec_cat.exe" %%f -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o %%f -Binary || exit /b
 )
 
@@ -150,13 +151,13 @@ for %%f in (hbios_rom.bin osimg.bin osimg1.bin osimg2.bin) do (
 ::
 
 if %ROMSize% gtr 0 (
-    copy /b hbios_rom.bin + osimg.bin + osimg1.bin + osimg2.bin + ..\RomDsk\rom%ROMDiskSize%_wbw.dat %ROMName%.rom || exit /b
-    copy /b hbios_rom.bin + osimg.bin + osimg1.bin + osimg2.bin %ROMName%.upd || exit /b
-    copy /b hbios_app.bin + osimg_small.bin %ROMName%.com || exit /b
+    copy /b hbios_rom.bin + rom1.bin + rom2.bin + rom3.bin + ..\RomDsk\rom%ROMDiskSize%_wbw.dat %ROMName%.rom || exit /b
+    copy /b hbios_rom.bin + rom1.bin + rom2.bin + rom3.bin %ROMName%.upd || exit /b
+    copy /b hbios_app.bin + appboot.bin %ROMName%.com || exit /b
 ) else (
-    copy /b hbios_rom.bin + osimg.bin + osimg1.bin + osimg2.bin  + ..\RomDsk\rom%RAMDiskSize%_wbw.dat %ROMName%.rom || exit /b
-    copy /b hbios_rom.bin + osimg.bin + osimg1.bin + osimg2.bin %ROMName%.upd || exit /b
-    copy /b hbios_app.bin + osimg_small.bin %ROMName%.com || exit /b
+    copy /b hbios_rom.bin + rom1.bin + rom2.bin + rom3.bin  + ..\RomDsk\rom%RAMDiskSize%_wbw.dat %ROMName%.rom || exit /b
+    copy /b hbios_rom.bin + rom1.bin + rom2.bin + rom3.bin %ROMName%.upd || exit /b
+    copy /b hbios_app.bin + appboot.bin %ROMName%.com || exit /b
 )
 
 ::
@@ -187,14 +188,14 @@ call :asm dbgmon || exit /b
 call :asm romldr || exit /b
 
 :: Create the OS bank
-copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_una.bin + ..\cpm22\cpm_una.bin osimg.bin || exit /b
+copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_una.bin + ..\cpm22\cpm_una.bin rom2.bin || exit /b
 
 :: Copy OS Bank and ROM Disk image files to output
-copy /b osimg.bin ..\..\Binary\UNA_WBW_SYS.bin || exit /b
+copy /b rom2.bin ..\..\Binary\UNA_WBW_SYS.bin || exit /b
 copy /b ..\RomDsk\rom%ROMDiskSize%_una.dat ..\..\Binary\UNA_WBW_ROM%ROMDiskSize%.bin || exit /b
 
 :: Create the final ROM image
-copy /b ..\UBIOS\UNA-BIOS.BIN + osimg.bin + ..\UBIOS\FSFAT.BIN + ..\RomDsk\rom%ROMDiskSize%_una.dat %ROMName%.rom || exit /b
+copy /b ..\UBIOS\UNA-BIOS.BIN + rom2.bin + ..\UBIOS\FSFAT.BIN + ..\RomDsk\rom%ROMDiskSize%_una.dat %ROMName%.rom || exit /b
 
 :: Copy to output
 copy %ROMName%.rom ..\..\Binary || exit /b

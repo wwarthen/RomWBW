@@ -1,7 +1,7 @@
 
 MOREDIFF = game.bin hbios_rom.bin nascom.bin usrrom.bin \
-	dbgmon.bin hbios_app.bin imgpad2.bin osimg1.bin osimg2.bin romldr.bin \
-	eastaegg.bin hbios_img.bin osimg.bin game.bin updater.bin usrrom.bin
+	dbgmon.bin hbios_app.bin imgpad2.bin rom2.bin rom3.bin romldr.bin \
+	eastaegg.bin hbios_img.bin rom1.bin game.bin updater.bin usrrom.bin
 
 DEST = ../../Binary
 TOOLS =../../Tools
@@ -58,37 +58,37 @@ ROMNAME=${ROM_PLATFORM}_${ROM_CONFIG}
 # $(info TASM=$(TASM))
 
 $(OBJECTS) : $(ROMDEPS)
-	@cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$(BIOS).bin ../CPM22/cpm_$(BIOS).bin >osimg.bin
-	cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$(BIOS).bin >osimg_small.bin
+	@cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$(BIOS).bin ../CPM22/cpm_$(BIOS).bin >rom1.bin
+	cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$(BIOS).bin >appboot.bin
 	if [ $(ROM_PLATFORM) = DUO ] ; then \
 		cat netboot-duo.mod >netboot.mod ; \
 	else \
 		cat netboot-mt.mod >netboot.mod  ; \
 	fi
 	if [ $(ROM_PLATFORM) != UNA ] ; then \
-		cat camel80.bin nascom.bin tastybasic.bin game.bin eastaegg.bin netboot.mod updater.bin sysconf.bin usrrom.bin >osimg1.bin ; \
+		cat camel80.bin nascom.bin tastybasic.bin game.bin eastaegg.bin netboot.mod updater.bin sysconf.bin usrrom.bin >rom2.bin ; \
 		if [ $(ROM_PLATFORM) = S100 ] ; then \
-			cat s100mon.bin >osimg2.bin ; \
+			cat s100mon.bin >rom3.bin ; \
 		else \
-			cat imgpad2.bin >osimg2.bin ; \
+			>rom3.bin ; \
 		fi ; \
-		for f in hbios_rom.bin osimg.bin osimg1.bin osimg2.bin ; do \
+		for f in hbios_rom.bin rom1.bin rom2.bin rom3.bin ; do \
 			srec_cat $$f -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o $$f -Binary ; \
 		done \
 	fi
 	if [ $(ROM_PLATFORM) = UNA ] ; then \
-		cp osimg.bin $(DEST)/UNA_WBW_SYS.bin ; \
+		cp rom1.bin $(DEST)/UNA_WBW_SYS.bin ; \
 		cp ../RomDsk/rom$(ROMDISKSIZE)_una.dat $(DEST)/UNA_WBW_ROM$(ROMDISKSIZE).bin ; \
-		cat ../UBIOS/UNA-BIOS.BIN osimg.bin ../UBIOS/FSFAT.BIN ../RomDsk/rom$(ROMDISKSIZE)_una.dat >$(ROMNAME).rom ; \
+		cat ../UBIOS/UNA-BIOS.BIN rom1.bin ../UBIOS/FSFAT.BIN ../RomDsk/rom$(ROMDISKSIZE)_una.dat >$(ROMNAME).rom ; \
 	else \
 		if [ $(ROMSIZE) -gt 0 ] ; then \
-			cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin ../RomDsk/rom$(ROMDISKSIZE)_wbw.dat >$(ROMNAME).rom ; \
-			cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin >$(ROMNAME).upd ; \
-			cat hbios_app.bin osimg_small.bin > $(ROMNAME).com ; \
+			cat hbios_rom.bin rom1.bin rom2.bin rom3.bin ../RomDsk/rom$(ROMDISKSIZE)_wbw.dat >$(ROMNAME).rom ; \
+			cat hbios_rom.bin rom1.bin rom2.bin rom3.bin >$(ROMNAME).upd ; \
+			cat hbios_app.bin appboot.bin > $(ROMNAME).com ; \
 		else \
-			cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin ../RomDsk/rom$(RAMDISKSIZE)_wbw.dat >$(ROMNAME).rom ; \
-			cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin >$(ROMNAME).upd ; \
-			cat hbios_app.bin osimg_small.bin > $(ROMNAME).com ; \
+			cat hbios_rom.bin rom1.bin rom2.bin rom3.bin ../RomDsk/rom$(RAMDISKSIZE)_wbw.dat >$(ROMNAME).rom ; \
+			cat hbios_rom.bin rom1.bin rom2.bin rom3.bin >$(ROMNAME).upd ; \
+			cat hbios_app.bin appboot.bin > $(ROMNAME).com ; \
 		fi \
 	fi
 

@@ -1553,7 +1553,7 @@ s100mon1:
 	; Launch S100 Monitor from ROM Bank 3
 	call	ldelay			; wait for UART buf to empty
 	di				; suspend interrupts
-	ld	a,BID_IMG2		; S100 monitor bank
+	ld	a,HWMON_BNK		; S100 monitor bank
 	ld	ix,0			; execution resumes here
 	jp	HB_BNKCALL		; do it
 ;
@@ -2629,31 +2629,32 @@ ra_ent		.equ	12
 ;
 ra_tbl:
 ;
-;      Name	  Key	   Dsky	  Bank	    Src	         Dest	    Size     Entry
-;      ---------  -------  -----  --------  -----        -------  -------  ----------
-ra_ent(str_mon,	  'M',	   KY_CL, BID_IMG0, MON_IMGLOC,  MON_LOC, MON_SIZ, MON_SERIAL)
-ra_entsiz	.equ	$ - ra_tbl
-#if (BIOS == BIOS_WBW)
-  #if (PLATFORM == PLT_S100)
-ra_ent(str_smon,  'S',	   $FF,	  bid_cur , $8000,       $8000,   $0001,   s100mon)
-  #endif
-#endif
-ra_ent(str_cpm22, 'C',	   KY_BK, BID_IMG0, CPM_IMGLOC,  CPM_LOC, CPM_SIZ, CPM_ENT)
-ra_ent(str_zsys,  'Z',	   KY_FW, BID_IMG0, ZSYS_IMGLOC, CPM_LOC, CPM_SIZ, CPM_ENT)
-#if (BIOS == BIOS_WBW)
-ra_ent(str_bas,	  'B',	   KY_DE, BID_IMG1, BAS_IMGLOC,  BAS_LOC, BAS_SIZ, BAS_LOC)
-ra_ent(str_tbas,  'T',	   KY_EN, BID_IMG1, TBC_IMGLOC,  TBC_LOC, TBC_SIZ, TBC_LOC)
-ra_ent(str_fth,	  'F',	   KY_EX, BID_IMG1, FTH_IMGLOC,  FTH_LOC, FTH_SIZ, FTH_LOC)
-ra_ent(str_play,  'P',	   $FF,	  BID_IMG1, GAM_IMGLOC,  GAM_LOC, GAM_SIZ, GAM_LOC)
-ra_ent(str_net,   'N',	   $FF,	  BID_IMG1, NET_IMGLOC,  NET_LOC, NET_SIZ, NET_LOC)
-ra_ent(str_upd,   'X',	   $FF,	  BID_IMG1, UPD_IMGLOC,  UPD_LOC, UPD_SIZ, UPD_LOC)
-ra_ent(str_nvr,   'W'+$80, $FF,	  BID_IMG1, NVR_IMGLOC,  NVR_LOC, NVR_SIZ, NVR_LOC)
-ra_ent(str_user,  'U',	   $FF,	  BID_IMG1, USR_IMGLOC,  USR_LOC, USR_SIZ, USR_LOC)
+;      Name	  Key	   Dsky	  Bank	     Src	   Dest	    Size     Entry
+;      ---------  -------  -----  --------   -----         -------  -------  ----------
+ra_ent(str_mon,	  'M',	   KY_CL, MON_BNK,   MON_IMGLOC,   MON_LOC, MON_SIZ, MON_SERIAL)
+ra_entsiz	.equ	$ - ra_tbl                         
+#if (BIOS == BIOS_WBW)                                     
+  #if (PLATFORM == PLT_S100)                               
+ra_ent(str_smon,  'S',	   $FF,	  bid_cur,   $8000,        $8000,   $0001,   s100mon)
+  #endif                                                   
+#endif                                                     
+ra_ent(str_cpm22, 'C',	   KY_BK, CPM22_BNK, CPM22_IMGLOC, CPM_LOC, CPM_SIZ, CPM_ENT)
+ra_ent(str_zsys,  'Z',	   KY_FW, ZSYS_BNK,  ZSYS_IMGLOC,  CPM_LOC, CPM_SIZ, CPM_ENT)
+#if (BIOS == BIOS_WBW)                                     
+ra_ent(str_bas,	  'B',	   KY_DE, BAS_BNK,   BAS_IMGLOC,   BAS_LOC, BAS_SIZ, BAS_LOC)
+ra_ent(str_tbas,  'T',	   KY_EN, TBC_BNK,   TBC_IMGLOC,   TBC_LOC, TBC_SIZ, TBC_LOC)
+ra_ent(str_fth,	  'F',	   KY_EX, FTH_BNK,   FTH_IMGLOC,   FTH_LOC, FTH_SIZ, FTH_LOC)
+ra_ent(str_play,  'P',	   $FF,	  GAM_BNK,   GAM_IMGLOC,   GAM_LOC, GAM_SIZ, GAM_LOC)
+ra_ent(str_net,   'N',	   $FF,	  NET_BNK,   NET_IMGLOC,   NET_LOC, NET_SIZ, NET_LOC)
+ra_ent(str_upd,   'X',	   $FF,	  UPD_BNK,   UPD_IMGLOC,   UPD_LOC, UPD_SIZ, UPD_LOC)
+ra_ent(str_nvr,   'W'+$80, $FF,	  NVR_BNK,   NVR_IMGLOC,   NVR_LOC, NVR_SIZ, NVR_LOC)
+ra_ent(str_user,  'U',	   $FF,	  USR_BNK,   USR_IMGLOC,   USR_LOC, USR_SIZ, USR_LOC)
 #endif
 #if (DSKYENABLE)
-ra_ent(str_dsky,  'Y'+$80, KY_GO, BID_IMG0, MON_IMGLOC,  MON_LOC, MON_SIZ, MON_DSKY)
+ra_ent(str_dsky,  'Y'+$80, KY_GO, MON_BNK,   MON_IMGLOC,   MON_LOC, MON_SIZ, MON_DSKY)
 #endif
-ra_ent(str_egg,	  'E'+$80, $FF,   BID_IMG1, EGG_IMGLOC,  EGG_LOC, EGG_SIZ, EGG_LOC)
+ra_ent(str_egg,	  'E'+$80, $FF,   EGG_BNK,   EGG_IMGLOC,   EGG_LOC, EGG_SIZ, EGG_LOC)
+;
 		.dw	0		; table terminator
 ;
 ra_tbl_app:
@@ -2665,6 +2666,7 @@ ra_ent(str_zsys,  'Z',	   KY_FW, bid_cur,  ZSYS_IMGLOC, CPM_LOC, CPM_SIZ, CPM_EN
 #if (DSKYENABLE)
 ra_ent(str_dsky,  'Y'+$80, KY_GO, bid_cur,  MON_IMGLOC,  MON_LOC, MON_SIZ, MON_DSKY)
 #endif
+;
 		.dw	0		; table terminator
 ;
 str_mon		.db	"Monitor",0
