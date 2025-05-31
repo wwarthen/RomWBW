@@ -18,6 +18,10 @@ include $(TOOLS)/Makefile.inc
 
 all :: deploy
 
+clean ::
+	rm -rf mkdocs
+	rm -rf site
+
 %.tmp : %.md
 	gpp -o $@ -U "$$" "$$" "{" "}{" "}$$" "{" "}" "@@@" "" -M "$$" "$$" "{" "}{" "}$$" "{" "}" $<
 
@@ -36,7 +40,7 @@ all :: deploy
 %.txt : %.tmp
 	pandoc $< -f markdown -t plain -s -o $@ --default-image-extension=pdf
 
-deploy : deploy_mkdocs
+deploy :
 	cp Introduction.gfm      "../../ReadMe.md"
 	cp Introduction.txt      "../../ReadMe.txt"
 	cp Introduction.pdf      "../../Doc/RomWBW Introduction.pdf"
