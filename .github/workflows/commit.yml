@@ -25,12 +25,9 @@ jobs:
       - name: Build
         run: |
           export TZ='America/Los_Angeles'
-          sudo apt-get install srecord gpp pandoc
-          pip install mkdocs
+          sudo apt-get install srecord
           make distlog
           rm -rf .git*
-          make -C Source/Doc deploy_mkdocs
-          mkdocs build -f Source/Doc/mkdocs.yml
 
       - name: List Output
         run: |
@@ -38,18 +35,26 @@ jobs:
           ls -l
           find -type f -exec md5sum '{}' \;
 
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4.3.0
+        with:
+          name: RomWBW-${{env.COMMIT_REF}}-Linux
+          path: .
+
+      - name: Build Docs
+        run: |
+          export TZ='America/Los_Angeles'
+          sudo apt-get install gpp pandoc
+          pip install mkdocs
+          make -C Source/Doc deploy_mkdocs
+          mkdocs build -f Source/Doc/mkdocs.yml
+
       - name: Deploy Docs
         uses: peaceiris/actions-gh-pages@v4
         if: github.ref == 'refs/heads/master'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: Source/Doc/site
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4.3.0
-        with:
-          name: RomWBW-${{env.COMMIT_REF}}-Linux
-          path: .
 
   buildMacOS:
     runs-on: macOS-latest
