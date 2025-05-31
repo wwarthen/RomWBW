@@ -46,7 +46,7 @@ deploy : deploy_mkdocs
 	cp Catalog.pdf           "../../Doc/RomWBW Disk Catalog.pdf"
 	cp Hardware.pdf          "../../Doc/RomWBW Hardware.pdf"
 
-deploy_mkdocs : Introduction.gfm UserGuide.gfm SystemGuide.gfm Applications.gfm Catalog.gfm Hardware.gfm
+deploy_mkdocs : Introduction.gfm UserGuide.gfm SystemGuide.gfm Applications.gfm Catalog.gfm Hardware.gfm ReadMe.gfm
 	rm -rf mkdocs
 	mkdir -p mkdocs/UserGuide/Graphics mkdocs/SystemGuide/Graphics
 	cp Introduction.gfm      mkdocs/Introduction.md
@@ -55,6 +55,6 @@ deploy_mkdocs : Introduction.gfm UserGuide.gfm SystemGuide.gfm Applications.gfm 
 	cp Applications.gfm      mkdocs/Applications.md
 	cp Catalog.gfm           mkdocs/Catalog.md
 	cp Hardware.gfm          mkdocs/Hardware.md
-	cp ReadMe.md             mkdocs/README.md
+	cp ReadMe.gfm            mkdocs/README.md
 	cp Graphics/*.svg        mkdocs/UserGuide/Graphics
 	cp Graphics/*.svg        mkdocs/SystemGuide/Graphics
