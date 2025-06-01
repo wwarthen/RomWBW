@@ -14,7 +14,14 @@ $define{doc_sys}{[RomWBW System Guide]($doc_root$/RomWBW System Guide.pdf)}$
 $define{doc_apps}{[RomWBW Applications]($doc_root$/RomWBW Applications.pdf)}$
 $define{doc_catalog}{[RomWBW Disk Catalog]($doc_root$/RomWBW Disk Catalog.pdf)}$
 $define{doc_hardware}{[RomWBW Hardware]($doc_root$/RomWBW Hardware.pdf)}$
-
+$ifdef{GFM}$
+  $define{doc_intro}{[RomWBW Introduction](Introduction.md)}$
+  $define{doc_user}{[RomWBW User Guide](UserGuide.md)}$
+  $define{doc_sys}{[RomWBW System Guide](SystemGuide.md)}$
+  $define{doc_apps}{[RomWBW Applications](Applications.md)}$
+  $define{doc_catalog}{[RomWBW Disk Catalog](Catalog.md)}$
+  $define{doc_hardware}{[RomWBW Hardware](Hardware.md)}$
+$endif$
 ---
 title: $doc_product$ $doc_title$
 subtitle: $doc_ver$

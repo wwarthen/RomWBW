@@ -18,10 +18,6 @@ include $(TOOLS)/Makefile.inc
 
 all :: deploy
 
-clean ::
-	rm -rf mkdocs
-	rm -rf site
-
 %.tmp : %.md
 	gpp -o $@ -U "$$" "$$" "{" "}{" "}$$" "{" "}" "@@@" "" -M "$$" "$$" "{" "}{" "}$$" "{" "}" $<
 
@@ -40,7 +36,12 @@ clean ::
 %.txt : %.tmp
 	pandoc $< -f markdown -t plain -s -o $@ --default-image-extension=pdf
 
-deploy :
+mkdocs/%.md : %.md
+	-mkdir -p mkdocs
+	gpp -DGFM -U "$$" "$$" "{" "}{" "}$$" "{" "}" "@@@" "" -M "$$" "$$" "{" "}{" "}$$" "{" "}" $< \
+	    | pandoc -f markdown -t gfm-yaml_metadata_block -s -o $@ --default-image-extension=svg
+
+deploy : deploy_mkdocs
 	cp Introduction.gfm      "../../ReadMe.md"
 	cp Introduction.txt      "../../ReadMe.txt"
 	cp Introduction.pdf      "../../Doc/RomWBW Introduction.pdf"
@@ -50,15 +51,9 @@ deploy :
 	cp Catalog.pdf           "../../Doc/RomWBW Disk Catalog.pdf"
 	cp Hardware.pdf          "../../Doc/RomWBW Hardware.pdf"
 
-deploy_mkdocs : Introduction.gfm UserGuide.gfm SystemGuide.gfm Applications.gfm Catalog.gfm Hardware.gfm ReadMe.gfm
-	rm -rf mkdocs
+deploy_mkdocs : mkdocs/Introduction.md mkdocs/UserGuide.md mkdocs/SystemGuide.md mkdocs/Applications.md \
+                mkdocs/Catalog.md mkdocs/Hardware.md mkdocs/ReadMe.md
 	mkdir -p mkdocs/UserGuide/Graphics mkdocs/SystemGuide/Graphics
-	cp Introduction.gfm      mkdocs/Introduction.md
-	cp UserGuide.gfm         mkdocs/UserGuide.md
-	cp SystemGuide.gfm       mkdocs/SystemGuide.md
-	cp Applications.gfm      mkdocs/Applications.md
-	cp Catalog.gfm           mkdocs/Catalog.md
-	cp Hardware.gfm          mkdocs/Hardware.md
-	cp ReadMe.gfm            mkdocs/README.md
+	mv mkdocs/ReadMe.md mkdocs/README.md
 	cp Graphics/*.svg        mkdocs/UserGuide/Graphics
 	cp Graphics/*.svg        mkdocs/SystemGuide/Graphics
