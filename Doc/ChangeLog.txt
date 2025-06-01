@@ -8,6 +8,7 @@ Version 3.6
 - WBW: Add -DELAY option to TUNE app (per Robb Bates)
 - R?G: Add online documentation site
 - WBW: Added enhanced Hi-Tech C Compiler files from Ladislau Szilagyi
+- WBW: Added boundary check to ram/rom disk driver
 
 Version 3.5.1
 -------------
