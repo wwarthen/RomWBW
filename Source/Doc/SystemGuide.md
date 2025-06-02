@@ -1756,14 +1756,17 @@ All video units are assigned a Device Type ID which indicates
 the specific hardware device driver that handles the unit.  The table
 below enumerates their values.
 
-| **Device Type** | **ID** | **Description**                          | **Driver** |
-|-----------------|-------:|------------------------------------------|------------|
-| VDADEV_VDU      | 0x00   | MC6845 Family Video Display Controller   | vdu.asm    |
-| VDADEV_CVDU     | 0x01   | MC8563-based Video Display Controller    | cvdu.asm   |
-| VDADEV_GDC      | 0x02   | uPD7220 Video Display Controller         | gdc.asm    |
-| VDADEV_TMS      | 0x03   | TMS9918/38/58 Video Display Controller   | tms.asm    |
-| VDADEV_VGA      | 0x04   | HD6445CP4-based Video Display Controller | vga.asm    |
-| VDADEV_VRC      | 0x05   | VGARC                                    | vrc.asm    |
+| **Device Type** | **ID** | **Description**                            | **Driver** |
+|-----------------|-------:|--------------------------------------------|------------|
+| VDADEV_VDU      | 0x00   | MC6845 Family Video Display Controller     | vdu.asm    |
+| VDADEV_CVDU     | 0x01   | MC8563-based Video Display Controller      | cvdu.asm   |
+| VDADEV_GDC      | 0x02   | uPD7220 Video Display Controller           | gdc.asm    |
+| VDADEV_TMS      | 0x03   | TMS9918/38/58 Video Display Controller     | tms.asm    |
+| VDADEV_VGA      | 0x04   | HD6445CP4-based Video Display Controller   | vga.asm    |
+| VDADEV_VRC      | 0x05   | VGARC                                      | vrc.asm    |
+| VDADEV_EF       | 0x06   | EF9345                                     | ef.asm     |
+| VDADEV_FV       | 0x07   | S100 FPGA VGA                              | fv.asm     |
+| VDADEV_XOSERA   | 0x08   | Xosera FPGA-based Video Display Controller | xosera.asm |
 
 Depending on the capabilities of the hardware, the use of colors and
 attributes may or may not be supported. If the hardware does not support
