@@ -41,21 +41,6 @@ jobs:
           name: RomWBW-${{env.COMMIT_REF}}-Linux
           path: .
 
-      - name: Build Docs
-        run: |
-          export TZ='America/Los_Angeles'
-          sudo apt-get install gpp pandoc
-          pip install mkdocs
-          make -C Source/Doc deploy_mkdocs
-          mkdocs build -f Source/Doc/mkdocs.yml
-
-      - name: Deploy Docs
-        uses: peaceiris/actions-gh-pages@v4
-        if: github.ref == 'refs/heads/master'
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: Source/Doc/site
-
   buildMacOS:
     runs-on: macOS-latest
 
