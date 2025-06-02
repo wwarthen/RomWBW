@@ -7,7 +7,7 @@
 **RomWBW Introduction** \
 Version 3.6 \
 Wayne Warthen  ([wwarthen@gmail.com](mailto:wwarthen@gmail.com)) \
-31 May 2025
+02 Jun 2025
 
 # Overview
 
@@ -49,7 +49,7 @@ Supported hardware features of RomWBW include:
 - Disk drivers for RAM, ROM, Floppy, IDE ATA/ATAPI, CF, SD, USB, Zip,
   Iomega
 - Serial drivers including UART (16550-like), ASCI, ACIA, SIO
-- Video drivers including TMS9918, SY6545, MOS8563, HD6445
+- Video drivers including TMS9918, SY6545, MOS8563, HD6445, Xosera
 - Keyboard (PS/2) drivers via VT8242 or PPI interfaces
 - Real time clock drivers including DS1302, BQ4845
 - Support for CP/NET networking using Wiznet, MT011 or Serial
@@ -340,7 +340,8 @@ let me know if I missed you!
 
 - Les Bird has contributed support for the NABU w/ Option Board
 
-- Rob Gowin created an online documentation site via MkDocs.
+- Rob Gowin created an online documentation site via MkDocs, and
+  contributed a driver for the Xosera FPGA-based video controller.
 
 ## Related Projects
 

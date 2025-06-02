@@ -49,65 +49,65 @@ ZXM_FEATURE	.EQU	XOS_BASE+30
 ; See: https:;github.com/XarkLabs/Xosera/blob/master/REFERENCE.md
 
 ; Xosera XR Memory Regions (size in 16-bit words)
-XR_CONFIG_REGS	.EQU	0x0000	; (R/W) 0x0000-0x0007 8 config/ctrl registers
-XR_PA_REGS	.EQU	0x0010	; (R/W) 0x0010-0x0017 8 playfield A video registers
-XR_PB_REGS	.EQU	0x0018	; (R/W) 0x0018-0x001F 8 playfield B video registers
-XR_AUDIO_REGS	.EQU	0x0020	; (-/W) 0x0020-0x002F 16 audio playback registers
-XR_BLIT_REGS	.EQU	0x0040	; (-/W) 0x0040-0x0049 10 blitter registers
-XR_TILE_ADDR	.EQU	0x4000	; (R/W) 0x4000-0x53FF tile glyph/tile map memory
-XR_TILE_SIZE	.EQU	0x1400	;                     4096+1024 x 16-bit tile glyph/tile map memory
-XR_COLOR_ADDR	.EQU	0x8000	; (R/W) 0x8000-0x81FF 2 x A & B color lookup memory
-XR_COLOR_SIZE	.EQU	0x0200	;                     2 x 256 x 16-bit words (0xARGB)
-XR_COLOR_A_ADDR	.EQU	0x8000	; (R/W) 0x8000-0x80FF A 256 entry color lookup memory
-XR_COLOR_A_SIZE	.EQU	0x0100	;                     256 x 16-bit words (0xARGB)
-XR_COLOR_B_ADDR	.EQU	0x8100	; (R/W) 0x8100-0x81FF B 256 entry color lookup memory
-XR_COLOR_B_SIZE	.EQU	0x0100	;                     256 x 16-bit words (0xARGB)
-XR_POINTER_ADDR	.EQU	0x8200	; (-/W) 0x8200-0x82FF 256 word 32x32 4-bpp pointer image
-XR_POINTER_SIZE	.EQU	0x0100	;                     256 x 16-bit words (4-bit pixels)
-XR_COPPER_ADDR	.EQU	0xC000	; (R/W) 0xC000-0xC5FF copper memory (16-bit words)
-XR_COPPER_SIZE	.EQU	0x0600	;                     1024+512 x 16-bit copper memory words
+XR_CONFIG_REGS	.EQU	$0000	; (R/W) 0x0000-0x0007 8 config/ctrl registers
+XR_PA_REGS	.EQU	$0010	; (R/W) 0x0010-0x0017 8 playfield A video registers
+XR_PB_REGS	.EQU	$0018	; (R/W) 0x0018-0x001F 8 playfield B video registers
+XR_AUDIO_REGS	.EQU	$0020	; (-/W) 0x0020-0x002F 16 audio playback registers
+XR_BLIT_REGS	.EQU	$0040	; (-/W) 0x0040-0x0049 10 blitter registers
+XR_TILE_ADDR	.EQU	$4000	; (R/W) 0x4000-0x53FF tile glyph/tile map memory
+XR_TILE_SIZE	.EQU	$1400	;                     4096+1024 x 16-bit tile glyph/tile map memory
+XR_COLOR_ADDR	.EQU	$8000	; (R/W) 0x8000-0x81FF 2 x A & B color lookup memory
+XR_COLOR_SIZE	.EQU	$0200	;                     2 x 256 x 16-bit words (0xARGB)
+XR_COLOR_A_ADDR	.EQU	$8000	; (R/W) 0x8000-0x80FF A 256 entry color lookup memory
+XR_COLOR_A_SIZE	.EQU	$0100	;                     256 x 16-bit words (0xARGB)
+XR_COLOR_B_ADDR	.EQU	$8100	; (R/W) 0x8100-0x81FF B 256 entry color lookup memory
+XR_COLOR_B_SIZE	.EQU	$0100	;                     256 x 16-bit words (0xARGB)
+XR_POINTER_ADDR	.EQU	$8200	; (-/W) 0x8200-0x82FF 256 word 32x32 4-bpp pointer image
+XR_POINTER_SIZE	.EQU	$0100	;                     256 x 16-bit words (4-bit pixels)
+XR_COPPER_ADDR	.EQU	$C000	; (R/W) 0xC000-0xC5FF copper memory (16-bit words)
+XR_COPPER_SIZE	.EQU	$0600	;                     1024+512 x 16-bit copper memory words
 
 ; XR Extended Register / Region (accessed via XM_RD_XADDR/XM_WR_XADDR and XM_XDATA)
 ;  Video Config and Copper XR Registers
-XR_VID_CTRL	.EQU	0x00	; (R /W) display control and border color index
-XR_COPP_CTRL	.EQU	0x01	; (R /W) display synchronized coprocessor control
-XR_AUD_CTRL	.EQU	0x02	; (- /-) TODO: audio channel control
-XR_SCANLINE	.EQU	0x03	; (R /W) read scanline (incl. offscreen), write signal video interrupt
-XR_VID_LEFT	.EQU	0x04	; (R /W) left edge of active display window (typically 0)
-XR_VID_RIGHT	.EQU	0x05	; (R /W) right edge of active display window +1 (typically 640 or 848)
-XR_POINTER_H	.EQU	0x06	; (- /W) pointer sprite raw H position
-XR_POINTER_V	.EQU	0x07	; (- /W) pointer sprite raw V position / pointer color select
+XR_VID_CTRL	.EQU	$00	; (R /W) display control and border color index
+XR_COPP_CTRL	.EQU	$01	; (R /W) display synchronized coprocessor control
+XR_AUD_CTRL	.EQU	$02	; (- /-) TODO: audio channel control
+XR_SCANLINE	.EQU	$03	; (R /W) read scanline (incl. offscreen), write signal video interrupt
+XR_VID_LEFT	.EQU	$04	; (R /W) left edge of active display window (typically 0)
+XR_VID_RIGHT	.EQU	$05	; (R /W) right edge of active display window +1 (typically 640 or 848)
+XR_POINTER_H	.EQU	$06	; (- /W) pointer sprite raw H position
+XR_POINTER_V	.EQU	$07	; (- /W) pointer sprite raw V position / pointer color select
 ; Playfield A Control XR Registers
-XR_PA_GFX_CTRL	.EQU	0x10	; (R /W ) playfield A graphics control
-XR_PA_TILE_CTRL	.EQU	0x11	; (R /W ) playfield A tile control
-XR_PA_DISP_ADDR	.EQU	0x12	; (R /W ) playfield A display VRAM start address
-XR_PA_LINE_LEN	.EQU	0x13	; (R /W ) playfield A display line width in words
-XR_PA_HV_FSCALE	.EQU	0x14	; (R /W ) playfield A horizontal and vertical fractional scale
-XR_PA_H_SCROLL	.EQU	0x15	; (R /W ) playfield A horizontal and vertical fine scroll
-XR_PA_V_SCROLL	.EQU	0x16	; (R /W ) playfield A horizontal and vertical fine scroll
-XR_PA_LINE_ADDR	.EQU	0x17	; (- /W ) playfield A scanline start address (loaded at start of line)
+XR_PA_GFX_CTRL	.EQU	$10	; (R /W ) playfield A graphics control
+XR_PA_TILE_CTRL	.EQU	$11	; (R /W ) playfield A tile control
+XR_PA_DISP_ADDR	.EQU	$12	; (R /W ) playfield A display VRAM start address
+XR_PA_LINE_LEN	.EQU	$13	; (R /W ) playfield A display line width in words
+XR_PA_HV_FSCALE	.EQU	$14	; (R /W ) playfield A horizontal and vertical fractional scale
+XR_PA_H_SCROLL	.EQU	$15	; (R /W ) playfield A horizontal and vertical fine scroll
+XR_PA_V_SCROLL	.EQU	$16	; (R /W ) playfield A horizontal and vertical fine scroll
+XR_PA_LINE_ADDR	.EQU	$17	; (- /W ) playfield A scanline start address (loaded at start of line)
 ; Playfield B Control XR Registers
-XR_PB_GFX_CTRL	.EQU	0x18	; (R /W ) playfield B graphics control
-XR_PB_TILE_CTRL	.EQU	0x19	; (R /W ) playfield B tile control
-XR_PB_DISP_ADDR	.EQU	0x1A	; (R /W ) playfield B display VRAM start address
-XR_PB_LINE_LEN	.EQU	0x1B	; (R /W ) playfield B display line width in words
-XR_PB_HV_FSCALE	.EQU	0x1C	; (R /W ) playfield B horizontal and vertical fractional scale
-XR_PB_H_SCROLL	.EQU	0x1D	; (R /W ) playfield B horizontal and vertical fine scroll
-XR_PB_V_SCROLL	.EQU	0x1E	; (R /W ) playfield B horizontal and vertical fine scroll
-XR_PB_LINE_ADDR	.EQU	0x1F	; (- /W ) playfield B scanline start address (loaded at start of line)
+XR_PB_GFX_CTRL	.EQU	$18	; (R /W ) playfield B graphics control
+XR_PB_TILE_CTRL	.EQU	$19	; (R /W ) playfield B tile control
+XR_PB_DISP_ADDR	.EQU	$1A	; (R /W ) playfield B display VRAM start address
+XR_PB_LINE_LEN	.EQU	$1B	; (R /W ) playfield B display line width in words
+XR_PB_HV_FSCALE	.EQU	$1C	; (R /W ) playfield B horizontal and vertical fractional scale
+XR_PB_H_SCROLL	.EQU	$1D	; (R /W ) playfield B horizontal and vertical fine scroll
+XR_PB_V_SCROLL	.EQU	$1E	; (R /W ) playfield B horizontal and vertical fine scroll
+XR_PB_LINE_ADDR	.EQU	$1F	; (- /W ) playfield B scanline start address (loaded at start of line)
 
 ; Default 1-bpp font glyphs in TILE memory (total 0x1400 words)
-FONT_ST_8x16_ADDR	.EQU	XR_TILE_ADDR + 0x0000
-FONT_ST_8x16_SIZE	.EQU	0x800
-FONT_ST_8x8_ADDR	.EQU	XR_TILE_ADDR + 0x0800
-FONT_ST_8x8_SIZE	.EQU	0x400
-FONT_PC_8x8_ADDR	.EQU	XR_TILE_ADDR + 0x0C00
-FONT_PC_8x8_SIZE	.EQU	0x400
-FONT_HEX_8x8_ADDR	.EQU	XR_TILE_ADDR + 0x1000
-FONT_HEX_8x8_SIZE	.EQU	0x400
+FONT_ST_8x16_ADDR	.EQU	XR_TILE_ADDR + $0000
+FONT_ST_8x16_SIZE	.EQU	$800
+FONT_ST_8x8_ADDR	.EQU	XR_TILE_ADDR + $0800
+FONT_ST_8x8_SIZE	.EQU	$400
+FONT_PC_8x8_ADDR	.EQU	XR_TILE_ADDR + $0C00
+FONT_PC_8x8_SIZE	.EQU	$400
+FONT_HEX_8x8_ADDR	.EQU	XR_TILE_ADDR + $1000
+FONT_HEX_8x8_SIZE	.EQU	$400
 
-TILE_CTRL_TILE_VRAM_F	.EQU	0x0100
-TILE_CTRL_DISP_TILEMEM_F	.EQU	0x0200
+TILE_CTRL_TILE_VRAM_F	.EQU	$0100
+TILE_CTRL_DISP_TILEMEM_F	.EQU	$0200
 
 ; GET XOSERA MAIN REGISTER REG_NUM VALUE INTO DE.
 #DEFINE XM_GETW(REG_NUM) \
