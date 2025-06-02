@@ -18,6 +18,10 @@ include $(TOOLS)/Makefile.inc
 
 all :: deploy
 
+clean ::
+	rm -rf mkdocs
+	rm -rf site
+
 %.tmp : %.md
 	gpp -o $@ -U "$$" "$$" "{" "}{" "}$$" "{" "}" "@@@" "" -M "$$" "$$" "{" "}{" "}$$" "{" "}" $<
 
@@ -41,7 +45,7 @@ mkdocs/%.md : %.md
 	gpp -DGFM -U "$$" "$$" "{" "}{" "}$$" "{" "}" "@@@" "" -M "$$" "$$" "{" "}{" "}$$" "{" "}" $< \
 	    | pandoc -f markdown -t gfm-yaml_metadata_block -s -o $@ --default-image-extension=svg
 
-deploy : deploy_mkdocs
+deploy :
 	cp Introduction.gfm      "../../ReadMe.md"
 	cp Introduction.txt      "../../ReadMe.txt"
 	cp Introduction.pdf      "../../Doc/RomWBW Introduction.pdf"
