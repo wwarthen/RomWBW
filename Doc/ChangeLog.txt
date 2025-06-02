@@ -10,6 +10,7 @@ Version 3.6
 - RDG: Add online documentation site
 - WBW: Added enhanced Hi-Tech C Compiler files from Ladislau Szilagyi
 - WBW: Added boundary check to ram/rom disk driver
+- WBW: Per Peter Onion, switch KERMIT default file xfer mode to binary
 
 Version 3.5.1
 -------------
