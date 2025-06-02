@@ -1,12 +1,13 @@
 Version 3.6
 -----------
+- RDG: Added VDA driver for Xosera FPGA-based VDC
 - MGG: Added COBOL language disk image
 - WDC: Added config options to PCF driver
 - WBW: Enabled dynamic CPU speed update on LCD screen
 - WBW: Improve LPT driver boot messaging when not detected (per Robb Bates)
 - WBW: Correct DS1307 boot date/time display (per Tadeusz Pycio)
 - WBW: Add -DELAY option to TUNE app (per Robb Bates)
-- R?G: Add online documentation site
+- RDG: Add online documentation site
 - WBW: Added enhanced Hi-Tech C Compiler files from Ladislau Szilagyi
 - WBW: Added boundary check to ram/rom disk driver
 

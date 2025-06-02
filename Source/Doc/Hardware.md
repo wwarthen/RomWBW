@@ -2279,6 +2279,7 @@ the active platform and configuration.
 | VDU       | MC6845 Family Video Display Controller (*)             |
 | VGA       | HD6445CP4-based Video Display Controller               |
 | VRC       | VGARC Video Display Controller                         |
+| XOSERA    | XOSERA FPGA-based Video Display Controller             |
 
 Note:
 
