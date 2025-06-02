@@ -535,7 +535,7 @@
 <p><strong>RomWBW User Guide</strong> \
 Version 3.6 \
 Wayne Warthen  (<a href="mailto:wwarthen@gmail.com">wwarthen@gmail.com</a>) \
-31 May 2025</p>
+01 Jun 2025</p>
 <h4 id="preface">Preface</h4>
 <p>This document is a general usage guide for the RomWBW software and is
 generally the best place to start with RomWBW.</p>
@@ -608,12 +608,11 @@ directory on your modern computer (Windows/Linux/Mac) use any zip tool
 to extract the contents of the archive.</p>
 <p>The Binary directory of the distribution contains the pre-built ROM
 images.<br />
-Refer to <a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Hardware.pdf">RomWBW
-Hardware</a>
-to identify the correct ROM image for your system.</p>
-<p>A complete list of the currently supported platforms is found in <a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Hardware.pdf">RomWBW
-Hardware</a>.
-You must burn the correct ROM image that matches your hardware</p>
+Refer to <a href="../Hardware/">RomWBW Hardware</a> to identify the correct ROM
+image for your system.</p>
+<p>A complete list of the currently supported platforms is found in <a href="../Hardware/">RomWBW
+Hardware</a>. You must burn the correct ROM image that matches
+your hardware</p>
 <p>Once you have a running RomWBW system, you can generally update your ROM
 to a newer version in-situ with the included ROM Flashing tool (Will
 Sowerbutts’ FLASH application) as described in the
@@ -625,18 +624,16 @@ able to boot and check out your system with just the ROM.</p>
 <p>Connect a serial terminal or computer with terminal emulation software
 to the primary serial port of your CPU board. You may need to refer to
 your hardware provider’s documentation for details. A null-modem
-connection may be required. Set the baud rate as indicated in <a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Hardware.pdf">RomWBW
-Hardware</a>.
-Set the line characteristics to 8 data bits, 1 stop bit, no parity, and
-no flow control. If possible, select ANSI or VT-100 terminal emulation.
-Hardware flow control is not required for terminal operation, but may be
-necessary for <a href="#serial-port-transfers">Serial Port Transfers</a>.</p>
+connection may be required. Set the baud rate as indicated in <a href="../Hardware/">RomWBW
+Hardware</a>. Set the line characteristics to 8 data bits, 1
+stop bit, no parity, and no flow control. If possible, select ANSI or
+VT-100 terminal emulation. Hardware flow control is not required for
+terminal operation, but may be necessary for <a href="#serial-port-transfers">Serial Port
+Transfers</a>.</p>
 <p>RomWBW will automatically attempt to detect and support typical add-on
 components for each of the systems supported. More information on the
 required system configuration and optional supported components for each
-ROM is found in <a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Hardware.pdf">RomWBW
-Hardware</a>
-.</p>
+ROM is found in <a href="../Hardware/">RomWBW Hardware</a> .</p>
 <p>Upon power-up, your terminal should display a sign-on banner within 2
 seconds followed by hardware inventory and discovery information. When
 hardware initialization is completed, a boot loader prompt allows you to
@@ -705,10 +702,9 @@ hardware devices at specific port addresses. If you add hardware to your
 system that is not automatically identified, you may need to build a
 custom ROM to add support for it. Building a custom ROM is covered
 later.</p>
-<p><a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Hardware.pdf">RomWBW
-Hardware</a>
-contains a list of the RomWBW hardware devices which may help you
-identify the hardware discovered in your system.</p>
+<p><a href="../Hardware/">RomWBW Hardware</a> contains a list of the RomWBW hardware
+devices which may help you identify the hardware discovered in your
+system.</p>
 <h3 id="device-unit-assignments">Device Unit Assignments</h3>
 <p>In order to support a wide variety of hardware, RomWBW HBIOS uses a
 modular approach to implementing device drivers and presenting devices
@@ -818,8 +814,7 @@ system.</p>
 type <code>L &lt;enter&gt;</code> to list the available built-in ROM applications. If
 your terminal supports ANSI escape sequences, you can try the ‘P’
 command to play a simple on-screen game. Instructions for the game are
-found in <a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Applications.pdf">RomWBW
-Applications</a>.</p>
+found in <a href="../Applications/">RomWBW Applications</a>.</p>
 <p>If all of this seems fine, your ROM has been successfully programmed.</p>
 <h1 id="boot-loader-operation">Boot Loader Operation</h1>
 <p>Once your system has completed the startup process, it presents a Boot
@@ -945,12 +940,11 @@ In the pre-built ROMs, selecting User App will just return to the Boot
 Loader menu. If you are interested in creating a custom application to
 run here, review the “usrrom.asm” file in the Source/HBIOS folder of the
 distribution.</p>
-<p>Each of the ROM Applications is documented in <a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Applications.pdf">RomWBW
-Applications</a>.
-Some of the applications (such as BASIC) also have their own independent
-manual in the Doc directory of the distribution. The OSes included in
-the ROM (CP/M 2.2 &amp; Z-System) are described in the Operating Systems
-chapter of this document.</p>
+<p>Each of the ROM Applications is documented in <a href="../Applications/">RomWBW
+Applications</a>. Some of the applications (such as BASIC)
+also have their own independent manual in the Doc directory of the
+distribution. The OSes included in the ROM (CP/M 2.2 &amp; Z-System) are
+described in the Operating Systems chapter of this document.</p>
 <p>In general, the command to exit any of these applications and restart
 the system is <code>BYE</code>. The exceptions are the Monitor which uses <code>X</code> and
 Play which uses <code>Q</code>.</p>
@@ -1211,9 +1205,8 @@ can be accessed by the command “<code>W</code>” from the RomWBW boot menu.</
 an disk image, it is found in the <code>Binary/Applications</code> folder of the
 RomWBW distribution.</p>
 <p>For further guidance on using this application please see the section
-“RomWBW System Configuration” in the <a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Applications.pdf">RomWBW
-Applications</a>
-document.</p>
+“RomWBW System Configuration” in the <a href="../Applications/">RomWBW
+Applications</a> document.</p>
 <p>If your system has both a <a href="#front-panel">Front Panel</a> as well as NVRAM,
 be aware that the Front Panel switches take precedence over the NVRAM
 configuration settings.</p>
@@ -1559,9 +1552,8 @@ primary side of the interface:</p>
 IDE0: 8-BIT LBA BLOCKS=0x00773800 SIZE=3815MB
 IDE1: NO MEDIA
 </code></pre>
-<p>See <a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Hardware.pdf">RomWBW
-Hardware</a>
-for a complete list of the different device types supported.</p>
+<p>See <a href="../Hardware/">RomWBW Hardware</a> for a complete list of the different
+device types supported.</p>
 <p>If you do not see drive letters assigned as expected, refer to the prior
 system boot messages to ensure media has been detected in the interface.</p>
 <p>Each drive letter refers back to a specific disk hardware interface like
@@ -1673,9 +1665,8 @@ has no SD Card inserted.</p>
 <p>The <code>ASSIGN</code> command is used to view or change the current drive letter
 mappings. Any changes made to drive letter mappings take immediate
 effect</p>
-<p>Refer to <a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Applications.pdf">RomWBW
-Applications</a>
-for more information on use of the <code>ASSIGN</code> command.</p>
+<p>Refer to <a href="../Applications/">RomWBW Applications</a> for more information on
+use of the <code>ASSIGN</code> command.</p>
 <p>Since drive letter assignments are easily changed at any time using the
 <code>ASSIGN</code> command, you can customize your assignments as desired after
 starting the operating system. Even better, you can use an auto-submit
@@ -1700,9 +1691,8 @@ manually setup a hard disk for first use.</p>
 <p>With RomWBW you use the <code>CLRDIR</code> command to do this. This command is
 merely “clearing out” the directory space of the drive referred to by a
 drive letter and setting up the new empty directory.</p>
-<p>Refer to <a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Applications.pdf">RomWBW
-Applications</a>
-for more information on use of the <code>CLRDIR</code> command.</p>
+<p>Refer to <a href="../Applications/">RomWBW Applications</a> for more information on
+use of the <code>CLRDIR</code> command.</p>
 <p>Since <code>CLRDIR</code> works on drive letters, make absolutely sure you know
 what media and slice are assigned to that drive letter before using
 <code>CLRDIR</code> because <code>CLRDIR</code> will wipe out any pre-existing contents of the
@@ -2012,9 +2002,8 @@ application. This application interacts directly with your hardware and
 therefore you must specify your floppy interface hardware at application
 startup. Additionally, you need to specify the floppy disk drive and
 media format to use for formatting.</p>
-<p>Refer to <a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Applications.pdf">RomWBW
-Applications</a>
-for more information on use of the <code>FDU</code> command.</p>
+<p>Refer to <a href="../Applications/">RomWBW Applications</a> for more information on
+use of the <code>FDU</code> command.</p>
 <p>Since the physical format of floppy media is the same as that used in a
 standard MS-DOS/Windows computer, you can also format floppy disk media
 in a standard computer. However there are caveats:</p>
@@ -2128,9 +2117,8 @@ normal and does not mean the disks/slices are ready to use.</p>
 starts, enter the disk unit number of the new media. The disk unit
 number was assigned at boot See <a href="#device-unit-assignments">Device Unit
 Assignments</a></p>
-<p>Refer to <a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Applications.pdf">RomWBW
-Applications</a>
-for more information on use of the <code>FDISK80</code> utility.</p>
+<p>Refer to <a href="../Applications/">RomWBW Applications</a> for more information on
+use of the <code>FDISK80</code> utility.</p>
 <p>If you want to use the legacy hd512 layout skip down to the <a href="#legacy-hd512">Legacy
 (hd512)</a> section</p>
 <h4 id="modern-hd1k">Modern (hd1k)</h4>
@@ -2487,12 +2475,11 @@ can change the size and location of the RomWBW and/or FAT partitions to
 increase/decrease the number of slices or FAT filesystem size. Doing so
 would require using <code>FDISK80</code> to define your own custom disk layout and
 initializing your filesystems manually.</p>
-<p>The <a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20System%20Guide.pdf">RomWBW System
-Guide</a>
-has more information on the standard disk layouts as implemented in the
-Combo Disk Images. Additionally, there is a document called “Hard Disk
-Anatomy.pdf” in the Doc directory of the RomWBW distribution with
-detailed information on the standard disk layouts.</p>
+<p>The <a href="../SystemGuide/">RomWBW System Guide</a> has more information on the
+standard disk layouts as implemented in the Combo Disk Images.
+Additionally, there is a document called “Hard Disk Anatomy.pdf” in the
+Doc directory of the RomWBW distribution with detailed information on
+the standard disk layouts.</p>
 <h3 id="combo-hard-disk-image">Combo Hard Disk Image</h3>
 <p>The Combo Disk Image is essentially just a single disk image that has
 several of the individual filesystem images (slices) already
@@ -3882,9 +3869,8 @@ operating system. One exception is <code>FDU</code> – the Floppy Disk Utility.
 application requires that you pick the floppy disk interface you want to
 interact with.</p>
 <p>There is more complete documentation of all of these applications in the
-related RomWBW manual “<a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Applications.pdf">RomWBW
-Applications</a>”
-found in the Doc directory of the distribution.</p>
+related RomWBW manual “<a href="../Applications/">RomWBW Applications</a>” found in
+the Doc directory of the distribution.</p>
 <p>The following custom applications are found on the ROM disk and are,
 therefore, globally available.</p>
 <table>
@@ -3999,11 +3985,9 @@ described below.</p>
 <h3 id="wdate-utility">WDATE Utility</h3>
 <p>The <code>WDATE</code> utility (contributed by Kevin Boone) is an application that
 will display and/or update the current date/time. Its operation is
-described in <a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Applications.pdf">RomWBW
-Applications</a>.
-This utility works with any of the supported RomWBW RTC hardware. Here
-is an example of displaying and updating the date/time with this
-utility:</p>
+described in <a href="../Applications/">RomWBW Applications</a>. This utility works
+with any of the supported RomWBW RTC hardware. Here is an example of
+displaying and updating the date/time with this utility:</p>
 <pre><code>A&gt;wdate
 Thursday 19 October 14:14:43 2023
 
@@ -4018,10 +4002,9 @@ of files. It merely displays and sets the real time clock value.</p>
 <p>Like <code>WDATE</code>, the <code>RTC</code> utility (contributed by Andrew Lynch) will let
 you display and set the current date/time. However, this utility only
 works with the DSRTC hardware (DS1302 chip). It is a “direct to hardware
-application”. Its operation is described in <a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Applications.pdf">RomWBW
-Applications</a>.
-Here is an example of displaying and updatting the date/time with this
-utility:</p>
+application”. Its operation is described in <a href="../Applications/">RomWBW
+Applications</a>. Here is an example of displaying and
+updatting the date/time with this utility:</p>
 <pre><code>A&gt;rtc
 Start RTC Program
 RomWBW HBIOS, Mark 4 RTC Latch Port 0x8A
@@ -4811,11 +4794,10 @@ computer.</p>
 <p>Finally, use the <code>FAT</code> tool to copy the files onto a CP/M drive. This
 process works just fine in reverse if you want to copy files from a CP/M
 filesystem to your modern computer.</p>
-<p>Complete instructions for the <code>FAT</code> application are found in <a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Applications.pdf">RomWBW
-Applications</a>.
-Here, we will just provide a couple of simple examples. Note that the
-FAT application is not on the ROM disk because it is too large to
-include there.</p>
+<p>Complete instructions for the <code>FAT</code> application are found in <a href="../Applications/">RomWBW
+Applications</a>. Here, we will just provide a couple of
+simple examples. Note that the FAT application is not on the ROM disk
+because it is too large to include there.</p>
 <p>The most important thing to understand about the <code>FAT</code> application is
 how it refers to FAT filesystems vs. CP/M filesystems. It infers this
 based on the file specification provided. If you use a specification

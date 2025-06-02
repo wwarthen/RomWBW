@@ -456,16 +456,16 @@
 <p><strong>RomWBW Applications Guide</strong> \
 Version 3.6 \
 MartinR \&amp; Phillip Summers  (<a href="mailto:"></a>) \
-31 May 2025</p>
+01 Jun 2025</p>
 <h1 id="summary">Summary</h1>
 <p>RomWBW is supplied with a suite of software applications that enhance
 the use of the system. Some of these applications have been written
 entirely from scratch for RomWBW. Others are pre-existing software that
 has been customized for the RomWBW environment. This document serves as
 a reference for these RomWBW-specific applications.</p>
-<p>The primary usage documentation for RomWBW is the <a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20User%20Guide.pdf">RomWBW User
-Guide</a>.
-It is assumed that the reader is generally familiar with this document.</p>
+<p>The primary usage documentation for RomWBW is the <a href="../UserGuide/">RomWBW User
+Guide</a>. It is assumed that the reader is generally
+familiar with this document.</p>
 <p>RomWBW also includes many generic software applications that have not
 been modified for RomWBW (e.g., MSBASIC). These generic applications are
 not documented here. Please refer to the application specific
@@ -732,10 +732,9 @@ work.</p>
 code that changes the stack to low memory will be affected.</p>
 <p>The U command may be used to undo the change and return the selected
 memory bank back to the previously selected one.</p>
-<p>Section 4 of the <a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20System%20Guide.pdf">RomWBW System
-Guide</a>
-provides detail on how Bank Ids map to the physical memory of the system
-and also how specific banks are utilized by RomWBW.</p>
+<p>Section 4 of the <a href="../SystemGuide/">RomWBW System Guide</a> provides detail
+on how Bank Ids map to the physical memory of the system and also how
+specific banks are utilized by RomWBW.</p>
 <h3 id="undo-bank">Undo Bank</h3>
 <p><strong><code>U</code></strong> - Change the bank in memory back to the previously selected
 bank. This command should be used in conjunction with the S command.</p>
@@ -753,10 +752,8 @@ RTC chip.</p>
 utility. Noting however the CP/M utility is not included on an disk
 image, it is found in the <code>Binary/Applications</code> folder of the RomWBW
 distribution.</p>
-<p>The <a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20User%20Guide.pdf">RomWBW User
-Guide</a>
-has additional information on the use of NVRAM to set your system
-configuration.</p>
+<p>The <a href="../UserGuide/">RomWBW User Guide</a> has additional information on the
+use of NVRAM to set your system configuration.</p>
 <h3 id="basic-operation">Basic Operation</h3>
 <p>The application is an interactive application; it does not have a
 command line syntax. Instead commands are executed from within the
@@ -1228,10 +1225,10 @@ This means that the operating system will be loaded directly from the
 network server and all of your drive letters will be provided by the
 network server.</p>
 <p>This function requires substantial knowledge of CP/NET and it’s
-implementation within RomWBW. Section 10 of the <a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20User%20Guide.pdf">RomWBW User
-Guide</a>
-provides complete instructions for setting up a CP/NET based network
-under RomWBW including a section on network booting.</p>
+implementation within RomWBW. Section 10 of the <a href="../UserGuide/">RomWBW User
+Guide</a> provides complete instructions for setting up a
+CP/NET based network under RomWBW including a section on network
+booting.</p>
 <h2 id="xmodem-flash-updater">Xmodem Flash Updater</h2>
 <p>The RomWBW Xmodem flash updater provides the capability to update RomWBW
 from the boot loader using an x-modem file transfer. It offers similar
@@ -1964,10 +1961,8 @@ system to fail and force you to reboot.</p>
 letter to a slice that does not fit on the physical media. However, any
 subsequent attempt to refer to that drive letter will result in an
 immediate OS error of “no disk”. Refer to “Hard Disk Capacity” in the
-<a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20User%20Guide.pdf">RomWBW User
-Guide</a>
-for a discussion of the exact number of slices that will fit on a
-specific physical disk size.</p>
+<a href="../UserGuide/">RomWBW User Guide</a> for a discussion of the exact number
+of slices that will fit on a specific physical disk size.</p>
 <p>This command is particularly sensitive to being matched to the
 appropriate version of the RomWBW ROM you are using. Be very careful to
 keep all copies of <code>ASSIGN.COM</code> up to date with your ROM.</p>
@@ -2380,11 +2375,10 @@ corrupt a file if it occurs. Be careful to avoid this.</p>
 <p><code>FDISK80</code> allows you to create and manage traditional partitions on your
 hard disk media. Depending on the hard disk format and features you are
 using, RomWBW may need hard disk partitions defined.</p>
-<p>Please refer to the <a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20User%20Guide.pdf">RomWBW User
-Guide</a>
-for more information on the use of partitions within RomWBW. It is very
-important to understand that RomWBW slices are completely different from
-disk partitions.</p>
+<p>Please refer to the <a href="../UserGuide/">RomWBW User Guide</a> for more
+information on the use of partitions within RomWBW. It is very important
+to understand that RomWBW slices are completely different from disk
+partitions.</p>
 <p>This application is provided by John Coffman. The primary documentation
 is in the file “FDisk Manual.pdf” found in the Doc directory of the
 RomWBW distribution.</p>
@@ -2400,9 +2394,8 @@ Doc directory of the RomWBW distribution for further instructions.</p>
 need to have their directory areas initialised properly using <code>CLRDIR</code>.
 Failure to do this will likely result in corrupted data.</p>
 <p>There is also more information on using FAT partitions with RomWBW in
-the <a href="https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20User%20Guide.pdf">RomWBW User
-Guide</a>
-document in the Doc directory of the distribution.</p>
+the <a href="../UserGuide/">RomWBW User Guide</a> document in the Doc directory of
+the distribution.</p>
 <h4 id="notes_7">Notes</h4>
 <p>Hard disk partition tables allow a maximum of 1024 cylinders when
 defining partitions. However, RomWBW uses exclusively Logical Block
