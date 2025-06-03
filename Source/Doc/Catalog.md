@@ -1061,23 +1061,64 @@ The following files are found in
 
 | **File**     | **Description**                            |
 |--------------|--------------------------------------------|
-| ADVENT.COW   | Adventure game program source              |
-| ADVENT.SUB   | Submit file to build ADVENT                |
-| ADVENT?.TXT  | Adventure game program resource            |
-| ADVMAIN.COW  | Adventure game program source              |
-| RAND.AS      | Assembler Library File                     |
-| COWBE.COM    |                                            |
-| COWFE.COM    | RomWBW specific (Memory Manage) version    |
-| COWLINK.COM  |                                            |
-| DYNMSORT.COW | demonstrates a sort algorithm              |
-| DYNMSORT.SUB | Submit file to build DYNMSORT              |
-| HEXDUMP.COW  | a simple hex dump utility, purely a Cowgol |
-| HEXDUMP.SUB  | Submit file to build HEXDUMP               |
-| HMERGES.C    | C Library File                             |
-| XRND.AS      | Assembler Library File                     |
-| -            | -                                          |
-
-NOTE : The above is incomplete
+| $EXEC.COM    | HiTech C batch processor which launches the Cowgol toolchain executables |
+| ADVENT.COW   | Adventure game program source |
+| ADVENT.SUB   | SUBMIT file to build Adventure game |
+| ADVENT?.TXT  | Adventure game program resources |
+| ADVMAIN.COW  | Adventure game program source |
+| ADVTRAV.COW  | Adventure game component source |
+| ARGV.COH     | Cowgol include file providing command line argument processing |
+| C.LIB        | Hi-Tech C runtime library |
+| CGEN.COM     | HiTech C compiler pass 2 |
+| COMMFILE.COH | Include file providing file I/O |
+| COMMON.COH   | Include file providing common functions |
+| COWBE.COM    | Cowgol back end which builds the cowgol object files (optimized) |
+| COWFE.COM    | Cowgol front end which parses the source file (optimized) |
+| COWFIX.COM   | Interface to Z80AS -- performs code optimizations |
+| COWGOL.COH   | Include file providing standard Cowgol functions |
+| COWGOL.COM   | Interprets the command line and generates $EXEC run requests (a variant of HiTech C.COM) |
+| COWGOL.COO   | Cowgol object file with ??? |
+| COWGOL.LIB   | ??? |
+| COWGOLC.COH  | Cowgol include file providing ??? |
+| COWLINK.COM  | Cowgol linker which binds all the cowgol object files and outputs a Z80 assembler file (optimized) |
+| CPP.COM      | HiTech C pre-processor, modified to accept // style comments |
+| DYNMSORT.COW | Sort algorithm sample program source |
+| DYNMSORT.SUB | SUBMIT file to build DYNMSORT sample application |
+| FACT.COW     | Factorial computation sample program source |
+| FILE.COH     | Include file providing CP/M file processing support |
+| FILEIO.COH   | Include file providing CP/M file processing support |
+| HEXDUMP.COW  | Hex file dump sample  source |
+| HEXDUMP.SUB  | SUBMIT file to build HEXDUMP sample program |
+| LIBBASIC.COH | Include file providing ??? |
+| LIBBIOS.COH  | Include file providing ??? |
+| LIBCONIO.COH | Include file providing console I/O |
+| LIBFP.COH    | Include file providing floating point support |
+| LIBR.COM     | HiTech object file librarian |
+| LIBSTR.COH   | Include file providing string functions |
+| LINK.COM     | HiTech linker which builds the final executable from object and library files |
+| MALLOC.COH   | Include file providing dynamic memory management functions |
+| MERGES.C     | Merge sort sample function C language source |
+| MISC.COH     | Include file providing miscellaneous functions |
+| MISC.COO     | Miscellaneous functions object file |
+| MISC.COW     | Miscellaneous functions source file |
+| OPTIM.COM    | HiTech C compiler optimizer |
+| P1.COM       | HiTech C compiler first pass |
+| RAND.AS      | Pseudo-random number generator source in assembly language |
+| RANFILE.COH  | Include file providing random file access functions |
+| RANFILE.COO  | Random file access functions object file |
+| RANFILE.COW  | Random file access functions source file |
+| README.TXT   | Cowgol disk image release notes |
+| SEQFILE.COH  | Include file providing sequential file access functions |
+| SEQFILE.COO  | Sequential file access functions object file |
+| SEQFILE.COW  | Sequential file access functions source file |
+| STDCOW.COH   | Include file providing standard library functions |
+| STRING.COH   | Include file providing string functions |
+| STRING.COO   | String functions object file |
+| STRING.COW   | String functions source file |
+| STRINGS.COH  | Include file implementing string functions |
+| TESTAS.COW   | Assembly language interface sample program source |
+| TESTAS.SUB   | SUBMIT file to build TESTAS sample program |
+| Z80AS.COM    | Z80 assembler which assembles the output of COWFIX and other Z80 source files (see <https://github.com/Laci1953/Z80AS>) |
 
 ## Microsoft Fortran 80 (Fortran)
 
