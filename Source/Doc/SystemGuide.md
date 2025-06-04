@@ -346,6 +346,14 @@ The memory manager used is determined by the configuration choices
 that are part of a RomWBW build process.  A given ROM can only have a
 single memory manager -- it is not selected dynamically.
 
+The configuration variable `MEMMGR` sets the memory mannager used by
+the ROM build.  It must be set to one of the above memory manager
+types.  For example, for the Z2 memory manager, `MEMMGR` should be set
+to `MM_Z2`.
+
+Note that the term memory manager (MM) and memory management unit (MMU)
+are used interchangeably in the documentation and code.
+
 # Disk Layout
 
 ## Floppy Disk Layout
