@@ -332,7 +332,7 @@
 <p><strong>RomWBW Disk Catalog</strong> \
 Version 3.6 \
 Mark Pruden \&amp; Mykl Orders  (<a href="mailto:"></a>) \
-02 Jun 2025</p>
+04 Jun 2025</p>
 <h1 id="romwbw-distribution-file-catalog">RomWBW Distribution File Catalog</h1>
 <p>This document is a reference to the files found on the disk media
 distributed with RomWBW. Specifically, RomWBW provides a set of floppy
@@ -3138,68 +3138,239 @@ the Doc/Language directory Cowgol Language.pdf</p>
 </thead>
 <tbody>
 <tr>
+<td>\$EXEC.COM</td>
+<td>HiTech C batch processor which launches the Cowgol toolchain executables</td>
+</tr>
+<tr>
 <td>ADVENT.COW</td>
 <td>Adventure game program source</td>
 </tr>
 <tr>
 <td>ADVENT.SUB</td>
-<td>Submit file to build ADVENT</td>
+<td>SUBMIT file to build Adventure game</td>
 </tr>
 <tr>
 <td>ADVENT?.TXT</td>
-<td>Adventure game program resource</td>
+<td>Adventure game program resources</td>
 </tr>
 <tr>
 <td>ADVMAIN.COW</td>
 <td>Adventure game program source</td>
 </tr>
 <tr>
-<td>RAND.AS</td>
-<td>Assembler Library File</td>
+<td>ADVTRAV.COW</td>
+<td>Adventure game component source</td>
+</tr>
+<tr>
+<td>ARGV.COH</td>
+<td>Cowgol include file providing command line argument processing</td>
+</tr>
+<tr>
+<td>C.LIB</td>
+<td>Hi-Tech C runtime library</td>
+</tr>
+<tr>
+<td>CGEN.COM</td>
+<td>HiTech C compiler pass 2</td>
+</tr>
+<tr>
+<td>COMMFILE.COH</td>
+<td>Include file providing file I/O</td>
+</tr>
+<tr>
+<td>COMMON.COH</td>
+<td>Include file providing common functions</td>
 </tr>
 <tr>
 <td>COWBE.COM</td>
-<td></td>
+<td>Cowgol back end which builds the cowgol object files (optimized)</td>
 </tr>
 <tr>
 <td>COWFE.COM</td>
-<td>RomWBW specific (Memory Manage) version</td>
+<td>Cowgol front end which parses the source file (optimized)</td>
+</tr>
+<tr>
+<td>COWFIX.COM</td>
+<td>Interface to Z80AS – performs code optimizations</td>
+</tr>
+<tr>
+<td>COWGOL.COH</td>
+<td>Include file providing standard Cowgol functions</td>
+</tr>
+<tr>
+<td>COWGOL.COM</td>
+<td>Interprets the command line and generates \$EXEC run requests (a variant of HiTech C.COM)</td>
+</tr>
+<tr>
+<td>COWGOL.COO</td>
+<td>Cowgol object file with ???</td>
+</tr>
+<tr>
+<td>COWGOL.LIB</td>
+<td>???</td>
+</tr>
+<tr>
+<td>COWGOLC.COH</td>
+<td>Cowgol include file providing ???</td>
 </tr>
 <tr>
 <td>COWLINK.COM</td>
-<td></td>
+<td>Cowgol linker which binds all the cowgol object files and outputs a Z80 assembler file (optimized)</td>
+</tr>
+<tr>
+<td>CPP.COM</td>
+<td>HiTech C pre-processor, modified to accept // style comments</td>
 </tr>
 <tr>
 <td>DYNMSORT.COW</td>
-<td>demonstrates a sort algorithm</td>
+<td>Sort algorithm sample program source</td>
 </tr>
 <tr>
 <td>DYNMSORT.SUB</td>
-<td>Submit file to build DYNMSORT</td>
+<td>SUBMIT file to build DYNMSORT sample application</td>
+</tr>
+<tr>
+<td>FACT.COW</td>
+<td>Factorial computation sample program source</td>
+</tr>
+<tr>
+<td>FILE.COH</td>
+<td>Include file providing CP/M file processing support</td>
+</tr>
+<tr>
+<td>FILEIO.COH</td>
+<td>Include file providing CP/M file processing support</td>
 </tr>
 <tr>
 <td>HEXDUMP.COW</td>
-<td>a simple hex dump utility, purely a Cowgol</td>
+<td>Hex file dump sample source</td>
 </tr>
 <tr>
 <td>HEXDUMP.SUB</td>
-<td>Submit file to build HEXDUMP</td>
+<td>SUBMIT file to build HEXDUMP sample program</td>
 </tr>
 <tr>
-<td>HMERGES.C</td>
-<td>C Library File</td>
+<td>LIBBASIC.COH</td>
+<td>Include file providing ???</td>
 </tr>
 <tr>
-<td>XRND.AS</td>
-<td>Assembler Library File</td>
+<td>LIBBIOS.COH</td>
+<td>Include file providing ???</td>
 </tr>
 <tr>
-<td>-</td>
-<td>-</td>
+<td>LIBCONIO.COH</td>
+<td>Include file providing console I/O</td>
+</tr>
+<tr>
+<td>LIBFP.COH</td>
+<td>Include file providing floating point support</td>
+</tr>
+<tr>
+<td>LIBR.COM</td>
+<td>HiTech object file librarian</td>
+</tr>
+<tr>
+<td>LIBSTR.COH</td>
+<td>Include file providing string functions</td>
+</tr>
+<tr>
+<td>LINK.COM</td>
+<td>HiTech linker which builds the final executable from object and library files</td>
+</tr>
+<tr>
+<td>MALLOC.COH</td>
+<td>Include file providing dynamic memory management functions</td>
+</tr>
+<tr>
+<td>MERGES.C</td>
+<td>Merge sort sample function C language source</td>
+</tr>
+<tr>
+<td>MISC.COH</td>
+<td>Include file providing miscellaneous functions</td>
+</tr>
+<tr>
+<td>MISC.COO</td>
+<td>Miscellaneous functions object file</td>
+</tr>
+<tr>
+<td>MISC.COW</td>
+<td>Miscellaneous functions source file</td>
+</tr>
+<tr>
+<td>OPTIM.COM</td>
+<td>HiTech C compiler optimizer</td>
+</tr>
+<tr>
+<td>P1.COM</td>
+<td>HiTech C compiler first pass</td>
+</tr>
+<tr>
+<td>RAND.AS</td>
+<td>Pseudo-random number generator source in assembly language</td>
+</tr>
+<tr>
+<td>RANFILE.COH</td>
+<td>Include file providing random file access functions</td>
+</tr>
+<tr>
+<td>RANFILE.COO</td>
+<td>Random file access functions object file</td>
+</tr>
+<tr>
+<td>RANFILE.COW</td>
+<td>Random file access functions source file</td>
+</tr>
+<tr>
+<td>README.TXT</td>
+<td>Cowgol disk image release notes</td>
+</tr>
+<tr>
+<td>SEQFILE.COH</td>
+<td>Include file providing sequential file access functions</td>
+</tr>
+<tr>
+<td>SEQFILE.COO</td>
+<td>Sequential file access functions object file</td>
+</tr>
+<tr>
+<td>SEQFILE.COW</td>
+<td>Sequential file access functions source file</td>
+</tr>
+<tr>
+<td>STDCOW.COH</td>
+<td>Include file providing standard library functions</td>
+</tr>
+<tr>
+<td>STRING.COH</td>
+<td>Include file providing string functions</td>
+</tr>
+<tr>
+<td>STRING.COO</td>
+<td>String functions object file</td>
+</tr>
+<tr>
+<td>STRING.COW</td>
+<td>String functions source file</td>
+</tr>
+<tr>
+<td>STRINGS.COH</td>
+<td>Include file implementing string functions</td>
+</tr>
+<tr>
+<td>TESTAS.COW</td>
+<td>Assembly language interface sample program source</td>
+</tr>
+<tr>
+<td>TESTAS.SUB</td>
+<td>SUBMIT file to build TESTAS sample program</td>
+</tr>
+<tr>
+<td>Z80AS.COM</td>
+<td>Z80 assembler which assembles the output of COWFIX and other Z80 source files (see <a href="https://github.com/Laci1953/Z80AS">https://github.com/Laci1953/Z80AS</a>)</td>
 </tr>
 </tbody>
 </table>
-<p>NOTE : The above is incomplete</p>
 <h2 id="microsoft-fortran-80-fortran">Microsoft Fortran 80 (Fortran)</h2>
 <p>Floppy Disk Image: <strong>fd_fortran.img</strong><br />
 Hard Disk Image: <strong>hd_fortran.img</strong></p>

@@ -659,7 +659,7 @@
 <p><strong>RomWBW System Guide</strong> \
 Version 3.6 \
 Wayne Warthen  (<a href="mailto:wwarthen@gmail.com">wwarthen@gmail.com</a>) \
-02 Jun 2025</p>
+04 Jun 2025</p>
 <h1 id="overview">Overview</h1>
 <p>The objective of RomWBW is to provide firmware, operating systems, and
 applications targeting the Z80 family of CPUs. The firmware, in the form
@@ -1058,6 +1058,11 @@ Memory manager onboard the Rhyophyre computer system by Andrew Lynch.</p>
 <p>The memory manager used is determined by the configuration choices that
 are part of a RomWBW build process. A given ROM can only have a single
 memory manager – it is not selected dynamically.</p>
+<p>The configuration variable <code>MEMMGR</code> sets the memory mannager used by the
+ROM build. It must be set to one of the above memory manager types. For
+example, for the Z2 memory manager, <code>MEMMGR</code> should be set to <code>MM_Z2</code>.</p>
+<p>Note that the term memory manager (MM) and memory management unit (MMU)
+are used interchangeably in the documentation and code.</p>
 <h1 id="disk-layout">Disk Layout</h1>
 <h2 id="floppy-disk-layout">Floppy Disk Layout</h2>
 <p>RomWBVW generally handles floppy disks in the same physical formats as
