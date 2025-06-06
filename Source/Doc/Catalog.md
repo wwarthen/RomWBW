@@ -70,11 +70,12 @@ disks should now be fully described.
   CP/M 3.  Applications have been patched according to the DRI
   patch list.
 
-- **ZPM3**: Digital Research CP/M-80 2.2 Distribution Files
+- **ZPM3**: ZPM3 Distribution Files
 
-  Documentation: *CPM Manual.pdf*
+  Documentation: *ZPM3.txt*
 
-  These files are from Simeon Cran's ZPM3 operating system distribution.
+  These files are from Simeon Cran's official distribution of ZPM3. 
+  All known patches have been applied.
 
 `\clearpage`{=latex}
 

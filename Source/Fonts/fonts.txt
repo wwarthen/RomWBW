@@ -15,13 +15,18 @@ There are multiple fonts associated with ROMWBW supported hardware:
 	ECB-VGA3	vga.asm		6445
 	MBC-VDC		cvdu.asm	8568
 	MBC-VDP		tms.asm		9938/9958
+	RCBUS-VRC	vrc.asm		PLD
+	RCBUS-TMS	tms.asm		99x8
 
-Name            Font    Storage	    Size    Board & Display Mode
---------------------------------------------------------------------------------------------
-font8x8u.bin    6x8     8x8         2048    ECB-SCG, ECB-VGA3 (80x60), MBC-VDP
-font8x11u.bin   8x11    8x11        2816    ECB-VGA3 (80x43)
-font8x16u.bin   8x14    8x16        4096    ECB-CVDU (80x25), ECB-VGA3 (80x24, 80x25, 80x30), MBC-VDC
-fontcgau.bin    8x8     8x16        4096    ECB-CVDU (80x25), MBC-VDC
+Name		Glyph	Cell	Size	Comp	Board & Display Mode
+------------------------------------------------------------------------------------------------
+font8x8		7x8	8x8	2048	1034	ECB-SCG, ECB-VGA3 (80x60), MBC-VDP
+font8x11	8x11	8x11	2816	1252	ECB-VGA3 (80x43)
+font8x16	8x14	8x16	4096	1466	ECB-CVDU (EGA), ECB-VGA3 (80x24, 80x25, 80x30), MBC-VDC (EGA)
+fontcga		8x8	8x16	4096	1280	ECB-CVDU (CGA), MBC-VDC (CGA)
+fontvrc		8x8	8x8	1024	650	VGARC
+				-----	-----
+				14080	5682
 
 Notes:
 
