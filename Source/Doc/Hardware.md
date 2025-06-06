@@ -2318,6 +2318,7 @@ Note:
 | DSRTC     | Maxim DS1302 Real-Time Clock w/ NVRAM                  |
 | EZ80RTC   | eZ80 Real-Time Clock                                   |
 | INTRTC    | Interrupt-based Real Time Clock                        |
+| PCRTC     | MC146818/DS1285/DS12885 PC style                       |
 | PCF       | PCF8584-based I2C Real-Time Clock                      |
 | RP5C01    | Ricoh RPC01A Real-Time Clock w/ NVRAM                  |
 | SIMRTC    | SIMH Simulator Real-Time Clock                         |
