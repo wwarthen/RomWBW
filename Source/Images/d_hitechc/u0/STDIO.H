@@ -2,8 +2,17 @@
 #define _HTC_STDIO_H
 
 /*
- * STDIO.H	Modified version from Tesseract vol 91
+ * STDIO.H	HI-TECH C standard I/O for V3.09-xx
+ *
+ *		This version incorporates changes to stdio routines
+ *		resulting from backporting features from V4.11
  */
+
+#define _HTC_VERSION	"3.09-19"
+#define _HTC_MAJOR	3
+#define _HTC_MINOR	9
+#define _HTC_REV	19
+
 #if	z80
 #define	BUFSIZ		512
 #define	_NFILE		8
@@ -12,18 +21,27 @@
 #define	_NFILE		20
 #endif	z80
 
+#ifndef	_STDDEF
+typedef	int		ptrdiff_t;
+typedef	unsigned	size_t;
+#define	_STDDEF
+#define	offsetof(ty, mem)	((int)&(((ty *)0)->mem))
+#endif	_STDDEF
+
 #ifndef FILE
-#define	uchar	unsigned char
+#define	uchar		unsigned char
 
 extern	struct	_iobuf
 {
-    char		*_ptr;
-    int			 _cnt;
-    char		*_base;
-    unsigned short	 _flag;
-    char		 _file;
+	char		*_ptr;
+	int		 _cnt;
+	char		*_base;
+	unsigned short	 _flag;
+	char		 _file;
+	size_t		 _size;
 } _iob[_NFILE];
 
+#define	FILE		struct _iobuf
 #endif	FILE
 
 #ifndef SEEK_SET
@@ -32,25 +50,26 @@ extern	struct	_iobuf
 #define SEEK_END 2
 #endif
 
-#define	_IOREAD		01
-#define	_IOWRT		02
-#define	_IORW		03
-#define	_IONBF		04
-#define	_IOMYBUF	010
-#define	_IOEOF		020
-#define	_IOERR		040
-#define	_IOSTRG		0100
-#define	_IOBINARY	0200
-                                /* New flags */
-#define	_IODIRN		01000	/* Set if writing to a R/W file */
-#define _IOAPPEND	02000	/* Set if in append mode */
-#define _IOWROTE 	04000	/* Write occurred since last seek */
+/* I/O status flag word bits */
+#define	_IOREAD		01	/* Allow file reading */
+#define	_IOWRT		02	/* Allow file writing */
+#define	_IORW		03	/* Mask for reading or writing */
+#define	_IONBF		04	/* Not being buffered */
+#define	_IOMYBUF	010	/* Using buffer */
+#define	_IOEOF		020	/* At end-of-file */
+#define	_IOERR		040	/* An I/O error has occurred */
+#define	_IOSTRG		0100	/* End of string reached */
+#define	_IOBINARY	0200	/* Binary mode */
+#define	_IOLBF		0400	/* Using line buffering */
+#define	_IODIRN		01000	/* Direction - writing to a R/W file */
+#define _IOAPPEND	02000	/* Append mode */
+#define _IOSEEKED	04000	/* A seek has occurred since last write */
+#define	_IOFBF		010000	/* Using full buffering */
 
 #ifndef	NULL
 #define	NULL	((void *)0)
 #endif	NULL
 
-#define	FILE		struct _iobuf
 #define	EOF		(-1)
 
 #define	stdin		(&_iob[0])
@@ -79,9 +98,6 @@ extern	struct	_iobuf
 #define	clrerr(p)	p->_flag &= ~_IOERR
 #define	clreof(p)	p->_flag &= ~_IOEOF
 
-#define	L_tmpnam	34		        /* max length of temporary names */
-#define	L_TMPNAM	(L_tmpnam)		/* max length of temporary names */
-
 extern int	 fclose(FILE *);
 extern int	 fflush(FILE *);
 extern int	 fgetc(FILE *);
@@ -96,7 +112,8 @@ extern int	 fread(void *, unsigned, unsigned, FILE *);
 extern int	 fwrite(void *, unsigned, unsigned, FILE *);
 extern int	 fseek(FILE *, long, int);
 extern int	 rewind(FILE *);
-extern int	 setbuf(FILE *, char *);
+extern void	 setbuf(FILE *, char *);
+extern int	 setvbuf(FILE *, char *, int, size_t);
 extern int	 printf(char *, ...);
 extern int	 fprintf(FILE *, char *, ...);
 extern int	 sprintf(char *, char *, ...);
@@ -111,5 +128,5 @@ extern long	 ftell(FILE *);
 extern char	*fgets(char *, int, FILE *);
 extern char	*_bufallo(void);
 
-#endif
-
+#endif _HTC_STDIO_H
+
