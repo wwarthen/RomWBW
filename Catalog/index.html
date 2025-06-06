@@ -332,7 +332,7 @@
 <p><strong>RomWBW Disk Catalog</strong> \
 Version 3.6 \
 Mark Pruden \&amp; Mykl Orders  (<a href="mailto:"></a>) \
-04 Jun 2025</p>
+06 Jun 2025</p>
 <h1 id="romwbw-distribution-file-catalog">RomWBW Distribution File Catalog</h1>
 <p>This document is a reference to the files found on the disk media
 distributed with RomWBW. Specifically, RomWBW provides a set of floppy
@@ -389,10 +389,11 @@ now be fully described.</p>
   CP/M 3. Applications have been patched according to the DRI patch
   list.</p>
 <ul>
-<li><strong>ZPM3</strong>: Digital Research CP/M-80 2.2 Distribution Files</li>
+<li><strong>ZPM3</strong>: ZPM3 Distribution Files</li>
 </ul>
-<p>Documentation: <em>CPM Manual.pdf</em></p>
-<p>These files are from Simeon Cran’s ZPM3 operating system distribution.</p>
+<p>Documentation: <em>ZPM3.txt</em></p>
+<p>These files are from Simeon Cran’s official distribution of ZPM3. All
+  known patches have been applied.</p>
 <h1 id="operating-system-boot-disks">Operating System Boot Disks</h1>
 <p>RomWBW contains several ready-to-run disks, that have been adapted for
 RomWBW. Theses disks are bootable as is (the operating system image is
@@ -3167,7 +3168,7 @@ the Doc/Language directory Cowgol Language.pdf</p>
 </tr>
 <tr>
 <td>C.LIB</td>
-<td>Hi-Tech C runtime library</td>
+<td>HI-TECH C runtime library</td>
 </tr>
 <tr>
 <td>CGEN.COM</td>
@@ -3442,13 +3443,13 @@ written in the C language to executable machine code programs. Versions
 are available which compile programs for operation under the host
 operating system, or which produce programs for execution in embedded
 systems without an operating system.</p>
-<p>This is the Mar 21, 2023 update 17 released by Tony Nicholson who
+<p>This is the Jun 2, 2025 update 19 released by Tony Nicholson who
 currently maintains HI-TECH C at
-<a href="https://github.com/agn453/HI-TECH-Z80-C">https://github.com/agn453/HI-TECH-Z80-C</a></p>
+<a href="https://github.com/agn453/HI-TECH-Z80-C">https://github.com/agn453/HI-TECH-Z80-C</a>.</p>
 <p>The manual is available in the Doc/Language directory, HI-TECH Z80 C
 Compiler Manual.txt</p>
 <p>A good blog post about the HI-TECH C Compiler is available at
-<a href="https://techtinkering.com/2008/10/22/installing-the-hi-tech-z80-c-compiler-for-cpm">https://techtinkering.com/2008/10/22/installing-the-hi-tech-z80-c-compiler-for-cpm</a></p>
+<a href="https://techtinkering.com/2008/10/22/installing-the-hi-tech-z80-c-compiler-for-cpm">https://techtinkering.com/2008/10/22/installing-the-hi-tech-z80-c-compiler-for-cpm</a>.</p>
 <p>User area 1 contains another complete copy of the HI-TECH C Compiler. It
 is identical to the copy in user area 0 except for the following files
 which were enhanced by Ladislau Szilagyi from his GitHub Repository at
@@ -3479,12 +3480,183 @@ CP/M and compatible operations systems provided in RomWBW.</p>
 </thead>
 <tbody>
 <tr>
-<td>–</td>
-<td>–</td>
+<td>\$EXEC.COM</td>
+<td>Compiler execution manager</td>
+</tr>
+<tr>
+<td>ASSERT.H</td>
+<td>Language include file</td>
+</tr>
+<tr>
+<td>C.COM</td>
+<td>Compiler invocation application (updated)</td>
+</tr>
+<tr>
+<td>C309.COM</td>
+<td>Compiler invocation application (original)</td>
+</tr>
+<tr>
+<td>CGEN.COM</td>
+<td>The code generator - produces assembler code</td>
+</tr>
+<tr>
+<td>CONIO.H</td>
+<td>Language include file (see manual)</td>
+</tr>
+<tr>
+<td>CPM.H</td>
+<td>Language include file (see manual)</td>
+</tr>
+<tr>
+<td>CPP.COM</td>
+<td>Pre-processor - handles macros and conditional compilation</td>
+</tr>
+<tr>
+<td>CREF.COM</td>
+<td>Produces cross-reference listings of C or assembler programs</td>
+</tr>
+<tr>
+<td>CRTCPM.OBJ</td>
+<td>Startup Object File (standard)</td>
+</tr>
+<tr>
+<td>CTYPE.H</td>
+<td>Language include file (see manual)</td>
+</tr>
+<tr>
+<td>DEBUG.COM</td>
+<td>C Debugger (Z80)</td>
+</tr>
+<tr>
+<td>DRTCPM.OBJ</td>
+<td>Startup Object File (???)</td>
+</tr>
+<tr>
+<td>EXEC.H</td>
+<td>Language include file (see manual)</td>
+</tr>
+<tr>
+<td>FLOAT.H</td>
+<td>Language include file (see manual)</td>
+</tr>
+<tr>
+<td>HITECH.H</td>
+<td>Language include file (see manual)</td>
+</tr>
+<tr>
+<td>LIBC.LIB</td>
+<td>Standard C Runtime Library</td>
+</tr>
+<tr>
+<td>LIBF.LIB</td>
+<td>Floating Point Library</td>
+</tr>
+<tr>
+<td>LIBOVR.LIB</td>
+<td>Overlay Library</td>
+</tr>
+<tr>
+<td>LIBR.COM</td>
+<td>Creates and maintains libraries of object modules</td>
+</tr>
+<tr>
+<td>LIMITS.H</td>
+<td>Language include file (see manual)</td>
+</tr>
+<tr>
+<td>LINQ.COM</td>
+<td>Link editor - links object files with libraries</td>
+</tr>
+<tr>
+<td>MATH.H</td>
+<td>Language include file (see manual)</td>
+</tr>
+<tr>
+<td>NRTCPM.OBJ</td>
+<td>Startup Object File (minimal getargs)</td>
+</tr>
+<tr>
+<td>OBJTOHEX.COM</td>
+<td>Converts the output of LINK into the appropriate executable file format (e.g., .EXE or .PRG or .HEX)</td>
+</tr>
+<tr>
+<td>OPTIM.COM</td>
+<td>Code improver - may optionally be omitted, reducing compilation time at a cost of larger, slower code produced</td>
+</tr>
+<tr>
+<td>OPTIONS</td>
+<td>Compiler usage help file</td>
+</tr>
+<tr>
+<td>OVERLAY.H</td>
+<td>Language include file</td>
+</tr>
+<tr>
+<td>P1.COM</td>
+<td>The syntax and semantic analysis pass - writes intermediate code for the code generator to read</td>
+</tr>
+<tr>
+<td>RRTCPM.OBJ</td>
+<td>Startup Object File (self relocating)</td>
+</tr>
+<tr>
+<td>SETJMP.H</td>
+<td>Language include file (see manual)</td>
+</tr>
+<tr>
+<td>SIGNAL.H</td>
+<td>Language include file (see manual)</td>
+</tr>
+<tr>
+<td>STAT.H</td>
+<td>Language include file (see manual)</td>
+</tr>
+<tr>
+<td>STDARG.H</td>
+<td>Language include file (see manual)</td>
+</tr>
+<tr>
+<td>STDDEF.H</td>
+<td>Language include file (see manual)</td>
+</tr>
+<tr>
+<td>STDINT.H</td>
+<td>Language include file (see manual)</td>
+</tr>
+<tr>
+<td>STDIO.H</td>
+<td>Language include file (see manual)</td>
+</tr>
+<tr>
+<td>STDLIB.H</td>
+<td>Language include file (see manual)</td>
+</tr>
+<tr>
+<td>STRING.H</td>
+<td>Language include file (see manual)</td>
+</tr>
+<tr>
+<td>SYMTOAS.COM</td>
+<td>Convert symbol file to assembler</td>
+</tr>
+<tr>
+<td>SYS.H</td>
+<td>Language include file (see manual)</td>
+</tr>
+<tr>
+<td>TIME.H</td>
+<td>Language include file (see manual)</td>
+</tr>
+<tr>
+<td>UNIXIO.H</td>
+<td>Language include file (see manual)</td>
+</tr>
+<tr>
+<td>ZAS.COM</td>
+<td>The assembler - in fact a general purpose macro assembler</td>
 </tr>
 </tbody>
 </table>
-<p>NOTE : The above is incomplete</p>
 <h2 id="msx-roms">MSX ROMS</h2>
 <p>Hard Disk Image: <strong>hd_msxroms1.img</strong><br />
 Hard Disk Image: <strong>hd_msxroms2.img</strong></p>
