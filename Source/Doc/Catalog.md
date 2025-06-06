@@ -1069,7 +1069,7 @@ The following files are found in
 | ADVMAIN.COW  | Adventure game program source |
 | ADVTRAV.COW  | Adventure game component source |
 | ARGV.COH     | Cowgol include file providing command line argument processing |
-| C.LIB        | Hi-Tech C runtime library |
+| C.LIB        | HI-TECH C runtime library |
 | CGEN.COM     | HiTech C compiler pass 2 |
 | COMMFILE.COH | Include file providing file I/O |
 | COMMON.COH   | Include file providing common functions |
@@ -1178,21 +1178,22 @@ NOTE : The above is incomplete
 | Floppy Disk Image: **fd_hitechc.img**
 | Hard Disk Image: **hd_hitechc.img**
 
-The HI-TECH C Compiler  is  a  set  of  software  which
+The HI-TECH C Compiler is a set of software which
 translates  programs written in the C language to executable
 machine code programs. Versions are available which  compile
 programs  for  operation under the host operating system, or
 which produce programs for  execution  in  embedded  systems
 without an operating system.
 
-This is the Mar 21, 2023 update 17 released by Tony Nicholson who currently
-maintains HI-TECH C at <https://github.com/agn453/HI-TECH-Z80-C>
+This is the Jun 2, 2025 update 19 released by Tony Nicholson who
+currently maintains HI-TECH C at
+<https://github.com/agn453/HI-TECH-Z80-C>.
 
 The manual is available in the Doc/Language directory,
 HI-TECH Z80 C Compiler Manual.txt
 
 A good blog post about the HI-TECH C Compiler is available at
-<https://techtinkering.com/2008/10/22/installing-the-hi-tech-z80-c-compiler-for-cpm>
+<https://techtinkering.com/2008/10/22/installing-the-hi-tech-z80-c-compiler-for-cpm>.
 
 User area 1 contains another complete copy of the HI-TECH C Compiler.
 It is identical to the copy in user area 0 except for the following files
@@ -1217,11 +1218,52 @@ The following files are found in
 
 *  /Source/Images/d_hitechc
 
-| **File** | **Description** |
-|----------|-----------------|
-| --       |       --        |
-
-NOTE : The above is incomplete
+| **File**     | **Description**                            |
+|--------------|--------------------------------------------|
+| $EXEC.COM    | Compiler execution manager |
+| ASSERT.H     | Language include file |
+| C.COM        | Compiler invocation application (updated) |
+| C309.COM     | Compiler invocation application (original) |
+| CGEN.COM     | The code generator - produces assembler code |
+| CONIO.H      | Language include file (see manual) |
+| CPM.H        | Language include file (see manual) |
+| CPP.COM      | Pre-processor - handles macros and conditional compilation |
+| CREF.COM     | Produces cross-reference listings of C or assembler programs |
+| CRTCPM.OBJ   | Startup Object File (standard) |
+| CTYPE.H      | Language include file (see manual) |
+| DEBUG.COM    | C Debugger (Z80) |
+| DRTCPM.OBJ   | Startup Object File (???) |
+| EXEC.H       | Language include file (see manual) |
+| FLOAT.H      | Language include file (see manual) |
+| HITECH.H     | Language include file (see manual) |
+| LIBC.LIB     | Standard C Runtime Library |
+| LIBF.LIB     | Floating Point Library |
+| LIBOVR.LIB   | Overlay Library |
+| LIBR.COM     | Creates and maintains libraries of object modules |
+| LIMITS.H     | Language include file (see manual) |
+| LINQ.COM     | Link editor - links object files with libraries |
+| MATH.H       | Language include file (see manual) |
+| NRTCPM.OBJ   | Startup Object File (minimal getargs) |
+| OBJTOHEX.COM | Converts the output of LINK into the appropriate executable file format (e.g., .EXE or .PRG or .HEX) |
+| OPTIM.COM    | Code improver - may optionally be omitted, reducing compilation  time at a cost of larger, slower code produced |
+| OPTIONS      | Compiler usage help file |
+| OVERLAY.H    | Language include file |
+| P1.COM       | The syntax and  semantic analysis pass - writes intermediate code for the code generator to read |
+| RRTCPM.OBJ   | Startup Object File (self relocating) |
+| SETJMP.H     | Language include file (see manual) |
+| SIGNAL.H     | Language include file (see manual) |
+| STAT.H       | Language include file (see manual) |
+| STDARG.H     | Language include file (see manual) |
+| STDDEF.H     | Language include file (see manual) |
+| STDINT.H     | Language include file (see manual) |
+| STDIO.H      | Language include file (see manual) |
+| STDLIB.H     | Language include file (see manual) |
+| STRING.H     | Language include file (see manual) |
+| SYMTOAS.COM  | Convert symbol file to assembler |
+| SYS.H        | Language include file (see manual) |
+| TIME.H       | Language include file (see manual) |
+| UNIXIO.H     | Language include file (see manual) |
+| ZAS.COM      | The assembler - in fact a general purpose macro  assembler |
 
 ## MSX ROMS
 
