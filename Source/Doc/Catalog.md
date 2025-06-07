@@ -667,12 +667,12 @@ The following are found in
 
 | **File**        | **CP/NET Version**  | **OS**          | **Hardware**            |
 |-----------------|---------------------|-----------------|-------------------------|
-| CPN12MT.LBR     | CP/NET 1.2          | CP/M 2.2        | RCBus w/ MT011          |
-| CPN3MT.LBR      | CP/NET 3            | CP/M 3          | RCBus w/ MT011          |
-| CPN12DUO.LBR    | CP/NET 1.2          | CP/M 2.2        | Duodyne w/ Disk I/O     |
-| CPN3DUO.LBR     | CP/NET 3            | CP/M 3          | Duodyne w/ Disk I/O     |
-| CPN12SER.LBR    | CP/NET 1.2          | CP/M 2.2        | RomWBW Serial Port      |
-| CPN3SER.LBR     | CP/NET 3            | CP/M 3          | RomWBW Serial Port      |
+| `CPN12MT.LBR`   | CP/NET 1.2          | CP/M 2.2        | RCBus w/ MT011          |
+| `CPN3MT.LBR`    | CP/NET 3            | CP/M 3          | RCBus w/ MT011          |
+| `CPN12DUO.LBR`  | CP/NET 1.2          | CP/M 2.2        | Duodyne w/ Disk I/O     |
+| `CPN3DUO.LBR`   | CP/NET 3            | CP/M 3          | Duodyne w/ Disk I/O     |
+| `CPN12SER.LBR`  | CP/NET 1.2          | CP/M 2.2        | RomWBW Serial Port      |
+| `CPN3SER.LBR`   | CP/NET 3            | CP/M 3          | RomWBW Serial Port      |
 
 ## General Purpose Applications
 
@@ -928,12 +928,12 @@ The following files are found in
 
 | **File**       | **Description**                                           |
 |----------------|-----------------------------------------------------------|
-| HDIR.COM       |                                                           |
-| R.COM          | transfer files between the simulator and host file system |
-| RSETSIMH.COM   | --                                                        |
-| TIMER.COM      | --                                                        |
-| URL.COM        | --                                                        |
-| W.COM          | transfer files between the simulator and host file system |
+| `HDIR.COM`     |                                                           |
+| `R.COM`        | transfer files between the simulator and host file system |
+| `RSETSIMH.COM` | --                                                        |
+| `TIMER.COM`    | --                                                        |
+| `URL.COM`      | --                                                        |
+| `W.COM`        | transfer files between the simulator and host file system |
 
 ## Testing Applications
 
@@ -1060,66 +1060,66 @@ The following files are found in
 
 *  /Source/Images/d_cowgol
 
-| **File**     | **Description**                            |
-|--------------|--------------------------------------------|
-| $EXEC.COM    | HiTech C batch processor which launches the Cowgol toolchain executables |
-| ADVENT.COW   | Adventure game program source |
-| ADVENT.SUB   | SUBMIT file to build Adventure game |
-| ADVENT?.TXT  | Adventure game program resources |
-| ADVMAIN.COW  | Adventure game program source |
-| ADVTRAV.COW  | Adventure game component source |
-| ARGV.COH     | Cowgol include file providing command line argument processing |
-| C.LIB        | HI-TECH C runtime library |
-| CGEN.COM     | HiTech C compiler pass 2 |
-| COMMFILE.COH | Include file providing file I/O |
-| COMMON.COH   | Include file providing common functions |
-| COWBE.COM    | Cowgol back end which builds the cowgol object files (optimized) |
-| COWFE.COM    | Cowgol front end which parses the source file (optimized) |
-| COWFIX.COM   | Interface to Z80AS -- performs code optimizations |
-| COWGOL.COH   | Include file providing standard Cowgol functions |
-| COWGOL.COM   | Interprets the command line and generates $EXEC run requests (a variant of HiTech C.COM) |
-| COWGOL.COO   | Cowgol object file with ??? |
-| COWGOL.LIB   | ??? |
-| COWGOLC.COH  | Cowgol include file providing ??? |
-| COWLINK.COM  | Cowgol linker which binds all the cowgol object files and outputs a Z80 assembler file (optimized) |
-| CPP.COM      | HiTech C pre-processor, modified to accept // style comments |
-| DYNMSORT.COW | Sort algorithm sample program source |
-| DYNMSORT.SUB | SUBMIT file to build DYNMSORT sample application |
-| FACT.COW     | Factorial computation sample program source |
-| FILE.COH     | Include file providing CP/M file processing support |
-| FILEIO.COH   | Include file providing CP/M file processing support |
-| HEXDUMP.COW  | Hex file dump sample  source |
-| HEXDUMP.SUB  | SUBMIT file to build HEXDUMP sample program |
-| LIBBASIC.COH | Include file providing ??? |
-| LIBBIOS.COH  | Include file providing ??? |
-| LIBCONIO.COH | Include file providing console I/O |
-| LIBFP.COH    | Include file providing floating point support |
-| LIBR.COM     | HiTech object file librarian |
-| LIBSTR.COH   | Include file providing string functions |
-| LINK.COM     | HiTech linker which builds the final executable from object and library files |
-| MALLOC.COH   | Include file providing dynamic memory management functions |
-| MERGES.C     | Merge sort sample function C language source |
-| MISC.COH     | Include file providing miscellaneous functions |
-| MISC.COO     | Miscellaneous functions object file |
-| MISC.COW     | Miscellaneous functions source file |
-| OPTIM.COM    | HiTech C compiler optimizer |
-| P1.COM       | HiTech C compiler first pass |
-| RAND.AS      | Pseudo-random number generator source in assembly language |
-| RANFILE.COH  | Include file providing random file access functions |
-| RANFILE.COO  | Random file access functions object file |
-| RANFILE.COW  | Random file access functions source file |
-| README.TXT   | Cowgol disk image release notes |
-| SEQFILE.COH  | Include file providing sequential file access functions |
-| SEQFILE.COO  | Sequential file access functions object file |
-| SEQFILE.COW  | Sequential file access functions source file |
-| STDCOW.COH   | Include file providing standard library functions |
-| STRING.COH   | Include file providing string functions |
-| STRING.COO   | String functions object file |
-| STRING.COW   | String functions source file |
-| STRINGS.COH  | Include file implementing string functions |
-| TESTAS.COW   | Assembly language interface sample program source |
-| TESTAS.SUB   | SUBMIT file to build TESTAS sample program |
-| Z80AS.COM    | Z80 assembler which assembles the output of COWFIX and other Z80 source files (see <https://github.com/Laci1953/Z80AS>) |
+| **File**       | **Description**                            |
+|----------------|--------------------------------------------|
+| `$EXEC.COM`    | HiTech C batch processor which launches the Cowgol toolchain executables |
+| `ADVENT.COW`   | Adventure game program source |
+| `ADVENT.SUB`   | SUBMIT file to build Adventure game |
+| `ADVENT?.TXT`  | Adventure game program resources |
+| `ADVMAIN.COW`  | Adventure game program source |
+| `ADVTRAV.COW`  | Adventure game component source |
+| `ARGV.COH`     | Cowgol include file providing command line argument processing |
+| `C.LIB`        | HI-TECH C runtime library |
+| `CGEN.COM`     | HiTech C compiler pass 2 |
+| `COMMFILE.COH` | Include file providing file I/O |
+| `COMMON.COH`   | Include file providing common functions |
+| `COWBE.COM`    | Cowgol back end which builds the cowgol object files (optimized) |
+| `COWFE.COM`    | Cowgol front end which parses the source file (optimized) |
+| `COWFIX.COM`   | Interface to Z80AS -- performs code optimizations |
+| `COWGOL.COH`   | Include file providing standard Cowgol functions |
+| `COWGOL.COM`   | Interprets the command line and generates $EXEC run requests (a variant of HiTech C.COM) |
+| `COWGOL.COO`   | Cowgol object file with ??? |
+| `COWGOL.LIB`   | ??? |
+| `COWGOLC.COH`  | Cowgol include file providing ??? |
+| `COWLINK.COM`  | Cowgol linker which binds all the cowgol object files and outputs a Z80 assembler file (optimized) |
+| `CPP.COM`      | HiTech C pre-processor, modified to accept // style comments |
+| `DYNMSORT.COW` | Sort algorithm sample program source |
+| `DYNMSORT.SUB` | SUBMIT file to build DYNMSORT sample application |
+| `FACT.COW`     | Factorial computation sample program source |
+| `FILE.COH`     | Include file providing CP/M file processing support |
+| `FILEIO.COH`   | Include file providing CP/M file processing support |
+| `HEXDUMP.COW`  | Hex file dump sample  source |
+| `HEXDUMP.SUB`  | SUBMIT file to build HEXDUMP sample program |
+| `LIBBASIC.COH` | Include file providing ??? |
+| `LIBBIOS.COH`  | Include file providing ??? |
+| `LIBCONIO.COH` | Include file providing console I/O |
+| `LIBFP.COH`    | Include file providing floating point support |
+| `LIBR.COM`     | HiTech object file librarian |
+| `LIBSTR.COH`   | Include file providing string functions |
+| `LINK.COM`     | HiTech linker which builds the final executable from object and library files |
+| `MALLOC.COH`   | Include file providing dynamic memory management functions |
+| `MERGES.C`     | Merge sort sample function C language source |
+| `MISC.COH`     | Include file providing miscellaneous functions |
+| `MISC.COO`     | Miscellaneous functions object file |
+| `MISC.COW`     | Miscellaneous functions source file |
+| `OPTIM.COM`    | HiTech C compiler optimizer |
+| `P1.COM`       | HiTech C compiler first pass |
+| `RAND.AS`      | Pseudo-random number generator source in assembly language |
+| `RANFILE.COH`  | Include file providing random file access functions |
+| `RANFILE.COO`  | Random file access functions object file |
+| `RANFILE.COW`  | Random file access functions source file |
+| `README.TXT`   | Cowgol disk image release notes |
+| `SEQFILE.COH`  | Include file providing sequential file access functions |
+| `SEQFILE.COO`  | Sequential file access functions object file |
+| `SEQFILE.COW`  | Sequential file access functions source file |
+| `STDCOW.COH`   | Include file providing standard library functions |
+| `STRING.COH`   | Include file providing string functions |
+| `STRING.COO`   | String functions object file |
+| `STRING.COW`   | String functions source file |
+| `STRINGS.COH`  | Include file implementing string functions |
+| `TESTAS.COW`   | Assembly language interface sample program source |
+| `TESTAS.SUB`   | SUBMIT file to build TESTAS sample program |
+| `Z80AS.COM`    | Z80 assembler which assembles the output of COWFIX and other Z80 source files (see <https://github.com/Laci1953/Z80AS>) |
 
 ## Microsoft Fortran 80 (Fortran)
 
@@ -1205,11 +1205,11 @@ all CP/M and compatible operations systems provided in RomWBW.
 
 The enhanced files are:
 
-- CGEN.COM
-- CPP.COM
-- OPTIM.COM
-- P1.COM
-- ZAS.COM (replaced with Z80AS)
+- `CGEN.COM`
+- `CPP.COM`
+- `OPTIM.COM`
+- `P1.COM`
+- `ZAS.COM` (replaced with Z80AS)
 
 A thread discussing this enhanced version of HI-TECH C is found at
 <https://groups.google.com/g/rc2014-z80/c/sBCCIpOnnGg>.
@@ -1218,52 +1218,52 @@ The following files are found in
 
 *  /Source/Images/d_hitechc
 
-| **File**     | **Description**                            |
-|--------------|--------------------------------------------|
-| $EXEC.COM    | Compiler execution manager |
-| ASSERT.H     | Language include file |
-| C.COM        | Compiler invocation application (updated) |
-| C309.COM     | Compiler invocation application (original) |
-| CGEN.COM     | The code generator - produces assembler code |
-| CONIO.H      | Language include file (see manual) |
-| CPM.H        | Language include file (see manual) |
-| CPP.COM      | Pre-processor - handles macros and conditional compilation |
-| CREF.COM     | Produces cross-reference listings of C or assembler programs |
-| CRTCPM.OBJ   | Startup Object File (standard) |
-| CTYPE.H      | Language include file (see manual) |
-| DEBUG.COM    | C Debugger (Z80) |
-| DRTCPM.OBJ   | Startup Object File (???) |
-| EXEC.H       | Language include file (see manual) |
-| FLOAT.H      | Language include file (see manual) |
-| HITECH.H     | Language include file (see manual) |
-| LIBC.LIB     | Standard C Runtime Library |
-| LIBF.LIB     | Floating Point Library |
-| LIBOVR.LIB   | Overlay Library |
-| LIBR.COM     | Creates and maintains libraries of object modules |
-| LIMITS.H     | Language include file (see manual) |
-| LINQ.COM     | Link editor - links object files with libraries |
-| MATH.H       | Language include file (see manual) |
-| NRTCPM.OBJ   | Startup Object File (minimal getargs) |
-| OBJTOHEX.COM | Converts the output of LINK into the appropriate executable file format (e.g., .EXE or .PRG or .HEX) |
-| OPTIM.COM    | Code improver - may optionally be omitted, reducing compilation  time at a cost of larger, slower code produced |
-| OPTIONS      | Compiler usage help file |
-| OVERLAY.H    | Language include file |
-| P1.COM       | The syntax and  semantic analysis pass - writes intermediate code for the code generator to read |
-| RRTCPM.OBJ   | Startup Object File (self relocating) |
-| SETJMP.H     | Language include file (see manual) |
-| SIGNAL.H     | Language include file (see manual) |
-| STAT.H       | Language include file (see manual) |
-| STDARG.H     | Language include file (see manual) |
-| STDDEF.H     | Language include file (see manual) |
-| STDINT.H     | Language include file (see manual) |
-| STDIO.H      | Language include file (see manual) |
-| STDLIB.H     | Language include file (see manual) |
-| STRING.H     | Language include file (see manual) |
-| SYMTOAS.COM  | Convert symbol file to assembler |
-| SYS.H        | Language include file (see manual) |
-| TIME.H       | Language include file (see manual) |
-| UNIXIO.H     | Language include file (see manual) |
-| ZAS.COM      | The assembler - in fact a general purpose macro  assembler |
+| **File**       | **Description**                            |
+|----------------|--------------------------------------------|
+| `$EXEC.COM`    | Compiler execution manager |
+| `ASSERT.H`     | Language include file |
+| `C.COM`        | Compiler invocation application (updated) |
+| `C309.COM`     | Compiler invocation application (original) |
+| `CGEN.COM`     | The code generator - produces assembler code |
+| `CONIO.H`      | Language include file (see manual) |
+| `CPM.H`        | Language include file (see manual) |
+| `CPP.COM`      | Pre-processor - handles macros and conditional compilation |
+| `CREF.COM`     | Produces cross-reference listings of C or assembler programs |
+| `CRTCPM.OBJ`   | Startup Object File (standard) |
+| `CTYPE.H`      | Language include file (see manual) |
+| `DEBUG.COM`    | C Debugger (Z80) |
+| `DRTCPM.OBJ`   | Startup Object File (???) |
+| `EXEC.H`       | Language include file (see manual) |
+| `FLOAT.H`      | Language include file (see manual) |
+| `HITECH.H`     | Language include file (see manual) |
+| `LIBC.LIB`     | Standard C Runtime Library |
+| `LIBF.LIB`     | Floating Point Library |
+| `LIBOVR.LIB`   | Overlay Library |
+| `LIBR.COM`     | Creates and maintains libraries of object modules |
+| `LIMITS.H`     | Language include file (see manual) |
+| `LINQ.COM`     | Link editor - links object files with libraries |
+| `MATH.H`       | Language include file (see manual) |
+| `NRTCPM.OBJ`   | Startup Object File (minimal getargs) |
+| `OBJTOHEX.COM` | Converts the output of LINK into the appropriate executable file format (e.g., .EXE or .PRG or .HEX) |
+| `OPTIM.COM`    | Code improver - may optionally be omitted, reducing compilation  time at a cost of larger, slower code produced |
+| `OPTIONS`      | Compiler usage help file |
+| `OVERLAY.H`    | Language include file |
+| `P1.COM`       | The syntax and  semantic analysis pass - writes intermediate code for the code generator to read |
+| `RRTCPM.OBJ`   | Startup Object File (self relocating) |
+| `SETJMP.H`     | Language include file (see manual) |
+| `SIGNAL.H`     | Language include file (see manual) |
+| `STAT.H`       | Language include file (see manual) |
+| `STDARG.H`     | Language include file (see manual) |
+| `STDDEF.H`     | Language include file (see manual) |
+| `STDINT.H`     | Language include file (see manual) |
+| `STDIO.H`      | Language include file (see manual) |
+| `STDLIB.H`     | Language include file (see manual) |
+| `STRING.H`     | Language include file (see manual) |
+| `SYMTOAS.COM`  | Convert symbol file to assembler |
+| `SYS.H`        | Language include file (see manual) |
+| `TIME.H`       | Language include file (see manual) |
+| `UNIXIO.H`     | Language include file (see manual) |
+| `ZAS.COM`      | The assembler - in fact a general purpose macro  assembler |
 
 ## MSX ROMS
 
@@ -1315,17 +1315,17 @@ The following files are found in
 
 *  /Source/Images/d_tpascal
 
-| **File**     | **Description**                |
-|--------------|--------------------------------|
-| ART.TXT      | Part of the Example program    |
-| SA.PAS       | Example Program                |
-| TINST.COM    | Installation and Configuration |
-| TINST.DTA    | Part of TINST                  |
-| TINST.MSG    | Part of TINST                  |
-| TURBO.COM    | The main Turbo Pascal program  |
-| TURBO.MSG    | Part of TURBO tascal           |
-| TURBO.OVR    | Part of TURBO tascal           |
-| TURBOMSG.OVR | Part of TURBO tascal           |
+| **File**       | **Description**                |
+|----------------|--------------------------------|
+| `ART.TXT`      | Part of the Example program    |
+| `SA.PAS`       | Example Program                |
+| `TINST.COM`    | Installation and Configuration |
+| `TINST.DTA`    | Part of TINST                  |
+| `TINST.MSG`    | Part of TINST                  |
+| `TURBO.COM`    | The main Turbo Pascal program  |
+| `TURBO.MSG`    | Part of TURBO Pascal           |
+| `TURBO.OVR`    | Part of TURBO Pascal           |
+| `TURBOMSG.OVR` | Part of TURBO Pascal           |
 
 ## WordStar 4
 
@@ -1472,53 +1472,53 @@ The following files are found in
 
 User Area 0 - Assembler
 
-| **File**    | **Description**                             |
-|-------------|---------------------------------------------|
-| 180FIG.COM  | Configuration utility for SLR180.COM        |
-| 8080.MAC    | ?                                           |
-| CONFIG.COM  | Configuration utility for Z80ASM.COM        |
-| CONFIGP.COM | Configuration utility for Z80ASMP.COM       |
-| DUMP.*      | Sample Program                              |
-| MAKESYM.COM | Symbol File .SYM file generation            |
-| MAKESYM.DOC | Documentation for MAKESYM.COM               |
-| SLR180.COM  | HD64180 (Z180) Relocating Macro Assembler   |
-| SLR180.DOC  | Release Notes for SLR180.COM                |
-| SLRMAC.COM  | 8080 Relocating Macro Assembler             |
-| SYNTAX.HLP  | Documentation basic usage for all SLR Tools |
-| SYNTAX.TXT  | Documentation basic usage for all SLR Tools |
-| TEST.*      | Sample Program                              |
-| Z80ASM.COM  | Z80 Relocating Macro Assembler              |
-| Z80ASMP.COM | Z80 Relocating Macro Assembler (PLUS)       |
-| Z80ASM.DOC  | Release Notes for Z80ASM.COM                |
+| **File**      | **Description**                             |
+|---------------|---------------------------------------------|
+| `180FIG.COM`  | Configuration utility for SLR180.COM        |
+| `8080.MAC`    | ?                                           |
+| `CONFIG.COM`  | Configuration utility for Z80ASM.COM        |
+| `CONFIGP.COM` | Configuration utility for Z80ASMP.COM       |
+| `DUMP.*`      | Sample Program                              |
+| `MAKESYM.COM` | Symbol File .SYM file generation            |
+| `MAKESYM.DOC` | Documentation for MAKESYM.COM               |
+| `SLR180.COM`  | HD64180 (Z180) Relocating Macro Assembler   |
+| `SLR180.DOC`  | Release Notes for SLR180.COM                |
+| `SLRMAC.COM`  | 8080 Relocating Macro Assembler             |
+| `SYNTAX.HLP`  | Documentation basic usage for all SLR Tools |
+| `SYNTAX.TXT`  | Documentation basic usage for all SLR Tools |
+| `TEST.\*`     | Sample Program                              |
+| `Z80ASM.COM`  | Z80 Relocating Macro Assembler              |
+| `Z80ASMP.COM` | Z80 Relocating Macro Assembler (PLUS)       |
+| `Z80ASM.DOC`  | Release Notes for Z80ASM.COM                |
 
 User Area 1 - Linker and Library Management
 
-| **File**     | **Description**                               |
-|--------------|-----------------------------------------------|
-| LNKFIG.COM   | Configuration utility for SLRNK.COM           |
-| NZLNKFIX.ZEX | ?                                             |
-| SLRIB.COM    | SuperLibrarian, library manager               |
-| SLRNK.COM    | SuperLinker, the main linker tool             |
-| SLRNKP.COM   | SuperLinker (PLUS)                            |
-| SLRNK.DOC    | Release Notes for SLRNK.COM                   |
-| SLRNKFIX.ZEX | ?                                             |
-| SYNTAX.HLP   | Documentation basic usage for all SLR Tools   |
-| SYNTAX.TXT   | Documentation basic usage for all SLR Tools   |
-| SYSSLR.REL   | SYSLIB (older) Library compatible with SLR    |
-| VSLR.REL     | VLIB (older) Library compatible with SLR      |
-| Z3SLR.REL    | Z3LIB (older) Library compatible with SLR     |
+| **File**       | **Description**                               |
+|----------------|-----------------------------------------------|
+| `LNKFIG.COM`   | Configuration utility for SLRNK.COM           |
+| `NZLNKFIX.ZEX` | ?                                             |
+| `SLRIB.COM`    | SuperLibrarian, library manager               |
+| `SLRNK.COM`    | SuperLinker, the main linker tool             |
+| `SLRNKP.COM`   | SuperLinker (PLUS)                            |
+| `SLRNK.DOC`    | Release Notes for SLRNK.COM                   |
+| `SLRNKFIX.ZEX` | ?                                             |
+| `SYNTAX.HLP`   | Documentation basic usage for all SLR Tools   |
+| `SYNTAX.TXT`   | Documentation basic usage for all SLR Tools   |
+| `SYSSLR.REL`   | SYSLIB (older) Library compatible with SLR    |
+| `VSLR.REL`     | VLIB (older) Library compatible with SLR      |
+| `Z3SLR.REL`    | Z3LIB (older) Library compatible with SLR     |
 
 User Area 2 - Disassembler
 
-| **File**     | **Description**                  |
-|--------------|----------------------------------|
-| README.22    | Documentation for Z80DIS         |
-| Z80DIS.000   | Overlay File for Z80DIS.COM      |
-| Z80DIS.001   | Overlay File for Z80DIS.COM      |
-| Z80DIS.002   | Overlay File for Z80DIS.COM      |
-| Z80DIS.COM   | Z80DIS Disassembler main program |
-| Z80DIS22.DOC | Main Documentation for Z80DIS    |
-| ZDINSTAL.COM | Instal and Config for Z80DIS.COM |
-| ZDINSTAL.DTA | Overlay file for ZDINSTAL.COM    |
-| ZDINSTAL.MSG | Overlay file for ZDINSTAL.COM    |
+| **File**       | **Description**                  |
+|----------------|----------------------------------|
+| `README.22`    | Documentation for Z80DIS         |
+| `Z80DIS.000`   | Overlay File for Z80DIS.COM      |
+| `Z80DIS.001`   | Overlay File for Z80DIS.COM      |
+| `Z80DIS.002`   | Overlay File for Z80DIS.COM      |
+| `Z80DIS.COM`   | Z80DIS Disassembler main program |
+| `Z80DIS22.DOC` | Main Documentation for Z80DIS    |
+| `ZDINSTAL.COM` | Instal and Config for Z80DIS.COM |
+| `ZDINSTAL.DTA` | Overlay file for ZDINSTAL.COM    |
+| `ZDINSTAL.MSG` | Overlay file for ZDINSTAL.COM    |
 

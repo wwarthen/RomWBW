@@ -56,8 +56,8 @@ deploy :
 	cp Hardware.pdf          "../../Doc/RomWBW Hardware.pdf"
 
 deploy_mkdocs : mkdocs/Introduction.md mkdocs/UserGuide.md mkdocs/SystemGuide.md mkdocs/Applications.md \
-                mkdocs/Catalog.md mkdocs/Hardware.md mkdocs/ReadMe.md
+                mkdocs/Catalog.md mkdocs/Hardware.md
 	mkdir -p mkdocs/UserGuide/Graphics mkdocs/SystemGuide/Graphics
-	mv mkdocs/ReadMe.md mkdocs/README.md
-	cp Graphics/*.svg        mkdocs/UserGuide/Graphics
-	cp Graphics/*.svg        mkdocs/SystemGuide/Graphics
+	cp mkdocs/Introduction.md   mkdocs/README.md
+	cp Graphics/*.svg           mkdocs/UserGuide/Graphics
+	cp Graphics/*.svg           mkdocs/SystemGuide/Graphics
