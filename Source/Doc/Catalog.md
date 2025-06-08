@@ -1209,7 +1209,7 @@ The enhanced files are:
 - `CPP.COM`
 - `OPTIM.COM`
 - `P1.COM`
-- `ZAS.COM` (replaced with Z80AS)
+- `ZAS.COM`
 
 A thread discussing this enhanced version of HI-TECH C is found at
 <https://groups.google.com/g/rc2014-z80/c/sBCCIpOnnGg>.

@@ -1,10 +1,10 @@
 ===== HI-TECH Z80 CP/M C compiler V3.09-17 =====
 
-The HI-TECH C Compiler is a set of software  which
-translates  programs written in the C language to executable
-machine code programs. Versions are available which  compile
-programs  for  operation under the host operating system, or
-which produce programs for  execution  in  embedded  systems
+The HI-TECH C Compiler is a set of software which
+translates programs written in the C language to executable
+machine code programs. Versions are available which compile
+programs for operation under the host operating system, or
+which produce programs for execution in embedded systems
 without an operating system.
 
 This is the Jun 2, 2025 update 19 released by Tony Nicholson who currently
@@ -33,7 +33,7 @@ which were enhanced by Ladislau Szilagyi from his GitHub Repository at
 https://github.com/Laci1953/HiTech-C-compiler-enhanced.  The files
 take advantage of additional banked memory using the RomWBW HBIOS API.
 As such, they require RomWBW to operate.  They should be compatible with
-all CP/M and compatible operations systems provided in RomWBW.
+all CP/M and compatible operating systems provided in RomWBW.
 
 The enhanced files are:
 
@@ -41,7 +41,7 @@ The enhanced files are:
 - CPP.COM
 - OPTIM.COM
 - P1.COM
-- ZAS.COM (replaced with Z80AS)
+- ZAS.COM
 
 A thread discussing this enhanced version of HI-TECH C is found at
 https://groups.google.com/g/rc2014-z80/c/sBCCIpOnnGg.
