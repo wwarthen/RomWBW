@@ -328,6 +328,9 @@ please let me know if I missed you!
   contributed a driver for the Xosera FPGA-based video
   controller.
 
+* Jörg Linder has contributed disassembled and nicely commented
+  source for ZSDOS2 and the BPBIOS utilities.
+
 `\clearpage`{=latex}
 
 ## Related Projects

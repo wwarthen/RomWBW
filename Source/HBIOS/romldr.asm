@@ -1554,7 +1554,7 @@ s100mon1:
 	call	ldelay			; wait for UART buf to empty
 	di				; suspend interrupts
 	ld	a,HWMON_BNK		; S100 monitor bank
-	ld	ix,0			; execution resumes here
+	ld	ix,HWMON_IMGLOC		; execution resumes here
 	jp	HB_BNKCALL		; do it
 ;
 str_smon	.db	"S100 Z180 Monitor",0

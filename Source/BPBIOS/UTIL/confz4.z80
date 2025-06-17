@@ -1,0 +1,489 @@
+	TITLE	"ZCPR 4 Configuration Utility"
+;************************************************************************
+;*  C O N F Z 4								*
+;* Configure ZCPR 4 options						*
+;*  by Harold F. Bower and Cameron W. Cotrill				*
+;*----------------------------------------------------------------------*
+;* Disassembly:	jxl					Jan 2025	*
+;*		public release 1.0			Apr 2025	*
+;*		see remarks at the end					*
+;*----------------------------------------------------------------------*
+;* LINK with Version 4 libraries: Z3LIB, SYSLIB				*
+;*									*
+;* A>Z80ASM CONFZ4/RS							*
+;* A>SLRNK CONFZ4/N,/A:100,/D:080A,CONFZ4,Z3LIBS/S,SYSLIBS/S,/E		*
+;************************************************************************
+
+VER	EQU	10
+REV	EQU	' '
+
+DATE	MACRO
+	DEFB	'18 Nov 95'
+	ENDM
+
+
+BEL	EQU	07H		; Bell character
+BS	EQU	08H		; Backspace character
+TAB	EQU	09H		; Tab character
+LF	EQU	0AH		; Line Feed character
+CR	EQU	0DH		; Carriage Return character
+
+CPMBIOS	EQU	0		; CP/M BIOS warm boot (JP)
+CPMBDOS	EQU	5		; CP/M BDOS entry point (JP)
+CPMFCB	EQU	5CH		; CP/M standard FCB #1 (+1 filename, +9 filetype)
+CPMDMA	EQU	80H		; CP/M standard DMA buffer
+
+
+; From Z3LIB Get..
+	EXTRN	GETNAME, PRTNAME, Z3INIT, WHRENV
+
+; From SYSLIB Get..
+	EXTRN	EPRINT, CRLF, CAPIN, PA2HC, COUT
+
+
+;::::: PROGRAM START
+
+	ORG	100H
+	CSEG
+
+
+CONFZ4:	JP	START		; bypass header
+	DEFB	'Z3ENV'		; this is a ZCPR3 utility
+	DEFB	1		; show external environment
+
+ENVADR: DEFW	0		; addr of Z3 environment
+	DEFW	CONFZ4		; type 4 filler
+
+	DEFB	'CONFZ41 ',0	; configuration name
+
+START:	LD	(STACK),SP
+	LD	SP,STACK
+	CALL	EPRINT
+	DEFB	'B/P System Command Processor Configuration  V'
+	DEFB	VER/10+'0','.',VER MOD 10 + '0',REV,' '
+	DATE
+	DEFB	CR,LF
+	DEFB	0
+
+	CALL	INITZ3		; find Z3ENV and check Wheel Byte
+	CALL	GETNAME		; get actual program name
+	CALL	CHKHLP		; check if help was requested
+	SUB	' '		; ##### convert to ... ??
+	LD	(UNUSED1),A	; #####  and store (not used at all)
+	CALL	CHKSYS		; check if running B/P Bios
+	LD	HL,(BPCNFG)	; addr CONFIG area
+	INC	HL		; move ptr fwd
+	INC	HL
+	LD	A,(HL)		; get option flags (OPTF1)
+	AND	00000001B	; mask bit 0 (0= unbanked, 1= banked)
+	LD	(BPBNKD),A	; store indicator
+	JR	NZ,CHKXENV	; ..if banked, jump to continue
+	CALL	EPRINT		;   else, display msg and exit
+	DEFB	CR,LF,'+++ Not Banked System..aborting...!',BEL
+	DEFB	0
+	JP	EXIT
+
+	; check for extended environment
+CHKXENV: INC	HL		; move ptr fwd
+	INC	HL
+	INC	HL
+	LD	A,(HL)		; get first system bank (SYSBNK)
+	LD	(SYSBNK),A	; store it
+	LD	HL,(ENVADR)	; addr ENV
+	LD	DE,8		; offset to type
+	ADD	HL,DE		; move ptr
+	BIT	7,(HL)		; check high bit (= 0x80+ for extended Z3ENV)
+	JR	NZ,CHKVERS	; ..if set, jump to continue
+	CALL	EPRINT
+	DEFB	CR,LF,'+++ Not Extended Environment..aborting..!',BEL
+	DEFB	0
+	JP	EXIT
+
+	; check ZCPR version
+CHKVERS
+	LD	DE,55		; offset addr CPR (8+55 = 63)
+	ADD	HL,DE		; move ptr
+	LD	E,(HL)		; get addr in DE
+	INC	HL
+	LD	D,(HL)
+	LD	HL,5		; offset to version byte in ZCPR 4.x
+				;   (code starts with JP.., JR.., VERSION)
+	ADD	HL,DE		; move ptr
+	LD	A,(HL)		; get byte
+	CP	41H		; is it 4.1 (or higher) ?
+	JR	NC,PVRSION	; ..if so, jump to continue
+	PUSH	AF		;   else, display error msg and exit
+	CALL	EPRINT
+	DEFB	CR,LF,BEL,"+++ Can't Configure Vers : "
+	DEFB	0
+	POP	AF
+	CALL	PA2HC
+	CALL	EPRINT
+	DEFB	' of Command Processor!'
+	DEFB	0
+	JP	EXIT
+
+	; display version
+PVRSION: PUSH	AF
+	CALL	EPRINT
+	DEFB	CR,LF,' Configuring Options for CPR Version : '
+	DEFB	0
+	POP	AF		; restore version #
+	PUSH	AF
+	RRCA			; rotate upper nybble to lower
+	RRCA			;   (major version #)
+	RRCA
+	RRCA
+	AND	00001111B	; mask lower nybble
+	ADD	A,'0'		; ..and convert to ascii
+	CALL	COUT		; display major version #
+	LD	A,'.'
+	CALL	COUT
+	POP	AF		; restore version #
+	AND	00001111B	; mask lower nybble
+	ADD	A,'0'		; ..and convert to ascii
+	CALL	COUT		; display minor version #
+	CALL	CRLF
+	LD	DE,10		; move forward by another 10 bytes
+	ADD	HL,DE		;   (in Z40-1.Z80 three bytes are defined as 'Space 
+				;    reserved for expansion' - this is the last byte)
+	LD	(PFLGADR),HL	; store addr
+
+	; branch interactive/cmdline mode
+	LD	A,(CPMFCB+1)	; get first char from cmdline
+	CP	' '		; is it <SP> ?
+	JP	NZ,EVALCMD	; ..if not, jump cmdline mode
+	CALL	EPRINT		;   else, interactive mode
+	DEFB	CR,LF,'Turn Time ON in Prompt Line ([Y]/N)? : '
+	DEFB	0
+	CALL	CAPIN		; get user input
+	LD	BC,0FE01H	; default to ON, European format
+				;   ( 11111110 00000001 B )
+	CP	'N'		; is it 'N' ?
+	JR	NZ,RUNIMOD	; ..if not, skip over
+	LD	C,0		;   else, clear C (indicating OFF)
+
+	; run interactive mode
+RUNIMOD: CALL	SETOPTB		; set byte
+	CALL	EPRINT
+	DEFB	CR,LF,'US (mm/dd/yy) or European (dd.mm.yy) Dates ([U]/E) : '
+	DEFB	0
+	CALL	CAPIN		; get user input
+	LD	BC,0FD00H	; default to US format
+				;   ( 11111101 00000000 B )
+	CP	'E'		; is it 'E' ?
+	JR	NZ,RUNIM0	; ..if not, skip over
+	LD	C,00000010B	;   else, set European format
+RUNIM0:	CALL	SETOPTB		; set byte
+	JP	EXIT
+
+	; evaluate command line
+EVALCMD: LD	HL,CPMDMA
+	LD	A,(HL)		; get # of chars
+	INC	HL		; set ptr to start of cmdline
+	PUSH	HL		; save regs
+	CALL	ADDHLA		; move ptr to end of cmdline
+	LD	(HL),0		; set <NUL> terminator
+	POP	HL		; restore start of cmdline
+	CALL	SKPWHSP		; skip any whitespace at the beginning
+	LD	A,(HL)		; get char
+	CP	'/'		; is it option char ?
+	JR	NZ,ECMD0	; ..if not, skip over
+	INC	HL		;   else, move ptr forward
+ECMD0:	LD	A,(HL)		; get byte
+	OR	A
+	JR	Z,ECMD1		; ..if zero, jump and exit
+	CALL	CMPRMPT		;   else, attempt processing option
+	JR	ECMD0		;   ..and loop
+
+ECMD1:	JP	EXIT
+
+
+	; cmdline: /T[+|-] Toggle Time in Prompt
+	; option byte, bit 0 = 0 off / 1 on
+	;
+	; cmdline: /U /E  US/Europe format
+	; option byte, bit 1 = 0 US / 1 European
+
+	; process prompt on/off
+CMPRMPT: CP	'T'		; is char 'T' (Toggle) ?
+	JR	NZ,CMFORMT	; ..if not, try processing format option
+	INC	HL
+	LD	C,00000001B	; prepare for ON
+	LD	A,(HL)		; get next char
+	CP	'+'		; is it '+' ?
+	JR	Z,CMPRMP0	; ..if so, skip over
+	LD	C,00000000B	;   else, prepare for OFF
+	CP	'-'		; is it '-' ?
+	JR	NZ,CMFORMT	; ..if not, rather check format
+CMPRMP0: LD	B,11111110B	;   default to European format
+
+CMSETOP: CALL	SETOPTB		; set
+CMSETX:	INC	HL		; move ptr fwd
+	RET			; ..and exit
+
+	; process format
+CMFORMT: LD	B,11111101B	; default to ON (else, format wouldn't make sense)
+	LD	C,00000010B	; prepare for European
+	CP	'E'		; is it 'E' ?
+	JR	Z,CMSETOP	; ..if so, set byte
+	LD	C,00000000B	;   else, prepare for US
+	CP	'U'		; is it 'U' ?
+	JR	Z,CMSETOP	; ..if so, set byte
+	JR	CMSETX		; jump exit
+
+
+	; set option byte
+	;  in: B= format (US/European)
+	;      C= on/off
+SETOPTB: EX	DE,HL		; swap regs (save HL)
+	LD	HL,(PFLGADR)	; addr of Prompt flag in ZCPR4 config area
+	LD	A,(HL)		; get byte
+	AND	B		; apply format setting
+	OR	C		; merge on/off setting
+	LD	(HL),A		; ..and save byte
+	LD	HL,010FH	; offset to option byte in SYSBNK
+	CALL	GETFRB		; get current setting
+	AND	B		; apply format setting
+	OR	C		; merge on/off setting
+	CALL	SETINB		; ..and write back
+	EX	DE,HL
+	RET
+
+
+	; check if help was requested
+	; get first token from command line (in FCB #1)
+CHKHLP:	LD	HL,CPMFCB+1
+	LD	A,(HL)		; get char
+	CP	'/'		; is this a help request ?
+	RET	NZ		; ..if not, return
+	INC	HL		; move ptr fwd
+	LD	A,(HL)		; check following char
+	CP	'/'		; if it is also '/'
+	RET	NZ		; ..if not, return
+				; else, fall through and show help screen
+
+
+;::::: HELP SCREEN
+
+HELP:	CALL	EPRINT
+	DEFB	CR,LF,'  '
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	EPRINT
+	DEFB	' Configure Running B/P Command Processor Options.',CR,LF,LF
+	DEFB	' Syntax:',CR,LF,'       '
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	EPRINT
+	DEFB	'          - Configure in Interactive Mode',CR,LF,'       '
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	EPRINT
+	DEFB	' /T[+|-]  - Toggle Time in Prompt [Set On/Off]',CR,LF,'       '
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	EPRINT
+	DEFB	' /E       - Display Date in European (dd.mm.yy) form',CR,LF,'       '
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	EPRINT
+	DEFB	' /U       - Display Date in US (mm/dd/yy) form',CR,LF,'       '
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	EPRINT
+	DEFB	' //   - display this screen',CR,LF,LF
+	DEFB	'   Arguments may be combined as:',CR,LF,'       '
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	EPRINT
+	DEFB	' /T+U     - Turn Time On, US-style Date Display',CR,LF,LF
+	DEFB	'This program will only run in Banked B/P Systems.',CR,LF
+	DEFB	0
+
+
+;::::: EXIT PROGRAM
+
+EXIT:	CALL	CRLF
+	LD	SP,(STACK)	; restore stack
+	RET			; ..and return to system
+
+
+;::::: SUPPORT FUNCTIONS
+
+	; init Z3ENV and check Wheel byte
+	; if not successful, exit program
+INITZ3:	LD	HL,(CPMBDOS+1)
+	CALL	WHRENV		; find Z3 Environment Descriptor
+	LD	(ENVADR),HL	; store ENV addr
+	LD	A,H		; check if invalid (= zero)
+	OR	L
+	JP	Z,E$BPBIO	; ..if so, jump exit
+	CALL	Z3INIT		; init for Z3LIB routines
+	LD	A,41		; offset to addr wheel byte (Z3WHL)
+	CALL	ADDHLA		; move ptr fwd
+	LD	E,(HL)		; get addr in DE
+	INC	HL
+	LD	D,(HL)
+	EX	DE,HL		; swap regs
+	LD	A,(HL)		; get value of wheel byte
+	AND	A		; check if zero
+	RET	NZ		; ..if not ON, return
+	CALL	EPRINT		;   else, display message and exit
+	DEFB	BEL,CR,LF,'Must be wheel to Execute !',CR,LF
+	DEFB	0
+	JR	EXIT
+
+
+	; check if running under B/P Bios
+	; if not, program is terminated
+CHKSYS:	LD	HL,(CPMBIOS+1)	; get warm boot addr (BIOS fn #1)
+	LD	L,30*3		; adjust ptr to fn #30
+	LD	A,(HL)		; check byte at ptr location
+	CP	0C3H		; is it opcode 0xC3 (JP) ?
+	JR	NZ,E$BPBIO	; ..if not, jump error and exit
+	CALL	JUMPHL		;   else, "call" B/P Bios fn #30 (RETBIO)
+	LD	(BPADDR),BC	; store base addr of B/P Bios
+	LD	(BPCNFG),DE	;   "   config area addr
+	LD	HL,-6		; move ptr 6 bytes backward
+	ADD	HL,DE		;   (signature string)
+	LD	A,(HL)		; get byte
+	CP	'B'		; is it 'B' ?
+	JR	NZ,E$BPBIO	; ..if not, jump error and exit
+	INC	HL
+	LD	A,(HL)		; get next byte
+	CP	'/'		; is it '/' ?
+	JR	NZ,E$BPBIO	; ..if not, jump error and exit
+	INC	HL
+	LD	A,(HL)		; and get next byte
+	CP	'P'		; is it 'P' ?
+	RET	Z		; ..if so, return
+				;   else, fall through (error and exit)
+
+
+	; error msg
+E$BPBIO: CALL	EPRINT
+	DEFB	CR,LF,BEL,'Not B/P Bios, aborting...!',CR,LF
+	DEFB	0
+	RST	0
+
+
+	; print program name on CON: device
+	; (either the actual name, or fallback to default)
+	; only used by HELP
+PPRGNAM: LD	A,(ENVADR+1)	; get high byte of local ENVPTR
+	OR	A		; check if valid (<> zero)
+	JP	NZ,PRTNAME	; ..if so, display actual name
+				;   and let return from there
+	CALL	EPRINT		; else, display default
+	DEFB	'SIZERAM'	; apparently wrong :-)
+	DEFB	0
+	RET
+
+
+	; skip whitespace (<SP> or <TAB>)
+	;  in: HL= ptr to string
+	; out: HL= ptr to first char <> whitespace
+SKPWHSP: DEC	HL		; prior to loop, set ptr back
+SKPWH0:	INC	HL		; move ptr fwd
+	LD	A,(HL)		; get byte
+	CP	' '		; is it <SP> ?
+	JR	Z,SKPWH0	; ..if so, loop
+	CP	TAB		; is it <TAB> ?
+	JR	Z,SKPWH0	; ..if so, loop
+	RET			;   else, return
+
+
+	; add A to HL (result in HL)
+ADDHLA:	ADD	A,L		; add L
+	LD	L,A		; store result in L
+	RET	NC		; ..if no overflow, return
+	INC	H		;   else, increment H
+	RET
+
+
+	; the following routines rearrange Top of Stack by injecting an
+	; intermediate return addr, and putting the Bios fn call on top
+	; so that HL regs are preserved
+	; order of steps:
+	;   [1]  HL (= addr) is pushed onto stack
+	;   [2]  intermediate return addr is swapped to Top of Stack
+	;   [3]  HL (= addr) is pushed onto stack again
+	;   [4]  Bios fn JP addr is swapped to Top of Stack
+	;   [5]  Bios is "called" through RET, and returns to intermediate addr
+
+	; get byte from ram bank (in C) - in the form LD A,(HL)
+	;  in: HL= addr
+	; out: A= byte
+GETFRB:	PUSH	BC
+	PUSH	HL		; save addr
+	LD	BC,(SYSBNK)	; C= System Bank, B= not used
+	LD	HL,GETFRB0	; load return addr
+	EX	(SP),HL		; put it on stack
+	PUSH	HL		; save HL again (previous top of stack)
+	LD	HL,(BPADDR)	; get B/P Bios base addr
+	LD	L,35*3		; adjust ptr to fn #35 (FRGETB)
+	EX	(SP),HL		; put addr on stack
+	RET			; ..and "call" Bios fn through stack
+
+GETFRB0: POP	BC		; restore regs
+	RET			; ..and finally return
+
+	; set byte in ram bank (in C) - in the form LD (HL),A
+	;  in: HL= addr,  A= byte to set
+SETINB:	PUSH	BC
+	PUSH	HL		; save addr
+	LD	BC,(SYSBNK)
+	LD	HL,GETFRB0	; load return addr
+	EX	(SP),HL		; put it on stack
+	PUSH	HL		; save HL again (previous top of stack)
+	LD	HL,(BPADDR)	; get B/P Bios base addr
+	LD	L,37*3		; adjust ptr to fn #37 (FRPUTB)
+	EX	(SP),HL
+	RET			; ..and "call" Bios fn through stack
+
+
+	; "called" as a pseudo-routine that returns to caller
+	;  in: HL= target addr
+JUMPHL:	JP	(HL)		; jump to addr in HL regs
+
+
+;::::: RAM STORAGE (_no_ DSEG !)
+
+PFLGADR:	DEFW	0	; addr of Prompt flag (last reserved option byte)
+SYSBNK:		DEFB	0	; beginning of System Bank(s)
+UNUSED1:	DEFB	0	; #####
+BPADDR:		DEFW	0	; base addr B/P Bios
+BPCNFG:		DEFW	0	; addr of B/P Bios CONFIG area
+BPBNKD:		DEFB	0	; indicator banked system
+				; (bit 0 of OPTF1, 0= unbanked, 1= banked)
+
+		DEFS	30H	; room for stack
+STACK:		DEFW	0	; stack storage location
+
+
+	END
+
+
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::
+; Z3LIB - 0x06b4
+; SYSLIB - 0x0762
+; end addr 0x080a (begin DSEG of LIB's)
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+;************************************************************************
+; Remarks jxl:
+;   CONFZ4.COM, included in available B/P Bios package(s), was dis-
+; assembled and extensively commented. Labels are up to seven chars long
+; to comply with M-REL standards. However, it is recommended to use SLR
+; tools that support labels up to sixteen chars.
+;   In its current state, the compiled/linked file matches exactly the
+; original CONFZ4.COM, i.e. no changes to the source were made. Possible
+; optimisations detected during disassembly are marked with "#####" in the
+; comment.
+;   The program seems to be in an early stage as it does not comply with
+; general coding standards seen by HFB/CWC. For instance, no DSEG is used.
+; Only 2 options can be configured with this program. It is not known
+; whether provisions were made in ZCPR v4.1 for further options.
+;************************************************************************

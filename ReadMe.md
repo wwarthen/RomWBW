@@ -7,7 +7,7 @@
 **RomWBW Introduction** \
 Version 3.6 \
 Wayne Warthen  ([wwarthen@gmail.com](mailto:wwarthen@gmail.com)) \
-08 Jun 2025
+16 Jun 2025
 
 # Overview
 
@@ -342,6 +342,9 @@ let me know if I missed you!
 
 - Rob Gowin created an online documentation site via MkDocs, and
   contributed a driver for the Xosera FPGA-based video controller.
+
+- Jörg Linder has contributed disassembled and nicely commented source
+  for ZSDOS2 and the BPBIOS utilities.
 
 ## Related Projects
 

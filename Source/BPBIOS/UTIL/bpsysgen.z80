@@ -1,0 +1,636 @@
+	TITLE	"Write B/P Bios System to system tracks of a disk"
+;************************************************************************
+;*  B P S Y S G E N							*
+;* Copy B/P Bios based Operating System to system tracks		*
+;*  by Harold F. Bower and Cameron W. Cotrill				*
+;*----------------------------------------------------------------------*
+;* Disassembly:	jxl					Dec 2024	*
+;*		public release 1.0			Apr 2025	*
+;*		see remarks at the end					*
+;*----------------------------------------------------------------------*
+;* LINK with Version 4 libraries: VLIB, Z3LIB, SYSLIB			*
+;*									*
+;* A>Z80ASM BPSYSGEN/RS							*
+;* A>SLRNK BPSYSGEN/N,/A:100,/D:08CD,BPSYSGEN,Z3LIBS/S,SYSLIBS/S,/E	*
+;************************************************************************
+
+VER	EQU	10
+REV	EQU	' '
+
+DATE	MACRO
+	DEFB	'31 Aug 92'
+	ENDM
+
+
+CTRLC	EQU	03H		; Control-C character
+BEL	EQU	07H		; Bell character
+LF	EQU	0AH		; Line Feed character
+CR	EQU	0DH		; Carriage Return character
+
+CPMBIOS	EQU	0		; CP/M BIOS warm boot (JP)
+CPMBDOS	EQU	5		; CP/M BDOS entry point (JP)
+CPMFCB	EQU	5CH		; CP/M standard FCB #1 (+1 filename, +9 filetype)
+CPMFCB2	EQU	6CH		; CP/M standard FCB #2
+
+;  From Z3LIB Get..
+	EXTRN	GETNAME, PRTNAME, Z3INIT, WHRENV
+
+;  From SYSLIB Get..
+	EXTRN	PUTUD, GETUD, SUA, EPRINT, CRLF, CAPINE, CIN, COUT
+
+
+;::::: PROGRAM START
+
+	ORG	100H
+	CSEG
+
+
+BPSYSGEN: JP	START		; bypass header
+	DEFB	'Z3ENV'		; this is a ZCPR3 utility
+	DEFB	1		; show external environment
+
+ENVADR: DEFW	0		; addr of Z3 environment
+
+START:	LD	HL,(CPMBDOS+1)	; BDOS entry as starting point for Z3ENV search
+	CALL	WHRENV		; get Z3 Environment
+	LD	(ENVADR),HL	; ..store it
+	CALL	Z3INIT		; init ENV ptr for Z3LIB modules
+	CALL	GETNAME		; get actual program name
+	CALL	GETQFLG		; check ENV quiet flag
+	AND	A		;   zero means 'verbose' i.e. not quiet
+	JR	NZ,START1	; ..if quiet mode, skip msg
+START0:	CALL	EPRINT
+	DEFB	'B/P SYSGEN Utility V',VER/10+'0','.',VER MOD 10 + '0',REV
+	DATE
+	DEFB	CR,LF,LF
+	DEFB	0
+
+START1:	CALL	PUTUD		; currently logged in drive/user
+	LD	HL,RESDISK	; prepare exit with resetting disk system
+	PUSH	HL		;   by putting addr of 'RESDISK' on stack
+	LD	HL,(CPMBIOS+1)	; get BIOS entry addr
+	LD	A,8*3		; move forward to fn #9 SELDSK
+	CALL	ADDHLA
+	LD	DE,BIOSELD	; ptr to target addr
+	LD	BC,8*3		; bytes to copy (8 JP instructions, 3 bytes each)
+	LDIR			; ..copy
+
+
+	; Evaluate command line (if invalid parameters, switch to interactive mode)
+EVALCMD: LD	HL,CPMFCB	; set ptr to standard FCB #1
+	LD	A,(HL)		; get drive
+	LD	(SRCDRV),A	; ..and store it (SRC)
+	INC	HL		; move ptr forard
+	LD	A,(HL)		; get byte/char
+	CP	'/'		; is this a help request ?
+	JP	Z,HELP		; ..if so, jump display help
+				;   ..and quit (addr of exit routine on stack)
+
+	; syntax:  BPSYSGEN [d:]fn[.ft] [d:]
+	; drive #1 = source, drive #2 = destination
+	LD	A,(CPMFCB2)	; get first byte of standard FCB #2
+	LD	(DSTDRV),A	; store drive # (DEST)
+	LD	(DSTDR2),A	; ..and a copy (as indicator for cmdline input)
+	LD	B,A		; remember value
+	LD	A,(HL)		; get first char of filename in FCB #1
+	CP	' '		; is it <SP> ?
+	JP	NZ,SRCRD0       ; ..if not, jump read sys file
+	LD	A,B		;   else, restore char (from FCB #2)
+	AND	A		; is it <NUL> ?
+	JP	NZ,SRCREAD	; ..if not, jump read sys tracks
+				;   else, no source specified in command line
+				;   (switch to interactive mode)
+	LD	A,(SRCDRV)	; get source drive number
+	LD	(DSTDRV),A	; ..and overwrite destination drive number
+
+
+;::::: SOURCE DRIVE
+
+	; interactive mode
+SRCINP:	CALL	EPRINT
+	DEFB	'Source Drive (CR to skip)? '
+	DEFB	0
+	CALL	CAPINE		; get user input
+	CALL	CRLF
+	CP	CR		; is it <CR> ?
+	JP	Z,SRCRD1	; ..if so, skip
+	SUB	40H		;   else, convert ascii to number
+	LD	(SRCDRV),A	;   ..and store it
+	CALL	EPRINT
+	DEFB	'Place source disk in drive '
+	DEFB	0
+	LD	A,(SRCDRV)	; get source drive number
+	ADD	A,40H		; convert to ascii
+	CALL	COUT		; ..and display it
+	CALL	EPRINT
+	DEFB	': and press return to continue...'
+	DEFB	0
+SRCINP0: CALL	CIN		; get input
+	CP	CTRLC		; is it <Ctrl-C> ?
+	RET	Z		; ..if so, return
+	CP	CR		; <CR> ?
+	JR	NZ,SRCINP0	; ..if not, loop ask for new input
+	CALL	CRLF
+
+
+	; start reading
+SRCREAD: CALL	RDTRACK		; read system tracks of source disk
+	JR	SRCRD1		; ..and skip over
+SRCRD0: CALL	RDFILE		; read system file
+SRCRD1:	CALL	CHKSYS		; check if a valid system was loaded/read
+				;   (fn _not_ implemented, simply returns)
+	JP	NZ,E$NOSYS	; ..if not, jump error and exit
+	LD	A,(DSTDRV)	; get # of destination disk
+	AND	A
+	JP	NZ,DSTINP0	; ..if not empty (= zero), jump to continue
+				;   else, fall through and ask user
+
+
+;::::: DESTINATION DRIVE
+
+	; interactive mode
+DSTINP:	CALL	EPRINT
+	DEFB	CR,LF,'Destination Drive (^C quits)? '
+	DEFB	0
+	CALL	CAPINE		; get user input
+	CP	CTRLC		; is it <Ctrl-C> ?
+	RET	Z		; ..if so, return
+	SUB	40H		;   else, convert ascii to number
+	LD	(DSTDRV),A	;   ..and store it
+	CALL	CRLF
+DSTINP0: LD	A,(DSTDR2)	; get copy of # destination disk
+	AND	A		; check if valid
+	JR	NZ,DSTWRIT  	; ..if so, running in command line mode
+				;   ..continue writing to destination immediately
+				;   else, fall through and ask user for input
+	CALL	EPRINT
+	DEFB	'Place destination disk in drive '
+	DEFB	0
+	LD	A,(DSTDRV)	; get destination drive number
+	ADD	A,40H		; convert to ascii
+	CALL	COUT		; ..and display it
+	CALL	EPRINT
+	DEFB	': and press return to continue...'
+	DEFB	0
+DSTINP1: CALL	CIN		; get input
+	CP	CTRLC		; is it <Ctrl-C> ?
+	RET	Z		; ..if so, return
+	CP	CR		; <CR> ?
+	JR	NZ,DSTINP1    	; ..if not, loop ask for new input
+	CALL	CRLF
+
+
+	; start writing
+	; exit through "RET", addr of RESDISK routine is on stack
+DSTWRIT: CALL	WRTRACK
+	CALL	GETQFLG
+	AND	A		; check if quiet flag is set
+	RET	NZ		; ..if not (= verbose), exit program
+	LD	A,(DSTDR2)	;   else, get copy of # dest. disk (indicator cmdline mode)
+	AND	A		; check if valid
+	RET	NZ		; ..if not, exit program
+	JP	DSTINP		;   else, loop ask for input
+
+
+	; initiate a reset of disk system when returning to system
+RESDISK: LD	C,13		; BDOS fn #13 (reset disk system)
+	CALL	CPMBDOS
+	JP	GETUD		; set Drive/User and let return from there
+
+
+;::::: HELP SCREEN
+
+HELP:	CALL	PRGNAME
+	CALL	EPRINT
+	DEFB	' Places a copy of the operating '
+	DEFB	'system onto the system',CR,LF
+	DEFB	' tracks of  a drive on the system.',CR,LF,LF
+	DEFB	' Syntax:   '
+	DEFB	0
+	CALL	PRGNAME
+	CALL	EPRINT
+	DEFB	' [DIR:[Ufn.Ft]] [D:]',CR,LF,LF
+	DEFB	' Examples:',CR,LF,LF
+	DEFB	'        '
+	DEFB	0
+	CALL	PRGNAME
+	CALL	EPRINT
+	DEFB	'                 - Execute in Interactive Mode',CR,LF
+	DEFB	'        '
+	DEFB	0
+	CALL	PRGNAME
+	CALL	EPRINT
+	DEFB	' A:              - Prompt for Source, '
+	DEFB	'Place System onto A',CR,LF
+	DEFB	'        '
+	DEFB	0
+	CALL	PRGNAME
+	CALL	EPRINT
+	DEFB	' B:ZSDOS64.COM   - Get System from File, '
+	DEFB	'Prompt for Drive',CR,LF
+	DEFB	'        '
+	DEFB	0
+	CALL	PRGNAME
+	CALL	EPRINT
+	DEFB	' A: B:           - Copy System from Drive A '
+	DEFB	'to Drive B',CR,LF
+	DEFB	'        '
+	DEFB	0
+	CALL	PRGNAME
+	CALL	EPRINT
+	DEFB	' //              - display this help',CR,LF
+	DEFB	0
+	RET
+
+
+;::::: SUPPORT FUNCTIONS
+
+	; get Quiet Flag from Z3 Environment
+	;  in: -
+	; out: A= Quiet Flag, defaults to A= 0 (not quiet)
+GETQFLG: LD	HL,(ENVADR)	; get local ENVPTR
+	LD	A,H		; check if invalid (= zero)
+	OR	L
+	RET	Z		; ..if so, return
+	LD	A,40		;   else, move ptr forward
+	CALL	ADDHLA		;   to Quiet Flag
+	LD	A,(HL)		; get value
+	RET			; ..and return
+
+
+	; print program name on CON: device
+	; (either the actual name, or fallback to default)
+	; only used by HELP
+PRGNAME: LD	A,(ENVADR+1)	; get high byte of ENVPTR
+	OR	A		; check if valid (<> zero)
+	JP	NZ,PRTNAME	; ..if so, display actual name
+				;   and let return from there
+	CALL	EPRINT		; else, display default
+	DEFB	'BPSYSGEN'
+	DEFB	0
+	RET
+
+
+	; Read system tracks - source
+RDTRACK: LD	A,(SRCDRV)	; get source drive
+	CALL	SELDRV		; and select it
+	JP	Z,E$SRC		; ..if error, jump
+	LD	(SRCDPH),HL	; store addr of DPH
+	LD	A,10		; move forward to DPB addr
+	CALL	ADDHLA		;   at DPH+10
+	LD	E,(HL)		; get DPB addr in DE
+	INC	HL
+	LD	D,(HL)
+	EX	DE,HL		; swap regs
+	LD	(SRCDPB),HL	; ..and store DPB addr
+	LD	E,(HL)		; get sectors per track in DE
+	INC	HL		;   at DPB+0
+	LD	D,(HL)
+	LD	(SECTTRK),DE	; store value
+	LD	A,12		; move forward to track offset
+	CALL	ADDHLA		;   (beginning of directory) at DPB+13
+	LD	E,(HL)		; get track offset in DE
+	INC	HL
+	LD	D,(HL)
+	LD	A,D		; check upper nybble
+	AND	A		; is it zero ?
+	JP	NZ,RDTRK0	; ..if not, jump to adjust
+	OR	E		; check lower nybble
+	JP	Z,E$NOSYS	; ..if also zero, jump to error and exit
+	CP	4		; check upper limit for # of system tracks
+	JR	C,RDTRK1	; ..if within boundaries, skip over
+RDTRK0:	LD	DE,2		; set (default) # of system tracks
+
+RDTRK1:	LD	B,E		; trk offset in B (counter)
+	LD	DE,(SECTTRK)	; get sect/trk
+	LD	HL,0		; set initial value
+RDTRK2:	ADD	HL,DE		; multiply by addition
+	DJNZ	RDTRK2		; loop till done
+	XOR	A		; nullify A
+	OR	H		; check if H is zero
+	JP	NZ,E$NOSYS	; ..if not, jump error and exit
+	PUSH	HL		; save regs
+	LD	BC,0
+	CALL	BIOSTTR		; set track # 0
+	POP	HL		; restore regs
+	LD	C,H		; move # of sectors containing system
+	LD	B,L		;   to BC (as counter)
+	LD	DE,0		; set intial value
+	LD	HL,FILEBUF	; set target addr to file buffer
+				; (at 0x0900, page-aligned after end of program)
+
+RDTRK3:	PUSH	DE		; save regs
+	PUSH	BC
+	PUSH	HL
+	LD	HL,(SRCDPH)	; get addr of DPH
+	LD	E,(HL)		; get skew table ptr in DE
+	INC	HL
+	LD	D,(HL)
+	CALL	BIOSTRN		; translate logical sector # in BC
+	LD	B,H		; move physical sector # to BC
+	LD	C,L
+	CALL	BIOSTSE		; ..and set (physical) sector
+	POP	BC		; restore target addr
+	PUSH	BC
+	CALL	BIOSTDM		; set as DMA buffer addr
+	CALL	BIOREAD		; read one sector
+	OR	A		; check for error (A <> 0)
+	JP	NZ,E$READ	; ..if error, jump
+	POP	HL		; restore target addr
+	LD	DE,128		; increase by 128 bytes (1 sector)
+	ADD	HL,DE
+	POP	BC		; restore regs / clear stack
+	POP	DE
+	DEC	B		; decrease counter
+	RET	Z		; ..if finished, return
+	INC	C
+	LD	A,C
+	AND	00000011b	; mask lower 2 bits
+	LD	A,'.'
+	CALL	Z,COUT		; display progress every 4 sectors (0.5 kB)
+	LD	A,(SECTTRK)
+	CP	C		; max. # sect/trk reached ?
+	JR	NZ,RDTRK3	; ..if not, loop
+	INC	DE		; increase trk counter
+	LD	C,0		; reset sect counter
+	PUSH	DE		; save regs
+	PUSH	BC
+	PUSH	HL
+	LD	B,D		; copy trk # in BC
+	LD	C,E
+	CALL	BIOSTTR		; ..and set track #
+	POP	HL		; restore regs
+	POP	BC
+	POP	DE
+	JR	RDTRK3		; loop
+
+
+	; Read system file (img) - source
+RDFILE:	LD	A,(ENVADR+1)	; get base addr of ENV
+	AND	A		; check if invalid (= zero)
+	JR	Z,RDFIL0	; ..if no ENV, skip over
+	LD	A,(CPMFCB+0DH)	;   else, get user no from standard FCB #1
+	CALL	SUA		;   ..and log in
+RDFIL0:	LD	DE,CPMFCB	; set ptr to standard FCB #1
+	LD	C,15		; BDOS fn #15 Open File
+	CALL	BDOSSV
+	JP	Z,E$SOPEN
+	LD	HL,32		; ptr to current record
+	ADD	HL,DE
+	LD	(HL),16		; set # of current record
+				; (skip 16 records = 2kB, MOVSYS boot loader code)
+	LD	HL,FILEBUF-128	; set addr of file buffer (-128 ahead of loop)
+
+RDFIL1:	LD	A,128		; move forward by 128 bytes (1 sector)
+	CALL	ADDHLA
+	EX	DE,HL		; swap regs
+	LD	C,26		; BDOS fn #26 Set DMA Address
+	CALL	BDOSSV
+	EX	DE,HL		; swap regs back
+	LD	C,20		; BDOS fn #20 Read Sequentially
+	CALL	BDOSSV
+	DEC	A		; A= 1 returned means EOF, so decrease A
+	JR	Z,RDFIL1	; ..if zero, continue with next sector
+	LD	C,16		; BDOS fn #16 Close File
+	JP	BDOSSV
+
+
+	; Write system tracks - destination
+WRTRACK: LD	A,(DSTDRV)	; get destination drive
+	CALL	SELDRV		; and select it
+	JP	Z,E$DEST	; ..if error, jump and exit
+	LD	(DSTDPH),HL	; store addr of DPH
+	LD	A,10		; move forward to DPB addr
+	CALL	ADDHLA		;   at DPH+10
+	LD	E,(HL)		; get DPB addr in DE
+	INC	HL
+	LD	D,(HL)
+	EX	DE,HL		; swap regs
+	LD	(DSTDPB),HL	; ..and store DPB addr
+	LD	E,(HL)		; get sectors per track in DE
+	INC	HL		;   at DPB+0
+	LD	D,(HL)
+	LD	(SECTTRK),DE	; store value
+	LD	A,12		; move forward to track offset
+	CALL	ADDHLA		;   (beginning of directory) at DPB+13
+	LD	E,(HL)		; get track offset in DE
+	INC	HL
+	LD	D,(HL)
+	LD	A,D		; check upper nybble
+	AND	A		; is it zero ?
+	JP	NZ,WRTRK0	; ..if not, jump to adjust
+	OR	E		; check lower nybble
+	JP	Z,E$NOSYS	; ..if also zero, jump to error and exit
+	CP	4		; check upper limit for # of system tracks
+	JR	C,WRTRK1	; ..if within boundaries, skip over
+
+WRTRK0:	LD	DE,2		; set (default) # of system tracks
+
+WRTRK1:	LD	B,E		; trk offset in B (counter)
+	LD	DE,(SECTTRK)	; get sect/trk
+	LD	HL,0		; set initial value
+WRTRK2:	ADD	HL,DE		; multiply by addition
+	DJNZ	WRTRK2     	; loop till done
+	XOR	A		; nullify A
+	OR	H		; check if H is zero
+	JP	NZ,E$NOSYS	; ..if not, jump error and exit
+	PUSH	HL		; save regs
+	LD	BC,0
+	CALL	BIOSTTR		; set track # 0
+	POP	HL		; save regs
+	LD	C,H		; move # of sectors containing system
+	LD	B,L		;   to BC (as counter)
+	LD	DE,0		; set initial value
+	LD	HL,FILEBUF	; set origin addr (file buffer)
+
+WRTRK3:	PUSH	DE		; save regs
+	PUSH	BC
+	PUSH	HL
+	LD	HL,(DSTDPH)	; get addr of DPH
+	LD	E,(HL)		; get skew table ptr in DE
+	INC	HL
+	LD	D,(HL)
+	CALL	BIOSTRN		; translate logical sector # in BC
+	LD	B,H		; move physical sector # to BC
+	LD	C,L
+	CALL	BIOSTSE		; ..and set (physical) sector
+	POP	BC		; restore origin addr
+	PUSH	BC
+	CALL	BIOSTDM		; set as DMA buffer addr
+	LD	C,0
+	CALL	BIOWRIT		; write one sector
+	OR	A		; check for error (A <> 0)
+	JP	NZ,E$WRITE	; ..if error, jump
+	POP	HL		; restore origin addr
+	LD	DE,128		; ..and increase by 128 bytes (1 sector)
+	ADD	HL,DE
+	POP	BC		; restore regs / clear stack
+	POP	DE
+	DEC	B		; decrease counter
+	JR	NZ,WRTRK4	; ..if not finished, continue
+	LD	C,1		;   else, force write (flush to disk)
+	JP	BIOWRIT		;   ..and let return from there
+
+WRTRK4:	INC	C
+	LD	A,C
+	AND	00000011b	; mask lower 2 bits
+	LD	A,'.'
+	CALL	Z,COUT		; display progress every 4 sectors (0.5 kB)
+	LD	A,(SECTTRK)
+	CP	C		; max. # sect/trk reached ?
+	JR	NZ,WRTRK3	; ..if not, loop
+	INC	DE		; increase trk counter
+	LD	C,0		; reset sect counter
+	PUSH	DE		; save regs
+	PUSH	BC
+	PUSH	HL
+	LD	B,D		; copy trk # in BC
+	LD	C,E
+	CALL	BIOSTTR		; ..and set track
+	POP	HL		; restore regs
+	POP	BC
+	POP	DE
+	JR	WRTRK3		; loop
+
+
+	; check if a valid B/P Bios was loaded
+	; *** function not implemented ***
+	;  in: -
+	; out: Z-Flag set if ok, NZ= error
+CHKSYS:	XOR	A		; always return Z-Flag set
+	RET
+
+
+	; select disk drive
+	;  in: A= drive number (one-based)
+	; out: Z-Flag set if error
+SELDRV:	DEC	A		; -1 to comply with CP/M BIOS standards
+	LD	C,A
+	LD	E,0
+	CALL	BIOSELD		; call BIOS fn #9 directly
+	LD	A,H
+	OR	L
+	RET
+
+
+	; call BDOS saving regs BC, DE, HL
+	; out: A= 0 and Z-Flag set if not found
+BDOSSV:	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	CALL	CPMBDOS
+	INC	A		; 0xFF --> 0x00 if not found
+	POP	HL
+	POP	DE
+	POP	BC
+	RET
+
+
+	; add A to HL (result in HL)
+ADDHLA:	ADD	A,L		; add L
+	LD	L,A		; store result in L
+	RET	NC		; ..if no overflow, return
+	INC	H		;   else, increment H
+	RET
+
+
+;::::: ERROR MESSAGES
+
+	; display msg on CON: then exit with warm boot
+E$READ:	CALL	EPRINT
+	DEFB	BEL,'*** Read error'
+	DEFB	0
+	JP	EXIT
+
+E$SRC:	CALL	EPRINT
+	DEFB	BEL,'*** Bad source!'
+	DEFB	0
+	JP	EXIT
+
+E$WRITE: CALL	EPRINT
+	DEFB	BEL,'*** Write error'
+	DEFB	0
+	JP	EXIT
+
+E$DEST:	CALL	EPRINT
+	DEFB	BEL,'*** Bad destination!'
+	DEFB	0
+	JP	EXIT
+
+E$NOSYS: CALL	EPRINT
+	DEFB	BEL,'*** No system!'
+	DEFB	0
+	JP	EXIT
+
+E$SOPEN: CALL	EPRINT
+	DEFB	BEL,"*** Can't open source file!"
+	DEFB	0
+
+
+;::::: EXIT PROGRAM
+
+EXIT:	CALL	CRLF
+	LD	HL,0		; set addr
+	JP	(HL)		; and jump to CP/M WBOOT
+
+
+;::::: BIOS JUMPS (for direct calls)
+
+	; area is filled with actual jumps at runtime
+	; to call BIOS fn's directly
+BIOSELD: JP	0		; fn #9 SELDSK select disk
+BIOSTTR: JP	0		; fn #10 SETTRK set track
+BIOSTSE: JP	0		; fn #11 SETSEC set sector
+BIOSTDM: JP	0		; fn #12 SETDMA set buffer addr
+BIOREAD: JP	0		; fn #13 READ read one sector
+BIOWRIT: JP	0		; fn #14 WRITE write one sector
+BIOLIST: JP	0		; fn #15 LISTST list status (not used)
+BIOSTRN: JP	0		; fn #16 SECTRN sector translation
+
+
+
+;::::: RAM STORAGE (not in DSEG !)
+
+SECTTRK:	DEFW	0	; sectors per track (sect/trk), used for src+dst
+SRCDPH:		DEFW	0	; source: addr of Disk Parameter Header (DPH)
+SRCDPB:		DEFW	0	; source: addr of Disk Parameter Block (DPB)
+DSTDPH:		DEFW	0	; destination: addr of DPH
+DSTDPB:		DEFW	0	; destination: addr of DPB
+SRCDRV:		DEFB	0	; source: drive # (from standard FCB #1)
+DSTDRV:		DEFB	0	; destination drive #
+DSTDR2:		DEFB	0	; destination drive # (copy)
+				;   extracted from cmdline, used as indicator for run mode
+
+
+
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::
+; Z3LIB - 0x0735
+; SYSLIB - 0x07e3
+; end addr 0x08cc (DSEG Z3+SYS = 4 bytes)
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+		; buffer start addr = 0x0900
+FILEBUF:	EQU	$+512-($-BPSYSGEN AND 255)
+
+	DSEG
+
+	END
+
+
+;************************************************************************
+; Remarks jxl:
+;   BPSYSGEN.COM, included in available B/P Bios package(s), was dis-
+; assembled and extensively commented. Labels are up to seven chars long
+; to comply with M-REL standards. However, it is recommended to use SLR
+; tools that support labels up to sixteen chars.
+;   In its current state, the compiled/linked file matches exactly the
+; original BPSYSGEN.COM, i.e. no changes to the source were made.
+;   The program is pretty straightforward. It supports a command line
+; mode and an interactive mode. (Code portions for the latter are pretty
+; short.) Functionality to check if the running system is valid, was
+; not implemented. Since other B/P Bios tools perform such checks, this
+; is rather surprising.
+;   An interesting approach was used to end the program and literally
+; return to the system. The address of RESDISK routine is pushed on the
+; stack at the very beginning.
+;************************************************************************

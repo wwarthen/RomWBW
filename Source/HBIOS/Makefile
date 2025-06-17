@@ -1,6 +1,6 @@
 
 MOREDIFF = game.bin hbios_rom.bin nascom.bin usrrom.bin \
-	dbgmon.bin hbios_app.bin imgpad2.bin rom2.bin rom3.bin romldr.bin \
+	dbgmon.bin hbios_app.bin rom2.bin rom3.bin romldr.bin \
 	eastaegg.bin hbios_img.bin rom1.bin game.bin updater.bin usrrom.bin
 
 DEST = ../../Binary
@@ -24,7 +24,7 @@ endif
 include $(TOOLS)/Makefile.inc
 
 FONTS := font8x11c.asm font8x11u.asm font8x16c.asm font8x16u.asm font8x8c.asm font8x8u.asm \
-	fontcgac.asm fontcgau.asm fontvgarcc.asm fontvgarcu.asm
+	font6x8c.asm font6x8u.asm fontcgac.asm fontcgau.asm fontvgarcc.asm fontvgarcu.asm
 
 ifeq ($(CPUFAM),2)
 	TASM=$(BINDIR)/uz80as -t hd64180
@@ -32,7 +32,7 @@ else ifeq ($(CPUFAM),3)
 	TASM=$(BINDIR)/uz80as -t z280
 endif
 
-DEPS=prereq dbgmon.bin romldr.bin nascom.bin tastybasic.bin game.bin eastaegg.bin updater.bin sysconf.bin sysconf.com usrrom.bin imgpad2.bin
+DEPS=prereq dbgmon.bin romldr.bin nascom.bin tastybasic.bin game.bin eastaegg.bin updater.bin sysconf.bin sysconf.com usrrom.bin
 
 ifeq ($(ROM_PLATFORM),UNA)
 	ROMDEPS=romldr.bin dbgmon.bin

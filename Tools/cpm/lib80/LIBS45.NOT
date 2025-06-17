@@ -1,0 +1,7 @@
+							11 October 1993
+This library contains the REL versions of SYSLIB, Z3LIB, VLIB, and DSLIB
+in both Microsoft REL and SLR REL form.  The names have an "S" appended
+to signify the libraries in SLR form.  All libraries are of the 4.5 
+release level.
+				Harold F. Bower
+

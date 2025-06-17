@@ -1,0 +1,546 @@
+	TITLE	"B/P Bios RAM size display"
+;************************************************************************
+;*  S I Z E R A M							*
+;* Determine size and location of (banked) Memory			*
+;*  by Harold F. Bower and Cameron W. Cotrill				*
+;*----------------------------------------------------------------------*
+;* Disassembly:	jxl					Dec 2024	*
+;*		public release 1.0			Apr 2025	*
+;*		see remarks at the end					*
+;*----------------------------------------------------------------------*
+;* LINK with Version 4 libraries: VLIB, Z3LIB, SYSLIB			*
+;*									*
+;* A>Z80ASM SIZERAM/RS							*
+;* A>SLRNK SIZERAM/N,/A:100,/D:0750,SIZERAM,VLIBS/S,Z3LIBS/S,SYSLIBS/S,/E *
+;************************************************************************
+
+VER	EQU	12
+REV	EQU	' '
+
+DATE	MACRO
+	DEFB	'30 Aug 01'
+	ENDM
+
+
+BEL	EQU	07H		; Bell character
+LF	EQU	0AH		; Line Feed character
+CR	EQU	0DH		; Carriage Return character
+
+CPMBIOS	EQU	0		; CP/M BIOS warm boot (JP)
+CPMBDOS	EQU	5		; CP/M BDOS entry point (JP)
+CPMFCB	EQU	5CH		; CP/M standard FCB #1 (+1 filename, +9 filetype)
+
+
+; From Z3LIB Get..
+	EXTRN	GETNAME, PRTNAME, Z3INIT, WHRENV
+
+; From SYSLIB Get..
+	EXTRN	EPRINT, CRLF, PAFDC, PHLFDC, COUT, CODEND
+
+
+;::::: PROGRAM START
+
+	ORG	100H
+	CSEG
+
+
+SIZERAM: JP	START		; bypass header
+	DEFB	'Z3ENV'		; this is a ZCPR3 utility
+	DEFB	1		; show external environment
+
+ENVADR: DEFW	0		; addr of Z3 environment
+	DEFW	SIZERAM		; type 4 filler
+
+	DEFB	'SIZERAM ',0	; configuration name
+
+START:	LD	(STACK),SP
+	LD	SP,STACK
+	CALL	EPRINT
+	DEFB	'B/P Banked RAM Sizing Utility   V',VER/10+'0','.'
+	DEFB	VER MOD 10 + '0',REV,' '
+	DATE
+	DEFB	CR,LF
+	DEFB	0
+	CALL	CHKZ3E		; check if Z3 Environment is valid
+	CALL	GETNAME		; get actual program name
+	CALL	CHKHELP		; check cmdline for help request
+	CALL	CHKSYS		; check if running under B/P Bios
+	CALL	M$BVER		; display version # msg
+	LD	HL,(BPCNFG)	; get addr of config area
+	INC	HL		; move ptr fwd
+	INC	HL
+	LD	A,(HL)		; get OPTF1 (option flag at CONFIG+2)
+	AND	00000001b	; mask bit 0
+	LD	(BPBNKD),A	; ..and store it
+	JP	NZ,BNKDSYS	; if banked, jump to continue
+
+
+;::::: NON-BANKED SYSTEM
+
+NBNKSYS: INC	HL		; move ptr to TPABNK in config area
+	INC	HL
+	CALL	EPRINT
+	DEFB	CR,LF,LF,'Non-Banked System using TPA Banks = '
+	DEFB	0
+	LD	A,(HL)		; get value
+	PUSH	AF
+	CALL	PAFDC		; ..and display
+	LD	A,'/'
+	CALL	COUT
+	POP	AF		; restore value
+	INC	A		; increase it
+	CALL	PAFDC		; ..and display
+	CALL	CRLF
+	JP	EXIT
+
+
+;::::: BANKED SYSTEM
+
+BNKDSYS: INC	HL		; move ptr to UABNK in config area
+	LD	DE,UABNK	; ..and make local copies
+	LD	BC,5		;   (5 bytes, UABNK..MAXBNK)
+	LDIR
+	CALL	CODEND		; get first available page after code end
+	LD	(WSPCBEG),HL	;   and store it
+	EX	DE,HL		; swap regs
+
+	; memory read/write tests for all ram banks at addr 0x0000
+	; building a map in WSPC area: b1= zero if no bank found, b2= initially read byte
+
+	; test #1: 0x00/0xFF byte - iterate over banks in forward order
+	LD	HL,0		; set addr 0x0000
+	LD	C,0		; start with bank #0 (TPA)
+MEMRW:	CALL	GETFRB		; get byte
+	LD	B,A		; store in B
+	CPL			; invert (complement) byte
+	CALL	SETINB		; write it back
+	CALL	GETFRB		; read again
+	CPL			; ..and invert
+	XOR	B		; xor'd with initially read byte
+	JR	NZ,MEMRW0	; ..if no match, skip over
+	LD	A,B		; get initially read byte
+	CALL	SETINB		; write it
+	CALL	GETFRB		;   and read again
+	SUB	B		; subtract initially read byte
+	JR	NZ,MEMRW0	; ..if not zero, skip over
+
+				; injected opcode 0xF6 (OR n) to skip following XOR A
+	DEFB	0F6h		; = OR 0AFH  (write non-zero)
+MEMRW0:	XOR	A		; nullify A
+	LD	(DE),A		; store in WSPC area
+	INC	DE		; move ptr fwd
+	LD	A,B		; get initially read byte
+	LD	(DE),A		; store it, too
+	INC	DE		; move ptr fwd
+	INC	C		; bank # +1
+	JR	NZ,MEMRW	; ..loop till all possible (256 / 0x100) banks tested
+
+	; test #2: write no. in each bank (iterate backward), then read and compare (forward)
+	DEC	C		; correct bank # (loop was 1 ahead)
+MEMWRB:	DEC	DE		; move ptr back
+	DEC	DE
+	LD	A,(DE)		; get byte
+	OR	A		; check if bank exists
+	JR	Z,MEMWRB0	; ..if not, skip over
+	LD	A,C		;   else, get bank #
+	CALL	SETINB		; and write in bank
+MEMWRB0: LD	A,C		; get bank #
+	SUB	1		; -1
+	LD	C,A		; set bank #
+	JR	NC,MEMWRB	; ..if not below zero, loop
+	INC	C		; correct bank #
+
+MEMRDB:	LD	A,(DE)		; get byte from WSPC area
+	OR	A		; check if bank exists
+	JR	Z,MEMRDB0	; ..if not, skip over
+	CALL	GETFRB		; read byte from bank
+	CP	C		; compare to bank #
+	JR	Z,MEMRDB0	; ..if match, skip over
+	XOR	A		;   else, set <NUL> as indicator
+	LD	(DE),A		;   that bank doesn't exist
+MEMRDB0: INC	DE		; move ptr fwd
+	INC	DE
+	INC	C		; bank # +1
+	JR	NZ,MEMRDB	; ..loop till all possible (256 / 0x100) banks tested
+
+	; restore bytes initially read in all banks
+	LD	DE,(WSPCBEG)	; set ptr to start of WSPC addr
+MEMRST:	LD	A,(DE)		; get byte
+	OR	A		; check bank exists
+	JR	Z,MEMRST0	; ..if not, skip over
+	INC	DE		; move ptr fwd
+	LD	A,(DE)		; get initially read byte
+	CALL	SETINB		; ..and restore it
+	INC	DE		; ptr fwd
+	JR	MEMRST1		; skip over
+MEMRST0: INC	DE		; ptr fwd
+	INC	DE
+MEMRST1: INC	C		; bank # +1
+	JR	NZ,MEMRST	; loop till done
+				; ..then fall through to display collected data
+
+
+	; display information for Banked System
+	; detect ranges of continuous ram banks
+	;
+	;  HL= ptr in WSPC area
+	;  C= counter (up) bank #,  B= counter (down) for outer loop
+	;  D= bank # begin of range, E= bank # end of range
+	LD	BC,0
+	LD	HL,(WSPCBEG)	; set ptr to start of WSPC addr
+BRANGLP: LD	A,(HL)		; get byte
+	OR	A		; check bank exists
+	JR	NZ,BRANGE	; ..if so, skip over
+	INC	HL		;   else, use a shorter loop
+	INC	HL		;   ..move ptr fwd
+	INC	C		;   ..and bank #
+	JR	NZ,BRANGLP	; loop until max. reached (256 / 0x100)
+	JR	PCNFIG		;   else, display Bios config report
+
+BRANGE: LD	D,C		; store start of range (bank # in D)
+BRANG0:	INC	HL		; ptr fwd
+	INC	HL
+	INC	C		; bank # +1
+	JR	NZ,BRANG1	; ..if not max., skip over
+	DEC	B
+	JR	PBRANG		;   else, display bank ranges
+
+BRANG1: LD	A,(HL)		; get byte
+	OR	A		; check bank exists
+	JR	NZ,BRANG0	; ..if so, loop
+				;   else, fall through
+
+	; display collected information
+PBRANG:	LD	E,C		; get current bank # in E
+	DEC	E		; loop is ahead, so -1
+	CALL	EPRINT
+	DEFB	CR,LF,'RAM Banks '
+	DEFB	0
+	LD	A,D		; get begin of range
+	CALL	PAFDC		; ..and display it
+	CALL	EPRINT
+	DEFB	' - '
+	DEFB	0
+	LD	A,E		; get end of range
+	CALL	PAFDC		; ..and display it
+	CALL	EPRINT
+	DEFB	'  ('
+	DEFB	0
+	LD	A,E		; get end of range
+	INC	A		; adjust for correct calc
+	SUB	D		; calc difference of begin/end
+	PUSH	HL
+	LD	L,A		; get value in L
+	LD	H,0		; ..and multiply for display
+	ADD	HL,HL		; *2
+	ADD	HL,HL		; *4
+	ADD	HL,HL		; *8
+	ADD	HL,HL		; *16
+	ADD	HL,HL		; *32  (fixed bank size of 32k assumed)
+	CALL	PHLFDC		; ..and display
+	POP	HL
+	CALL	EPRINT
+	DEFB	'k Bytes)'
+	DEFB	0
+	LD	A,B		; check if more to go
+	OR	A
+	JR	Z,BRANGLP	; loop till done
+
+	; display information as stored in B/P Bios config area
+PCNFIG:	CALL	EPRINT
+	DEFB	CR,LF,LF,'Bios Reports:',CR,LF
+	DEFB	'   TPA Banks      = '
+	DEFB	0
+	LD	A,(TPABNK)	; get TPA bank #
+	PUSH	AF		; save regs
+	CALL	PAFDC		;   and display it
+	LD	A,'/'
+	CALL	COUT
+	POP	AF		; restore value
+	INC	A		; +1  (TPA bank is build by 2 consecutive banks)
+				; fixed size of 32k per bank is assumed
+	CALL	PAFDC		;   and display it
+	CALL	EPRINT
+	DEFB	CR,LF,'   System Bank    = '
+	DEFB	0
+	LD	A,(SYSBNK)	; get SYSTEM bank #
+	CALL	PAFDC		;   and display it
+	CALL	EPRINT
+	DEFB	CR,LF,'   User Bank      = '
+	DEFB	0
+	LD	A,(UABNK)	; get # of USER banks
+	OR	A
+	JR	NZ,PCNFIG0	; ..if not zero, skip over
+	CALL	EPRINT
+	DEFB	'(None)'
+	DEFB	0
+	JR	PCNFIG1
+PCNFIG0: CALL	PAFDC		; display # of USER banks
+PCNFIG1: CALL	EPRINT
+	DEFB	CR,LF,'   RAM Disk Start = '
+	DEFB	0
+	LD	A,(RAMBNK)	; get # of begin RAM Disk
+	CALL	PAFDC
+	CALL	EPRINT
+	DEFB	CR,LF,'   Last Used Bank = '
+	DEFB	0
+	LD	A,(MAXBNK)	; get max. available bank #
+	CALL	PAFDC
+	CALL	EPRINT
+	DEFB	CR,LF,LF,' -- Scan Complete.',CR,LF
+	DEFB	0
+	JP	EXIT
+
+
+;::::: SUPPORT FUNCTIONS
+
+	; get first token from command line (in FCB #1)
+	; and check if help was requested
+CHKHELP: LD	HL,CPMFCB+1
+	LD	A,(HL)		; get byte
+	CP	'/'		; is this a help request ?
+	RET	NZ		; ..if not, return
+	INC	HL		;   else, move ptr fwd
+	LD	A,(HL)		; and get next byte
+	CP	'/'		; is it also '/' ?
+	RET	NZ		; ..if not, return
+				;   else, fall through and display help
+
+
+;::::: HELP SCREEN
+
+HELP:	CALL	EPRINT
+	DEFB	CR,LF,'  '
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	EPRINT
+	DEFB	' Determines location and Size of Banked Memory.',CR,LF
+	DEFB	'    (Only TPA Banks printed if Non-Banked)',CR,LF,LF
+	DEFB	' Syntax:',CR,LF
+	DEFB	'       '
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	EPRINT
+	DEFB	'      - Print 32k RAM banks present and B/P Allocations',CR,LF
+	DEFB	'       '
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	EPRINT
+	DEFB	' //   - display this screen',CR,LF
+	DEFB	0		; fall through and exit
+
+
+;::::: EXIT PROGRAM
+
+EXIT:	CALL	CRLF
+	LD	SP,(STACK)	; restore stack pointer
+	RET			; ..and return to system
+
+
+;::::: SUPPORT FUNCTIONS
+
+	; check if running under ZCPR3 and status of wheel byte
+	; terminate program if not succesful
+CHKZ3E:	LD	HL,(CPMBDOS+1)
+	CALL	WHRENV		; find Z3 Environment Descriptor
+	LD	(ENVADR),HL	; store ENV ptr
+	LD	A,H		; check if invalid (= zero)
+	OR	L
+	JP	Z,E$BPBIO	; ..if so, jump error and terminate
+	CALL	Z3INIT		;   else, init for Z3LIB routines
+	LD	A,41		; offset to addr of wheel byte (Z3WHL)
+	CALL	ADDHLA		; adjust ptr
+	LD	E,(HL)		; get addr in DE
+	INC	HL
+	LD	D,(HL)
+	EX	DE,HL		; swap regs
+	LD	A,(HL)		; get value of wheel byte
+	AND	A		; check if zero
+	RET	NZ		; ..if not (wheel on), return
+	CALL	EPRINT		;   else, display message and exit
+	DEFB	BEL,CR,LF,'Must be wheel to Execute !',CR,LF
+	DEFB	0
+	JR	EXIT
+
+
+	; check if running under B/P Bios
+	; if not, program is terminated
+CHKSYS:	LD	HL,(CPMBIOS+1)	; get warm boot addr (BIOS fn #1)
+	LD	L,30*3		; adjust ptr to fn #30
+	LD	A,(HL)		; check byte at ptr location
+	CP	0C3H		; is it opcode 0xC3 (JP) ?
+	JR	NZ,E$BPBIO	; ..if not, jump error and terminate
+	CALL	JUMPHL		;   else, "call" B/P Bios fn #30 (RETBIO)
+	LD	(BPVERS),A	; store version of B/P Bios
+	LD	(BPADDR),BC	;   "   base addr
+	LD	(BPCNFG),DE	;   "   config area addr
+	LD	HL,-6		; move ptr 6 bytes backward
+	ADD	HL,DE		;   (signature string)
+	LD	A,(HL)		; get byte
+	CP	'B'		; is it 'B' ?
+	JR	NZ,E$BPBIO	; ..if not, jump error and exit
+	INC	HL		; ptr fwd
+	LD	A,(HL)		; get byte
+	CP	'/'		; is it '/' ?
+	JR	NZ,E$BPBIO	; ..if not, jump error and exit
+	INC	HL		; ptr fwd
+	LD	A,(HL)		; get byte
+	CP	'P'		; is it 'P' ?
+	RET	Z		; ..if so, return
+				;   else, fall through (error and exit)
+
+
+	; msg aborting
+E$BPBIO: CALL	EPRINT
+	DEFB	CR,LF,BEL,'Not B/P Bios, aborting...!',CR,LF
+	DEFB	0
+	RST	0
+
+
+	; print program name on CON: device
+	; (either the actual name, or fallback to default)
+	; only used by HELP
+PPRGNAM: LD	A,(ENVADR+1)	; get high byte of ENVPTR
+	OR	A		; check if valid (<> zero)
+	JP	NZ,PRTNAME	; ..if so, display actual name
+				;   ..and let return from there
+	CALL	EPRINT		;   else, display default
+	DEFB	'SIZERAM'
+	DEFB	0
+	RET
+
+
+	; msg B/P Bios Vers x.x
+M$BVER:	CALL	EPRINT
+	DEFB	'  (B/P Bios Vers '
+	DEFB	0
+	LD	A,(BPVERS)	; get version #
+	RRCA			; reverse nybbles in A
+	RRCA
+	RRCA
+	RRCA
+	AND	00001111b	; mask lower nybble
+	ADD	A,'0'		; make it ascii
+	CALL	COUT		; ..and display
+	LD	A,'.'
+	CALL	COUT
+	LD	A,(BPVERS)	; get version #
+	AND	00001111b	; mask lower nybble
+	ADD	A,'0'		; make it ascii
+	CALL	COUT		; ..and display
+	CALL	EPRINT
+	DEFB	')',CR,LF
+	DEFB	0
+	RET
+
+
+	; add A to HL (result in HL)
+ADDHLA:	ADD	A,L		; add L
+	LD	L,A		; store result in L
+	RET	NC		; ..if no overflow, return
+	INC	H		;   else, increment H
+	RET
+
+
+	; the following routines rearrange Top of Stack by injecting an
+	; intermediate return addr, and putting the Bios fn call on top
+	; so that HL regs are preserved
+	; order of steps:
+	;   [1]  HL (= addr) is pushed onto stack
+	;   [2]  intermediate return addr is swapped to Top of Stack
+	;   [3]  HL (= addr) is pushed onto stack again
+	;   [4]  Bios fn JP addr is swapped to Top of Stack
+	;   [5]  Bios is "called" through RET, and returns to intermediate addr
+
+	; get byte from ram bank - in the form LD A,(HL)
+	;  in: C= bank #,  HL= addr
+	; out: A= byte
+GETFRB:	PUSH	BC
+	PUSH	HL		; save addr
+	LD	HL,GETFRB0	; load return addr
+	EX	(SP),HL		; put it on stack
+	PUSH	HL		; save HL again (previous top of stack)
+	LD	HL,(BPADDR)	; get B/P Bios base addr
+	LD	L,35*3		; adjust ptr to fn #35 (FRGETB)
+	EX	(SP),HL		; put addr on stack
+	RET			; ..and "call" Bios fn through stack
+
+GETFRB0: POP	BC		; restore regs
+	RET			; ..and finally return
+
+	; set byte in ram bank - in the form LD (HL),A
+	;  in: C= bank #,  HL= addr,  A= byte to set
+SETINB:	PUSH	BC
+	PUSH	HL		; save addr
+	LD	HL,GETFRB0	; load return addr
+	EX	(SP),HL		; put it on stack
+	PUSH	HL		; save HL again (previous top of stack)
+	LD	HL,(BPADDR)	; get B/P Bios base addr
+	LD	L,37*3		; adjust ptr to fn #37 (FRPUTB)
+	EX	(SP),HL		; put addr on stack
+	RET			; ..and "call" Bios fn through stack
+
+
+	; "called" as a pseudo-routine that returns to caller
+	;  in: HL= target addr
+JUMPHL:	JP	(HL)		; jump to addr in HL regs
+
+
+;::::: LOCAL DATA (not in DSEG)
+
+WSPCBEG:	DEFW	0	; addr begin of workspace area
+				; (first available page, returned by CODEND)
+
+	; data retrieved from running system
+BPVERS:		DEFB	0	; B/P Bios version
+BPADDR:		DEFW	0	; B/P Bios base addr
+BPCNFG:		DEFW	0	; addr of Config Area
+BPBNKD:		DEFB	0	; indicator banked system (bit 0 of OPTF1)  --> not used
+
+	; local copies of RAM bank configuration
+UABNK:		DEFB	0	; beginning of User Bank(s)
+TPABNK:		DEFB	0	; TPA Bank
+SYSBNK:		DEFB	0	; beginning of System Bank(s)
+RAMBNK:		DEFB	0	; base bank # for Ram Disk
+MAXBNK:		DEFB	0	; highest permissible Bank #
+
+
+		DEFS	30H	; room for stack
+STACK:		DEFW	0	; stack storage location
+
+
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::
+; Z3LIB - 0x05ae
+; SYSLIB - 0x065c
+; end addr 0x0750 (begin DSEG)
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+;::::: RAM STORAGE
+
+	DSEG
+
+	END
+
+
+;************************************************************************
+; Remarks jxl:
+;   SIZERAM.COM, included in available B/P Bios package(s), was dis-
+; assembled and extensively commented. Labels are up to seven chars long
+; to comply with M-REL standards. However, it is recommended to use SLR
+; tools that support labels up to sixteen chars.
+;   In its current state, the compiled/linked file matches exactly the
+; original INITRAM.COM, i.e. no changes to the source were made.
+;
+;   The program uses an interesting technique to read and write data in
+; alternative ram banks utilizing B/P Bios functions no. 35 FRGETB and
+; no. 37 FRPUTB. Top of Stack is manipulated to keep registers intact
+; and "call" functions through a RET statement (instead of CALL.)
+;   Another specialty which is worth mentioning: Routine MEMRW (memory
+; read/write) contains an "injected" opcode to alter the behaviour at
+; runtime. Otherwise a more complex logic and/or additional routine
+; would have been necessary.
+;   Storage of local data is in CSEG (code segment), not DSEG. There
+; seems to be no particular reason for this. So, it can be assumed that
+; this just happened by mistake.
+;************************************************************************

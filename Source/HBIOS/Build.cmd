@@ -98,6 +98,8 @@ call :asm game || exit /b
 call :asm usrrom || exit /b
 call :asm updater || exit /b
 
+:: call :asm fonts || exit /b
+
 :: Sysconf builds as both BIN and COM files
 tasm -t%CPUType% -g3 -fFF -dROMWBW sysconf.asm sysconf.bin sysconf_bin.lst || exit /b
 tasm -t%CPUType% -g3 -fFF -dCPM sysconf.asm sysconf.com sysconf_com.lst || exit /b

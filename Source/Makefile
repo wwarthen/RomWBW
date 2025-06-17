@@ -23,6 +23,7 @@ shared:
 	$(MAKE) --directory ZCPR $(ACTION)
 	$(MAKE) --directory ZCPR-DJ $(ACTION)
 	$(MAKE) --directory ZSDOS $(ACTION)
+	$(MAKE) --directory ZSDOS2 $(ACTION)
 	$(MAKE) --directory CPM3 $(ACTION)
 	$(MAKE) --directory ZPM3 $(ACTION)
 	$(MAKE) --directory CPNET $(ACTION)

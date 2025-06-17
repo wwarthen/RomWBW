@@ -1,0 +1,752 @@
+	TITLE	"HASHINI Drive Utility"
+;************************************************************************
+;*  H A S H I N I							*
+;* Set Drive Volume Name and Init for File Stamps			*
+;*  by Harold F. Bower and Cameron W. Cotrill				*
+;*----------------------------------------------------------------------*
+;* Disassembly:	jxl					Mar 2025	*
+;*		public release 1.0			Apr 2025	*
+;*		see remarks at the end					*
+;*----------------------------------------------------------------------*
+;* LINK with Version 4 libraries: Z3LIB, SYSLIB				*
+;*									*
+;* A>Z80ASM HASHINI/RS							*
+;* A>SLRNK HASHINI/N,/A:100,/D:09E5,HASHINI,Z3LIBS/S,SYSLIBS/S,/E	*
+;************************************************************************
+
+VER	EQU	02
+REV	EQU	' '
+
+DATE	MACRO
+	DEFB	'12 Sep 93'
+	ENDM
+
+
+CTRLC	EQU	03H		; Control-C character
+BEL	EQU	07H		; Bell character
+BS	EQU	08H		; Backspace character
+TAB	EQU	09H		; Tab character
+LF	EQU	0AH		; Line Feed character
+CR	EQU	0DH		; Carriage Return character
+ESC	EQU	1BH		; Escape character
+
+CPMBIOS	EQU	0		; CP/M BIOS warm boot (JP)
+CPMBDOS	EQU	5		; CP/M BDOS entry point (JP)
+CPMFCB	EQU	5CH		; CP/M standard FCB #1 (+1 filename, +9 filetype)
+CPMFCB2	EQU	6CH		; CP/M standard FCB #2
+CPMDMA	EQU	80H		; CP/M standard DMA buffer
+
+
+; From Z3LIB Get..
+	EXTRN	GETNAME, PRTNAME, GETQUIET, Z3INIT
+
+; From SYSLIB Get..
+	EXTRN	BLINE, EPRINT, CRLF, CAPIN, COUT, CODEND
+
+
+;::::: PROGRAM START
+
+	ORG	100H
+	CSEG
+
+
+HASHINI: JP	START		; bypass header
+	DEFB	'Z3ENV'		; this is a ZCPR3 utility
+	DEFB	1		; show external environment
+	DEFB	1
+
+ENVADR: DEFW	0		; addr of Z3 environment
+
+	DEFB	1
+	DEFB	'HASHINI '
+	DEFB	0
+
+	; config area (for ZNCFG.COM)
+CFGAREA: DEFB	0		; default value for program quiet flag
+	DEFB	0FFH
+
+START:	LD	(STACK),SP	; save stack
+	LD	SP,STACK
+	CALL	Z3INIT		; init ENVPTR for Z3LIB routines
+	CALL	GETNAME		; get ptr to program name
+	CALL	GETQUIET	; check ENV quiet flag
+	LD	HL,CFGAREA	; ptr to config area
+	OR	(HL)		; merge flags (ENV + program)
+	LD	(PRGQFLG),A	; store program quiet flag
+	CALL	EPRINT
+	DEFB	CR,LF,'Initialize Volume Label and File Stamps   Ver '
+	DEFB	VER/10+'0','.',VER MOD 10 + '0',REV,'  '
+	DATE
+	DEFB	CR,LF
+	DEFB	0
+	LD	C,25		; get current disk (BDOS fn #25)
+	CALL	CPMBDOS
+	LD	(OLDDRV),A	; remember drive #
+	CALL	EVALCMD		; evaluate command line
+	JR	INITWSPC
+
+
+;::::: MAIN LOOP
+
+START0:	LD	SP,STACK	; reset stack pointer
+	CALL	EPRINT
+	DEFB	CR,LF,LF,'Initialize another Disk?  (Y/[N]) : '
+	DEFB	0
+	CALL	CINPUT		; get user input
+	CP	'Y'		; is it 'Y' ?
+	JP	NZ,EXIT		; ..if not, jump to exit
+	CALL	SELODRV		; restore previously logged drive
+	CALL	CRLF
+	OR	0FFH		; from now on run interactively
+
+	; init workspace (ram storage)
+INITWSPC: LD	(RUNMODE),A	; store mode
+	LD	HL,WSPC		; clear workspace data area
+	LD	B,(STACK-WSPC)-3
+	CALL	FILLZ
+
+
+;::::: DISK DRIVE
+
+GETDISK: LD	A,(RUNMODE)	; get mode
+	OR	A		; running in cmdline mode ?
+	JR	Z,GETVOLN	; ..if so, drive is known, jump to continue
+
+	; interactive mode - ask for disk to initialize
+IMDISK:	CALL	EPRINT
+	DEFB	CR,LF,LF,'Initialize which Disk for '
+	DEFB	0
+	LD	A,(STMPTYP)	; stamp format indicator
+	OR	A		; is it P2Dos ?
+	JR	NZ,IMDISK1	; ..if not, jump to continue
+	CALL	EPRINT		; display chosen format
+	DEFB	'P2DOS'
+	DEFB	0
+	JR	IMDISK2		; skip over
+IMDISK1: CALL	EPRINT
+	DEFB	'NZTIME'
+	DEFB	0
+
+IMDISK2: CALL	EPRINT
+	DEFB	' Date/Time Stamps? : '
+	DEFB	0
+	CALL	CINPUT		; get user input
+	CP	'A'		; disk drive letter must be
+	JR	C,IMDISK3	;   between 'A' and 'P'
+	CP	'P'+1
+	JR	C,IMDISK4
+IMDISK3: CALL	EPRINT		; else, notify user and loop
+	DEFB	BEL,BS,' ',BS
+	DEFB	0
+	JR	IMDISK
+
+IMDISK4: LD	(CURRDSK),A	; store disk drive letter
+
+
+;::::: VOLUME NAME
+
+GETVOLN: LD	A,(VOLNAME)
+	OR	A
+	JR	NZ,IMVOLN3
+
+	; interactive mode - ask for volume name
+IMVOLN:	CALL	EPRINT
+	DEFB	CR,LF,'Enter Volume Name [1-11 chars] : '
+	DEFB	0
+	LD	HL,CPMDMA	; set ptr to standard buffer
+	LD	(HL),11		; prepare char count (max. 11 chars)
+	XOR	A		; clear A
+	LD	(CPMDMA+1),A	; prepare end-of-string
+	DEC	A		; let capitalize (A= non-zero)
+	CALL	BLINE		; get user input
+	LD	A,(HL)		; check char count
+	OR	A		; is it empty string (nothing entered) ?
+	JR	Z,IMVOLN	; ..if so, loop
+	LD	DE,VOLNAME	; point to volname buffer
+IMVOLN1: LD	A,(HL)		; get char
+	LDI			; ..and copy over
+	OR	A		; end of string ?
+	JR	NZ,IMVOLN1	; ..if not, loop
+
+IMVOLN3: LD	A,(PRGQFLG)	; get program quiet flag
+	OR	A		; running in quiet mode ?
+	JR	Z,DSKPROC	; ..if so, skip over
+	CALL	EPRINT
+	DEFB	CR,LF,'     Confirm Initialize Drive '
+	DEFB	0
+	LD	A,(CURRDSK)
+	CALL	COUT
+	CALL	EPRINT
+	DEFB	': (Y/[N]) '
+	DEFB	0
+	CALL	CINPUT		; get user input
+	CP	'Y'
+	JP	NZ,FINISH
+
+
+;::::: PROCESS DISK
+
+DSKPROC: LD	A,(CURRDSK)	; get current disk drive letter
+	SUB	'A'		; make numeric
+	PUSH	AF		; save regs
+	LD	E,A		; drive # in E
+	CALL	BDSELD		; select disk drive (BDOS call)
+	CALL	EPRINT		; display warning
+	DEFB	BEL,CR,LF,'+++ Existing Files will be ERASED! +++'
+	DEFB	CR,LF,' --- Proceed anyway (Y/[N]) : '
+	DEFB	0
+
+	CALL	CINPUT		; get user input
+	CP	'Y'		; is it 'Y' ?
+	JP	NZ,FINISH	; ..if not, jump to finish processing
+	POP	AF		; restore regs
+	LD	C,A		; drive # in C
+	CALL	BIOSELD		; select disk drive (BIOS call)
+	LD	A,H		; check if DPH addr is valid
+	OR	L
+	JP	Z,E$DRVILL	; ..if not, jump display error msg and exit
+
+	; get parameters of current disk drive
+	LD	E,(HL)		; get addr of skew table in DE
+	INC	HL
+	LD	D,(HL)
+	LD	(SKEWTBL),DE	; and store value
+	LD	DE,9
+	ADD	HL,DE		; move ptr fwd (to DPH+10)
+	LD	E,(HL)		; addr of DPB in DE
+	INC	HL
+	LD	D,(HL)
+	PUSH	DE		; move addr to IX
+	POP	IX
+
+	; ??? ##### CODEND not used
+	CALL	CODEND		; get first free memory page addr in HL
+
+	LD	D,(IX+8)	; get DirMax in DE
+	LD	E,(IX+7)	;   (max. dir entries -1)
+	INC	DE		; +1
+	LD	(DIRMAX),DE	; store value
+	SRL	D		; /2
+	RR	E
+	SRL	D		; /4
+	RR	E
+	LD	(STMPMAX),DE	; store value
+				; (1 stamp dir entry for 4 file dir entries)
+	LD	BC,0
+	LD	HL,CPMDMA	; set to standard buffer
+	PUSH	DE		; save regs
+	PUSH	BC
+	LD	DE,VOLNAME	; ptr to volume name
+	LD	A,(DE)		; get char
+	OR	A		; is it zero ? (<NUL> means empty string)
+	LD	B,3*32		; prepare counter for 3 stamp entries
+	JR	Z,MKSTMP	; ..if no volume name, jump to continue
+
+	; make a volume name entry
+	; HL= ptr to standard buffer, DE= ptr to VOLNAME
+	; B= char count, C= char
+	LD	(HL),020H	; set first byte of dir entry (user area)
+				; to 0x20 - indicates time stamp
+	INC	HL		; move ptr fwd
+	LD	B,11		; number of chars
+MKVOLN:	LD	A,(DE)		; get VOLNAME char in A
+	LD	C,' '		; prepare for <NUL> byte
+	OR	A		; end of string ?
+	JR	Z,MKVOLN1	; ..if so, skip over
+	LD	C,A		;   else, get char in C
+	INC	DE		; move VOLNAME ptr forward
+MKVOLN1: LD	(HL),C		; copy char to buffer
+	INC	HL		; move ptr fwd
+	DJNZ	MKVOLN		; loop till done
+	LD	B,32-12		; clear remaining bytes of stamp entry
+	CALL	FILLZ
+	LD	B,2*32		; fill next 2 stamp entries
+
+	; make a stamp entry and write to dir
+MKSTMP:	LD	A,0E5H		; CP/M default byte for free dir entries
+	CALL	FILLA		; fill stamp entries
+	LD	A,(STMPTYP)	; get chosen stamp format (0x00 = P2Dos, 0xFF = NZTime)
+	OR	A		; ..and check
+	LD	A,021H		; prepare for P2Dos
+	JR	Z,MKSTMP1	; ..if so, skip over
+	LD	A,0A1H		;   else, prepare for NZTime
+MKSTMP1: LD	(HL),A		; store byte
+	INC	HL		; move ptr fwd
+	LD	B,32-1		; ..and clear remaining bytes of stamp entry
+	CALL	FILLZ
+	POP	BC		; restore regs
+	POP	DE
+	CALL	PVBOSE		; if verbose mode, display msg
+	DEFB	CR,LF,'...Writing Initialized Directory...'
+	DEFB	0
+
+	LD	DE,0		; initial start #
+	LD	(STMPCUR),DE	; set # of current stamp entry
+	CALL	WRSTMP		; ..and write stamp to directory
+	LD	HL,CPMDMA	; reset ptr to begin of standard buffer
+	LD	A,0E5H		; clear first part of stamp entry
+	LD	B,32
+	CALL	FILLA
+MKSTMP2: CALL	WRSTMP		; ..and write next stamp entry
+	LD	HL,(STMPCUR)	; get current #
+	LD	DE,(STMPMAX)	; get max. #
+	OR	A		; clear flags
+	SBC	HL,DE		; check if all entries were written
+	ADD	HL,DE
+	JR	NZ,MKSTMP2	; ..if not, loop
+	LD	BC,1		; set C= 1 to indicate Directory Write (forced)
+	CALL	BIOWRIT		; ..and perform through BIOS
+	JP	DSKDONE
+
+
+	; display help and exit
+HLPEXIT: XOR	A		; clear A
+	LD	(RUNMODE),A	; ..and store mode (cmdline)
+	JR	HELP
+
+E$DRVILL: CALL	EPRINT		; display error msg and fall through
+	DEFB	CR,LF,LF,BEL,'Illegal drive name'
+	DEFB	0
+
+
+;::::: HELP
+
+HELP:	CALL	EPRINT
+	DEFB	CR,LF,'Usage: Set Drive Volume Name & '
+	DEFB	'Initialize for P2Dos/NzTime file stamps',CR,LF,LF
+	DEFB	'Syntax:',CR,LF,TAB
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	EPRINT
+	DEFB	' [d:][volname] [/][P | Z | Q]',CR,LF
+	DEFB	'Examples:',CR,LF,TAB
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	EPRINT
+	DEFB	TAB,'- Enter Interactive Mode',CR,LF,TAB
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	EPRINT
+	DEFB	' /P',TAB,'- Init Drive interactively w/P2D stamps',CR,LF,TAB
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	EPRINT
+	DEFB	' d:',TAB,'- Initialize drive "d" w/default Stamp',CR,LF,TAB
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	EPRINT
+	DEFB	' d:name',TAB,'- Init drive "d" adding Vol ID "name"',CR,LF,TAB
+	DEFB	TAB,TAB,'   file with default Stamps',CR,LF,TAB
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	EPRINT
+	DEFB	' d: ZQ',TAB,'- Init drive "d" for NZTime Stamps',CR,LF,TAB
+	DEFB	TAB,TAB,'   suppressing unneeded messages',CR,LF,TAB
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	EPRINT
+	DEFB	' //',TAB,'- Display this message',CR,LF,LF
+	DEFB	'Note: ZCNFG may be used to configure a flag to suppress',CR,LF
+	DEFB	'      drive confirmation prompt and status messages',CR,LF
+	DEFB	0
+
+	JP	FINISH
+
+
+	; print program name on CON: device
+	; (either the actual name, or fallback to default)
+	; only used by HELP
+PPRGNAM: LD	A,(ENVADR)	; get high byte of ENV ptr
+	OR	A		; check if valid (<> zero)
+	JP	NZ,PRTNAME	; ..if so, display actual name
+				;   and let return from there
+	CALL	EPRINT		; else, display default name
+	DEFB	'HASHINI'
+	DEFB	0
+	RET
+
+
+	; write a stamp entry to directory
+	;  in: IX= ptr DPB
+	;      STMPCUR= # of current stamp entry
+WRSTMP:	PUSH	BC		; save regs
+	PUSH	DE
+	PUSH	HL
+	LD	HL,0
+	LD	BC,(STMPCUR)	; get # of current stamp entry
+	LD	D,(IX+1)	; get sectors per track (DPB+0)
+	LD	E,(IX+0)
+	LD	A,17		; set counter
+
+	; determine track # (in BC) and sector # (in HL)
+WRSTMP1: OR	A		; clear flags
+	SBC	HL,DE		; divide by subtraction
+	CCF			; inverse C-flag
+	JR	C,WRSTMP2
+	ADD	HL,DE		; compensate overflow
+	OR	A		; clear flags
+WRSTMP2: RL	C		; divide BC by 2 (track #)
+	RL	B
+	DEC	A		; decrease counter
+	JR	Z,WRSTMP3	; ..if zero, exit loop
+	RL	L		;   else, also divide HL by 2 (sector #)
+	RL	H
+	JR	WRSTMP1		; and continue
+
+WRSTMP3: PUSH	HL		; save (log.) sector #
+	LD	H,(IX+14)	; get track offset (# sys tracks)
+	LD	L,(IX+13)
+	ADD	HL,BC		; add to calculated track #
+	LD	B,H
+	LD	C,L
+	CALL	BIOSTTR		; set track
+	POP	BC		; restore (log.) sector #
+	LD	DE,(SKEWTBL)	; get addr of skew table
+	CALL	BIOSTRN		; translate logical to physical sector
+	LD	B,H
+	LD	C,L
+	CALL	BIOSTSE		; set (phys.) sector
+	LD	BC,CPMDMA	; set buffer addr
+	CALL	BIOSTDM
+	LD	BC,0		; set C= 0 to indicate Unallocated Write
+	CALL	BIOWRIT		; ..and perform through BIOS
+	OR	A		; check for error
+	JR	Z,WRSTMPX	; ..if not, jump to exit subroutine
+	CALL	EPRINT		;   else, display msg
+	DEFB	CR,LF,BEL,'Directory write error'
+	DEFB	0
+	JR	FINISH
+
+WRSTMPX: LD	BC,(STMPCUR)	; get current stamp #
+	INC	BC		; increase
+	LD	(STMPCUR),BC	; ..and save again
+	POP	HL		; restore regs
+	POP	DE
+	POP	BC
+	RET
+
+
+	; select disk drive that was logged at start of program
+	; using BIOS fn first, then BDOS fn
+SELODRV: LD	A,(OLDDRV)	; get # of old logged disk drive
+	LD	C,A		; in C
+	LD	B,0
+	PUSH	BC		; save it
+	LD	DE,1		; ???  ##### not necessary
+	CALL	BIOSELD		; select disk drive (through BIOS)
+	POP	DE		; restore drive # in E
+				; ..and fall through
+
+
+	; call BDOS fn #14 SELDSK
+	;  in: E= drive #
+BDSELD:	LD	C,14
+	JP	CPMBDOS		; jump BDOS and let return from there
+
+
+;::::: FINISH PROCESSING DISK
+
+FINISH:	CALL	SELODRV		; restore previously logged drive
+				; ..and fall through
+
+DSKDONE: LD	A,(CURRDSK)
+	SUB	40H		; make numeric
+	LD	B,A		; use value as counter
+	SCF			; set C-flag
+	LD	HL,0		; start with all bits cleared
+DSKDN0:	ADC	HL,HL		; shift Carry bit into position
+	DJNZ	DSKDN0		; loop till done
+	EX	DE,HL		; bit mask in DE (selected disk drive)
+	LD	C,37		; BDOS fn #37 RESDSK reset disk system
+	CALL	CPMBDOS
+	LD	A,(RUNMODE)	; get mode
+	OR	A		; running in cmdline mode ?
+	JP	NZ,START0	; ..if not, loop for next drive
+				;   else, fall through and exit
+
+
+;::::: EXIT PROGRAM
+
+EXIT:	LD	SP,(STACK)	; restore stack
+	RET			; ..and return to system
+
+
+;::::: SUPPORT FUNCTIONS
+
+	; EVALCMD Evaluate command line
+	; based on tokens provided by CP/M parser in FCB #1/#2
+	;  in: A= # of current drive
+	; out: A= 0x00 cmdline mode, 0xFF interactive mode
+	; Syntax: [d:][volname] [/][P | Z | Q]
+EVALCMD: XOR	A		; clear A
+	LD	(CURRDSK),A	; ..and variables
+	LD	(RUNMODE),A
+	LD	HL,CPMFCB	; set ptr to standard FCB #1
+	LD	A,(HL)		; get drive #
+	OR	A		; check if zero
+	JR	Z,ECMD1		; ..if so, skip over
+	ADD	A,40H		;   else, make ascii
+	CP	'P'+1		; check if valid
+	JR	NC,ECMD1	; ..if not, skip over
+	LD	(CURRDSK),A	;   else, save disk drive letter
+ECMD1
+	INC	HL		; move ptr fwd
+	LD	A,(HL)		; get char
+	LD	DE,VOLNAME	; ptr to buffer for volume name
+	LD	B,11		; max. 11 chars
+	CP	' '		; is it <SP> ?
+	JR	Z,ECMD2		; ..if so, jump to continue
+	CP	'/'		; is it option or help request ?
+	JR	NZ,ECMD1V	; ..if not, jump to copy volume name
+	INC	HL		; else, move ptr fwd
+	CP	(HL)		; and check next char
+	JP	Z,HLPEXIT	; ..if also '/', jump to display help
+	JR	ECMD3OPT	;   else, this char indicates an option
+
+	; volume name found, copy it
+ECMD1V0: LD	A,(HL)		; get char
+ECMD1V:	CP	' '		; is it <SP> ?
+	JR	Z,ECMD2		; ..if so, jump to continue
+	LD	(DE),A		; save char in VOLNAME buffer
+	INC	DE		; move both ptr's forward
+	INC	HL
+	DJNZ	ECMD1V0		; loop till done
+
+	; eval 2nd cmdline token (FCB #2)
+ECMD2:	XOR	A		; clear A
+	LD	(DE),A		; store in VOLNAME to indicate no name
+	LD	HL,CPMFCB2+1	; set ptr to standard FCB #2, after drive letter
+	LD	A,(HL)		; get char
+	CP	'/'		; is it option or help request ?
+	JR	NZ,ECMD3OPT	; ..if not, letter must be an option, so skip over
+	INC	HL		; else, move ptr fwd
+	CP	(HL)		; and check next char
+	JP	Z,HLPEXIT	; ..if also '/', jump to display help
+
+	; eval option and done
+ECMD3OPT: CALL	EVLOPT		; eval option
+	RET	NZ		; if error, switch to interactive mode and return
+				;   else, continue final check
+	LD	HL,CPMFCB	; set ptr to standard FCB #1
+	LD	A,(HL)		; get byte
+	OR	A		; is it zero ?
+	JR	Z,ECMDIM	; ..if so, jump done (interactive mode)
+	INC	HL		; move ptr fwd
+	LD	A,(HL)		; get char
+	CP	' '		; is it <SP> ?
+	JR	NZ,ECMDCM	; ..if not, jump done (cmdline mode)
+	LD	A,(CPMFCB2+1)	; get char of 2nd token
+	CP	' '		; is it <SP> ?
+	JR	NZ,ECMDCM	; ..if not, jump done (cmdline mode)
+				;   else, fall through (interactive mode)
+
+ECMDIM:	OR	0FFH		; set status (interactive mode)
+	RET
+ECMDCM:	XOR	A		; set status (cmdline mode)
+	RET
+
+
+	; evaluate _one_ option on cmdline
+	;  in: HL= ptr to char  (already behind a leading '/')
+	; out: A= 0x00 cmdline mode, 0xFF interactive mode
+	;      Z-flag reset (NZ) in case of error, i.e. interactive mode
+	; possible flags are /Q (quiet),  /P (P2Dos stamps),  /Z (NZTime stamps)
+EVLOPT:	LD	B,7		; max. 7 chars
+
+EVLOPTQ: LD	A,(HL)		; get char
+	CP	'Q'		; option /Q - quiet ?
+	JR	NZ,EVLOPTP	; ..if not, jump to check next option
+	LD	A,(PRGQFLG)	; get program quiet flag
+	XOR	0FFH		; toggle
+	LD	(PRGQFLG),A	; ..and save back
+	JR	EVLONXT		; jump to continue
+
+EVLOPTP: CP	'P'		; option /P - P2Dos stamps ?
+	JR	NZ,EVLOPTZ	; ..if not, jump to check next option
+	XOR	A		; clear A
+	LD	(STMPTYP),A	; ..and store stamp type
+	JR	EVLONXT		; jump to continue
+
+EVLOPTZ: CP	'Z'		; option /Z - NZTime stamps ?
+	JR	NZ,EVLONX1	; ..if not, jump to check for whitespace
+	OR	0FFH		; set A= 0xFF
+	LD	(STMPTYP),A	; store stamp type
+				; ..and fall through to read next char
+
+EVLONXT: INC	HL		; move ptr fwd
+	LD	A,(HL)		; get char
+				; options are separated by whitespace
+EVLONX1: CP	' '		; is it <SP> ?
+	JR	Z,EVLOXIT	; ..if so, jump to exit loop
+	CP	TAB		; is it <TAB> ?
+	JR	Z,EVLOXIT	; ..if so, jump to exit loop
+	JR	NZ,EVLOERR	;   else, invalid option char found
+	DJNZ	EVLOPTQ		; loop till done
+
+EVLOXIT: XOR	A		; set return code 0x00 (clear A and flags)
+	RET
+
+EVLOERR: LD	A,(PRGQFLG)	; get program quiet flag
+	OR	A		; running in verbose mode ?
+	LD	A,BEL
+	CALL	Z,COUT		; ..if so, notify user
+	CALL	EPRINT
+	DEFB	CR,LF,'+++ Unrecognized Option "'
+	DEFB	0
+	LD	A,(HL)
+	CALL	COUT
+	CALL	EPRINT
+	DEFB	'" ... Setting Interactive'
+	DEFB	0
+	OR	0FFH		; set return code 0xFF
+	RET
+
+
+	; get console input
+	; and check for abort request
+CINPUT:	CALL	CAPIN		; get char and capitalize
+	CP	CTRLC		; is it <Ctrl-C> ?
+	JP	Z,EXIT
+	CP	ESC		; is it <ESC> ?
+	JP	Z,EXIT
+	CP	'a'		; below 'a' ?  (not possible, CAPIN capitalizes)
+	RET	C
+	CP	'z'+1		; between lowercase 'a' and lowercase 'z' ?
+	RET	NC
+	AND	01011111b	; remove bit 5 to capitalize
+	RET
+
+
+	; ##### unreferenced code (not used)
+	; copy 32 (0x20) bytes from (HL) to (DE)
+	LD	B,32
+UNUSED1: LD	A,(HL)
+	LD	(DE),A
+	INC	HL
+	INC	DE
+	DJNZ	UNUSED1
+	RET
+	; #####
+
+
+	; fill memory with zero, or byte
+	;  in: A= byte
+	;      B= # of bytes
+	;      HL= target addr
+FILLZ:	XOR	A		; clear A
+FILLA:	LD	(HL),A		; store byte
+	INC	HL		; move ptr fwd
+	DJNZ	FILLA		; loop
+	RET
+
+
+	; verbose print - print string to CON: if quiet flag is off
+	;  in: (Stack) contains start addr of nul-terminated string
+PVBOSE:	LD	A,(PRGQFLG)	; get program quiet flag
+	OR	A		; running in verbose mode ?
+	JP	Z,EPRINT	; ..if so, jump to print and let return from there
+	EX	(SP),HL		;   else, swap HL and top-of-stack
+PVBOSE0: LD	A,(HL)		; get char
+	INC	HL		; move ptr fwd
+	OR	A		; is byte = zero ?
+	JR	NZ,PVBOSE0	; ..if not, loop
+	EX	(SP),HL		;   else, swap back
+	RET
+
+
+	; entry points for indirect BIOS calls
+	; BC is loaded with absolute offset from WBOOT (fn #1)
+	; to respective jump instruction, i.e. 3 bytes per fn
+BIOSELD: PUSH	BC
+	LD	BC,3*8		; fn #9 SELDSK select disk
+	JR	BIOSFN
+
+BIOSTTR: PUSH	BC
+	LD	BC,3*9		; fn #10 SETTRK set track
+	JR	BIOSFN
+
+BIOSTSE: PUSH	BC
+	LD	BC,3*10		; fn #11 SETSEC set sector
+	JR	BIOSFN
+
+BIOSTDM: PUSH	BC
+	LD	BC,3*11		; fn #12 SETDMA set buffer addr
+	JR	BIOSFN
+
+BIOREAD: PUSH	BC
+	LD	BC,3*12		; fn #13 READ read one sector (not used)
+	JR	BIOSFN
+
+BIOWRIT: PUSH	BC
+	LD	BC,3*13		; fn #14 WRITE write one sector
+	JR	BIOSFN
+
+BIOSTRN: PUSH	BC
+	LD	BC,3*15		; fn #16 SECTRN sector translation
+	JR	BIOSFN
+
+
+	; call BIOS fn indirectly
+	;  in: BC= offset to fn in Bios jump table
+BIOSFN:	EX	(SP),HL		; swap HL and top-of-stack (= prev. BC)
+	PUSH	HL		; save HL (prev. BC)
+	LD	HL,(CPMBIOS+1)	; Bios base addr
+	ADD	HL,BC		; add offset to fn #
+	POP	BC		; restore BC
+	EX	(SP),HL		; swap HL and top-of-stack again
+	RET			; "call" by returning to Bios fn
+
+
+UNUSED2:
+	DEFB	0,0,0,0,0,0	; ##### unreferenced chunk of data
+	DEFB	'!!!TIME&DAT'	; obviously not used
+	DEFB	0,0,0,0,0,0,0,0
+	DEFB	0,0,0,0,0,0,0,0
+	DEFB	0,0,0,0,0,0,0,0
+
+
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::
+; Z3LIB - 0x08a7
+; SYSLIB - 0x091a
+; end addr 0x09e5 (begin DSEG)
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+	DSEG
+
+STMPTYP:	DEFB	0	; stamp type flag, 0x00 = P2Dos, 0xFF = NZTime
+PRGQFLG:	DEFB	0	; program quiet flag, 0x00 = verbose
+VOLNAME:	DEFS	12	; buffer for volume name, 11 bytes + <NUL> terminator
+
+RUNMODE:	DEFB	0	; indicator, 0x00 = cmdline mode / 0xFF = interactive mode
+OLDDRV:		DEFB	0	; logged drive at program start
+CURRDSK:	DEFB	0	; current disk drive letter
+
+WSPC:				; workspace starts here
+DIRMAX:		DEFW	0	; max. # of dir entries (from DPH +1)
+STMPMAX:	DEFW	0	; max. # of stamp entries (= DIRMAX / 4)
+STMPCUR:	DEFW	0	; current # of stamp entry (used as counter)
+SKEWTBL:	DEFW	0	; addr of skew table (from DPH)
+
+		DEFS	070H	; room for stack
+STACK:		DEFW	0	; stack storage location
+
+	END
+
+
+;************************************************************************
+; Remarks jxl:
+;   HASHINI.COM, included in available B/P Bios package(s), was dis-
+; assembled and extensively commented. Labels are up to seven chars long
+; to comply with M-REL standards. However, it is recommended to use SLR
+; tools that support labels up to sixteen chars.
+;   In its current state, the compiled/linked file matches exactly the
+; original SHOWHD.COM, i.e. no changes to the source were made. Possible
+; optimisations detected during disassembly are marked with "#####" in the
+; comment. It is fair to say that the program seems to be in an early
+; stage; as the version number indicates. Apparently, provisions were made
+; to test exitence, or even generate a DateStamper !!!TIME&.DAT file
+; (which is not the case right now.)
+;   The program supports an interactive and a command line mode. Labels
+; start with "IM" to indicate code specifically for interactive mode.
+;************************************************************************

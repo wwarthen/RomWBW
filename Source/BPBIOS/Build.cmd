@@ -2,6 +2,7 @@
 setlocal
 
 pushd ZCPR33 && call Build || exit /b & popd
+pushd UTIL && call Build || exit /b & popd
 
 set TOOLS=..\..\Tools
 set PATH=%PATH%;%TOOLS%\zxcc;%TOOLS%\cpmtools;

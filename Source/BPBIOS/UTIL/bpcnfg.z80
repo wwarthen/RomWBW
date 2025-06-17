@@ -1,0 +1,4539 @@
+	TITLE	"Change B/P Bios Configuration Settings"
+;************************************************************************
+;*  B P C O N F I G							*
+;* Set user-configurable parameters in a B/P Bios			*
+;*  by Harold F. Bower and Cameron W. Cotrill				*
+;*----------------------------------------------------------------------*
+;* Disassembly:	jxl					Nov 2024	*
+;*		public release 1.0			Apr 2025	*
+;*		see remarks at the end					*
+;*----------------------------------------------------------------------*
+;* LINK with Version 4 libraries: VLIB, Z3LIB, SYSLIB			*
+;*									*
+;* A>Z80ASM BPCNFG/RS							*
+;* A>SLRNK BPCNFG/N,/A:100,/D:3A55,BPCNFG,VLIBS/S,Z3LIBS/S,SYSLIBS/S,/E	*
+;************************************************************************
+
+VER	EQU	21
+REV	EQU	'a'
+
+DATE	MACRO
+	DEFB	'21 Apr 97'
+	ENDM
+
+
+CTRLC	EQU	03H		; Control-C character
+BEL	EQU	07H		; Bell character
+BS	EQU	08H		; Backspace character
+TAB	EQU	09H		; Tab character
+LF	EQU	0AH		; Line Feed character
+CR	EQU	0DH		; Carriage Return character
+CTRLZ	EQU	1AH		; Control-Z character (end of file)
+ESC	EQU	1BH		; Escape character
+
+CPMBIOS	EQU	0		; CP/M BIOS warm boot (JP)
+CPMBDOS	EQU	5		; CP/M BDOS entry point (JP)
+CPMFCB	EQU	5CH		; CP/M standard FCB #1 (+1 filename, +9 filetype)
+CPMFCB2	EQU	6CH		; CP/M standard FCB #2
+
+
+; For SYSLIB make visible...
+	PUBLIC	CIN
+
+; From VLIB Get..
+	EXTRN	Z3VINIT, VPRINT, CLS, VPSTR, EREOL
+
+; From Z3LIB Get..
+	EXTRN	WHRENV, GETNAME, PRTNAME, ZFNAME, FCB1CHK, Z3LOG
+
+; From SYSLIB Get..
+	EXTRN	RETUD, LOGUD, CODEND, COUT, CRLF, PAFDC, PHLFDC, PHL4HC, PAFDC, PFN3, EVAL
+	EXTRN	CAPIN, CAPINE, INLINE, SETDMA, F$EXIST, F$OPEN, R$READ, F$WRITE, F$CLOSE, F$READ
+
+
+;::::: PROGRAM START
+
+	ORG	100H
+	CSEG
+
+
+BPCNFG:	JP	START		; bypass header
+	DEFB	'Z3ENV'		; this is a ZCPR3 utility
+	DEFB	1		; show external environment
+
+ENVADR:	DEFW	0h		; addr of Z3 environment
+	DEFW	BPCNFG		; type 4 filler
+	DEFB	'BPCNFG  '	; configuration name
+	DEFB	0
+FTYPE:	DEFB	'IMG'		; standard file types
+	DEFB	'CNF'
+
+START:	LD	(STACK),SP	; save stack pointer
+	LD	SP,STACK	; ..and set local stack
+	CALL	RETUD		; get currently logged drive/user
+	LD	(OLDDU),BC	; ..store
+	CALL	CODEND		; determine begin of WSPC
+	LD	(WSPCBEG),HL	; ..store
+	LD	(WRKSTRT),HL	; ..plus a copy to work with
+	EX	DE,HL		; clear workspace area up to 0x8000
+	LD	HL,8000H
+	OR	A
+	SBC	HL,DE		; calc length
+	LD	C,L
+	LD	B,H
+	DEC	BC		; actual bytecount is one less
+	LD	L,E		; restore HL
+	LD	H,D
+	INC	DE		; move fwd
+	LD	(HL),0		; set first byte to 0x00
+	LDIR			; ..clear
+
+	; save 2nd token of cmdline (script file)
+	LD	HL,CPMFCB2	; ptr to 2nd token of cmdline
+	LD	DE,CFFCB	; ptr to local FCB
+	LD	BC,16		; copy 16 bytes
+	LDIR
+	CALL	CFINFT		; add standard filetype, if necessary
+
+	; find/init Z3 Environment
+	LD	HL,(CPMBDOS+1)
+	CALL	WHRENV		; locate Env descriptor
+	LD	(ENVADR),HL	; ..save addr
+	CALL	Z3VINIT		; and init for VLIB/Z3LIB routines
+	CALL	GETNAME		; get actual program name
+	CALL	GETQFLG		; get quiet flag
+	AND	A
+	JR	NZ,START0	; ..if quiet, skip over
+
+	; display message (verbosely)
+	CALL	VPRINT
+	DEFB	CR,LF,1,'B/P CONFIG Utility',2,'  V'
+	DEFB	VER/10+'0','.',VER MOD 10 + '0',REV,'   '
+	DATE
+	DEFB	CR,LF,'    Copyright 1991-3 by H.F.Bower/C.W.Cotrill',CR,LF
+	DEFB	0
+
+	; init BIOS shortcuts and evaluate cmdline (FCB #1)
+START0:	LD	HL,(CPMBIOS+1)	; ptr to BIOS WBOOT JP
+	LD	A,8*3		; ..skip 8 JP's
+	CALL	ADDHLA		; HL= ptr to JP of BIOS fn #9 (SELDSK)
+	LD	DE,BIOSELD	; target addr
+	LD	BC,8*3		; make local copies of 8 fn jumps
+	LDIR
+	LD	A,(CPMFCB+1)	; get first cmdline token from FCB
+	CP	'/'		; is this a help request ?
+	JP	Z,HELP		; ..if so, show help screen
+	CP	'?'		; is it an ambiguous filename ?  (option '*' is expanded)
+	LD	C,'M'
+	JR	Z,CHKMOD1	; ..if so, jump to (M)emory config
+	CP	' '		; <SP> ?
+	LD	C,'I'
+	JP	NZ,CHKMOD6	; ..if not, jump to (I)mage config
+	LD	A,(CPMFCB)	;   else get drive
+	OR	A		; is it zero ?
+	JR	Z,CHKMODE	; ..if so, jump to display options
+	ADD	A,40H		;   else, convert to ascii letter
+	LD	C,'D'
+	JR	CHKMOD4		; ..and jump to (D)isk config
+
+	; --- Check running mode
+CHKMODE: CALL	VPRINT
+	DEFB	CR,LF,'  Configure Memory (M), Disk (D), or Image (I) ? : '
+	DEFB	0
+	CALL	GETINP
+	LD	C,A		; keep user input
+	CP	'M'		; is it 'M' ?
+	JR	NZ,CHKMOD2	; ..if not, jump to next
+
+CHKMOD1: LD	A,C		; restore user input
+	LD	(RUNMODE),A	; save (confirmed) mode
+	CALL	RDMEM		; read B/P Bios of running system
+	JP	CHKMOD9
+
+CHKMOD2: CP	'D'		; is it 'D' ?
+	JR	NZ,CHKMOD5	; ..if not, jump to next
+	CALL	VPRINT
+CHKMOD3: DEFB	CR,LF,TAB,'Disk Drive Letter (A..P) : '
+	DEFB	0
+	CALL	GETINP		; get input
+	CALL	CHKDLTR		; is a valid drive letter ? ('A'..'P')
+	JR	C,CHKMOD3	; ..if not, ask for new input
+CHKMOD4: PUSH	AF		; save AF
+	LD	A,C		; restore user input
+	LD	(RUNMODE),A	; save (confirmed) mode
+	POP	AF		; restore AF (drive)
+	CALL	RDDSK		; read system tracks and find B/P Bios
+	JR	CHKMOD9
+
+CHKMOD5: CP	'I'		; is it 'I' ?
+	JP	NZ,CHKMODE	; ..if not, loop ask user again
+	CALL	VPRINT
+	DEFB	CR,LF,TAB,'Image File to Configure : '
+	DEFB	0
+	CALL	CINPUTL		; get input (inline editor)
+	JP	Z,EXIT
+	LD	DE,CPMFCB	; ptr to CP/M standard FCB #1
+	CALL	ZFNAME		; parse FCB
+	OR	A
+	JR	NZ,CHKMOD7	; ..if error, display msg and quit program
+CHKMOD6: LD	A,C		; restore user input
+	LD	(RUNMODE),A	; save (confirmed) mode
+	CALL	FCB1CHK		; check 1st cmdline token
+	JR	Z,CHKMOD8	; ..if valid filename, skip over
+
+CHKMOD7: CALL	E$MSG
+	CALL	VPRINT
+	DEFB	'Error in File Name Parse !'
+	DEFB	0
+	JP	EXIT
+CHKMOD8: CALL	RDIMG		; read image file
+
+	; fall through and try to open script file
+CHKMOD9: XOR	A
+	LD	(CFBYTE),A	; clear current byte
+	LD	A,(CFFCB+1)	; get first char of script file name
+	CP	' '		; is it <SP> ?
+	CALL	NZ,CFINOPN	; ..if not, open script file
+
+	; *
+
+
+;::::: MENU 0 - MAIN
+
+
+M0MAIN:	LD	SP,STACK	; reset SP to local stack
+	XOR	A			; clear A
+	LD	(CFMENU),A		; ..and store as indicator
+	CALL	CLS
+	CALL	VPRINT
+	DEFB	CR,LF,'Main Menu  -  Configuring '
+	DEFB	0
+
+	; eval user selection
+	; configure (M)emory, (D)isk, or default to (I)mage
+	LD	A,(RUNMODE)
+	CP	'M'
+	JR	NZ,M0MAIN1
+	CALL	VPRINT
+	DEFB	'Running Memory'
+	DEFB	0
+	JR	M$BVER
+M0MAIN1: CP	'D'
+	JR	NZ,M0MAIN2
+	CALL	VPRINT
+	DEFB	'Drive '
+	DEFB	0
+	LD	A,(DISKNO)	; get disk number
+	ADD	A,40H		; ..convert to ascii letter for display
+	CALL	COUT
+	LD	A,':'
+	CALL	COUT
+	CALL	VPRINT
+	DEFB	' Boot Sectors'
+	DEFB	0
+	JR	M$BVER
+M0MAIN2: CALL	VPRINT
+	DEFB	'Image File  ['
+	DEFB	0
+	LD	BC,(IMGDU)
+	LD	A,B
+	ADD	A,'A'
+	CALL	COUT
+	LD	A,C
+	CALL	PAFDC		; print byte in A as 1-3 decimal chars
+	LD	A,':'
+	CALL	COUT
+	LD	DE,CPMFCB+1	; filename in CP/M standard FCB
+	CALL	PFN3		; display fn/ft on CON:
+	LD	A,']'
+	CALL	COUT
+
+	; msg B/P Bios Vers x.x
+M$BVER:	CALL	VPRINT
+	DEFB	CR,LF,'        Bios Ver '
+	DEFB	0
+	LD	A,(BPVERS)	; get version #
+	PUSH	AF		; save AF
+	RRCA			; reverse nybbles in A
+	RRCA
+	RRCA
+	RRCA
+	CALL	PLOWAX		; print lower nybble as hex
+	LD	A,'.'
+	CALL	COUT
+	POP	AF		; restore AF
+	CALL	PLOWAX		; ..and print lower nybble as hex
+
+	; display Main menu
+	CALL	VPRINT
+	DEFB	CR,LF,LF,'  ',1,' 1 ',2,'  System Options'
+	DEFB	CR,LF,LF,'  ',1,' 2 ',2,'  Character IO Options'
+	DEFB	CR,LF,LF,'  ',1,' 3 ',2,'  Floppy Subsystem Options'
+	DEFB	CR,LF,LF,'  ',1,' 4 ',2,'  Hard Disk Subsystem Options'
+	DEFB	CR,LF,LF,'  ',1,' 5 ',2,'  Logical Drive Layouts'
+	DEFB	CR,LF,LF,'  ',1,' 6 ',2,'  Configure from Script File'
+	DEFB	0
+
+M0SLCT:	LD	A,'6'		; max. possible option in this menu as ascii number
+	CALL	MSELECT
+	OR	A
+	JR	Z,WRCONF
+	CP	'1'
+	JP	Z,M1SYS
+	CP	'2'
+	JP	Z,M2CIO
+	CP	'3'
+	JP	Z,M3FD
+	CP	'4'
+	JP	Z,M4HD
+	CP	'5'
+	JP	Z,M5DL
+	CP	'6'
+	JP	Z,M6CNF
+	CALL	CFEVAL		; eval script file input
+	JR	M0SLCT		; loop
+
+	; write configuration
+WRCONF:	CALL	VPRINT
+	DEFB	CR,LF,'..Writing New Configuration to '
+	DEFB	0
+	LD	A,(RUNMODE)	; get mode
+	CP	'D'		; config mode (D)rive ? (system tracks)
+	JR	NZ,WRCONF1	; ..if not, jump to next
+
+	CALL	VPRINT
+	DEFB	'Drive : '
+	DEFB	0
+	LD	A,(DISKNO)	; get disk number
+	ADD	A,40H		; convert to ascii letter for display
+	CALL	COUT
+	CALL	WRDSK		; write to disk
+	JR	WRCONF3		; ..and exit
+WRCONF1: CP	'M'		; config mode (M)emory ? (running system)
+	JR	NZ,WRCONF2	; ..if not, jump to next
+
+	CALL	VPRINT
+	DEFB	'Memory..'
+	DEFB	0
+	CALL	WRMEM		; write to memory
+	JR	WRCONF3		; ..and exit
+WRCONF2: CALL	VPRINT		; config mode (I)mage
+	DEFB	' : '
+	DEFB	0
+	LD	DE,CPMFCB+1	; filename in CP/M standard FCB
+	CALL	PFN3		; display fn.ft on CON:
+	CALL	VPRINT
+	DEFB	'..'
+	DEFB	0
+	CALL	WRIMG		; write to image file
+WRCONF3: LD	BC,(OLDDU)
+	CALL	LOGUD		; restore previously logged DU:
+	CALL	CRLF
+	JP	EXIT
+
+	; *
+
+
+;::::: MENU 1 - SYSTEM OPTIONS (display)
+
+
+M1SYS:	LD	A,1
+	LD	(CFMENU),A	; store flag (sub-)menu entered
+	CALL	CLS
+	CALL	VPRINT
+	DEFB	CR,LF,'Menu 1 - System Options'
+	DEFB	CR,LF,LF,LF,'  ',1,' 1 ',2,'  System Drive    = '
+	DEFB	0
+	LD	A,7FH		; offset to SYSDRV in Config area
+	CALL	WSPCPTR		; set ptr
+	LD	A,(HL)		; get system drive #
+	ADD	A,'A'		; ..convert to ascii letter
+	CALL	COUT		;   display it
+	CALL	VPRINT
+	DEFB	':',CR,LF,LF,'  ',1,' 2 ',2,'  Startup Command = "'
+	DEFB	0
+	LD	A,8EH		; offset to AUTOCMD in Config area
+	CALL	WSPCPTR		; set ptr
+	INC	HL		; get past leading 'DEFB 8'
+	CALL	VPSTR		; ..and display nul-terminated string
+	CALL	VPRINT
+	DEFB	'"',CR,LF,LF,'  ',1,' 3 ',2,'  Reload Constant = '
+	DEFB	0
+	LD	A,9FH		; offset to RELOD0 in Config area (const counter/timer)
+	CALL	WSPCPTR		; set ptr
+	LD	A,(HL)		; get low byte of 16-bit value
+	INC	HL		; ptr fwd
+	LD	H,(HL)		; get high byte
+	LD	L,A
+	CALL	PHLFDC		; display value in HL as dec
+	CALL	VPRINT
+	DEFB	' ('
+	DEFB	0
+	CALL	PHL4HC		; ..and as hex
+	CALL	VPRINT
+	DEFB	'H)',
+	DEFB	LF,CR,LF,'  ',1,' 4 ',2,'  Processor Speed = '
+	DEFB	0
+	LD	A,9DH		; offset to SPEED in Config area
+	CALL	WSPCPTR		; set ptr
+	LD	A,(HL)		; get processor speed
+	CALL	PAFDC		; ..and display it
+	CALL	VPRINT
+	DEFB	' MHz'
+	DEFB	CR,LF,LF,'  ',1,' 5 ',2,'  Memory Waits = '
+	DEFB	0
+	LD	A,9EH		; offset to WAITS in Config area (MEM + IO combined)
+	CALL	WSPCPTR		; set ptr
+	LD	A,(HL)		; get value
+	RRCA			; reverse nybbles in A
+	RRCA
+	RRCA
+	RRCA
+	AND	00001111B	; mask off upper nybble
+	CALL	PAFDC		; ..and display value
+	CALL	VPRINT
+	DEFB	',  IO Waits = '
+	DEFB	0
+	LD	A,(HL)		; get value
+	AND	00001111B	; mask off upper nybble
+	CALL	PAFDC		; ..and display value
+	LD	A,'6'		; max. possible option in this menu as ascii number
+				; (hidden option 6: Menu 1.1 System Banks)
+	CALL	MSELECT
+	OR	A
+	JP	Z,M0MAIN
+
+
+;::::: MENU 1 - SYSTEM OPTIONS (configure)
+
+	; subsequent labels start with "SY_"
+M1CFG:	CP	'1'		; option '1' selected ?
+	JR	NZ,SY_CMD	; ..if not, jump to next
+	CALL	CRLF
+
+	; --- option 1 System Drive
+SY_DRV:	CALL	VPRINT
+	DEFB	CR,TAB,TAB,'System Drive Letter',TAB,TAB,'['
+	DEFB	0
+	LD	A,7FH		; offset to SYSDRV in Config area
+	CALL	WSPCPTR		; set ptr
+	LD	A,(HL)		; get system drive #
+	ADD	A,'A'		; ..convert to ascii letter
+	CALL	COUT		;   display it
+	CALL	VPRINT
+	DEFB	']',TAB,': '
+	DEFB	0
+	CALL	EREOL		; clear CON: to end of line
+	CALL	GETINP
+	JP	Z,M1SYS		; ..if no input, jump display menu again
+	CP	CR		; <CR> entered ?
+	JP	Z,M1SYS		; ..if so, jump display menu
+	CALL	CHKDLTR		; check is drive letter A..P ?
+	JR	NC,SY_DRV1	; ..if so, jump to continue
+	CALL	CFEVAL		; eval script file input
+	JR	SY_DRV		; loop (ask for new input)
+SY_DRV1: SUB	'A'		; convert ascii to number
+	LD	C,A
+	LD	A,7FH		; offset to SYSDRV in Config area
+	CALL	WSPCPTR		; set ptr in WSPC
+	LD	(HL),C		; store new SYSDRV value
+	JP	M1SYS		; loop, jump to display menu
+
+	; --- option 2 Startup Command
+SY_CMD:	CP	'2'		; option 2 selected ?
+	JR	NZ,SY_TMR	; ..if not, jump to next
+	CALL	CRLF
+SY_CMD1: CALL	VPRINT
+	DEFB	CR,TAB,TAB,'Enter New Startup Command : '
+	DEFB	0
+	CALL	EREOL		; clear CON: to end of line
+	CALL	CINPUTL		; get input (inline editor)
+	JR	Z,SY_CMD1	; ..if empty, jump ask for new input
+	EX	DE,HL		; DE= ptr input buffer
+	LD	A,8EH		; offset to AUTOCMD in Config area
+	CALL	WSPCPTR		; set ptr in WSPC
+	INC	HL		; move past leading 'DEFB 8'
+	EX	DE,HL		; swap pointers
+	LD	B,8		; copy up to 8 chars
+SY_CMD2: LD	A,(HL)		; get char from input buffer
+	OR	A		; is it a <NUL> ? (= end)
+	JR	Z,SY_CMD3	; ..if so, exit loop
+	LD	(DE),A		; store char in AUTOCMD
+	INC	HL		; move ptr's fwd
+	INC	DE
+	DJNZ	SY_CMD2		; ..and loop til done
+	JR	SY_CMD5		; at this point, 8 chars were copied
+				; no filling up with <SP>
+SY_CMD3: EX	DE,HL		; swap pointers (HL= AUTOCMD)
+SY_CMD4: LD	(HL),' '	; fill remaining bytes with <SP>
+	INC	HL
+	DJNZ	SY_CMD4
+SY_CMD5: JP	M1SYS		; loop, display menu
+
+	; --- option 3 Timer Reload Value
+SY_TMR:	CP	'3'		; option 3 selected ?
+	JR	NZ,SY_PRC	; ..if not, jump to next
+	CALL	CRLF
+SY_TMR1: CALL	VPRINT
+	DEFB	CR,TAB,TAB,'Timer Reload Value',TAB,'['
+	DEFB	0
+	CALL	EREOL		; clear CON: to end of line
+	LD	A,9FH		; offset to RELOD0 in Config area
+	CALL	WSPCPTR		; set ptr
+	LD	E,(HL)		; get low-byte of 16-bit value
+	INC	HL
+	LD	D,(HL)		; ..and high-byte
+	PUSH	HL		; save ptr
+	EX	DE,HL		; swap regs
+	CALL	PHLDCNV		; display value and ask for input
+	POP	HL		; restore ptr
+	JR	NC,SY_TMR2	; ..if input is valid, skip over
+	CALL	CFEVAL		; eval script file input
+	JR	SY_TMR1		; loop (ask for input)
+SY_TMR2: LD	(HL),D		; store high-byte of new value
+	DEC	HL		; move ptr back
+	LD	(HL),E		; ..and low-byte
+	JR	SY_CMD5		; jump to display menu again
+				; (use of two consecutive JR's saves one byte)
+
+
+	; --- option 4 Processor Speed
+SY_PRC:	CP	'4'		; was option 4 selected ?
+	JP	NZ,SY_WT	; ..if not, jump to next
+	CALL	CRLF
+SY_PRC1: CALL	VPRINT
+	DEFB	CR,TAB,TAB,'Processor Speed in MHz',TAB,'['
+	DEFB	0
+	CALL	EREOL		; clear CON: to end of line
+	LD	A,9DH		; offset to SPEED in Config area
+	CALL	WSPCPTR		; set ptr
+	LD	E,(HL)		; get Processor Speed
+	LD	D,0
+	PUSH	HL		; save ptr
+	EX	DE,HL		; swap regs
+	CALL	PHLDCNV		; display value and ask for input
+	POP	HL		; restore ptr
+	JR	C,SY_PRC2	; ..if input is invalid, jump
+	LD	A,D		;   else, evaluated input in DE
+	OR	A		; high-byte must be zero
+	JR	Z,SY_PRC3	; ..if zero, jump to continue
+SY_PRC2: CALL	CFEVAL		; eval script file input
+	JR	SY_PRC1		; loop (ask for input)
+SY_PRC3: LD	D,(HL)		; get new Processor Speed
+	LD	(HL),E		; ..and store value
+	PUSH	DE		;   also save it
+	CALL	VPRINT
+	DEFB	CR,LF,TAB,TAB,'   Scale Timer Constant?',TAB,'([Y]/N) : '
+	DEFB	0
+	CALL	GETINP		; get input
+	CP	'N'		; entered 'N' ?
+	POP	DE
+	JP	Z,M1SYS		; ..if so, exit and display menu again
+	LD	A,9FH		; offset to RELOD0 in Config area
+	CALL	WSPCPTR		; set ptr
+	LD	A,(HL)		; get low-byte of 16-bit value
+	INC	HL
+	LD	H,(HL)		; ..and high-byte
+	LD	L,A		; HL= constant for counter/timer refresh
+	LD	C,D		; Processor Speed in C
+	LD	B,0		; prepare BC as divisor
+	INC	C		; check if Processor Speed = 0
+	DEC	C
+	JP	Z,M1SYS		; ..if so, exit and display menu
+	PUSH	DE		;   else, save Processor Speed
+	LD	DE,0		; DE is quotient
+	OR	A		; clear Flags
+SY_PRC4: SBC	HL,BC		; division by subtraction
+	JR	C,SY_PRC5	; ..if below zero, exit loop
+	INC	DE		; increase counter (quotient)
+	JR	SY_PRC4		;   and loop
+SY_PRC5: POP	BC		; restore Processor Speed in BC
+	LD	HL,0		; set initial value
+SY_PRC6: ADD	HL,DE		; multiply by addition
+	DEC	C		; decrease counter
+	JR	NZ,SY_PRC6	; ..loop till done
+	EX	DE,HL		; swap regs (DE= new RELOD0 value)
+	LD	A,9FH		; offset to RELOD0 in Config area
+	CALL	WSPCPTR		; set ptr
+	INC	HL		; move ptr fwed
+	JP	SY_TMR2		; ..and re-use code to store value in DE
+
+	; --- option 5 Memory Waits
+SY_WT:	CP	'6'		; option 6 selected ?
+	JP	Z,M11ASK	; ..if so, jump to continue
+	CALL	CRLF		;   else, must be config of waits
+SY_WT1:	CALL	VPRINT
+	DEFB	CR,TAB,TAB,'Number of Memory Waits',TAB,'['
+	DEFB	0
+	CALL	EREOL
+	LD	A,9EH		; offset to WAITS in Config area
+	CALL	WSPCPTR		; set ptr
+	LD	A,(HL)		; get value
+	RRCA			; shift upper nybble to lower
+	RRCA			;   WAITS combines Mem (bits 7-4)
+	RRCA			;   and IO (bits 3-0) wait states
+	RRCA
+	AND	00001111B	; mask off higher nybble
+	LD	L,A		; Mem wait states in HL
+	LD	H,0
+	CALL	PHLDCNV		; display value and ask for input
+	JR	C,SY_WT2	; ..if input is not valid, jump
+	LD	A,D		; evaluated input in DE
+	OR	A		; high-byte must be zero
+	JR	NZ,SY_WT2	; ..if not, jump
+	LD	A,E
+	CP	00010000B	; check if value exceeds limit
+	JR	C,SY_WT3	; ..if not, skip over
+SY_WT2:	CALL	CFEVAL		; eval script file input
+	JR	SY_WT1		; loop (ask for new input)
+SY_WT3:	RLCA			; move new value to high nybble
+	RLCA
+	RLCA
+	RLCA
+	LD	C,A		; ..and remember it
+	CALL	CRLF
+SY_WT4:	CALL	VPRINT		; now IO waits
+	DEFB	CR,TAB,TAB,'Number of IO Waits',TAB,'['
+	DEFB	0
+	CALL	EREOL
+	LD	A,9EH		; offset to WAITS in Config area
+	CALL	WSPCPTR		; set ptr
+	LD	A,(HL)		; get value
+	PUSH	HL		; save ptr
+	AND	00001111B	; mask off high nybble (bits 3-0 = IO waits)
+	LD	L,A		; get value in HL
+	LD	H,0
+	CALL	PHLDCNV		; display value and ask for input
+	POP	HL		; restore ptr
+	JR	C,SY_WT5	; ..if input not valid, jump
+	LD	A,D		; evaluated input in DE
+	OR	A		; high-byte must be zero
+	JR	NZ,SY_WT5	; ..if not, jump
+	LD	A,E
+	CP	00010000B	; check if value exceeds limit
+	JR	C,SY_WT6	; ..if not, skip over
+SY_WT5:	CALL	CFEVAL		; eval script file input
+	JR	SY_WT4		; loop (ask for new input)
+SY_WT6:	OR	C		; combine values (C= Mem waits, A= IO waits)
+	LD	(HL),A		; store new value
+	JP	M1SYS		; ..loop, display menu
+
+	; *
+
+
+	; --- option 6 System Banks (hidden menu 1.1)
+M11ASK:	CALL	VPRINT		; ask for confirmation before entering menu
+	DEFB	CR,LF,TAB,'-- This is DANGEROUS...Proceed? (Y/[N]) : '
+	DEFB	0
+	CALL	GETINP		; get input
+	CP	'Y'		; entered 'Y' ?
+	JP	NZ,M1SYS	; ..if not, jump display main menu again
+				;   else, fall through
+
+
+;::::: MENU 1.1 - SYSTEM BANK NUMBERS (display)
+
+
+M11BNK:	CALL	CLS
+	CALL	VPRINT
+	DEFB	CR,LF,'Menu 1.1 - System Bank Numbers'
+	DEFB	CR,LF,LF,LF,'  ',1,' 1 ',2,'  TPA Bank #       = '
+	DEFB	0
+	LD	A,82H		; offset to TPABANK in Config area
+	CALL	WSPCPTR		; set ptr
+	LD	A,(HL)		; get TPABANK #
+	CALL	PAFDC		; ..display as decimal
+	CALL	VPRINT
+	DEFB	CR,LF,LF,'  ',1,' 2 ',2,'  System Bank #    = '
+	DEFB	0
+	LD	A,83H		; offset to SYSBNK in Config area
+	CALL	WSPCPTR		; set ptr
+	LD	A,(HL)		; get SYSBNK #
+	CALL	PAFDC		; ..and display
+	CALL	VPRINT
+	DEFB	CR,LF,LF,'  ',1,' 3 ',2,'  User Bank #      = '
+	DEFB	0
+	LD	A,81H		; offset to UABNK in Config area
+	CALL	WSPCPTR		; set ptr
+	LD	A,(HL)		; get UABNK #
+	CALL	PAFDC		; ..and display
+	CALL	VPRINT
+	DEFB	CR,LF,LF,'  ',1,' 4 ',2,'  RAM Drive Bank # = '
+	DEFB	0
+	LD	A,84H		; offset to RAMBNK in Config area
+	CALL	WSPCPTR		; set ptr
+	LD	A,(HL)		; get RAMBNK #
+	CALL	PAFDC		; ..and display
+	CALL	VPRINT
+	DEFB	CR,LF,LF,'  ',1,' 5 ',2,'  Maximum Bank #   = '
+	DEFB	0
+	LD	A,85H		; offset to MAXBNK in Config area
+	CALL	WSPCPTR		; set ptr
+	LD	A,(HL)		; get MAXBNK #
+	CALL	PAFDC		; ..and display
+	LD	A,'5'		; max. possible option in this menu as ascii number
+	CALL	MSELECT
+	OR	A		; valid option selected ?
+	JP	Z,M1SYS		; ..if not, jump to display system menu
+				;   else, fall through
+
+
+;::::: MENU 1.1 - SYSTEM BANKS (configure)
+
+M11CFG:	CALL	CRLF
+	SUB	'1'		; convert input (ascii) to zero-based index
+	LD	HL,BKOTBL	; ptr lookup table of offset values
+	CALL	ADDHLA		; adjust ptr
+	LD	A,(HL)		; ..and get offset
+	CALL	SB_BNK		; configure
+	JP	M11BNK		; loop, display menu
+
+	; Lookup table for offsets in config area
+	; to the different RAM banks
+BKOTBL:	DEFB	82H		; TPABNK
+	DEFB	83H		; SYSBNK
+	DEFB	81H		; UABNK
+	DEFB	84H		; RAMBNK
+	DEFB	85H		; MAXBNK
+
+
+	; --- configure System Banks
+SB_BNK:	LD	(SELBNK),A	; store offset
+SB_BNK1: CALL	VPRINT
+	DEFB	CR,TAB,'    Enter Bank Number',TAB,'['
+	DEFB	0
+	CALL	EREOL		; clear CON: to end of line
+	LD	A,(SELBNK)	; get offset value for selected RAM bank
+	CALL	WSPCPTR		; ..and set ptr in WSPC
+	LD	E,(HL)		; bank #
+	LD	D,0
+	PUSH	HL		; save ptr
+	EX	DE,HL		; swap regs
+	CALL	PHLDCNV		; display value and ask for input
+	POP	HL		; restore ptr
+	JR	C,SB_BNK1	; ..if input not value, loop
+	LD	A,D		; evaluated number in DE
+	OR	A		; high-byte must be zero
+	JR	NZ,SB_BNK1	; ..if not, loop ask for new input
+	LD	(HL),E		;   else, store new value
+	RET
+
+	; *
+
+
+;::::: MENU 2 - CHARACTER I/O (display)
+
+
+M2CIO:	LD	A,1
+	LD	(CFMENU),A	; store flag (sub-)menu entered
+	CALL	CLS
+	CALL	VPRINT
+	DEFB	CR,LF,'Menu 2 - Character IO Options'
+	DEFB	CR,LF,LF,LF,'  ',1,' 1 ',2,'  IOBYTE Assignment:'
+	DEFB	CR,LF,TAB,TAB,'Console   = '
+	DEFB	0
+	LD	A,7EH		; offset IOBYT in Config area
+	CALL	WSPCPTR		; set ptr
+	LD	A,(HL)		; get IO Byte
+	PUSH	AF		; ..and save
+	CALL	PIOASSG		; display name of assigned device
+	CALL	VPRINT
+	DEFB	CR,LF,TAB,TAB,'Auxiliary = '
+	DEFB	0
+	POP	AF		; restore IOBYT
+	PUSH	AF
+	RRCA			; shift bits 3-2 to position 1-0
+	RRCA
+	CALL	PIOASSG		; display name of assigned device
+	CALL	VPRINT
+	DEFB	CR,LF,TAB,TAB,'Printer   = '
+	DEFB	0
+	POP	AF		; restore IOBYT
+	RLCA			; ..and shift bits 7-6 to pos 1-0 (other direction)
+	RLCA
+	CALL	PIOASSG		; display name of assigned device
+	XOR	A		; nullify A
+	LD	(DEVASSG),A	; clear temp data storage
+M2CIO1:	CALL	IO_PTR		; ptr to DEVCFG table
+	LD	A,(HL)		; get byte
+	OR	A		; is it <NUL> ?
+	JR	Z,M2CFG		; ..if so, exit loop
+	LD	(DEVTBL),HL	;   else, save addr
+	LD	A,(DEVASSG)
+	INC	A		; counter +1
+	LD	(DEVASSG),A	; ..store
+	CP	6		; display additional <CR><LF> for first five devices
+	CALL	C,CRLF
+	CALL	VPRINT
+	DEFB	CR,LF,'  ',1,' '
+	DEFB	0
+	LD	A,(DEVASSG)
+	ADD	A,'1'		; convert number to ascii
+	CALL	COUT		; ..display
+	CALL	VPRINT
+	DEFB	' ',2,'  '
+	DEFB	0
+	LD	HL,(DEVTBL)	; ptr to DEVCFG (Char IO device table)
+	CALL	PIOPARM		; display parameters
+	JR	M2CIO1		; ..loop
+
+
+;::::: MENU 2 - CHARACTER I/O (configure)
+
+	; subsequent labels start with "IO_"
+M2CFG:	LD	A,(DEVASSG)	; get last device #
+	ADD	A,'1'		; convert to ascii
+	LD	(DEVLAST),A	; ..and store it (later used as max. option in this menu)
+	LD	A,(BPVERS)	; get B/P Bios version
+	CP	20H		; less than 2.0 ?
+	LD	A,(DEVLAST)
+	JR	C,IO_ASS	; ..if <2.0, swap devices not possible
+	CALL	VPRINT
+	DEFB	CR,LF,LF,'  ',1,' '
+	DEFB	0
+	LD	A,(DEVASSG)	; get last device # (num)
+	ADD	A,'2'		; ..convert to ascii +1 (adjust for menu option)
+	CALL	COUT
+	CALL	VPRINT
+	DEFB	' ',2,'  Swap Devices'
+	DEFB	0
+	LD	A,(DEVLAST)	; get last device # (ascii)
+	INC	A		; make max. possible option in this menu as ascii number
+
+	; --- configure IO Device Assignment (IOBYT)
+IO_ASS:	CALL	MSELECT
+	OR	A		; input not valid ?
+	JP	Z,M0MAIN	; ..if so, jump to main menu
+	CP	'1'		;   else, option 1 selected ?
+	JP	NZ,IO_SWP	; ..if not, jump to next
+	CALL	VPRINT
+	DEFB	CR,LF,TAB,'Set [C]onsole, [A]uxiliary, or [P]rinter : '
+	DEFB	0
+IO_ASS1: CALL	CAPINE		; get input
+	CP	CR		; is it <CR> ?
+	JP	Z,M2CIO		; ..if so, display menu 2 again
+	CP	'C'		; assign (C)onsole ?
+	JR	NZ,IO_ASS2	; ..if not, jump
+	CALL	CIOASSG		; configure CON IO Dev Assignment
+	JP	C,M2CIO		; ..if error, display menu again
+	LD	C,11111100B	; set bit mask
+	JR	IO_ASS5		; ..and finish
+IO_ASS2: CP	'A'		; assign (A)uxiliary ?
+	JR	NZ,IO_ASS3	; ..if not, jump
+	CALL	CIOASSG		; configure AUX IO Dev Assignment
+	JP	C,M2CIO		; ..if error, display menu again
+	RLC	B		; device number in B
+	RLC	B		; ..shift bits to position 3-2
+	LD	A,B		; copy to bits 5-4 by multiplication
+	ADD	A,A		; *2
+	ADD	A,A		; *4
+	ADD	A,B		; *5
+	LD	B,A		; B= AUX Out (bits 5-4) and In (bits 3-2)
+	LD	C,11000011B	; set bit mask
+	JR	IO_ASS5		; ..and finish
+IO_ASS3: CP	'P'		; assign (P)rinter ?
+	JR	Z,IO_ASS4	; ..if so, jump
+	CP	' '		;   else, <SP> entered ?
+	JP	Z,M2CIO		; ..then display menu again
+	CP	ESC		;   or <ESC> ?
+	JP	Z,M2CIO		; ..then also display menu again
+	CALL	CFEVAL		; eval script file input
+	CALL	VPRINT		; notify user, and loop
+	DEFB	BEL,BS
+	DEFB	0
+	JR	IO_ASS1
+IO_ASS4: CALL	CIOASSG		; configure PRT IO Dev Assignment
+	JP	C,M2CIO		; ..if error, display menu again
+	RRC	B		; device in B
+	RRC	B		; shift bits from pos 1-0 to 7-6
+	LD	C,00111111B	; set bit mask
+				; ..and fall through
+
+	; set new IO Dev Assignment
+IO_ASS5: LD	A,7EH		; offset to IOBYT in Config area
+	CALL	WSPCPTR		; set ptr
+	LD	A,(HL)		; get IOBYT
+	AND	C		; apply bit mask
+	OR	B		; combine with new assignment
+	LD	(HL),A		; ..and store back
+	JP	M2CIO		; loop display menu
+
+	; --- Swap Device Assignment
+IO_SWP:	PUSH	AF
+	LD	A,(DEVLAST)	; get last device # (ascii)
+	INC	A		; increase
+	LD	C,A		; this menu option is created dynamically
+	POP	AF
+	CP	C		; so check if selection matches
+	JP	NZ,IO_CFG	; ..if not, jump
+	CALL	VPRINT
+	DEFB	CR,LF,TAB,'Swap [2..'
+	DEFB	0
+	LD	A,(DEVLAST)	; get last device # (ascii)
+	CALL	COUT		; ..display
+	CALL	VPRINT
+	DEFB	'] : '
+	DEFB	0
+IO_SWP1: CALL	GETINP		; get input
+	JP	Z,M2CIO		; ..if empty, jump display menu again
+	CP	'2'		; entered value below '2' ?
+	JR	C,IO_SWP2	; ..if so, jump and loop
+	LD	HL,DEVLAST
+	DEC	A
+	CP	(HL)		;   else, also check above max.
+	JR	C,IO_SWP3	;   ..if not, jump to continue
+				;     else, fall through and loop
+IO_SWP2: CALL	VPRINT		; notify user (<BEL>), and remove char (<BS>)
+	DEFB	BS,BEL
+	DEFB	0
+	CALL	CFEVAL		; eval script file input
+	JR	IO_SWP1		; loop (ask for new input)
+IO_SWP3: SUB	'1'		; convert ascii to number (already reduced by 1 before)
+	LD	(DEV1SWP),A	; ..store it
+	CALL	VPRINT
+	DEFB	'  with [2..'
+	DEFB	0
+	LD	A,(DEVLAST)	; get ascii number of last device
+	CALL	COUT		; ..and display it
+	CALL	VPRINT
+	DEFB	'] : '
+	DEFB	0
+IO_SWP4: CALL	GETINP		; get input
+	JP	Z,M2CIO		; ..if empty, jump display menu again
+	CP	'2'		; check if input is below '2'
+	JR	C,IO_SWP5	; ..if so, jump and loop
+	LD	HL,DEVLAST
+	DEC	A
+	CP	(HL)		;   else, check if input is above max.
+	JR	C,IO_SWP6	;   ..if not, jump
+				;     else, fall through and loop
+IO_SWP5: CALL	VPRINT		; remove char (<BS>) and notify user (<BEL>)
+	DEFB	BS,BEL
+	DEFB	0
+	CALL	CFEVAL		; eval script file input
+	JR	IO_SWP4		; loop (ask for new input)
+IO_SWP6: SUB	'1'		; convert ascii to number (already reduced by 1, so only -'1')
+	LD	(DEVASSG),A	; ..and store
+	CALL	IO_PTR		; get ptr to entry in DEVCFG
+	PUSH	HL		; save
+	LD	A,(DEV1SWP)	; get device to swap
+	LD	(DEVASSG),A	; ..and store
+	CALL	IO_PTR		; get ptr to entry in DEVCFG
+	POP	DE		; restore 1st ptr
+	LD	B,16		; length of an entry in DEVCFG
+				; (swap is only displayed for version above 2.0
+				;  no additional check/adjustment of length needed)
+
+	; perform device swapping (copy bytes from one entry to the other)
+IO_SWP7: LD	C,(HL)		; get byte from entry #1
+	LD	A,(DE)		; get byte from entry #2
+	EX	DE,HL		; swap regs (ie. ptr's)
+	LD	(DE),A		; save bytes to other entry
+	LD	(HL),C
+	EX	DE,HL		; ..swap pointers back
+	INC	HL		; move fwd
+	INC	DE
+	DJNZ	IO_SWP7		; loop till done
+	JP	M2CIO		; finally, jump to display menu again
+
+
+	; --- Configure Char IO Device
+	; menu option entries are created dynamically according to existing devices
+	; A= selected option  ('1' is fixed, so devices start with '2')
+IO_CFG:	SUB	'2'		; convert selected option to device # (num)
+	LD	(DEVASSG),A	; ..store
+	CALL	IO_PTR		; display, and get ptr in DEVCFG
+	PUSH	HL		; move ptr to IX
+	POP	IX
+	LD	A,(HL)		; check if entry is valid (<> zero)
+	OR	A
+	JR	NZ,IO_CFG1	; ..if so, jump to continue
+	CALL	VPRINT		;   else, display msg and loop
+	DEFB	BEL,CR,LF,'-- Nothing There !! --'
+	DEFB	0
+	CALL	CFEVAL		; eval script file input
+	JP	M2CIO		; loop, display Char IO menu again
+
+
+	; IX= ptr to first byte of entry in DEVCFG table
+	;     +4 baud rate, +5 data transmission, +6 input data mask, +7 output data mask
+IO_CFG1: CALL	VPRINT
+	DEFB	CR,LF,TAB,'Configuring '
+	DEFB	0
+	CALL	P4CHRS		; display name of device
+	LD	A,' '		; and <SP>
+	CALL	COUT
+	CALL	PIOIO		; display In/Out configuration of device
+	LD	A,':'		; and colon
+	CALL	COUT
+
+	; configure baud rate
+	LD	A,(IX+4)	; get baud rate
+	AND	11110000B	; check high nybble (capabilities)
+	JP	Z,IO_FLW	; ..if none, jump
+	CALL	VPRINT		;   else, continue displaying
+	DEFB	CR,LF,TAB,'    Baud Rate '
+	DEFB	0
+	LD	A,(IX+4)	; get baud rate
+	CPL			; complement
+	AND	11110000B	; check high nybble (capabilities)
+	JR	Z,IO_BDR	; ..if zero, skip option 'Max'
+	CALL	VPRINT
+	DEFB	' (Max='
+	DEFB	0
+	LD	A,(IX+4)	; get baud rate
+	RRCA			; move high nybble to lower
+	RRCA
+	RRCA
+	RRCA
+	AND	00001111B	; mask off high nybble
+	LD	(BAUDRT),A	; ..store value
+	CALL	PIOBDRT		;   and display it
+	CALL	VPRINT
+	DEFB	') = '
+	DEFB	0
+IO_BDR:	CALL	VPRINT
+	DEFB	'  Selections are:'
+	DEFB	0
+	LD	A,1		; set initial value
+	PUSH	AF
+IO_BDR1: DEC	A		; insert <CR><LF><TAB>
+	AND	3		; after output of 4 values
+	JR	NZ,IO_BDR2
+	CALL	VPRINT
+	DEFB	CR,LF,TAB
+	DEFB	0
+IO_BDR2: LD	A,TAB		; print <TAB>
+	CALL	COUT
+	POP	AF		; restore counter
+	PUSH	AF
+	CALL	PAFDC		; display value
+	LD	A,'-'
+	CALL	COUT
+	POP	AF		; restore counter again
+	PUSH	AF
+	CALL	PIOBDRT		; ..and display corresponding baud rate
+	POP	AF
+	PUSH	AF
+	LD	HL,BAUDRT	; get value for max. baud rate
+	CP	(HL)		; check if reached
+	JR	NC,IO_BDR3	; ..if so, exit loop
+	POP	AF		; else, restore counter
+	INC	A		; +1
+	PUSH	AF		; ..save again
+	JR	IO_BDR1		; loop
+IO_BDR3: CALL	CRLF
+IO_BDR4: CALL	VPRINT
+	DEFB	CR,TAB,'    Select',TAB,'['
+	DEFB	0
+	CALL	EREOL		; clear CON: to end of line
+	LD	A,(IX+4)	; get current baud rate
+	AND	00001111B	; mask off high nybble
+	LD	L,A		; value in HL
+	LD	H,0
+	CALL	PHLDCNV		; display and ask for input
+	JR	C,IO_BDR5	; ..if input is not valid, jump
+	LD	A,D		; evaluated number in DE
+	OR	A		; high-byte must be zero
+	JR	NZ,IO_BDR5	; ..if not, jump
+	LD	A,E		; check if low-byte is zero
+	OR	A
+	JR	Z,IO_BDR5	; ..if so, jump
+	DEC	A		; make zero-based
+	LD	HL,BAUDRT	; get value for max. baud rate
+	CP	(HL)		; check if new value exceeds limit
+	JR	C,IO_BDR6	; ..if not, continue
+IO_BDR5: CALL	CFEVAL		; eval script file input
+	JR	IO_BDR4		; loop (ask for new input)
+IO_BDR6: LD	A,(IX+4)	; get current baud rate settings
+	AND	11110000B	; mask off low nybble
+	OR	E		; combine with new value
+	LD	(IX+4),A	; ..and store
+
+	; configure data bits
+	CALL	VPRINT
+	DEFB	CR,LF,TAB,'    Data = '
+	DEFB	0
+	LD	A,(IX+5)	; get Config Byte data transmission
+	CPL			; complement
+	BIT	3,A		; ..and test bit 3 (data bits)
+	CALL	M$87BIT		; display # of bits and ask for change
+	JR	NZ,IO_STP	; ..if no change, jump
+	LD	A,00001000B	;   else, mask bit 4
+	XOR	(IX+5)		; invert current state
+	LD	(IX+5),A	; ..and save back
+
+	; configure stop bits
+IO_STP:	CALL	VPRINT
+	DEFB	CR,LF,TAB,'    Stop Bits = '
+	DEFB	0
+	BIT	0,(IX+5)	; test bit 0 for stop bits (0= 2, 1= 1)
+	LD	A,'1'		; prepare for '1'
+	JR	NZ,IO_STP1	; ..if not set, skip over
+	INC	A		;   else, increase to '2'
+IO_STP1: CALL	COUT		; display current setting
+	CALL	M$BITS		; display string and ask for change
+	JR	NZ,IO_PTY	; ..if no change, jump
+	LD	A,00000001B	;   else, mask bit 0
+	XOR	(IX+5)		; invert current state
+	LD	(IX+5),A	; ..and save back
+
+	; configure parity
+IO_PTY:	CALL	VPRINT
+	DEFB	CR,LF,TAB,'    Parity = '
+	DEFB	0
+	LD	HL,PRTY$4	; prepare ptr to string "None"
+	BIT	1,(IX+5)	; test bit 1 for Parity (0= no, 1= enabled)
+	JR	Z,IO_PTY1	; ..if not enabled, jump
+	LD	HL,PRTY$2	;   else point to string "Odd"
+	BIT	2,(IX+5)	; test bit 2 for Parity (0= odd, 1= even)
+	JR	Z,IO_PTY1	; ..if odd, skip over
+	LD	HL,PRTY$1	;   else, point to string "Even"
+IO_PTY1: CALL	VPSTR		; display string (ptr in HL)
+	CALL	M$CHNG		; ask for change
+	JR	NZ,IO_FLW	; ..if no change, jump
+	CALL	VPRINT
+	DEFB	CR,LF,TAB,TAB,'Enable Parity'
+	DEFB	0
+	CALL	ASKYN		; ask Yes (Z) / No (NZ)
+	RES	1,(IX+5)	; reset bit
+	JR	NZ,IO_FLW	; ..if 'N' was entered, jump
+	SET	1,(IX+5)	;   else, set bit and continue
+	CALL	VPRINT
+	DEFB	CR,LF,TAB,TAB,'Odd or Even? (O/[E]) : '
+	DEFB	0
+	CALL	GETINP		; get input
+	SET	2,(IX+5)	; set bit (even)
+	CP	'O'		; check if 'O' was entered
+	JR	NZ,IO_FLW	; ..if not, skip over
+	RES	2,(IX+5)	;   else, reset bit (odd) and fall through
+
+	; configure flow control
+IO_FLW:	CALL	VPRINT		; display output
+	DEFB	CR,LF,TAB,'    XON/XOFF Flow = '
+	DEFB	0
+	BIT	4,(IX+5)	; test bit 4 XON/XOFF (0= no, 1= yes) in Config. Byte
+	CALL	PNOYES		; display No/Yes accordingly
+	CALL	M$CHNG		; ..and ask if it shall be changed
+	JR	NZ,IO_FLW1	; ..if not 'Y', skip
+	LD	A,00010000B	;   else, take bit 4
+	XOR	(IX+5)		;   ..invert it
+	LD	(IX+5),A	;   ..and write back
+IO_FLW1: CALL	VPRINT
+	DEFB	CR,LF,TAB,'    RTS/CTS Flow = '
+	DEFB	0
+	BIT	5,(IX+5)	; test bit 5 CTS/RTS control (0= no, 1= enabled)
+	CALL	PNOYES		; display No/Yes accordingly
+	CALL	M$CHNG		; ..and ask if it shall be changed
+	JR	NZ,IO_MSK	; ..if not 'Y', skip
+	LD	A,00100000B	;   else, take bit 5
+	XOR	(IX+5)		;   ..invert it
+	LD	(IX+5),A	;   ..and write back
+
+	; configure in/out and data masks
+IO_MSK:	LD	A,(IX+5)	; get Config. Byte
+	AND	11000000B	; mask high bits
+	JR	Z,IO_NONE	; ..if zero, exit (no input, no output)
+	BIT	6,(IX+5)	; test bit 6 Input (0= no, 1= dev can be read) Config. Byte
+	JR	Z,IO_MSK1	; ..if no Input, jump to output settings
+	CALL	VPRINT		;   else, display
+	DEFB	CR,LF,TAB,'    Input is '
+	DEFB	0
+	BIT	7,(IX+6)	; test bit 7 of data mask
+	CALL	M$87BIT		; display # of bits and ask for change
+	JR	NZ,IO_MSK1	; ..if not 'Y', skip
+	LD	A,10000000B	;   else, take bit 7
+	XOR	(IX+6)		;   ..invert it
+	LD	(IX+6),A	;   ..and write back
+IO_MSK1: BIT	7,(IX+5)	; test bit 7 Output (0= no, 1= can write dev) Config. Byte
+	JR	Z,IO_EXIT	; ..if no Output, jump exit
+	CALL	VPRINT		;   else, display
+	DEFB	CR,LF,TAB,'    Output is '
+	DEFB	0
+	BIT	7,(IX+7)	; test bit 7 of data mask
+	CALL	M$87BIT		; display # of bits and ask for change
+	JR	NZ,IO_EXIT	; ..if not 'Y', exit
+	LD	A,10000000B	;   else, take bit 7
+	XOR	(IX+7)		;   ..invert it
+	LD	(IX+7),A	;   ..and write back
+	JR	IO_EXIT		; then exit to display menu again
+
+	; nothing configurable
+IO_NONE: CALL	VPRINT
+	DEFB	CR,LF,TAB,'  -- Nothing Configurable...'
+	DEFB	'[any key to continue]  --'
+	DEFB	0
+	CALL	CFIN
+IO_EXIT: JP	M2CIO		; display menu again
+
+
+;::::: SUPPORT FUNCTIONS - Char IO Device Config.
+
+	; get ptr to entry in DEVCFG
+	; (length of an entry is 16 bytes, or 8 bytes prior to B/P Bios v1.1)
+	;  in: variable DEVASSG, bits 1-0
+	; out: HL= ptr to entry
+IO_PTR:	LD	A,(BPVERS)	; check B/P Bios version
+	LD	C,8		; length of an entry
+	CP	11H		; is version prior to 1.1 ?
+	JR	C,IO_PTR1	; ..if so, jump
+	LD	C,16		;   else, set length of entry to 16 byte
+IO_PTR1: LD	A,(DEVASSG)	; assignment bits 1-0 (from IOBYT)
+	LD	B,A		; copy to B as counter
+	OR	A		; is it zero ?
+	JR	Z,IO_PTR3	; ..if so, no more calculation
+	XOR	A		;   else, clear A
+IO_PTR2: ADD	A,C		;   add length of an entry
+	DJNZ	IO_PTR2		;   ..and loop
+IO_PTR3: LD	E,A		; offset into E
+	LD	A,0DBH		; DEVCFG offset (after Config area)
+	CALL	WSPCPTR		; calc ptr to DEVCFG
+	LD	D,0
+	ADD	HL,DE		; add offset (ptr to first byte of entry)
+	RET
+
+
+	; prints "No" or "Yes" to CON:
+	;  in: Z-Flag set= No, NZ= Yes
+PNOYES:	LD	HL,PRTY$3	; ptr to string "No"
+	JR	Z,PNOYES0	; ..if Z-Flag set, skip over
+	LD	HL,PRTY$5	;   else, ptr to string "Yes"
+PNOYES0: JP	VPSTR		; display string, and let return from there
+
+
+	; print name of assigned device
+	; mask off upper bits, get ptr to assigned device in DEVCFG table
+	;  in: A= device (bits shifted from IOBYT to position 1-0)
+	; out: HL= ptr to baud rate
+	;      dev assignment stored in DEVASSG
+PIOASSG: AND	00000011B	; mask off upper bits 7-2
+	LD	(DEVASSG),A	; store encoded device assignment
+	PUSH	DE
+	CALL	IO_PTR		; HL= ptr to entry in DEVCFG
+	POP	DE
+	LD	B,4		; name consists of 4 chars
+PIOASS1: LD	A,(HL)		; get char
+	CALL	COUT		; ..display
+	INC	HL		;   move ptr fwd
+	DJNZ	PIOASS1		; loop till done
+	RET
+
+
+	; configure IO Device assignment, display current setting and ask for input
+	; out: A= new device number, B= A (copy)
+	;      C-Flag set if error (no input), NC ok
+CIOASSG: CALL	VPRINT
+	DEFB	CR,LF,TAB,'  Set '
+	DEFB	0
+	XOR	A		; clear A
+	LD	(DEVASSG),A	; ..and stored assignment
+CIOASS1: CALL	PIOASSG		; display device name (starting with COM1)
+	LD	A,'['
+	CALL	COUT
+	LD	A,(DEVASSG)	; get device number
+	INC	A		; ..increase it
+	LD	(DEVASSG),A
+	ADD	A,'0'		; convert to ascii for display
+	CP	'4'		; maximum reached ?
+	PUSH	AF		; save regs
+	CALL	COUT
+	LD	A,']'
+	CALL	COUT
+	POP	AF
+	PUSH	AF
+	LD	A,','
+	CALL	C,COUT
+	LD	A,' '
+	CALL	COUT
+	POP	AF		; restore flags
+	JR	C,CIOASS1	; ..loop till done
+	CALL	VPRINT
+	DEFB	'? '
+	DEFB	0
+CIOASS2: CALL	GETINP		; get input
+	SCF			; set C-Flag (error)
+	RET	Z		; ..if input is empty, return
+	SUB	'1'		;   else, convert ascii to number
+	LD	B,A
+	JR	C,CIOASS3	; ..if input below '1', jump/loop
+	CP	4		; check for max. device number
+	CCF			; invers C-Flag
+	RET	NC		; if input '1' to '4', return with C-Flag cleared
+				; ..else, fall through and loop
+
+CIOASS3: CALL	VPRINT		; notify user (<BEL>), remove char (<BS>), and ask for new input
+	DEFB	BS,BEL
+	DEFB	0
+	JR	CIOASS2
+
+
+	; display parameters of Char IO Device on CON:
+	;  in: HL= ptr to first byte of entry in DEVCFG
+PIOPARM: PUSH	HL		; move ptr to IX
+	POP	IX
+	LD	A,(HL)
+	OR	A		; check entry
+	JR	NZ,PIOPAR1	; ..if not empty, jump to continue
+	CALL	VPRINT		;   else, display msg and return
+	DEFB	'-- Unavailable --'
+	DEFB	0
+	RET
+
+	; device is valid, display name and baud rate
+PIOPAR1: CALL	P4CHRS		; display name of device
+	CALL	VPRINT
+	DEFB	' - '
+	DEFB	0
+	EX	DE,HL		; swap regs, DE= ptr first byte after name
+	LD	A,(DE)		; get baud rate
+	INC	DE		; move ptr fwd
+	CP	00010000B	; is a max. baud rate set ? (upper nybble)
+	JR	C,PIOIO		; ..if so, jump
+	DEC	DE		;   else, move ptr back
+	CALL	PIOBDRT
+	CALL	VPRINT
+	DEFB	', '
+	DEFB	0
+	EX	DE,HL		; swap regs
+	INC	HL		; move ptr to config. byte for data transmission
+	LD	A,'8'		; prepare to display '8'
+	BIT	3,(HL)		; check # of data bits (0= 8 bit data, 1= 7 bit data)
+	JR	Z,PIOPAR2	; ..if 8 bits, skip
+	DEC	A		;   else, adjust A
+
+	; display number of data bits
+PIOPAR2: EX	DE,HL		; swap regs
+	CALL	COUT		; print char in A
+	CALL	VPRINT
+	DEFB	' Data, '
+	DEFB	0
+	LD	A,(DE)		; get config. byte for data transmission
+	BIT	0,A			; check # of stop bits (0= 2, 1= 1)
+	LD	A,'1'		; prpare to display '1'
+	JR	NZ,PIOPAR3	; ..if 1 stop bit, skip
+	LD	A,'2'		;   else, adjust A
+
+	; display number of stop bits
+PIOPAR3: CALL	COUT		; print char in A
+	CALL	VPRINT
+	DEFB	' Stop, '
+	DEFB	0
+	LD	A,(DE)		; get config. byte for data transmission
+	LD	HL,PRTY$3	; ptr to string "No"
+	BIT	1,A		; check parity (0= no parity, 1= enabled)
+	JR	Z,PIOPAR4	; ..if no parity, jump to output
+	LD	HL,PRTY$1	;    else, set ptr to string "Even"
+	BIT	2,A		; check parity setting (0= odd, 1= even)
+	JR	NZ,PIOPAR4	; ..if even, jump to output
+	LD	HL,PRTY$2	;   else, set ptr to "Odd"
+
+	; display parity
+PIOPAR4: CALL	VPSTR		; display string, HL is ptr
+	CALL	VPRINT
+	DEFB	' Parity, '
+	DEFB	0
+
+	; display Char IO Device In/Out settings on CON:
+	;  in: IX= ptr to first byte of an entry in DEVCFG
+PIOIO:	LD	A,'['		; print left bracket
+	CALL	COUT
+	BIT	6,(IX+5)	; check Input setting (0= no input, 1= dev can be read)
+				; IX+5 points to config. byte for data transmission
+	JR	Z,PIOIO2	; ..if no Input, jump
+	CALL	VPRINT		;   else, display
+	DEFB	'In'
+	DEFB	0
+	LD	A,'('		; print left parenthesis
+	CALL	COUT
+	BIT	7,(IX+6)	; check Input data mask (IX+6 points to mask byte)
+	LD	A,'7'		; prepare to display '7'
+	JR	Z,PIOIO1	; ..if high bit not set, skip
+	INC	A		;   else, adjust A
+PIOIO1:	CALL	COUT		;   ..and display char in A
+	LD	A,')'		; and display closing parenthesis
+	CALL	COUT
+	LD	A,(IX+5)	; get config. byte for data transmission
+	AND	11000000B	; mask high bits (7 Input, 8 Output)
+	CP	11000000B
+	JR	NZ,PIOIO2	; ..if not both bits are set, skip
+	LD	A,'/'		;   else, display '/' as separator
+	CALL	COUT
+
+PIOIO2:	BIT	7,(IX+5)	; check Output setting (0= no output, 1= can write dev)
+				; IX+5 points to config. byte for data transmission
+	JR	Z,PIOIO4	; ..if no Output, jump
+	CALL	VPRINT		;   else, display
+	DEFB	'Out'
+	DEFB	0
+	LD	A,'('		; print left parenthesis
+	CALL	COUT
+	BIT	7,(IX+7)	; check Output data mask (IX+7 points to mask byte)
+	LD	A,'7'		; prepare to display '7'
+	JR	Z,PIOIO3	; ..if high bit not set, skip
+	INC	A		;   else, adjust A
+PIOIO3:	CALL	COUT		; display char in A
+	LD	A,')'		; ..and closing parenthesis
+	CALL	COUT
+PIOIO4:	LD	A,']'		; print right bracket
+	JP	COUT		; ..and let return from there
+
+	; parity options
+	; nul-terminated strings
+PRTY$1:	DEFB	'Even',0
+PRTY$2:	DEFB	'Odd',0
+PRTY$3:	DEFB	'No',0
+PRTY$4:	DEFB	'None',0
+PRTY$5:	DEFB	'Yes',0
+
+
+	; print four chars (ptr in HL), used to display name of Char IO Device
+	;  in: HL= ptr to first byte of entry in DEVCFG (name)
+	;      IX= HL  (not used in this routine)
+P4CHRS:	LD	B,4		; number of chars
+P4CHR1:	LD	A,(HL)		; get char
+	INC	HL		; move ptr fwd
+	CALL	COUT		; send char in A to CON:
+	DJNZ	P4CHR1		; ..loop till done
+	RET
+
+
+	; displays the baud rate on CON:
+	;  in: A= data rate setting
+	;      IX= ptr to first byte of an entry in DEVCFG
+PIOBDRT: AND	00001111B	; mask lower nybble
+	LD	HL,BDRT$1	; ptr to 1st string
+	CP	00001110B	; check special cases
+	JR	NC,PIOBDR1
+	LD	HL,BDRT$2	; ptr to 2nd string
+	CP	00000001B
+	JR	Z,PIOBDR1
+	LD	HL,BDRT$3	; followings strings are 5 bytes long
+	SUB	2		; calc offset, account for 2 special cases
+	LD	B,A
+	ADD	A,A		; *2
+	ADD	A,A		; *4
+	ADD	A,B		; *5
+	CALL	ADDHLA		; add offset
+	LD	A,B
+	CP	9		; check for entry number
+	JR	C,PIOBDR1	; ..and display "kpbs" or "bps"
+	CALL	VPSTR		; print string, ptr in HL
+	CALL	VPRINT
+	DEFB	' kbps'
+	DEFB	0
+	JR	PIOBDR2
+PIOBDR1: CALL	VPSTR		; print string, ptr in HL
+	CALL	VPRINT
+	DEFB	' bps'
+	DEFB	0
+PIOBDR2: LD	A,(IX+4)	; get 'Data Rate Capabilities' byte in DEVCFG entry
+	AND	11110000B	; mask upper nybble
+	CP	11110000B	; all upper bits set ?
+	RET	NZ		; ..if not, return
+	CALL	VPRINT		;   else, append string and then return
+	DEFB	' (fixed)'
+	DEFB	0
+	RET
+
+	; baud rate options
+	; nul-terminated strings, from BDRT$3 onwards = table w/ 5-byte entries
+	; data rate is represented by upper/lower nybble
+BDRT$1:	DEFB	'115.2',0		; 1110 = 115200
+BDRT$2:	DEFB	'134.5',0		; 0001 = 134.5
+BDRT$3:	DEFB	'50',0,0,0		; 0010 = 50
+	DEFB	'75',0,0,0		; 0011 = 75
+	DEFB	'150',0,0		; 0100 = 150
+	DEFB	'300',0,0		; 0101 = 300
+	DEFB	'600',0,0		; 0110 = 600
+	DEFB	'1200',0		; 0111 = 1200
+	DEFB	'2400',0		; 1000 = 2400
+	DEFB	'4800',0		; 1001 = 4800
+	DEFB	'9600',0		; 1010 = 9600
+	DEFB	'19.2',0		; 1011 = 19200
+	DEFB	'38.4',0		; 1100 = 38400
+	DEFB	'76.8',0		; 1101 = 76800
+	DEFB	'(fixed)',0		; 1111 = Fixed
+
+
+	; display '8' or '7' then fall through fo following msg's and get input
+	;  in: Z-Flag set= '7', NZ= '8'
+	; out: Z-Flag set for 'Y' entered, else NZ
+M$87BIT: LD	A,'8'		; prepare to display '8'
+	JR	NZ,M$87BI1	; ..if Z-Flag cleared, display
+	DEC	A		;   else, adjust A
+M$87BI1: CALL	COUT		; print char in A
+				; ..and fall through
+
+	; msg '-bits.'
+M$BITS:	CALL	VPRINT		; display and fall through
+	DEFB	'-bits.'
+	DEFB	0
+
+	; msg 'Change'
+M$CHNG:	CALL	VPRINT		; display and fall through
+	DEFB	TAB,'Change'
+	DEFB	0
+
+
+	; ask for user input Y/[N]
+	; out: Z-Flag set if 'Y' was entered, else NZ
+ASKYN:	CALL	VPRINT		; display
+	DEFB	'? (Y/[N]) : '
+	DEFB	0
+	CALL	GETINP		; get input
+	CP	'Y'		; check if 'Y' was entered
+	RET			; ..and return, Z-Flag is set accordingly
+
+	; *
+
+
+;::::: MENU 3 - FLOPPY DISK (display)
+
+M3FD:	LD	A,1
+	LD	(CFMENU),A	; store flag (sub-)menu entered
+	CALL	CLS
+	CALL	VPRINT
+	DEFB	CR,LF,'Menu 3 - Floppy Disk Options'
+	DEFB	CR,LF,LF,LF,'  ',1,' 1 ',2,'  Floppy Drive Characteristics:'
+	DEFB	CR,LF,TAB,'Drv0 = '
+	DEFB	0
+	LD	A,0A1H		; offset to FDCSPEC (floppy drv #1) in Config area
+	CALL	PFDPARM		; display characteristics floppy #1
+	CALL	VPRINT
+	DEFB	TAB,'Drv1 = '
+	DEFB	0
+	LD	A,0A6H		; offset to FDCSPEC+5 (floppy drv #2) in Config area
+	CALL	PFDPARM		; display characteristics floppy #2
+	CALL	VPRINT
+	DEFB	TAB,'Drv2 = '
+	DEFB	0
+	LD	A,0ABH		; offset to FDCSPEC+10 (floppy drv #3) in Config area
+	CALL	PFDPARM		; display characteristics floppy #3
+	CALL	VPRINT
+	DEFB	TAB,'Drv3 = '
+	DEFB	0
+	LD	A,0B0H		; offset to FDCSPEC+15 (floppy drv #4) in Config area
+	CALL	PFDPARM		; display characteristics floppy #4
+	CALL	VPRINT
+	DEFB	CR,LF,'  ',1,' 2 ',2,'  Motor ON Time (Tenths-of-Seconds) : '
+	DEFB	0
+	LD	A,0B5H		; offset to MONTIM in Config area
+	CALL	WSPCPTR		; set ptr
+	LD	A,(HL)		; get Motor On Time (in tenths-of-seconds)
+	CALL	PAFDC		; ..and display it
+	CALL	VPRINT
+	DEFB	CR,LF,LF,'  ',1,' 3 ',2,'  Motor Spinup (Tenths-of-Seconds)  : '
+	DEFB	0
+	LD	A,0B6H		; offset to SPINUP in Config area
+	CALL	WSPCPTR		; set ptr
+	LD	A,(HL)		; get Spinup Delay (in tenths-of-seconds)
+	CALL	PAFDC		; ..and display it
+	CALL	VPRINT
+	DEFB	CR,LF,LF,'  ',1,' 4 ',2,'  Times to Try Disk Operations : '
+	DEFB	0
+	LD	A,0B7H		; offset to MXRTRY in config area
+	CALL	WSPCPTR		; set ptr
+	LD	A,(HL)		; get Max. # of Retries on Floppy Disks
+	CALL	PAFDC		; ..and display
+	LD	A,'4'		; max. possible option in this menu as ascii number
+	CALL	MSELECT
+	OR	A		; valid input ?
+	JP	Z,M0MAIN	; ..if not, jump to display main menu
+
+
+;::::: MENU 3 - FLOPPY DISK (configure)
+
+	; subsequent labels start with "FD_"
+M3CFG:	CALL	CRLF
+	CP	'1'		; option 1 (Phys. Unit) selected ?
+	JR	NZ,FD_MOTR	; ..if not, jump to next
+
+	; configure Floppy Disk drive physical unit
+FD_UNIT: CALL	VPRINT
+	DEFB	CR,TAB,'    Configure which unit [0..3] : '
+	DEFB	0
+	CALL	EREOL
+	CALL	GETINP		; get input
+	CP	' '		; is it <SP> ?
+	JR	Z,FD_UN3	; ..if so, jump done and display menu again
+	CP	CR		; <CR> ?
+	JR	Z,FD_UN3	; ..if so, jump done and display menu again
+	SUB	'0'		;   else, convert ascii to number
+	JR	C,FD_UN1	;   ..if less than '0', jump
+	CP	4		;     else, check upper limit
+	JR	C,FD_UN2	; ..if within range, skip over and continue
+FD_UN1:	CALL	M$BEL		;   else, notify user
+	JR	FD_UNIT		;   ..and ask for new input
+FD_UN2:	LD	L,A			; copy unit # in HL
+	LD	H,0
+	ADD	HL,HL		; *2
+	ADD	HL,HL		; *4
+	CALL	ADDHLA		; *5 (FDCSPEC entry = 5 bytes long)
+	EX	DE,HL		; swap regs
+	LD	A,0A1H		; offset to FDCSPEC in Config area
+	CALL	WSPCPTR		; set ptr
+	ADD	HL,DE		; add calculated offset
+	PUSH	HL		; move ptr in IX
+	POP	IX
+	CALL	CFDUNIT		; ..and go configure the drive
+FD_UN3:	JP	M3FD		; loop, display menu again
+
+	; configure Floppy Disk motor on time
+FD_MOTR: CP	'2'		; option 2 (Motor On) selected ?
+	JR	NZ,FD_SPIN	; ..if not, jump to next
+FD_MOT1: CALL	VPRINT
+	DEFB	CR,TAB,TAB,'Motor On Time in 1/10 Secs',TAB,'['
+	DEFB	0
+	CALL	EREOL
+	LD	A,0B5H		; offset to MONTIM in Config area
+	CALL	PVALASK		; display current value, ask for input
+	JR	C,FD_MOT2	; ..if error, jump
+	LD	A,D		;   else, check if input is valid
+	OR	A		; high-byte must be zero
+	JR	NZ,FD_MOT2	; ..if not, do not save value
+	OR	E		; is the entered value zero ?
+	JR	NZ,FD_MOT3	; ..if not, jump save value
+FD_MOT2: CALL	M$BEL		;   else, notify user
+	JR	FD_MOT1		;   ..and ask for new input
+FD_MOT3: LD	(HL),E		; save new value
+	JP	M3FD		; ..and display Floppy menu again
+
+	; configure Floppy Disk motor spinup time
+FD_SPIN: CP	'3'		; option 3 (Motor Spinup) selected ?
+	JR	NZ,FD_RTRY	; ..if not, jump to next
+FD_SP1:	CALL	VPRINT
+	DEFB	CR,TAB,TAB,'Motor Spinup in 1/10 Secs',TAB,'['
+	DEFB	0
+	CALL	EREOL		; clear CON: to end of line
+	LD	A,0B6H		; offset to SPINUP in Config area
+	CALL	PVALASK		; display current value, ask for input
+	JR	C,FD_SP2	; ..if error, jump
+	LD	A,D		;   else, check if input is valid
+	OR	A		; high-byte must be zero
+	JR	NZ,FD_SP2	; ..if not, do not save value
+	OR	E		; is the entered value zero ?
+	JR	NZ,FD_SP3	; ..if not, jump save value
+FD_SP2:	CALL	M$BEL		;   else, notify user
+	JR	FD_SP1		;   ..and ask for new input
+FD_SP3:	LD	(HL),E		; save new value
+	JP	M3FD		; ..and display Floppy menu again
+
+	; configure Floppy Disk number of retries
+FD_RTRY: CALL	EREOL
+FD_RTR1: CALL	VPRINT
+	DEFB	CR,TAB,TAB,'Times to try Disk Opns',TAB,'['
+	DEFB	0
+	CALL	EREOL
+	LD	A,0B7H		; pointer to MXRTRY in Config area
+	CALL	PVALASK		; display current value, ask for input
+	JR	C,FD_RTR2	; ..if error, jump
+	LD	A,D		;   else, check if input is valid
+	OR	A		; high-byte must be zero
+	JR	NZ,FD_RTR2	; ..if not, do not save
+	OR	E		; is the entered value zero ?
+	JR	NZ,FD_RTR3	; ..if not, jump save value
+FD_RTR2: CALL	M$BEL		; else, notify user
+	JR	FD_RTR1		; ..and ask for new input
+FD_RTR3: LD	A,E
+	CP	11		; new value greater than 10 ?
+	JR	C,FD_RTR4	; ..if not, jump save
+	CALL	VPRINT		;   else, ask for confirmation
+	DEFB	CR,LF,TAB,TAB,TAB,'Do you REALLY mean '
+	DEFB	0
+	LD	A,E		; get new value again
+	CALL	PAFDC		; ..and display it
+	CALL	VPRINT
+	DEFB	' tries? (Y/[N]) : '
+	DEFB	0
+	CALL	CAPINE
+	CP	'Y'		; confirmed by user ?
+	JR	Z,FD_RTR4	; ..if so, save and exit
+	CALL	M$BEL		;   else, notify user
+	JR	FD_RTRY		;   ..and ask for new input
+FD_RTR4: LD	(HL),E		; save new value
+	JP	M3FD		; display Floppy menu again
+
+
+;::::: SUPPORT FUNCTIONS - Floppy Disk
+
+	; configure Floppy Disk Physical Unit
+	;  in: IX= ptr to entry in FDCSPEC
+CFDUNIT: CALL	CRLF
+
+	; floppy disk size
+CFDSZ:	CALL	VPRINT
+	DEFB	CR,TAB,TAB,'Size  8"(1),  5.25"(2),  3.5"(3)?',TAB,'['
+	DEFB	0
+	CALL	EREOL
+	LD	A,(IX+0)	; get FDCSPEC
+	AND	00000111B	; mask lower 3 bits (floppy size)
+	LD	L,A		; ..and move to HL
+	LD	H,0
+	CALL	PHLDCNV		; display value and ask for input
+	JR	C,CFDSZ1	; ..if input is not valid, jump
+	LD	A,D		; evaluated input in DE
+	OR	A		; high-byte must be zero
+	JR	NZ,CFDSZ1	; ..if not, jump
+	LD	A,E		;   else, check if low-byte is zero
+	OR	A
+	JR	Z,CFDSZ1	;   ..if so, jump
+	CP	4		; check if value is within limit
+	JR	C,CFDSZ2	; ..if so, skip over and continue
+CFDSZ1:	CALL	M$BEL		;   else, notify user
+	JR	CFDSZ		;   ..and loop, ask for new input
+CFDSZ2:	LD	B,A		; copy input
+	LD	A,(IX+0)	; get FDCSPEC
+	AND	11111000B	; mask off lower bits
+	OR	B		; combine with new value
+	LD	(IX+0),A	; ..save it back
+
+	; single-/double-sided
+CFDSSD:	CALL	VPRINT
+	DEFB	CR,TAB,TAB,'Single or Double-Sided Drive ?',TAB,TAB,'('
+	DEFB	0
+	LD	D,'S'		; prepare available options for output
+	LD	E,'D'		;   (S)ingle / (D)ouble
+	BIT	3,(IX+0)	; check bit 3 (0= single-sided, 1= double-sided)
+	CALL	PDEOPTN		; show options
+	CALL	VPRINT
+	DEFB	')',TAB,': '
+	DEFB	0
+	CALL	EREOL		; clear CON: to end of line
+	CALL	GETINP		; get input
+	CALL	CHRSPCR		; is <SP> or <CR> ?
+	JR	Z,CFDMCTR	; ..if so, jump
+	CP	'S'		;   else, is it 'S' ?
+	JR	Z,CFDSSD1	;   ..if so, jump to continue
+	CP	'D'		;   or, 'D' entered ?
+	JR	Z,CFDSSD1	;   ..if so, jump to continue
+	CALL	M$BEL		;   else, notify user
+	JR	CFDSSD		; ..loop
+CFDSSD1: CP	'D'		; check input again
+	SET	3,(IX+0)	; set bit 3 (= double-sided)
+	JR	Z,CFDMCTR	; ..if 'D' entered, skip over
+	RES	3,(IX+0)	;   else, reset bit 3 (= single-sided)
+
+	; motor control
+CFDMCTR: CALL	VPRINT
+	DEFB	CR,LF,TAB,TAB,'Motor On/Off Control Needed ?',TAB,TAB,'('
+	DEFB	0
+	LD	D,'Y'		; prepare available options for output
+	LD	E,'N'		;   (Y)es / (N)o
+	LD	A,(IX+0)	; get FDCSPEC
+	CPL			; invers value (two's complement)
+	BIT	5,A		; check bit 5 (motor), now reversed meaning
+	CALL	PDEOPTN		; display options
+	CALL	VPRINT
+	DEFB	')',TAB,': '
+	DEFB	0
+	CALL	GETINP		; get input
+	CALL	CHRSPCR		; is it <SP> or <CR> ?
+	JR	Z,CFDMCT1	; ..if so, jump
+	CP	'N'		;   else, is it 'N' ?
+	SET	5,(IX+0)	; set bit 5 (= motor drive control)
+	JR	NZ,CFDMCT1	; ..if not 'N' entered, skip over
+	RES	5,(IX+0)	;   else, reset bit 5 (= motor always on)
+CFDMCT1: LD	A,(IX+0)	; get FDCSPEC
+	AND	00000111B	; mask lower 3 bits
+	DEC	A		; -1
+	JR	Z,CFDMCT4	; ..if 8", jump (cannot be hi-density)
+	CALL	CRLF
+CFDMCT2: CALL	VPRINT
+	DEFB	CR,TAB,TAB,'Motor Speed Standard or Hi-Density',TAB,'('
+	DEFB	0
+	LD	D,'S'		; prepare available options for output
+	LD	E,'H'		;  (H)igh / (S)tandard Density
+	BIT	6,(IX+0)	; check bit 6 (max. speed, 0= 300 RPM, 1= 360 RPM)
+	CALL	PDEOPTN		; display options
+	CALL	VPRINT
+	DEFB	')',TAB,': '
+	DEFB	0
+	CALL	EREOL		; clear CON: to end of line
+	CALL	GETINP		; get input
+	CALL	CHRSPCR		; is it <SP> or <CR> ?
+	JR	Z,CFDTRK	; ..if so, jump
+	CP	'S'		;   else, is it 'S' ?
+	JR	Z,CFDMCT3	;   ..if so, jump to continue
+	CP	'H'		;   or, 'H' entered ?
+	JR	Z,CFDMCT3	;   ..if so, jump to continue
+	CALL	M$BEL		; else, notify user
+	JR	CFDMCT2		; ..loop, ask for new input
+CFDMCT3: RES	6,(IX+0)	; reset bit 6 (= for 8" and HD max speed)
+	CP	'H'		; check input again, 'H' entered ?
+	JR	NZ,CFDTRK	; ..if not, skip over
+CFDMCT4: SET	6,(IX+0)	;   else, set bit 6 (= max speed 5.25")
+
+	; tracks per side
+CFDTRK:	CALL	CRLF
+CFDTRK1: LD	A,(IX+0)	; get FDCSPEC
+	AND	00000111B	; mask lower 3 bits
+	DEC	A		; -1
+	LD	A,77		; prepare for 77 tracks
+	JR	Z,CFDTRK3	; ..if 8", jump
+	CALL	VPRINT
+	DEFB	CR,TAB,TAB,'Tracks-per-Side (35,40,80)',TAB,TAB,'['
+	DEFB	0
+	CALL	EREOL		; clear CON: to end of line
+	LD	L,(IX+4)	; get FDCSPEC+4 (tracks per side)
+	LD	H,0
+	CALL	PHLDCNV		; display value and ask for input
+	JR	C,CFDTRK2	; ..if input not valid, jump
+	LD	A,D		; evaluated input in DE
+	OR	A		; high-byte must be zero
+	JR	NZ,CFDTRK2	; ..if not, jump
+	LD	A,E		; check input value (tracks)
+	CP	35
+	JR	Z,CFDTRK3	; ..if 35, jump to continue
+	CP	40
+	JR	Z,CFDTRK3	; ..or 40, jump to continue
+	CP	80
+	JR	Z,CFDTRK3	; ..or 80, jump to continue
+CFDTRK2: CALL	M$BEL		;   else, notify user
+	JR	CFDTRK1		; loop, ask for new input
+CFDTRK3: LD	(IX+4),A	; save new value at FDCSPEC+4 (tracks)
+
+	; step rate
+CFDSTP:	CALL	VPRINT
+	DEFB	CR,TAB,TAB,'Step Rate in Milli-Seconds',TAB,TAB,'['
+	DEFB	0
+	CALL	EREOL		; clear CON: to end of line
+	LD	L,(IX+1)	; get FDCSPEC+1 (step rate in mS)
+	LD	H,0
+	CALL	PHLDCNV		; display value and ask for input
+	JR	C,CFDSTP1	; ..if input not valid, jump
+	LD	A,D		; evaluated input in DE
+	OR	A		; high-byte must be zero
+	JR	NZ,CFDSTP1	; ..if not, jump
+	OR	E		;   else, is low-byte zero ?
+	JR	NZ,CFDSTP2	;   ..if not, skip over and continue
+CFDSTP1: CALL	M$BEL		;     else, notify user
+	JR	CFDSTP		; loop, ask for new input
+CFDSTP2: LD	(IX+1),A	; store new value (step rate)
+
+	; head load/unload time
+CFDHLD:	CALL	VPRINT
+	DEFB	CR,TAB,TAB,'Head Load Time in Milli-Seconds',TAB,TAB,'['
+	DEFB	0
+	CALL	EREOL		; clear CON: to end of line
+	LD	L,(IX+2)	; get FDCSPEC+2 (head load time in mS)
+	LD	H,0
+	CALL	PHLDCNV		; display value and ask for input
+	JR	C,CFDHLD1	; ..if input not valid, jump
+	LD	A,D		; evaluated input in DE
+	OR	A		; high-byte must be zero
+	JR	NZ,CFDHLD1	; ..if not, jump
+	OR	E		;   else, is low-byte zero ?
+	JR	NZ,CFDHLD2	;   ..if not, skip over to continue
+CFDHLD1: CALL	M$BEL		;     else, notify user
+	JR	CFDHLD		; loop, ask for new input
+CFDHLD2: LD	(IX+2),A	; store new value (head load time)
+CFDHLD3: CALL	VPRINT
+	DEFB	CR,TAB,TAB,'Head Unload Time in Milli-Seconds',TAB,'['
+	DEFB	0
+	CALL	EREOL		; clear CON: to end of line
+	LD	L,(IX+3)	; get FDCSPEC+3 (head unload time in mS)
+	LD	H,0
+	CALL	PHLDCNV		; display value and ask for input
+	JR	C,CFDHLD4	; ..if input not valid, jump
+	LD	A,D		; evaluated input in DE
+	OR	A		; high-byte must be zero
+	JR	NZ,CFDHLD4	; ..if not, jump
+	OR	E		;   else, is low-byte zero ?
+	JR	NZ,CFDHLD5	;   ..if not, skip over to continue
+CFDHLD4: CALL	M$BEL		;     else, notify user
+	JR	CFDHLD3		; loop, ask for new input
+CFDHLD5: LD	(IX+3),A	; store new value (head unload time)
+	RET
+
+	; output <BEL> to CON: and continue validating script file input
+M$BEL:	LD	A,BEL		; <BEL>
+	CALL	COUT		; output char in A to CON:
+	JP	CFEVAL		; eval script file input
+				; ..and let return from there
+
+
+	; display Floppy Drive parameters on CON:
+	;  in: A= offset to first byte of FDCSPEC drive entry
+PFDPARM: CALL	WSPCPTR		; set ptr
+	LD	A,(HL)		; get Drive Characteristics
+	PUSH	HL		; save regs
+	LD	HL,FDSZ$5	; ptr to "Unknown"
+	AND	00000111B	; mask lower bits
+	CP	00000100B	; check for unknown Disk Size
+				; 000= Fixed / 001= 8" / 010= 5.25" / 011= 3.5"
+	JR	NC,PFDPAR1	; ..if unknown, jump to continue
+	LD	HL,FDS$TBL	;   else, ptr to vectors of Floppy Sizes
+	ADD	A,A		; calculate offset in vector table
+	CALL	GWRDHLA		; ..and get addr
+PFDPAR1: CALL	VPSTR		; display string (HL= ptr)
+	LD	A,' '
+	CALL	COUT
+	POP	HL		; restore ptr to Drive Characteristics
+	BIT	3,(HL)		; check if single-sided (0), or double-sided (1)
+	INC	HL		; move ptr fwd
+	PUSH	HL		; save
+	LD	A,'S'		; prepare for output 'S'
+	JR	Z,PFDPAR2	; ..if bit 3 not set; jump
+	LD	A,'D'		;   else, output 'D'
+PFDPAR2: CALL	COUT
+	LD	A,'S'
+	CALL	COUT
+	CALL	VPRINT		; display string (ptr on Stack), value Step Rate
+	DEFB	', '
+	DEFB	0
+	POP	HL		; restore ptr
+	PUSH	HL
+	INC	HL		; move ptr fwd to Tracks per Side
+	INC	HL
+	INC	HL
+	LD	A,(HL)		; get # of Tracks
+	CALL	PAFDC		; ..and display it
+	CALL	VPRINT
+	DEFB	' Trks/Side',CR,LF,TAB,TAB,'Step Rate = '
+	DEFB	0
+	POP	HL		; restore ptr (to Step Rate)
+	LD	A,(HL)		; get value
+	CALL	PAFDC		; ..and display
+	CALL	VPRINT
+	DEFB	' mS, Head Load = '
+	DEFB	0
+	INC	HL		; move ptr fwd to Head Load Time
+	LD	A,(HL)
+	CALL	PAFDC		; ..and display
+	CALL	VPRINT
+	DEFB	' mS, Unload = '
+	DEFB	0
+	INC	HL		; move ptr fwd to Head Unload Time
+	LD	A,(HL)
+	CALL	PAFDC		; ..and display
+	CALL	VPRINT
+	DEFB	' mS',CR,LF
+	DEFB	0
+	RET
+
+	; Floppy Disk sizes
+	; nul-terminated strings prefixed by a table of vectors
+FDS$TBL: DEFW	FDSZ$1
+	DEFW	FDSZ$4
+	DEFW	FDSZ$3
+	DEFW	FDSZ$2
+FDSZ$1:	DEFB	'Fixed',0
+FDSZ$2:	DEFB	'3.5"',0
+FDSZ$3:	DEFB	'5.25"',0
+FDSZ$4:	DEFB	'8"',0
+FDSZ$5:	DEFB	'Unknown',0
+
+
+	; ###### CHECK: unreferenced code (not used)
+UNUSED1: LD	A,']'
+	CALL	COUT
+	CALL	VPRINT
+	DEFB	TAB,': '
+	DEFB	0
+	RET
+	; ######
+
+
+	; display value at given offset in Config area, and ask user for new value
+	;  in: A= offset (base is B/P Bios page addr)
+	; out: DE= evaluated number (user input)
+	;      HL= ptr in config area
+PVALASK: CALL	WSPCPTR		; set ptr
+	LD	E,(HL)		; get value
+	LD	D,0
+	PUSH	HL		; save regs
+	EX	DE,HL		; swap
+	CALL	PHLDCNV		; display current value and ask for user input
+	POP	HL		; restore regs (ptr)
+	RET
+
+
+;::::: MENU 4 - HARD DISK (config)
+
+M4HD:	LD	A,1
+	LD	(CFMENU),A	; store flag (sub-)menu entered
+	CALL	CLS
+	CALL	VPRINT
+	DEFB	CR,LF,'Menu4 - Hard Disk Options'
+	DEFB	CR,LF,LF,'  ',1,' 1 ',2,'  Hard Drive Controller = '
+	DEFB	0
+	LD	A,0BAH		; offset to CNTRLR in Config area
+	CALL	WSPCPTR		; set ptr
+	LD	A,(HL)		; get controller type
+	LD	(HDCTRLR),A	; ..and store it
+	LD	(HDCTRL2),A
+	LD	HL,HDCTR$A	; prepare ptr for "GIDE"
+	CP	80H		; is it GIDE ?
+	JR	Z,M4HD1		; ..if so, jump to contiinue
+	LD	HL,HDCTRL2	;   else, clear copy
+	LD	(HL),0
+	CP	10		; check for unknown controller type
+	LD	HL,HDCTR$B+1	; prepare for type "Unknown"
+	JR	NC,M4HD1	; ..if so, jump
+	LD	HL,HDC$TBL	;   else, ptr to vector table for strings
+	ADD	A,A		; calculate offset
+	CALL	GWRDHLA		; read addr and let HL point to string
+M4HD1:	CALL	VPSTR		; display string (HL= ptr)
+	CALL	VPRINT
+	DEFB	CR,LF,LF,'  ',1,' 2 ',2,'  First Drive  :'
+	DEFB	0
+	LD	A,0BBH		; offset to HDRV0 in Config area
+	CALL	PHDPARM		; set ptr
+	CALL	VPRINT
+	DEFB	CR,LF,LF,'  ',1,' 3 ',2,'  Second Drive :'
+	DEFB	0
+	LD	A,0C4H		; offset to HDRV1 in Config area
+	CALL	PHDPARM		; set ptr
+	CALL	VPRINT
+	DEFB	CR,LF,LF,'  ',1,' 4 ',2,'  Third Drive  :'
+	DEFB	0
+	LD	A,0CDH		; offset to HDRV2 in Config area
+	CALL	PHDPARM		; set ptr
+	LD	A,'4'		; max. possible option in this menu as ascii number
+	CALL	MSELECT		; get input
+	OR	A
+	JP	Z,M0MAIN	; if none, jump display main menu
+
+
+;::::: MENU 4 - HARD DISK (configure)
+
+	; subsequent labels start with "HD_"
+M4CFG:	CP	'2'		; option '2' selected ?
+	JR	Z,HD_DRV1	; ..if so, jump
+	CP	'3'		; option '3' ?
+	JR	Z,HD_DRV2
+	CP	'4'		; option '4' ?
+	JR	Z,HD_DRV3
+	CALL	VPRINT
+	DEFB	CR,LF,TAB,'  Select Controller Type as:',CR,LF
+	DEFB	0
+	XOR	A		; clear A
+	LD	C,A		; ..and C
+M4CFG1:	LD	HL,HDC$TBL	; ptr to vector tables of strings
+	ADD	A,A		; calc offset (2 bytes per entry)
+	CALL	ADDHLA		; move ptr fwd
+	CALL	PHDCNAM		; display option number and name of controller
+	INC	C		; counter +1
+	LD	A,C
+	CP	10		; check if max. number not exceeded
+	JR	C,M4CFG1	; ..show next controller type
+	LD	A,0BAH		; offset to CNTRLR in Config area
+	CALL	WSPCPTR		; set ptr
+	PUSH	HL		; ..in IX
+	POP	IX
+	LD	A,'9'+1		; max. possible option in this menu as ascii number
+	CALL	MSELECT		; get input
+	JR	Z,M4CFG3	; if none, jump exit
+	SUB	'0'		; convert ascii to number
+	CP	9		; below 9 ?
+	JR	C,M4CFG2	; ..if so, skip over
+	LD	A,80H		;   else, must be GIDE (type 0x80)
+M4CFG2:	LD	(IX+0),A	; set controller type
+M4CFG3:	JP	M4HD		; ..and display hard disk menu again
+
+
+	; configure HD drive
+	;  in: A= offset to HDRV0/1/2
+	;      use injected opcode to skip over another offset being loaded
+HD_DRV1: LD	A,0BBH		; offset to HDRV0 in Config area
+	DEFB	21h		; injected opcode 0x21 (= LD HL,nnnn), and fall through
+HD_DRV2: LD	A,0C4H		; offset to HDRV1 in Config area
+	DEFB	21h
+HD_DRV3: LD	A,0CDH		; offset to HDRV2 in Config area
+	CALL	WSPCPTR		; set ptr
+	CALL	VPRINT
+	DEFB	CR,LF,TAB,TAB,'Activate Drive ([Y]/N) ? '
+	DEFB	0
+	CALL	CAPIN
+	RES	4,(HL)		; byte = combined Phys. Unit # and Log. Unit #
+				; bit 4 indicates if active (0= inactive, 1= active)
+	CP	'N'		; 'N' entered ?
+	JP	Z,HD_STP4	; ..if so, jump exit
+	SET	4,(HL)		;   else, set bit 4 to activate drive
+	CALL	CRLF
+
+	; physical unit
+HD_PUN:	CALL	VPRINT
+	DEFB	CR,TAB,TAB,'Physical Unit (0..7)',TAB,TAB,'['
+	DEFB	0
+	CALL	EREOL		; clear CON: to end of line
+	PUSH	HL		; save HL (ptr to HDRV0/1/2)
+	LD	A,(HL)		; get config. byte
+	AND	00000111B	; mask lower bits (physical device)
+	LD	L,A		; ..and move to HL for display/input
+	LD	H,0
+	CALL	PHLDCNV		; display current value and ask for user input
+	POP	HL		; restore regs
+	LD	A,D		; evaluated number in DE
+	OR	A		; high-byte must not be zero
+	JR	NZ,HD_PUN1	; ..if so, jump
+	LD	A,E		;   else, get low-byte
+	CP	8		;   ..and check if above limit
+	JR	C,HD_PUN2	;     ..if not, jump to continue
+HD_PUN1: CALL	CFEVAL		; eval script file input
+	JR	HD_PUN		; loop
+HD_PUN2: LD	A,(HL)		; get Config. Byte
+	AND	11111000B	; mask off lower 3 bits
+	OR	E		; ..combine with new value (input)
+	LD	(HL),A		;   ..and write back
+	LD	C,A		; store Config. Byte in C
+	LD	A,(HDCTRLR)	; get controller type
+	CP	80H		; is it GIDE ?
+	JR	Z,HD_CYL	; ..if so, skip following options
+	CALL	CRLF
+
+	; configure logical unit
+HD_LUN:	CALL	VPRINT
+	DEFB	CR,TAB,TAB,'Logical Unit Number (0..7)',TAB,'['
+	DEFB	0
+	CALL	EREOL		; clear CON: to end of line
+	LD	A,(HL)		; get Config. Byte
+	RLCA			; shift upper bits 7-5 to position 2-0
+	RLCA
+	RLCA
+	AND	00000111B	; mask lower bits (= log. unit)
+	PUSH	HL		; save regs
+	LD	L,A		; copy to HL for display
+	LD	H,0
+	CALL	PHLDCNV		; display current value and ask for user input
+	POP	HL		; restore regs
+	LD	A,D		; evaluated number in DE
+	OR	A		; check if high-byte is zero
+	JR	NZ,HD_LUN1	; ..if not, jump
+	LD	A,E		;   else, get low-byte
+	CP	8		;   ..and check if above limit
+	JR	C,HD_LUN2	;     ..if not, jump to continue
+HD_LUN1: CALL	CFEVAL		;     else, eval script file input
+	JR	HD_LUN		; loop (ask for new input)
+HD_LUN2: RRCA			; shift bits back to position 7-5
+	RRCA
+	RRCA
+	LD	B,A		; save logical unit number in B
+	LD	A,(HL)		; get Config. Byte
+	AND	00011111B	; mask off upper 3 bits
+	OR	B		; ..combine with new value (input)
+	LD	(HL),A		; write back
+
+	; configure cylinders
+HD_CYL:	INC	HL		; move ptr to # of Cylinders in HDRV0/1/2
+	PUSH	HL		; ..copy to IX
+	POP	IX
+	CALL	VPRINT
+	DEFB	CR,LF,TAB,TAB,'Number of Cylinders',TAB,TAB,'['
+	DEFB	0
+	LD	L,(IX+0)	; current # of Cyl's in HL for output
+	LD	H,(IX+1)
+	CALL	PHLDCNV		; display current value and ask for user input
+	LD	(IX+0),E	; evaluated number in DE
+	LD	(IX+1),D	; ..write back
+	LD	(HDCYLNO),DE	;   ..and also store locally
+	CALL	CRLF
+
+	; configure heads
+HD_HEAD: CALL	VPRINT
+	DEFB	CR,TAB,TAB,'Number of Heads',TAB,TAB,TAB,'['
+	DEFB	0
+	CALL	EREOL		; clear CON: to end of line
+	LD	L,(IX+2)	; current # of Heads in HL for output
+	LD	H,0
+	CALL	PHLDCNV		; display current value and ask for user input
+	LD	A,D		; evaluated number in DE
+	OR	A		; check if high-byte is zero
+	JR	Z,HD_HED1	; ..if so, jump to continue
+	CALL	CFEVAL		;   else, eval script file input
+	JR	HD_HEAD		; loop (ask for new input)
+HD_HED1: LD	(IX+2),E	; write back new value (input)
+	LD	A,(HDCTRLR)	; get controller type
+	CP	80H		; is it GIDE ?
+	JR	NZ,HD_HED2	; ..if not, continue w/ reduced write
+	CALL	VPRINT		;   else, continue w/ sectors per track
+	DEFB	CR,LF,TAB,TAB,'Sectors Per Track',TAB,TAB,'['
+	DEFB	0
+	JR	HD_RWRT
+HD_HED2: CALL	VPRINT
+	DEFB	CR,LF,TAB,TAB,'Reduced Write Starting Cylinder',TAB,'['
+	DEFB	0
+
+	; configure Sectors per Track (GIDE) or Reduced Write Starting Cyl (SCSI)
+HD_RWRT: LD	L,(IX+3)	; current value in HL for output
+	LD	H,(IX+4)
+	CALL	PHLDCNV		; display current value and ask for user input
+	LD	(IX+3),E	; write back evaluated number in DE
+	LD	(IX+4),D
+	LD	A,(HDCTRLR)	; get controller type
+	SUB	80H		; is it GIDE ?
+				; Note: SUB 0x80 is used here, instead of CP
+				; so A= 0 which is written as Step Rate value below
+				; GIDE does not use a Step Rate
+	JP	Z,HD_STP3	; ..if so, skip following options
+	CALL	VPRINT
+	DEFB	CR,LF,TAB,TAB,'Write Precomp. Start Cylinder',TAB,'['
+	DEFB	0
+	LD	L,(IX+5)	; get current Cyl # to start precompensation
+	LD	H,(IX+6)	; ..to HL for output
+	CALL	PHLDCNV		; display current value and ask for user input
+	LD	(IX+5),E	; write back evaluated number in DE
+	LD	(IX+6),D
+	LD	A,(HDCTRLR)	; get controller type
+	CP	3		; is it Owl/Adaptec/Xebec (first 3 options) ?
+	LD	A,0
+	JR	NC,HD_STP3	; ..if so, set Step Rate = 0
+
+	; configure Step Rate (predefined values for specific SCSI controllers)
+HD_STEP: LD	A,(HDCTRLR)	; get controller type
+	LD	HL,HDSTP$1	; prepare ptr to Step Rate options #1
+	LD	C,3		; number of options
+	DEC	A		; is it Adaptec (#1) ?
+	JR	Z,HD_STP1	; ..if so, jump continue
+	LD	HL,HDSTP$2	; ptr Step Rate options #2
+	LD	C,4		; number of options
+	DEC	A		; is it Xebec ?
+	JR	NZ,HD_STP4	; ..if not, jump exit
+HD_STP1: CALL	VPSTR		; print string (HL= ptr)
+	CALL	EREOL
+	LD	L,(IX+7)	; get current value
+	INC	L		; make it 1-based
+	LD	H,0
+	CALL	PHLDCNV		; display current value and ask for user input
+	JR	C,HD_STP2	; ..if error, jump
+	LD	A,D		; evaluated number in DE
+	OR	A		; check if high-byte is zero
+	JR	NZ,HD_STP2	; ..if not, jump
+	LD	A,E		;   else, get low byte
+	DEC	A		;   ..make it 0-based
+	CP	C		;   and compare to possible # of options
+	JR	C,HD_STP3	; ..if within boundaries, continue
+HD_STP2: CALL	CFEVAL		; eval script file input
+	JR	HD_STEP		; loop (ask for new input)
+HD_STP3: LD	(IX+7),A	; write Step Rate
+HD_STP4: JP	M4HD		; jump display HD menu
+
+	; Step Rate options
+	; nul-terminated strings
+HDSTP$1: DEFB	CR,LF,TAB,TAB,'Step Rate:'
+	DEFB	CR,LF,'  3mS(1), 28uS(2), 12uS(3)',TAB,TAB,'['
+	DEFB	0
+HDSTP$2: DEFB	CR,LF,TAB,TAB,'Step Rate:  3mS(1), '
+	DEFB	'200uS(2), 70uS(3), 40uS(4)',TAB,'['
+	DEFB	0
+
+
+;::::: SUPPORT FUNCTIONS - Hard Disk (config)
+
+	; display option number and name of controller
+	;  in: C= current number (counter)
+	;      HL= entry in vector table of strings (names)
+PHDCNAM: CALL	VPRINT
+	DEFB	CR,LF,TAB,TAB,'('
+	DEFB	0
+	LD	A,C		; get number
+	ADD	A,'0'		; make it ascii
+	CALL	COUT		; ..and display
+	CALL	VPRINT
+	DEFB	') '
+	DEFB	0
+	LD	E,(HL)		; addr of string, low byte
+	INC	HL			; ptr fwd
+	LD	D,(HL)		; addr of string, high byte
+	EX	DE,HL		; swap regs
+	JP	VPSTR		; display string (HL= ptr), and return from there
+
+	; strings Hard Disk controllers
+	; nul-terminated strings prefixed by a table of vectors
+HDC$TBL: DEFW	HDCTR$1
+	DEFW	HDCTR$2
+	DEFW	HDCTR$3
+	DEFW	HDCTR$4
+	DEFW	HDCTR$5
+	DEFW	HDCTR$6
+	DEFW	HDCTR$7
+	DEFW	HDCTR$8
+	DEFW	HDCTR$9
+	DEFW	HDCTR$A
+	DEFW	HDCTR$B
+
+HDCTR$1: DEFB	'Owl',0
+HDCTR$2: DEFB	'Adaptec ACB-4000A',0
+HDCTR$3: DEFB	'Xebec 1410a/Shugart 1610-3',0
+HDCTR$4: DEFB	'Seagate SCSI',0
+HDCTR$5: DEFB	'Shugart 1610-4/Minimal SCSI',0
+HDCTR$6: DEFB	'Conner SCSI',0
+HDCTR$7: DEFB	'Quantum SCSI',0
+HDCTR$8: DEFB	'Maxtor SCSI',0
+HDCTR$9: DEFB	'Syquest SCSI',0
+HDCTR$A: DEFB	'GIDE (IDE/ATA)',0
+HDCTR$B: DEFB	'--Unknown--',0
+
+
+	; display Hard Disk parameters
+	;  in: A= offset to HDRV0/1/2
+PHDPARM: CALL	WSPCPTR		; set ptr
+	LD	A,(HL)		; get Config. Byte
+	BIT	4,A		; is drive active ?  (bit 4, 0= inactive, 1= active)
+	JR	NZ,PHDPAR1	; ..if active, continue
+	CALL	VPRINT		;   else, display msg and return
+	DEFB	' - inactive -'
+	DEFB	0
+	RET
+PHDPAR1: LD	A,(HDCTRLR)	; get controller type
+	CP	80H		; is it GIDE ?
+	JR	NZ,PHDPAR2	; ..if not, jump
+	CALL	VPRINT		;   else, display msg
+	DEFB	'  Unit '
+	DEFB	0
+	LD	A,(HL)		; get Config. Byte
+	JR	PHDPAR3		; ..and skip several options
+
+	; for SCSI drives, show physical and locgical unit
+PHDPAR2: CALL	VPRINT
+	DEFB	'  Physical Unit '
+	DEFB	0
+	LD	A,(HL)		; get Config. Byte
+	AND	00000111B	; mask off bits 4-7
+	CALL	PAFDC		; ..display value (Phys. Unit)
+	CALL	VPRINT
+	DEFB	',  Logical Unit '
+	DEFB	0
+	LD	A,(HL)		; get Config. Byte
+	RLCA			; rotate bits 7-5 to position 2-0
+	RLCA
+	RLCA
+PHDPAR3: AND	00000111B	; mask off bits 4-7
+	CALL	PAFDC		; ..display value (Log. Unit)
+	INC	HL		; move ptr fwd (# Cyl)
+	PUSH	HL		; ..into IX
+	POP	IX
+	LD	A,(HL)		; get # Cylinders
+	INC	HL		; ..in HL
+	LD	H,(HL)
+	LD	L,A
+	OR	H		; is value = zero ?
+	JP	Z,PHDPARB	; ..if so, exit
+	LD	(HDCYLNO),HL	; store # Cylinders
+	CALL	VPRINT
+	DEFB	CR,LF,TAB,' No. of Cylinders = '
+	DEFB	0
+	CALL	PHLFDC		; display value (# Cyl)
+	CALL	VPRINT
+	DEFB	',',TAB,'No. of Heads   = '
+	DEFB	0
+	LD	A,(IX+2)	; get # Heads
+	CALL	PAFDC		; ..and display
+	LD	A,(HDCTRLR)	; get controller type
+	CP	80H		; is it GIDE ?
+	JR	NZ,PHDPAR4	; ..if not, jump
+	CALL	VPRINT		;   else, display Sect. per Track
+	DEFB	CR,LF,TAB,' Sectors-Per-Track= '
+	DEFB	0
+	LD	L,(IX+3)	; get word - for GIDE Sect./Track are stored here
+	LD	H,(IX+4)	;   (instead of Cyl. to start Reduced Write)
+	JP	PHLFDC		; ..diplay, and let return from there
+
+	; more parameters shown for certain SCSI controllers
+PHDPAR4: CP	3		; is controller type # less than 3 ?
+	RET	NC		; ..if not, return (type <> Owl, Adaptec, Xebec)
+	CALL	VPRINT		;   else, display more parameters
+	DEFB	CR,LF,TAB,' Red. Write Cyl   = '
+	DEFB	0
+	LD	E,(IX+3)	; get word, Cyl. # to start Reduced Write
+	LD	D,(IX+4)
+	LD	HL,(HDCYLNO)	; get total # of Cylinders
+	OR	A		; clear C-Flag
+	SBC	HL,DE		; subtract
+	EX	DE,HL		; swap regs
+	JR	NZ,PHDPAR5	; ..if not zero, jump
+	CALL	VPRINT		;   else, no Reduced Write
+	DEFB	'None'
+	DEFB	0
+	JR	PHDPAR6		; skip over
+PHDPAR5: CALL	PHLFDC		; display value (Cyl. to start Reduced Write)
+PHDPAR6: CALL	VPRINT
+	DEFB	',',TAB,'Precomp. @ Cyl = '
+	DEFB	0
+	LD	E,(IX+5)	; get word, Cyl. # to start Precompensation
+	LD	D,(IX+6)
+	LD	HL,(HDCYLNO)	; get total # of Cylinders
+	OR	A		; clear C-Flag
+	SBC	HL,DE		; subtract
+	EX	DE,HL		; swap regs
+	JR	NZ,PHDPAR7	; ..if not zero, jump
+	CALL	VPRINT		;   else, no Precompensation
+	DEFB	'None'
+	DEFB	0
+	JR	PHDPAR8		; skip over
+PHDPAR7: CALL	PHLFDC		; display value (Cyl. to start Precompensation)
+PHDPAR8: LD	A,(HDCTRLR)	; get controller type
+	OR	A		; is it zero ? (= Owl)
+	RET	Z		; ..if so, return
+	CP	3		;   else, check if type # is less than 3 ?
+	RET	NC		; ..if not, return
+
+	; Step Rate parameters only for Adaptec and Xebec SCSI controllers
+	CALL	VPRINT
+	DEFB	CR,LF,TAB,' Drive Step Rate  = '
+	DEFB	0
+	LD	HL,HDSTP$A	; prepare ptr
+	DEC	A		; is it Adaptec controller ?
+	JR	Z,PHDPAR9	; ..if so, skip over
+	LD	HL,HDSTP$X	;   else, ptr to Xebec controller strings
+PHDPAR9: LD	A,(IX+7)	; get Step Rate
+	AND	00000011B	; mask off bits 2-7 (max. 4 values possible)
+	LD	B,A
+	ADD	A,A		; *2
+	ADD	A,A		; *4
+	ADD	A,B		; *5 (each entry is 5 bytes long)
+	CALL	ADDHLA		; set ptr to string
+	LD	B,5		; 5 chars to display
+PHDPARA: LD	A,(HL)		; get char
+	INC	HL		; move ptr fwd
+	CALL	COUT		; ..and display char in A
+	DJNZ	PHDPARA		; loop till done
+	RET
+
+	; parameter not defined, exit
+PHDPARB: CALL	VPRINT
+	DEFB	CR,LF,TAB,'-- Not Defined --'
+	DEFB	0
+	RET
+
+; Step Rate options - Adaptec controller
+; 5 bytes per entry
+HDSTP$A: DEFB	'3mS  '
+	DEFB	'28uS '
+	DEFB	'12uS '
+	DEFB	'???  '
+; Step Rate options - Xebec controller
+; 5 bytes each entry
+HDSTP$X: DEFB	'3mS  '
+	DEFB	'200uS'
+	DEFB	'70uS '
+	DEFB	'40uS '
+
+	; *
+
+
+;::::: MENU 5 - DRIVE LAYOUT (display)
+
+M5DL:	LD	A,1
+	LD	(CFMENU),A	; store flag (sub-)menu entered
+	LD	HL,(WSPCBEG)	; addr start WSPC area
+	LD	DE,22*3+1	; offset to Bios fn #22 DRVTBL (addr drive table)
+	ADD	HL,DE
+	LD	E,(HL)		; get low byte
+	INC	HL
+	LD	D,(HL)		; get high byte
+	EX	DE,HL		; ..and swap
+	CALL	CNVADDR		; convert to addr in WSPC area
+	INC	HL		; move ptr past 0x21 LD HL,....
+	LD	E,(HL)		; get low byte
+	INC	HL
+	LD	D,(HL)		; get high byte
+	EX	DE,HL		; ..and swap
+	CALL	CNVADDR		; convert to addr in WSPC area
+	LD	(DRTBL),HL	; store addr (in WSPC) of drive table
+M5DL1:	CALL	CLS
+	CALL	VPRINT
+	DEFB	CR,LF,'Menu 5 - Logical Drive Layout',CR,LF,LF
+	DEFB	0
+	XOR	A		; clear A
+	LD	B,16		; max. number of drives
+M5DL2:	PUSH	BC
+	PUSH	AF
+	ADD	A,'A'		; convert to ascii letter (0 -> 'A')
+	CALL	COUT		; ..and display
+	CALL	VPRINT
+	DEFB	': = '
+	DEFB	0
+	POP	AF		; restore drive number
+	PUSH	AF
+	CALL	PDLPARM		; display drive parameters
+	CALL	CRLF
+	POP	AF
+	POP	BC
+	INC	A		; next drive number
+	DJNZ	M5DL2		; loop
+	CALL	VPRINT
+	DEFB	CR,LF,'     '
+	DEFB	1,' 1 ',2,' Swap Drives, '
+	DEFB	1,' 2 ',2,' Configure Partition'
+	DEFB	1,' 3 ',2,' Show Drive Allocations'
+	DEFB	0
+	LD	A,'3'		; max. possible option in this menu as ascii number
+	CALL	MSELECT		; get input
+	OR	A
+	JP	Z,M0MAIN	; ..if none, display Main menu
+
+
+;::::: MENU 5 - DRIVE LAYOUT (configure)
+
+	; subsequent labels start with "DL_"
+M5CFG:	CP	'1'		; option 1 selected ?
+	JP	NZ,DL_PRTT	; ..if not, jump to next
+
+	; --- Swap Drives (option 1)
+	CALL	VPRINT
+	DEFB	CR,LF,'   Swap drive [A..P] : '
+	DEFB	0
+DL_SWP:	CALL	GETINP		; get input
+	CP	' '+1		; is it a Control char or <SP> ?
+	JP	C,M5DL1		; ..if so, go back and display options again
+	CALL	CKDLTR		; is it a valid drive letter ?
+	JR	C,DL_SWP	; ..if not, loop
+	LD	(DR1SWP),A	;   else, store number of 1st drive
+	CALL	VPRINT
+	DEFB	'  with drive [A..P] : '
+	DEFB	0
+DL_SWP1: CALL	GETINP		; get input
+	CP	' '+1		; is it a Control char or <SP> ?
+	JP	C,M5DL1		; ..if so, go back and display options again
+	CALL	CKDLTR		; is it a valid drive letter ?
+	JR	C,DL_SWP1	; ..if not, loop
+	ADD	A,A		; double the number (drive table entries are 16-bit)
+	LD	HL,(DRTBL)	; addr of DRVTBL
+	LD	E,L		; ..into DE
+	LD	D,H
+	CALL	ADDHLA		; add offset
+	EX	DE,HL		; ..swap
+	LD	A,(DR1SWP)	; # of 1st drive
+	ADD	A,A		; *2
+	CALL	ADDHLA		; add offset
+	LD	A,(DE)		; byte of table entry 1st drive (HL= ptr)
+	LD	B,(HL)		; byte of table entry 2nd drive (DE= ptr)
+	EX	DE,HL		; swap pointers
+	LD	(HL),B		; ..and write bytes to swapped locations
+	LD	(DE),A
+	INC	DE		; both pointers fwd
+	INC	HL
+	LD	A,(DE)		; ..and repeat read/write
+	LD	B,(HL)
+	EX	DE,HL
+	LD	(HL),B
+	LD	(DE),A
+	LD	HL,(DRTBL)	; get addr of DRVTBL
+	LD	B,16		; number of drives
+	LD	DE,0
+	DEC	HL		; move ptr back
+				; ..and fall through
+
+	; build drive vector (bitmap of available drives) in DE
+DL_VECT: INC	HL		; move ptr fwd
+	LD	A,(HL)		; get byte
+	INC	HL		; ptr fwd
+	OR	(HL)		; is it zero ? (no drive)
+	JR	Z,DL_VEC1	; ..if so, skip
+	SCF			;   else, set C-Flag
+DL_VEC1: RR	D		; rotate bits through DE
+	RR	E		; ..existing drives are marked with a 1-bit
+	DJNZ	DL_VECT		; loop till done
+	LD	A,(RUNMODE)	; get program running mode
+	LD	BC,34H		; offset drive vector in Z3ENV Descriptor
+	LD	HL,(WRKEND)	; addr of WSPC end
+	CP	'I'		; config mode 'I'mage ?
+	JR	Z,DL_VEC2	; ..if so, jump
+	LD	HL,(ENVADR)	;   else, get addr of Environment
+	CP	'M'		; config mode 'M'emory ?
+	JR	Z,DL_VEC2	; ..if so, jump
+	LD	HL,(WRKZ3E)	;   else, Disk mode, get addr of Environment
+	LD	A,H		; is it valid ?
+	OR	L
+	JR	Z,DL_VEC3	; ..if not, jump exit
+DL_VEC2: ADD	HL,BC		; add offset
+	LD	(HL),E		; ..and store new drive vector
+	INC	HL
+	LD	(HL),D
+DL_VEC3: JP	M5DL1
+
+	; --- Configure Partition (option 2)
+DL_PRTT: CP	'2'		; option 2 selected ?
+	JP	NZ,DL_ALOC	; ..if not, jump to next
+	LD	A,(RUNMODE)	; get program running mode
+	CP	'M'		; config mode 'M'emory ?
+	JR	NZ,DL_PRT1	; ..if not, jump to coninue
+	CALL	VPRINT		;   else, show message
+	DEFB	CR,LF,TAB,"--- Can't Configure Running System ! ---"
+	DEFB	0
+	CALL	CFEVAL		; eval script file input
+	JP	DL_ALO7		; ..and jump exit
+DL_PRT1: CALL	VPRINT
+	DEFB	CR,LF,TAB,'Configure which Drive [A..P] : '
+	DEFB	0
+DL_PRT2: CALL	GETINP		; get input
+	CP	CR		; is it <CR> ?
+	JP	Z,M5DL1		; ..if so, jump display DL menu again
+	CALL	CKDLTR		;   else, convert to drive number
+	JR	C,DL_PRT2	;   ..if not valid, get new input
+	LD	(DRNO),A	; store drive number
+	CALL	GDPHDPB		; addr of DPH and DPB in WSPC area
+	LD	A,D		; is DPH addr valid ?
+	OR	E
+	JP	Z,M5DL1		; ..if not, jump to display menu
+	DEC	DE		; move ptr back (in XPDH, located before standard DPH)
+	DEC	DE
+	LD	A,(DE)		; get driver ID
+	LD	(DRVRID),A	; ..store it
+	CP	2		; is it a Hard Disk ?
+	JR	Z,DL_PRT3	; ..if so, continue
+	CP	3		; or is it RAM Disk ?
+	JR	Z,DL_PRT3	; ..then continue
+	LD	A,BS		;   else, clear char (send <BS>)
+	CALL	COUT
+	CALL	CFEVAL		; eval script file input
+	JR	NZ,DL_PRT2	; loop (ask for new input)
+DL_PRT3: CALL	CRLF
+
+	; partition allocation size
+DL_ALSZ: CALL	VPRINT
+	DEFB	TAB,'Allocation Size (1, 2, 4, 8, 16, 32k)',TAB,'['
+	DEFB	0
+	LD	A,(DRNO)	; get drive number
+	CALL	GDPHDPB		; HL= addr of DPB
+	LD	E,(HL)		; Sect/Trk into DE
+	INC	HL
+	LD	D,(HL)
+	INC	HL
+	SRL	D		; divide DE by 2
+	RR	E
+	SRL	D		; /4
+	RR	E
+	SRL	D		; /8
+	RR	E
+	LD	(ALSIZKB),DE	; store allocation size (kB)
+	LD	A,(HL)		; get block shift factor (BSH)
+	LD	(DRBSH),A	; ..and store
+	CALL	GBLS		; get Block Size (BLS)
+	LD	L,A		; ..in HL for output
+	LD	H,0
+	CALL	PHLDCNV		; display value and ask for input
+	LD	A,1		; start with 1
+	LD	B,6		; max. 6 valid allocation sizes
+DL_ALS1: CP	E		; evaluated number in DE (single digit range - check E)
+	JR	Z,DL_ALS2	; ..if match, jump
+	ADD	A,A		;   else, double value
+	DJNZ	DL_ALS1		;   ..and loop
+	LD	A,7		; entered value is invalid
+	CALL	COUT
+	CALL	CFEVAL		; eval script file input
+	JR	DL_ALSZ		; loop (ask for new input)
+DL_ALS2: CALL	GBSHP		; get ptr to BSH that corresponds with block size
+	LD	(DRBSTBL),HL	; ..and store it
+
+	; partition number of dir entries
+DL_DIRE: CALL	VPRINT
+	DEFB	TAB,TAB,'Number of Dir Entries',TAB,'['
+	DEFB	0
+	LD	A,(DRNO)	; get drive number
+	CALL	GDPHDPB		; HL= addr of DPB
+	LD	DE,7		; offset to 'Dir Max -1'
+	ADD	HL,DE
+	LD	A,(HL)		; get DirMax value
+	INC	HL		; ..into HL
+	LD	H,(HL)
+	LD	L,A
+	INC	HL		; +1
+	CALL	PHLDCNV		; display value and ask for input
+	LD	HL,(DRBSTBL)	; ptr to BSH lookup table
+	INC	HL		; move fwd to BLM
+	LD	A,(HL)		; get Block Mask (BLM)
+	SCF
+	RLA			; A= A*2+1
+	SCF
+	RLA			; A= A*2+1
+	AND	E		; compare input with max. possible number
+	JR	Z,DL_TROF	; ..if ok, jump to continue
+	CALL	VPRINT		;   else, display error and ask for new input
+	DEFB	BEL,'  +++ Illegal Number of Entries +++',CR,LF
+	DEFB	0
+	CALL	CFEVAL		; eval script file input
+	JR	DL_DIRE		; loop (ask for new input)
+
+	; partition track offset (start of directory)
+DL_TROF: LD	(DRDIRMX),DE	; store new Max Dir value
+	CALL	VPRINT
+	DEFB	TAB,TAB,'Starting Track Number',TAB,'['
+	DEFB	0
+	LD	A,(DRNO)	; get drive number
+	CALL	GDPHDPB		; HL= addr of DPB
+	LD	DE,13		; offset to 'Trk Offset'
+	ADD	HL,DE
+	LD	A,(HL)		; get 'Trk Offset'
+	INC	HL		; ..into HL
+	LD	H,(HL)
+	LD	L,A
+	CALL	PHLDCNV		; display value and ask for input
+	LD	(DROFFS),DE	; store entered value
+	CALL	VPRINT
+	DEFB	TAB,TAB,'# Tracks in Logical Drv',TAB,'['
+	DEFB	0
+	LD	A,(DRNO)	; get drive number
+	CALL	GDPHDPB		; HL= addr of DPB
+	LD	DE,5		; offset to 'Disk Size -1'
+	ADD	HL,DE
+	LD	E,(HL)		; get Disk Size
+	INC	HL		; ..into DE
+	LD	D,(HL)
+	INC	DE		; +1
+	LD	A,(DRBSH)	; get current Block Shift Factor (BSH)
+	EX	DE,HL		; swap regs (HL= Disk Size)
+	SUB	3		; reduce BSH
+	LD	B,A		; ..for use as counter
+	LD	DE,(ALSIZKB)	; get allocation size (kB)
+	LD	A,0
+	JR	Z,DL_TRN1	; ..if A already zero (BSH= 3), don't loop
+
+	; partition number of tracks (total)
+DL_TRNO: ADD	HL,HL		; 'Disk Size' is measured in BLS units (allocation blocks)
+	ADC	A,0		; ..so double it [BSH-3] times
+	DJNZ	DL_TRNO
+DL_TRN1: CALL	DIVHLDE		; calculate disk capacity in tracks
+	LD	L,C		; copy result in HL
+	LD	H,B
+	CALL	PHLDCNV		; display value and ask for input
+	LD	(DRTRKS),DE	; store entered value (# tracks)
+	LD	A,(DRNO)	; get drive number
+	CALL	GDPHDPB		; DE= addr DPH, HL= addr DPB
+	PUSH	HL		; save HL (DPB)
+	EX	DE,HL		; swap regs
+	DEC	HL		; move ptr backwards
+	PUSH	HL		; save HL (ptr DPH-1, Phys. Unit #)
+	LD	L,(HL)		; get Phys. Unit number
+	LD	H,0
+	CALL	VPRINT
+	DEFB	TAB,TAB,'Physical Unit Number',TAB,'['
+	DEFB	0
+	CALL	PHLDCNV		; display value and ask for input
+	POP	HL		; restore ptr (DPH-1, Phys. Drive #)
+	LD	(HL),E		; ..and store entered value
+	EX	DE,HL		; swap regs
+	INC	DE		; move ptr fwd to DPH
+	POP	HL		; restore HL (DPB)
+	LD	A,(DRVRID)	; get driver ID
+	CP	2		; is it Hard Disk ?
+	JR	Z,DL_UNIT	; ..if so, jump to continue
+	INC	HL		;   else, move ptr fwd to DPB+2 (BSH)
+	INC	HL
+	JR	DL_UN1		; ..and skip over
+
+	; partition physical unit
+	; for Hard Disk, set fixed Sect/Trk (DEFW 64) and Alloc. Size (8k)
+DL_UNIT: LD	(HL),64		; set number of sectors per track
+	INC	HL		; ptr fwd
+	LD	(HL),0
+	INC	HL
+	LD	DE,8		; allocation size
+	LD	(ALSIZKB),DE	; ..store it
+DL_UN1:	LD	DE,(DRBSTBL)	; ptr to BSH in internal lookup table
+	EX	DE,HL		; swap regs
+	LDI			; copy BSH and BLM over
+	LDI
+	EX	DE,HL		; swap regs back
+	PUSH	HL		; save HL (ptr to DPB+4, extent mask)
+	LD	A,(DE)		; get BLS from internal lookup table
+	LD	E,A		; ..into DE
+	LD	D,0
+	LD	HL,(DRTRKS)	; # of tracks (disk capacity)
+	LD	A,(ALSIZKB)	; allocation size in kB (Sect/Trk)
+	SRL	A		; shift right through C-Flag
+	LD	B,A		; after initial SRL, reg B will be used
+	XOR	A		; clear A and C-Flag
+
+	; multiply # of tracks according to Allocation Size
+	; 1k= *2, 2k= *4, 4k= *8 and so forth
+DL_UN2:	ADD	HL,HL		; double value
+	ADC	A,0		; test C-Flag
+	SRL	B		; shift right through C-Flag
+	JR	NC,DL_UN2	; ..loop if more to do
+	CALL	DIVHLDE		; then divide by BLS (from internal lookup table)
+	LD	A,E		; BLS into A (value: 1, 2, 4, 8, 16, or 32)
+	LD	L,0
+	SRL	A		; shift LSB out
+	JR	Z,DL_UN4	; ..if A= 0, jump
+DL_UN3:	SCF			;   else, set Carry
+	RL	L		;   ..and set as LSB in L
+	SRL	A		; shift next LSB out
+	JR	NZ,DL_UN3	; ..and continue until A= 0
+				; reg L contains a mask with lower bits set
+				; representing BLS value (1= 00000000, 2= 00000001, 4= 00000011 ...)
+	LD	A,B		; get high-byte of quotient (disk capacity / BLS)
+	OR	A		; is it zero ?
+	JR	Z,DL_UN4	; ..if so, skip over
+	SRL	L		;   else, extent bit mask once more
+DL_UN4:	LD	A,L		; bit mask into A
+	POP	HL		; restore HL (ptr DPB+4, extent mask)
+	LD	(HL),A		; ..store EXM
+	INC	HL		; ptr fwd
+	DEC	BC		; disk size -1
+	LD	(HL),C		; ..store value
+	INC	HL
+	LD	(HL),B
+	INC	HL		; ptr to DPB+7 'Dir Max -1'
+	LD	BC,(DRDIRMX)	; get Dir Max value
+	DEC	BC		; -1
+	LD	(HL),C		; ..and store
+	INC	HL
+	LD	(HL),B
+	INC	HL
+	PUSH	HL		; save HL (ptr DPB+9, Alloc0)
+	LD	L,C		; copy 'Dir Max -1' to HL
+	LD	H,B
+	INC	HL
+	LD	B,5		; set counter
+DL_UN5:	SRL	H		; divide HL by 32 (5 times /2)
+	RR	L
+	DJNZ	DL_UN5		; loop
+	XOR	A
+	CALL	DIVHLDE		; divide by BLS
+	LD	B,C		; ..use result as counter
+	LD	HL,0
+DL_UN6:	SCF			; set Carry
+	RR	H		; ..and build bit mask
+	RR	L		;   starting from MSB this time
+				;   (see B/P Bios manual, p. 57)
+	DJNZ	DL_UN6		; loop
+	EX	DE,HL		; swap regs, bit mask in DE
+	POP	HL		; restore HL (ptr DPB+9, Alloc0)
+	LD	(HL),D		; ..store value
+	INC	HL
+	LD	(HL),E
+	INC	HL
+	LD	(HL),0		; set 'Check Size' (DPB+11) to zero
+	INC	HL
+	LD	(HL),0
+	INC	HL		; move ptr to 'Trk Offset'
+	LD	DE,(DROFFS)	; get start of Dir
+	LD	(HL),E		; ..and store
+	INC	HL
+	LD	(HL),D
+	JP	M5DL1		; jump back to display menu
+
+	; display allocation (option 3)
+DL_ALOC: CALL	VPRINT
+	DEFB	CR,LF,'  Display Allocations for which Hard Drive [0..2] : '
+	DEFB	0
+DL_ALO1: CALL	GETINP		; get input
+	CP	CR		; is it <CR> ?
+	JP	Z,M5DL1		; ..if so, jump to display DL menu
+	SUB	'0'		;   else, convert to number
+	JR	C,DL_ALO1	;   ..if less than ascii '0', ask for new input
+	CP	3
+	JR	NC,DL_ALO1	;   ..if greater than '3', ask for new input
+	LD	C,A		; remember user input (number)
+	LD	HL,(WRKEND)	; addr of WSPC end
+	INC	H		; +100h
+	LD	B,16		; set initial value to avoid underflow
+DL_ALO2: LD	A,16
+	SUB	B
+	PUSH	HL
+	PUSH	BC
+	CALL	GDPHDPB		; DE= addr DPH, HL= addr DPB
+	POP	BC
+	LD	A,D		; check if DPH is valid (<> zero)
+	OR	E
+	JR	Z,DL_ALO5	; ..if not valid, jump
+	DEC	DE		; move ptr to XDPH (DPH-2= Driver ID)
+	DEC	DE
+	LD	A,(DE)
+	CP	2		; is Hard Drive ? (ID= 2)
+	JR	NZ,DL_ALO5	; ..if not, jump
+	INC	DE		; ptr fwd
+	LD	A,(DE)		; get Phys. Drive #
+	CP	C		; matches user input ?
+	JR	NZ,DL_ALO5	; ..if not, jump
+	EX	DE,HL		;   else, swap regs (DE= DPB)
+	POP	HL		; restore addr WSPC end
+	LD	A,16
+	SUB	B		; calc drive #
+	ADD	A,'A'		; convert to ascii letter
+	LD	(HL),A		; store it (WSPC end)
+	INC	HL		; ptr fwd
+	PUSH	BC		; save regs
+	PUSH	DE
+	PUSH	HL
+	LD	HL,13		; offset to 'Track Offset' (DPB+13)
+	ADD	HL,DE		; adjust ptr
+	LD	C,(HL)		; get track offset (16-bit)
+	INC	HL
+	LD	B,(HL)
+	POP	HL		; restore ptr (WSPC end)
+	LD	(HL),C		; ..and store TrkOffs value
+	INC	HL
+	LD	(HL),B
+	INC	HL		; ptr fwd
+	PUSH	HL		; save regs
+	PUSH	BC
+	INC	DE		; move ptr to DPB+2
+	INC	DE
+	LD	A,(DE)		; get block shift factor (BSH)
+	INC	DE		; move ptr to 'Disk Size -1'
+	INC	DE
+	INC	DE
+	EX	DE,HL		; swap regs
+	LD	E,(HL)		; 'Disk Size -1' into DE
+	INC	HL
+	LD	D,(HL)
+	EX	DE,HL		; swap regs back
+	INC	HL		; Disk Size (measured in BLS units)
+	SUB	3		; reduce BSH
+	JR	Z,DL_ALO4	; ..if zero, don't loop
+	LD	B,A		;   else, use as counter
+	XOR	A		; clear A
+DL_ALO3: ADD	HL,HL		; 'Disk Size' is measured in BLS units (allocation blocks)
+	ADC	A,0		; ..so double it [BSH-3] times
+	DJNZ	DL_ALO3
+DL_ALO4: LD	DE,8		; 8 sectors (of 128 bytes) = 1kB
+	CALL	DIVHLDE		; divide (result in BC)
+	POP	HL		; restore HL= 'Track Offset'
+	POP	DE		;   DE= ptr WSPC end
+	DEC	BC		; [Disk Size in kB]-1
+	ADD	HL,BC		; calc in HL
+	EX	DE,HL		; swap regs
+	LD	(HL),E		; ..and store value in WSPC area
+	INC	HL
+	LD	(HL),D
+	INC	HL		; move ptr fwd
+	POP	DE		; clear stack
+	POP	BC
+	PUSH	HL		; save ptr WSPC
+DL_ALO5: POP	HL
+	LD	(HL),0		; <NUL> (zero) marks end of string
+	DJNZ	DL_ALO2		; loop, collect data of all partitions of that drive
+	CALL	CLS
+	CALL	VPRINT
+	DEFB	'Partition Data Hard Drive Unit : '
+	DEFB	0
+	LD	A,C
+	ADD	A,'0'
+	CALL	COUT
+	CALL	VPRINT
+	DEFB	CR,LF,LF,'      Drv',TAB,'Start Trk',TAB,'End Trk',CR,LF
+	DEFB	0
+	LD	HL,(WRKEND)	; addr of WSPC end
+	INC	H		; +100h (scratch area w/ collected data)
+	LD	A,(HL)		; check first byte, zero = nothing to display
+	OR	A
+	JR	NZ,DL_ALO6	; ..if not zero, jump to continue
+	CALL	VPRINT
+	DEFB	CR,LF,TAB,'-- No Assignments --'
+	DEFB	0
+	JR	DL_ALO7		; jump to exit
+
+	; loop through collected data and display it
+DL_ALO6: CALL	VPRINT
+	DEFB	CR,LF,TAB
+	DEFB	0
+	LD	A,(HL)		; ascii letter of drive
+	INC	HL
+	CALL	COUT
+	LD	A,TAB
+	CALL	COUT
+	LD	E,(HL)		; get start track
+	INC	HL
+	LD	D,(HL)
+	INC	HL
+	EX	DE,HL		; swap regs
+	CALL	PHLFDC		; ..display value
+	EX	DE,HL		; and swap back
+	CALL	VPRINT
+	DEFB	TAB,TAB
+	DEFB	0
+	LD	E,(HL)		; get end track
+	INC	HL
+	LD	D,(HL)
+	INC	HL
+	EX	DE,HL		; swap regs
+	CALL	PHLFDC		; ..display value
+	EX	DE,HL		; and swap back
+	LD	A,(HL)		; end of data (= zero) ?
+	OR	A
+	JR	NZ,DL_ALO6	; ..if not, loop
+	CALL	CRLF		;   else, fall through
+
+DL_ALO7: CALL	VPRINT
+	DEFB	TAB,'[any key to continue]'
+	DEFB	0
+	CALL	GETINP		; get input
+	JP	M5DL1		; display DL menu again
+
+
+;::::: SUPPORT FUNCTIONS - Drive Layout
+
+	; check if input is a valid drive letter, and convert to number
+	;  in: A= ascii letter (user input)
+	; out: A= number ('A' = 0 .. 'P' = 15)
+	; ##### another version of this routine is implemented as CHKDLTR
+	;       with slightly different functionality
+	;       THIS routine is only used by "DL_" (Drive Layout)
+CKDLTR: CP	'A'		; min. 'A'
+	JP	C,CFEVAL	; ..if not, jump
+	CP	'P'+1		; max. 'P'
+	CCF
+	JP	C,CFEVAL	; ..if not, jump
+	SUB	'A'		; convert ascii letter to number ('A' -> 0)
+	RET
+
+
+	; display drive layout parameters on CON:
+	; (for drives other than HD, only a short msg is displayed)
+	;  in: A= drive number (0 = 'A:')
+PDLPARM: CALL	GDPHDPB		; DE= addr DPH, HL= addr DPB
+	LD	A,E		; check if valid (<> zero)
+	OR	D
+	JP	Z,M$NODRV	; ..if not valid, display message and let return from there
+	DEC	DE		;   else, move ptr to XDPH area (DPH-2)
+	DEC	DE
+	LD	A,(DE)		; get Driver ID
+	CP	2		; is it Hard Disk ?
+	JP	NZ,M$FLPPY	; ..if not, jump to display type and let return from there
+	INC	DE		;   else, move ptr to Phys. Drive #
+	CALL	VPRINT
+	DEFB	'Unit '
+	DEFB	0
+	LD	A,(DE)		; get Unit (Phys. Drive #)
+	CALL	PAFDC		; ..and display
+	CALL	VPRINT
+	DEFB	', '
+	DEFB	0
+	LD	E,(HL)		; Sectors per Track in DE
+	INC	HL
+	LD	D,(HL)
+	LD	(DRSECTT),DE	; store value
+	INC	HL
+	EX	DE,HL		; swap regs
+	CALL	PHLFDC		; ..display value
+	EX	DE,HL		; and swap back
+	LD	A,(HL)		; get Block Shift Factor (BSH)
+	PUSH	AF		; ..save
+	CALL	VPRINT
+	DEFB	' Sctrs/Trk, '
+	DEFB	0
+	CALL	GBLS		; get Block Size (BLS) for that BSH
+	CALL	PAFDC		; ..display as decimal
+	CALL	VPRINT
+	DEFB	'k/Blk, '
+	DEFB	0
+	LD	E,(HL)		; 'Disk Size -1' in DE
+	INC	HL
+	LD	D,(HL)
+	INC	HL
+	EX	DE,HL		; swap regs
+	INC	HL		; +1 (HL= Disk Size in BLS units)
+	POP	AF		; restore AF
+	SUB	3		; reduce BSH for use as counter
+	LD	B,A
+	JR	Z,PDLPAR2	; ..if already zero, don't loop
+	XOR	A		;   else, clear A
+PDLPAR1: ADD	HL,HL		; 'Disk Size' is measured in BLS units (allocation blocks)
+	ADC	A,A		; ..so double it [BSH-3] times
+	JP	C,M$BIG		; overflow ? then exit loop
+	DJNZ	PDLPAR1		;   else, continue loop
+PDLPAR2: PUSH	DE
+	PUSH	AF
+	PUSH	HL
+	CALL	PDISKSZ		; display capacity
+	CALL	VPRINT
+	DEFB	'k ('
+	DEFB	0
+	LD	DE,(DRSECTT)	; get Sectors/Track
+	LD	B,3
+PDLPAR3: SRL	D		; divide by 8 (sectors to kB)
+	RR	E
+	DJNZ	PDLPAR3		; loop
+	POP	HL		; restore regs (HL= Disk Size in kB)
+	POP	AF
+	CALL	DIVHLDE		; Disk Size / Sectors-per-Tracks (both in kB)
+	LD	L,C		; result into HL
+	LD	H,B
+	CALL	PHLFDC		; ..and display value
+	CALL	VPRINT
+	DEFB	' Trks), '
+	DEFB	0
+	POP	HL		; restore DPB+8 'Dir Max -1'
+	LD	E,(HL)		; get value
+	INC	HL
+	LD	D,(HL)
+	EX	DE,HL		; swap regs
+	INC	HL		; +1 for display
+	CALL	PHLFDC
+	CALL	VPRINT
+	DEFB	' Dirs'
+	DEFB	0
+	RET
+
+	; msg "No Drive"
+M$NODRV: CALL	VPRINT
+	DEFB	'   -- No Drive --'
+	DEFB	0
+	RET
+
+	; for drives other than Hard Disks, only the type is displayed
+M$FLPPY: CP	1		; check Driver ID
+	JR	NZ,M$RAM	; ..if not Floppy (1), jump next
+	CALL	VPRINT
+	DEFB	'Floppy '
+	DEFB	0
+	INC	DE		; move DPH ptr fwd
+	LD	A,(DE)		; get Unit (Phys. Drive #)
+	ADD	A,'0'		; convert to ascii
+	JP	COUT		; ..display, and let return from there
+
+M$RAM:	CP	3		; check Driver ID
+	JR	NZ,M$UKNWN	; ..if not RAM (3), jump to next
+	CALL	VPRINT		;   else, just display and return
+	DEFB	'RAM'
+	DEFB	0
+	RET
+
+M$UKNWN: CALL	VPRINT		; unknown type
+	DEFB	'??? ('
+	DEFB	0
+	INC	DE		; move DPH ptr fwd
+				; ##### BUG: LD A,(DE) missing ?  value not retrieved before output
+	CALL	PAFDC		; display byte in A as 1-3 decimal chars
+	LD	A,')'
+	JP	COUT
+
+	; msg "Too Big"
+M$BIG:	CALL	VPRINT
+	DEFB	'+++ Too Big +++'
+	DEFB	0
+	RET
+
+
+	; 16-bit division
+	;  in: HL= dividend
+	;      DE= divisor
+	; out: BC= result
+DIVHLDE: OR	A		; clear C-Flag
+	LD	BC,-1		; set initial value for counter
+DIVHLD1: INC	BC		; increase counter
+	SBC	HL,DE		; divide by subtraction
+	SBC	A,0		; test C-Flag
+	JR	NC,DIVHLD1	; ..and loop while more to go
+	RET
+
+
+	; get ptr to BSH (Block Shift Factor) in internal lookup table
+	;  in: A= BLS
+	; out: HL= points to BSH value
+GBSHP:	PUSH	BC		; save BC
+	LD	B,6		; # entries in lookup table
+	LD	HL,BSTBL+2	; ptr to first BLS
+GBSHP1:	CP	(HL)		; BLS found ?
+	JR	Z,GBSHP2	; ..if so, exit loop
+	INC	HL		;   else, ptr to next BLS
+	INC	HL
+	INC	HL
+	DJNZ	GBSHP1		; ..and loop
+GBSHP2:	DEC	HL		; move ptr back (= BLM)
+	DEC	HL		; ..and once more (= BSH)
+	POP	BC		; restore BC
+	RET
+
+
+	; get BLS (Block Size) for given BSH (Block Shift Factor)
+	;  in: HL= ptr to BSH (in DPB)
+	; out: A= BLS, or 0x00 if no valid BSH was found
+GBLS:	LD	B,6		; # entries in lookup table
+	LD	DE,BSTBL	; ptr to lookup table
+GBLS1:	PUSH	HL		; save HL
+	LD	A,(DE)		; get BSH from table
+	CP	(HL)		; ..and compare
+	INC	HL		; move pointers fwd
+	INC	DE
+	JR	NZ,GBLS2	; ..if no match, jump
+	LD	A,(DE)		;   else, get BLM
+	CP	(HL)		;   ..and compare to value in DPB
+GBLS2:	POP	HL		; restore HL
+	INC	DE		; move table ptr fwd
+	JR	Z,GBLS3		; ..if match, jump
+	INC	DE		;   else move table ptr fwd
+	DJNZ	GBLS1		; loop till done
+	XOR	A		; clear A (not found)
+	JR	GBLS4		; ..and exit
+GBLS3:	LD	A,(DE)
+GBLS4:	INC	HL
+	INC	HL
+	INC	HL
+	RET
+
+	; lookup table for related values of
+	; BSH (block shift factor) / BLM (block mask) / BLS (block size)
+	; 3 bytes per entry
+BSTBL:	DEFB	3			; BSH= 3
+	DEFB	7			; BLM= 7
+	DEFB	1			; BLS= 1 (1 kB)
+	DEFB	4			; BSH= 4 / BLM= 15 / BLS= 2 kB
+	DEFB	15
+	DEFB	2
+	DEFB	5			; BSH= 5 / BLM= 31 / BLS= 4 kB
+	DEFB	31
+	DEFB	4
+	DEFB	6			; BSH= 6 / BLM= 63 / BLS= 8 kB
+	DEFB	63
+	DEFB	8
+	DEFB	7			; BSH= 7 / BLM= 127 / BLS= 16 kB
+	DEFB	127
+	DEFB	16
+	DEFB	8			; BSH= 8 / BLM= 255 / BLS= 32 kB
+	DEFB	255
+	DEFB	32
+
+
+	; get addr's of DPH and DPB for given drive number
+	;  in: A= drive number
+	; out: DE= addr of DPH, HL= addr of DPB
+	;      or Z-Flag set if no drive
+GDPHDPB: LD	HL,(DRTBL)	; addr of DRVTBL in WSPC area
+	ADD	A,A		; offset is 2* drive #
+	CALL	GWRDHLA		; get 16-bit value from offset addr
+	LD	D,H		; ..into DE
+	LD	E,L
+	OR	H		; addr invalid (= zero) ?
+	RET	Z		; ..if so, exit with Z-Flag set
+	CALL	CNVADDR		; convert to addr in WSPC
+	EX	DE,HL		; swap regs
+	LD	HL,10		; offset from to addr DPB in DPH
+	ADD	HL,DE
+	LD	A,(HL)		; get addr
+	INC	HL
+	LD	H,(HL)
+	LD	L,A		; ..and fall through, convert addr to WSPC
+
+
+	; convert addr in B/P Bios to addr in WSPC area
+	;  in/out: HL= addr
+CNVADDR: LD	BC,(BIOSADR)	; B/P Bios page addr
+	OR	A		; clear flags
+	SBC	HL,BC		; calculate offset
+	LD	BC,(WSPCBEG)	; ..and add to addr of start WSPC
+	ADD	HL,BC
+	RET
+
+
+	; print disk size to CON: (capacity in kB)
+	; output as decimal with provision for 3-byte values - see ZXD21.Z80 PRBIG
+	;  in: A,H,L= 24-bit value
+	;      (Stack)= DE, AF, HL in that order
+PDISKSZ: PUSH	DE		; save regs
+	PUSH	BC
+	EX	AF,AF'		; swap AF
+	PUSH	AF		; save
+	EX	AF,AF'		; ..and swap back
+	LD	B,0
+	LD	C,-1		; set initial result
+	LD	DE,86A0H	; 100,000 = 0x0186A0, set lower 2 bytes
+	OR	A		; clear C-Flag
+PDISKS1: INC	C		; accumulate count
+	SBC	HL,DE		; subtract lower 2 bytes
+	SBC	A,1		; ..and upper byte
+	JR	NC,PDISKS1	; loop till done
+	ADD	HL,DE		; adjust underflow
+	ADC	A,1
+	CALL	PHLD2
+	LD	DE,10000	; print 10000's
+	CALL	PHLD
+	LD	DE,1000		; print 1000's
+	CALL	PHLD
+	LD	DE,100		; print 100's
+	CALL	PHLD
+	LD	DE,10		; print 10's
+	CALL	PHLD
+	LD	A,L		; print 1's
+	CALL	PHLD3
+	POP	AF		; restore AF
+	EX	AF,AF'		; ..and swap
+	POP	BC		; restore regs
+	POP	DE
+	RET
+
+
+	; print content of HL to CON: as decimal
+	; divide HL by DE, convert remainder to ascii digit and print it
+	; (similar to SYSLIB's PHLFDC/PHDC1 - see ZXD21.Z80 DECDSP)
+	;  in: HL= value, DE= divisor
+PHLD:	LD	C,-1		; set initial count
+	OR	A		; clear C-Flag
+PHLD1:	INC	C		; accumulate count
+	SBC	HL,DE		; divide by subtraction
+	SBC	A,0
+	JR	NC,PHLD1	; ..and loop while more to go
+	ADD	HL,DE		; compensate for underflow
+	ADC	A,0
+PHLD2:	EX	AF,AF'		; swap AF regs (retain flags)
+	LD	A,C		; get result (quotient)
+	OR	A		; is it zero ?
+	JR	NZ,PHLD3	; ..if not, skip over
+	OR	B		; get prior digit print flag
+	JR	Z,PHLD4		; ..if anything printed yet, jump
+	XOR	A		;   else, print a zero
+PHLD3:	ADD	A,'0'		; convert to ascii
+	LD	B,A		; remember for next loop
+	CALL	COUT		; ..and display it
+PHLD4:	EX	AF,AF'		; swap AF regs back
+	RET
+
+	; *
+
+
+;::::: IMAGE FILE
+
+	; --- Read IMG file
+RDIMG:	LD	DE,CPMFCB+9	; filetype in CP/M standard FCB #1
+	LD	A,(DE)		; get byte
+	CP	' '		; is it <SP> ?
+	JR	NZ,RDIMG1	; ..if not, skip over
+	LD	HL,FTYPE	;   else, point to standard filetype 'IMG'
+	LD	BC,3		; copy 3 bytes
+	LDIR
+RDIMG1:	LD	HL,(WRKSTRT)	; start of workspace area
+	LD	(WRKDMA),HL	; ..set as DMA buffer addr
+	CALL	SETDMA
+	LD	DE,CPMFCB
+	CALL	Z3LOG		; log into given DU (eval as ZCPR3 XFCB)
+	CALL	F$EXIST		; check file exists (Z= not found)
+	JR	NZ,RDIMG2	; ..if so, jump to continue
+	CALL	E$MSG		;   else, display error and exit
+	CALL	VPRINT
+	DEFB	'File Not Found!'
+	DEFB	0
+	JP	EXIT
+
+RDIMG2:	CALL	F$OPEN		; open image file
+	JR	Z,RDIMG3	; ..if no error, jump to continue
+	CALL	E$MSG		;   else, dipslay error and exit
+	CALL	VPRINT
+	DEFB	"Can't Open!"
+	DEFB	0
+	JP	EXIT
+
+	; image file found and opened, read into memory
+RDIMG3:	LD	HL,0		; read record #0
+	CALL	R$READ		; random read from file (DE=FCB, HL=record)
+	JP	NZ,RDIMERR
+	LD	HL,(WRKSTRT)	; ptr workspace area (= current DMA)
+	LD	DE,29		; offset ZCPR Non-banked Size (at offset 29d)
+	ADD	HL,DE		; adjust ptr
+	LD	DE,0100H	; length of img file header
+	CALL	ADDDHPT		; add values, DE = DE + (HL)
+	INC	HL		; ptr fwd
+	INC	HL
+	INC	HL		; ZCPR Banked Size (at offset 33d)
+	CALL	ADDDHPT		; add values
+	LD	BC,27		; move ptr fwd
+	ADD	HL,BC		; ZSDOS Non-banked Size (at offset 61d)
+	CALL	ADDDHPT		; add values
+	INC	HL		; move ptr fwd
+	INC	HL
+	INC	HL		; ZSDOS Banked Size (at offset 66d)
+	CALL	ADDDHPT		; add values
+	LD	BC,25		; move ptr fwd
+	ADD	HL,BC		; B/P Bios base addr (at offset 91d)
+	LD	C,(HL)		; get low byte
+	INC	HL
+	LD	B,(HL)		; ..and high byte
+	LD	(BIOSADR),BC	; store B/P Bios page addr
+	EX	DE,HL		; swap regs, HL= offset to Bios start in img file
+	ADD	HL,HL		; *2
+	LD	A,H		; high byte in A
+	LD	(BPOFFS),A	; store offset sector #
+	LD	L,H		; ..and set as start value
+	LD	H,0
+	LD	DE,CPMFCB
+
+	; read 20 sectors (20 * 128 = 2560 bytes)
+	LD	B,20
+RDIMSEC: CALL	R$READ		; read file sector (randomly, DE= FCB, HL= sector #)
+	JR	NZ,RDIMERR	; ..if error, jump
+	PUSH	HL		; save regs
+	PUSH	BC
+	LD	HL,(WRKDMA)	; get current DMA addr
+	LD	BC,128		; ..and increase by 128 bytes
+	ADD	HL,BC
+	LD	(WRKDMA),HL	; store new addr
+	CALL	SETDMA		; ..and set as DMA buffer addr
+	POP	BC		; restore regs
+	POP	HL
+	INC	HL		; next sector
+	DJNZ	RDIMSEC		; ..loop til done
+	LD	HL,(WRKDMA)	; get end of workspace area
+	LD	(WRKEND),HL	; ..save
+	CALL	CHKBP		; check for "B/P" signature string
+	JP	C,EXIT		; ..if not found, exit
+
+	PUSH	DE
+	LD	HL,(WRKSTRT)	; get addr start WSPC
+	PUSH	HL
+	LD	DE,91		; offset to B/P Bios page addr
+	ADD	HL,DE		; ..adjust ptr
+	LD	E,(HL)		; get low byte
+	INC	HL
+	LD	D,(HL)		; ..and high byte of Bios page addr
+	LD	HL,(BIOSADR)	; offset from file start
+	EX	DE,HL		; swap regs
+	OR	A		; clear flags
+	SBC	HL,DE		; calc difference
+	POP	DE		; addr WSPC (now in DE)
+	ADD	HL,DE		; ..add to ptr
+	LD	DE,10		;   ..and move another 10 bytes fwd
+	ADD	HL,DE
+	LD	A,(HL)		; get byte
+	LD	(BPVERS),A	; ..and save it (Bios version #)
+	CALL	RETUD		; currently logged drive in B, and user in C
+	LD	(IMGDU),BC	; ..store DU: of IMG file
+	POP	DE
+	LD	HL,(WRKEND)	; addr of workspace end
+	CALL	SETDMA		; set DMA transfer address (in HL)
+	LD	HL,1		; read sector #1
+	CALL	R$READ		; read file sector (DE= FCB, HL= sector #)
+	RET	Z
+
+	; error while reading image file
+RDIMERR: CALL	E$MSG
+	CALL	VPRINT
+	DEFB	'Error Reading : '
+	DEFB	0
+	JR	PIMGFN		; display filename and close file
+				; ..let return from there
+
+
+	; ADD DE,(HL), add 16-bit value addressed by HL to DE
+	;  in: DE= 16-bit value
+	;      HL= ptr to 2nd 16-bit value
+	; uses: BC, DE, HL
+ADDDHPT: LD	C,(HL)		; get low byte in C
+	INC	HL		; move ptr to next byte
+	LD	B,(HL)		; get high byte in B
+	EX	DE,HL		; swap regs
+	ADD	HL,BC		; add values
+	EX	DE,HL		; ..and swap back
+	RET
+
+	; --- Write IMG file
+WRIMG:	LD	HL,(WRKSTRT)	; addr start of WSPC
+	LD	(WRKDMA),HL	; ..set as DMA buffer addr
+	CALL	SETDMA
+	LD	BC,(IMGDU)	; drive and user of IMG file
+	CALL	LOGUD		; set DU: for following operations
+	LD	DE,CPMFCB
+	CALL	Z3LOG		; log DU (eval as ZCPR3 XFCB)
+	LD	A,(BPOFFS)	; get offset sector # to start writing
+	LD	L,A
+	LD	H,0
+
+	; write 20 records (20 * 128 = 2560 bytes)
+	LD	B,20
+WRIMSEC: CALL	F$WRITE		; write file sector (randomly, DE= FCB, HL= sector #)
+	JR	NZ,WRIMERR	; ..if not successful, jump
+	PUSH	HL		; save regs
+	PUSH	BC
+	LD	HL,(WRKDMA)	; get current DMA addr
+	LD	BC,128		; ..and increase by 128 bytes
+	ADD	HL,BC
+	LD	(WRKDMA),HL	; store new addr
+	CALL	SETDMA		; ..and set as DMA addr
+	POP	BC
+	POP	HL
+	INC	HL		; next sector
+	DJNZ	WRIMSEC		; ..loop til done
+	LD	HL,(WRKEND)	; addr end of workspace
+	CALL	SETDMA		; set as DMA buffer addr
+	LD	HL,1		; sector #1
+	CALL	F$WRITE		; write to file
+	JR	Z,CLSIMG	; ..if successful, jump to close file
+
+
+; error while writing image file
+WRIMERR: CALL	F$CLOSE		; close file (DE= ptr FCB)
+	CALL	E$MSG		; ..and display error msg
+	CALL	VPRINT
+	DEFB	'Error Writing : '
+	DEFB	0
+
+; Display IMG filename
+PIMGFN:	LD	DE,CPMFCB+1	; fn in CP/M standard FCB #1
+	CALL	PFN3		; display fn.ft
+	JP	CRLF
+
+; --- Close IMG file
+CLSIMG:	CALL	F$CLOSE		; close file (DE= ptr FCB)
+	CALL	VPRINT		; ..and inform user
+	DEFB	CR,LF,TAB,'...File Closed.'
+	DEFB	0
+	RET
+
+	; *
+
+
+;::::: MEMORY
+
+	; --- Read running B/P Bios from memory (using BIOS fn #30)
+RDMEM:	LD	HL,(CPMBIOS+1)	; addr warm boot (BION fn #1)
+	LD	L,30*3		; adjust ptr to fn #30
+	LD	A,(HL)		; check byte at ptr location
+	CP	0C3H		; is it opcode 0xC3 (JP) ?
+	JP	NZ,E$BPBIO	; ..if not, jump error and let return from there
+	CALL	JUMPHL		; else "call" B/P Bios fn #30 (RETBIO)
+	LD	(BPVERS),A	; store version of B/P Bios
+	LD	(BIOSADR),BC	;   "   base addr
+	LD	(CNFGADR),DE	;   "   config area addr
+	EX	DE,HL		; swap regs (HL= ptr Config area)
+	CALL	CHKSYS		; check for signature string
+	JP	NZ,E$BPBIO	; ..if not found, jump error and let return from there
+	LD	DE,(WSPCBEG)	; addr WSPC
+	LD	L,C		; Bios page addr in HL
+	LD	H,B
+	LD	BC,2560		; number of bytes
+	LDIR			; ..and copy
+	LD	(WRKEND),DE	; store end of WSPC area
+	RET
+
+	; --- Write new configuration to memory, replace running system
+WRMEM:	LD	HL,(WSPCBEG)	; addr WSPC start
+	LD	DE,(BIOSADR)	; B/P Bios page addr
+	LD	BC,2560		; bytes to copy
+	LDIR
+	LD	HL,(BIOSADR)	; B/P Bios page addr
+	LD	L,21*3		; offset to BIOS fn #21 (DEVINI, init IO devices)
+	CALL	JUMPHL		; ..and "call" BIOS directly
+	CALL	VPRINT
+	DEFB	CR,LF,LF,TAB,'..New Configuration Installed..',CR,LF
+	DEFB	0
+	RET
+
+	; *
+
+
+;::::: DISK (System Tracks)
+
+	; --- Read System Tracks
+	;     and find addr's of system segments
+	;  in: A= drive letter (already checked it is A..P)
+RDDSK:	SUB	40H		; convert ascii to number
+	LD	(DISKNO),A	; ..and store it
+	CALL	DSKINDR		; ask user to place disk in drive
+	LD	A,(DISKNO)	; get disk number
+	LD	HL,(WSPCBEG)	; addr start WSPC
+	CALL	RDSTRK		; read sys tracks into WSPC
+	JP	C,ERREXIT	; ..if error, jump exit
+	LD	A,(OLDDU+1)	; get previously logged drive
+	JP	SELDSK		; ..select and let return from there
+
+	; --- Write System Tracks
+WRDSK:	LD	A,(DISKNO)	; get disk number
+	CALL	SELDSK1		; ..select
+	LD	BC,(SECTNO)	; counter outer loop
+	LD	DE,(SYSSECT)	; # sectors w/ system tracks
+	PUSH	BC		; save regs
+	PUSH	DE
+	CALL	BIOSTTR		; set track for subsequent write
+	POP	BC		; restore regs
+	POP	DE
+	LD	A,(SCTBOOT)	; # of sectors w/ system (after boot code)
+	LD	B,A
+	LD	HL,(WRKSTRT)	; addr start WSPC
+WRDSK1:	PUSH	DE		; save regs
+	PUSH	BC
+	PUSH	HL
+	LD	DE,(XLTADR)	; addr XLT (sector translation table)
+	CALL	BIOSTRN		; translate logical to physical sector
+	LD	B,H		; ..in BC
+	LD	C,L
+	CALL	BIOSTSE		; set sector for subsequent write
+	POP	BC		; addr WSPC
+	PUSH	BC
+	CALL	BIOSTDM		; set DMA buffer
+	LD	C,0
+	CALL	BIOWRIT		; ..write one sector
+	OR	A
+	JP	NZ,E$WRITE	; if not successful, jump error and exit
+	POP	HL		; addr WSPC
+	LD	DE,128		; ..move forward by 128 bytes (1 sector)
+	ADD	HL,DE
+	POP	BC		; restore regs / clear stack
+	POP	DE
+	DEC	B		; reduce counter
+	JR	NZ,WRDSK2	; ..if not finished, skip over
+	LD	C,1		;   else, force writing
+	JP	BIOWRIT		;    ..and write final sector (returning from there)
+
+WRDSK2:	INC	C		; counter +1
+	LD	A,(SECTTRK)	; check if sectors/track (DPB) limit reached
+	CP	C
+	JR	NZ,WRDSK1	; ..if not, write sector
+	INC	DE		;   else, increase track #
+	LD	C,0		;   ..clear counter
+	PUSH	DE
+	PUSH	BC
+	PUSH	HL
+	LD	B,D		; track # in BC
+	LD	C,E
+	CALL	BIOSTTR		; ..and set track
+	POP	HL
+	POP	BC
+	POP	DE
+	JR	WRDSK1		; loop
+
+
+	; read system tracks
+	;  in: A= drive number
+	;      HL= addr of WSPC start
+	; out: Z-Flag set if error, NZ if ok
+RDSTRK:	LD	(WRKSTRT),HL	; store copy of WSPC addr (to work with)
+	CALL	SELDSK1		; select disk (A= #)
+	JP	Z,E$SRC		; ..if error, jump error and exit
+	LD	E,(HL)		; HL= addr of DPH
+	INC	HL		; get addr of XLT (sector translation table)
+	LD	D,(HL)		;   in DE
+	LD	(XLTADR),DE	; ..and store it
+	LD	A,9		; move ptr to DPB addr
+	CALL	ADDHLA
+	LD	E,(HL)		; addr of DPB in DE
+	INC	HL
+	LD	D,(HL)
+	EX	DE,HL		; swap regs
+	LD	E,(HL)		; get Sectors/Track from DPB
+	INC	HL
+	LD	D,(HL)
+	LD	(SECTTRK),DE	; ..and save
+	LD	A,12		; move ptr to Trk Offset
+	CALL	ADDHLA
+	LD	E,(HL)		; get # of system tracks
+	INC	HL
+	LD	A,(HL)
+	AND	A		; high byte must be zero
+	JP	NZ,E$NOSYS	; ..if not, jump error and exit
+	OR	E		; check if # of system tracks is zero
+	JP	Z,E$NOSYS	; ..if so, jump error and exit
+	LD	(SYSTRK),A	; store # of system tracks
+	LD	HL,(SECTTRK)	; get Sectors/Track
+	LD	DE,46		; # of sectors (= 0x1700)
+				; ##### CHECK: bpboot codes approx. 0x1700 -- 46d/0x2E sectors
+	LD	C,0
+	XOR	A		; clear flags
+	SBC	HL,DE		; enough space in one track ?
+	JR	NC,RDSTRK2	; ..if so, jump to continue
+	ADD	HL,DE		;   else, restore initial value
+	EX	DE,HL		; swap regs
+	XOR	A		; clear flags
+RDSTRK1: SBC	HL,DE		; divide by subtraction
+	INC	C		; increase counter (quotient)
+	JR	NC,RDSTRK1	; ..more to go
+	ADD	HL,DE		; compensate underflow
+	DEC	C		; and correct quotient
+	EX	DE,HL		; swap back
+RDSTRK2: LD	B,0
+	LD	A,E		; check if DE= 0
+	OR	D
+	JR	Z,RDSTRK3	; ..if so, skip
+	DEC	DE		;   else, decrease DE
+RDSTRK3: LD	(SECTNO),BC	; store loop counter
+	LD	(SYSSECT),DE	; store # of sys sectors
+	PUSH	BC		; save regs
+	PUSH	DE
+	LD	A,(SYSTRK)	; # of system tracks
+	LD	DE,(SECTTRK)	; sectors/track
+	LD	HL,0
+RDSTRK4: ADD	HL,DE		; accumulate count
+	DEC	A		; decrease counter
+	JR	NZ,RDSTRK4	; ..loop till done
+	LD	DE,-45		; adjust for boot code
+	ADD	HL,DE
+	LD	A,L
+	LD	(SCTBOOT),A	; save # of sectors after boot code
+	CALL	BIOSTTR		; set track for subsequent read
+	POP	BC
+	POP	DE
+	LD	A,(SCTBOOT)	; get # of sectors
+	LD	B,A
+	LD	HL,(WRKSTRT)	; addr start WSPC
+RDSTRK5: PUSH	DE		; save regs
+	PUSH	BC
+	PUSH	HL
+	LD	DE,(XLTADR)	; addr of XLT
+	CALL	BIOSTRN		; translate sector # (log. to phys.)
+	LD	B,H
+	LD	C,L
+	CALL	BIOSTSE		; set sector for subsequent read
+	POP	BC		; restore addr in WSPC
+	PUSH	BC
+	CALL	BIOSTDM		; set as DMA buffer
+	CALL	BIOREAD		; ..and read one sector
+	OR	A
+	JP	NZ,E$READ	; ..if error, jump error and exit
+	POP	HL		; restore addr in WSPC
+	LD	DE,128		; move fwd by 128 bytes (1 sector)
+	ADD	HL,DE
+	LD	(WRKEND),HL	; store as WSPC end addr
+	POP	BC		; restore regs
+	POP	DE
+	DEC	B		; decrease counter (# of sectors)
+	JR	Z,RDSTRK6	; ..if done, exit loop
+	INC	C		; counter +1
+	LD	A,(SECTTRK)	; check if sectors/track (DPB) limit reached
+	CP	C
+	JR	NZ,RDSTRK5	; ..if not, loop
+	INC	DE		;   else, increase track #
+	LD	C,0		;   ..clear counter
+	PUSH	DE
+	PUSH	BC
+	PUSH	HL
+	LD	B,D		; track # in BC
+	LD	C,E
+	CALL	BIOSTTR		; ..and set it
+	POP	HL
+	POP	BC
+	POP	DE
+	JR	RDSTRK5		; then start all over again
+RDSTRK6: CALL	CHKBP		; search for B/P signature string in WSPC
+	JP	C,EXIT		; ..if not found, exit program
+				;   else, fall through
+
+	; --- Find System Segments
+	; search for B/P Bios fn #30 RETBIO in the just loaded system
+	; start addr is at known offset in WSPC
+	; byte pattern:  0x01 0x00 ...   0x11 ... ...   0x21 ... ...   0x3E ...
+	;                LD BC,..00      LD DE,....     LD HL,....     LD A,..
+	;                page addr       config area    dev table      version
+	LD	HL,0
+FNDSYS:	LD	(WRKZ3E),HL	; clear variable
+	LD	HL,(WSPCBEG)	; addr start WSPC area
+	LD	DE,30*3+1	; offset to B/P Bios fn #30 RETBIO
+	ADD	HL,DE
+	LD	C,(HL)		; get addr of function
+	INC	HL
+	LD	B,(HL)
+	LD	E,C		; ..low byte only
+	LD	D,0
+	LD	HL,(WSPCBEG)	; reset ptr to start WSPC again
+	ADD	HL,DE		; move ptr to first byte of fn
+FNDSYS1: PUSH	HL		; ..and save ptr
+	LD	A,(HL)		; get byte at ptr location
+	CP	01H		; is it 0x01 ? (LD BC,...)
+	JR	NZ,FNDSYS2	; ..if not, move to next memory page
+	INC	HL		;   else, move ptr fwd
+	LD	A,(HL)		; get byte
+	OR	A		; is it 0x00 ?
+	JR	NZ,FNDSYS2	; ..if not, move to next mem page
+	INC	HL		;   else, move ptr fwd
+	LD	A,(HL)		; get byte (high byte of possible B/P Bios page addr)
+	ADD	A,D		; add to current offset in WSPC area
+	CP	B		; match w/ addr of fn #30 ?
+	JR	Z,FNDSYS3	; ..if so, code found, jump to continue
+FNDSYS2: POP	HL		;   else, restore ptr in WSPC
+	INC	D		; move both ptr's fws by 0x100 bytes
+	INC	H
+	LD	A,D		; fn must be within first 0x600 bytes
+	CP	6		; so check
+	JR	C,FNDSYS1	; ..if within limit, continue searching
+	LD	HL,0		;   else, clear addr and exit
+	JR	FNDSYS8
+
+	; code signature of fn #30 found, extract data
+FNDSYS3: PUSH	HL		; save regs
+	PUSH	DE
+	LD	DE,8		; offset to version # (LD A,..)
+	ADD	HL,DE		; adjust ptr
+	LD	A,(HL)		; get byte
+	LD	(BPVERS),A	; ..and store it
+	POP	DE
+	POP	HL		; HL= ptr to high byte of B/P Bios page addr
+	LD	A,(HL)		; get it
+	POP	HL		; clear stack
+	LD	H,A		; copy Bios page addr in HL
+	LD	L,0
+	PUSH	HL		; ..and save it
+
+	; search for Z3ENV Environment descriptor
+	LD	DE,(WSPCBEG)	; addr start WSPC area
+	LD	HL,(WRKEND)	; addr end WSPC area
+	OR	A		; clear C-Flag
+	SBC	HL,DE		; calculate size of WSPC area
+	LD	C,L		; ..copy to BC
+	LD	B,H
+	EX	DE,HL		; swap regs
+	LD	DE,Z3ENV$	; ptr to "Z3ENV"
+FNDSYS4: LD	A,(DE)		; get letter from string to search for
+	CPIR
+	JP	PO,FNDSYS7	; ..if not found, exit
+	PUSH	HL		;   else, save regs
+	PUSH	DE
+	PUSH	BC
+	LD	B,4		; number of remaining letters
+FNDSYS5: INC	DE		; move to next letter to search
+	LD	A,(DE)		; ..and get it
+	CP	(HL)		; compare with found place
+	JR	NZ,FNDSYS6	; ..if no match, jump
+	INC	HL		;   else, move ptr fwd
+	DJNZ	FNDSYS5		;   ..and loop for next letter
+	XOR	A		; set Z-Flag (= found) and fall through
+FNDSYS6: POP	BC		; restore regs
+	POP	DE
+	POP	HL
+	JR	NZ,FNDSYS4	; Z-Flag not set, continue searching
+	LD	DE,-4		; correct addr, set to beginning of Z3ENV
+	ADD	HL,DE
+	LD	(WRKZ3E),HL	; ..and store it
+FNDSYS7: POP	HL		; restore regs
+	OR	A		; clear flags
+FNDSYS8: LD	(BIOSADR),HL	; store B/P Bios page addr
+	RET
+Z3ENV$:	DEFB	'Z3ENV'
+
+
+	; search for signature string "B/P" within first 3 sectors in workspace
+	;  in: WRKSTRT set to start addr
+	; out: if found, Z-Flag is set and C-Flag is reset (NC)
+	;      else display error msg and C-Flag set
+CHKBP:	LD	HL,(WRKSTRT)	; addr start of WSPC
+	LD	(WSPCBEG),HL	; ..retain copy
+	LD	B,2		; set counter (# of attempts)
+CHKBP0:	LD	HL,(WSPCBEG)	; addr start WSPC
+	LD	A,7EH		; offset to Config area (from sector start)
+	CALL	ADDHLA		; adjust ptr
+	CALL	CHKSYS		; ..and check for signature
+	RET	Z		; if found, return
+	LD	HL,(WSPCBEG)	;   else, get addr of WSPC
+	LD	DE,128		;   ..and move fwd by 1 sector (128 bytes)
+	ADD	HL,DE
+	LD	(WSPCBEG),HL	; store new addr
+	DJNZ	CHKBP0		; ..and loop
+	JP	E$BPBIO		; not found, display err msg and let return from there
+				; ..with C-Flag set
+
+
+;::::: HELP
+
+HELP:	CALL	VPRINT
+	DEFB	CR,LF,1
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	VPRINT
+	DEFB	2,' - Alter parameters in a B/P Bios Image file, Boot Tracks or Memory.'
+	DEFB	CR,LF,'    The program may be interactive with screen attributes under ZCPR3'
+	DEFB	CR,LF,'    or take input from a text Configuration file.'
+	DEFB	CR,LF,LF,'Syntax:',CR,LF,'   '
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	VPRINT
+	DEFB	' //',TAB,TAB,'<-- Display this message',CR,LF,'   '
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	VPRINT
+	DEFB	TAB,TAB,'<-- Run interactively',CR,LF,LF
+	DEFB	'  The following forms may be followed by an optional Config file',CR,LF
+	DEFB	'  from which to draw parameters to set.  There must be a space',CR,LF
+	DEFB	'  between the first argument shown and the filename.',CR,LF,LF,'   '
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	VPRINT
+	DEFB	' *',TAB,TAB,'<-- Configure Memory Image',CR,LF,'   '
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	VPRINT
+	DEFB	' d:',TAB,TAB,'<-- Configure drive d: Boot Tracks',CR,LF,'   '
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	VPRINT
+	DEFB	' [du:]fn[.ft]',TAB,'<-- Configure Image File',CR,LF,'   '
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	VPRINT
+	DEFB	' [du:]fn[.ft] [du:]fn[.ft]  <-- Configure Image file (1st ',CR,LF
+	DEFB	'              filespec) using Config file (2nd filespec).',CR,LF
+	DEFB	'              Default Type of Config File is .CNF.',CR,LF
+	DEFB	0
+
+
+;::::: EXIT PROGRAM
+EXIT:	LD	SP,(STACK)	; restore stack pointer
+	JP	0		; initiate warm boot
+
+EXIT1:	CALL	VPRINT
+	DEFB	CR,LF,TAB,'.. aborted ..',CR,LF
+	DEFB	0
+	JR	EXIT
+
+
+	; return quiet flag from ENV, or Z-Flag set if error
+	; (shorter than SYSLIB's GETQUIET)
+GETQFLG: LD	HL,(ENVADR)	; get ENV addr
+	LD	A,H		; check if valid (<> zero)
+	OR	L
+	RET	Z		; ..if not, return with Z-Flag set
+	LD	A,28H		; offset to quiet flag
+	CALL	ADDHLA		; ..adjust ptr
+	LD	A,(HL)		; get flag
+	RET
+
+
+	; print program name on CON: device
+	; (either the actual name, or fallback to default)
+	; only used by HELP
+PPRGNAM: LD	A,(ENVADR+1)	; get high byte of ENVPTR
+	OR	A		; check if valid (<> zero)
+	JP	NZ,PRTNAME	; ..if so, display actual name
+				;   and let return from there
+	CALL	VPRINT		; else, display default
+	DEFB	'BPCNFG'
+	DEFB	0
+	RET
+
+
+	; #### CHECK: unreferenced code (not used)
+				; print filename (?), deleting spaces
+	LD	B,8		; up to eight chars
+UNUSED2: INC	HL		; move ptr forward
+	LD	A,(HL)		; get char
+	AND	7FH		; mask MSB
+	CP	' '		; is it <SP> ?
+	CALL	NZ,COUT		; ..if not, print to CON:
+	DJNZ	UNUSED2	; count down
+	RET
+	; #####
+
+
+	; check if running under B/P Bios
+	;  in: HL= ptr to possible B/P Bios CONFIG area
+	; out: Z-Flag set if B/P Bios, NZ= not ok
+CHKSYS:	PUSH	HL		; save regs
+	DEC	HL		; move ptr 6 bytes backward
+	DEC	HL		;   (signature string)
+	DEC	HL
+	DEC	HL
+	DEC	HL
+	DEC	HL
+	LD	A,(HL)		; get byte
+	CP	'B'		; is it 'B' ?
+	JR	NZ,CHKSYS1	; ..if not, jump error
+	INC	HL		; ptr fwd
+	LD	A,(HL)		; get byte
+	CP	'/'		; is it '/' ?
+	JR	NZ,CHKSYS1	; ..if not, jump error
+	INC	HL		; ptr fwd
+	LD	A,(HL)		; get byte
+	CP	'P'		; is it 'P'
+				; ..if so, fall trhough w/ Z-Flag set
+CHKSYS1: POP	HL		; restore regs
+	RET
+
+
+	; select disk using direct BIOS call
+	;  in: A= disk drive # (one-based)
+	; out: Z-Flag set if error, NZ= ok
+SELDSK1: DEC	A		; A -1, and fall through
+
+	;  in: A= disk drive # (zero-based)
+SELDSK:	LD	C,A		; C= drive (0= A ... 15= P)
+	LD	E,0		; ##### CHECK: not needed under B/P Bios
+	CALL	BIOSELD
+	LD	A,H		; HL= 0 if no drive
+	OR	L		; ..set Z-Flag (status indicator)
+	RET
+
+
+	; #### CHECK: unreferenced code (not used)
+UNUSED3: PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	CALL	CPMBDOS
+	INC	A
+	POP	HL
+	POP	DE
+	POP	BC
+	RET
+	; #####
+
+
+;::::: MENU SELECTION
+
+	; evaluate selected option, or exit program (on <Ctrl-C> / <ESC>)
+	; function combines manual input and reading script file (CNF)
+	;  in: A= max. possible option (as ascii number)
+	; out: Z-Flag set if error, NZ= ok
+MSELECT: INC	A		; upper limit +1
+	LD	E,A		; ..store value
+	CALL	VPRINT
+	DEFB	CR,LF,LF,LF,TAB,'Enter Selection : '
+	DEFB	0
+MSELCT1: CALL	CFIN		; get input
+	CP	' '		; is it <SP> ?
+	JR	Z,MSELCT3	; ..jump return
+	CP	CR		; <CR> ?
+	JR	Z,MSELCT3	; ..jump return
+	CP	CTRLC		; <Ctrl-C> ?
+	JP	Z,EXIT		; ..exit program
+	CP	ESC		; <ESC> ?
+	JP	Z,EXIT		; ..exit program
+	CP	'1'		; is it ascii number ?
+	JR	C,MSELCT2	; ..if not, jump error
+	CP	E		;   else, compare with limit
+	CCF			; reverse C-Flag
+	JR	C,MSELCT2	; ..if out of range, jump error
+	CALL	COUT		;   else, print char and return
+	RET
+MSELCT2: LD	A,BEL		; error, notify user
+	CALL	COUT
+	CALL	CFEVAL		; if running script, opt change to interactive mode
+	JR	MSELCT1		; ..and loop
+MSELCT3: XOR	A		; set Z-Flag
+	RET
+
+
+	; get input - either from script file, or manual (CAPINE uses injected CIN)
+	; *** A CENTRAL FUNCTION ***
+	; out: A= char
+	;      Z-Flag set if <SP>, exit program if <Ctrl-C> or <ESC>
+GETINP:	CALL	CAPIN		; get char in A and capitalize
+	CP	' '		; is it a control char ?
+	CALL	NC,COUT		; ..if not, echo on console
+	CP	ESC		; <ESC> ?
+	JR	Z,GETINP1	; ..if so, jump exit program
+	CP	3		; <Ctrl-C> ?
+GETINP1: JP	Z,EXIT		; ..if so, exit program
+	CP	' '		; is it <SP> ? return w/ Z-Flag set
+	RET
+
+
+	; check for <SP> and <CR>
+	;  in: A= char to check
+	; out: Z-Flag set if true
+CHRSPCR: CP	' '		; is it a <SP> ?
+	RET	Z		; ..if so, return w/ Z-Flag set
+	CP	CR		; <CR> ?
+	RET			; return, Z-Flag is set accordingly
+
+
+	; #### CHECK: unreferenced code (not used)
+UNUSED4: PUSH	HL
+	CALL	PHL4HC		; display hex number
+	JR	PHLDCN1		; ... and get input
+	; #####
+
+
+	; print HL as decimal + closing bracket
+	; then get user input and convert to number
+	;  in: HL= 16-bit value
+	; out: DE= converted number, or original value if no input
+	;      HL= ptr after string
+	;      Z-Flag set if no input
+PHLDCNV: PUSH	HL		; save regs
+	CALL	PHLFDC		; display as dec
+PHLDCN1: POP	DE		; get orig. value in DE
+	CALL	VPRINT
+	DEFB	']',TAB,': '
+	DEFB	0
+	CALL	CINPUTL		; line input
+	RET	Z		; ..if no input, return
+	JP	EVAL		;   else, parse input string as Bin/Oct/Dec/Hex
+
+
+	; print 2 options the user can choose from as "[D]/E" or "D/[E]"
+	;  in: DE= ascii chars to display
+	;      Z-Flag set= "D" in brackets, NZ= "E" in brackets
+PDEOPTN: CALL	Z,PLBR		; ..if Z, print left bracket
+	LD	A,D		; print char in D
+	CALL	COUT
+	CALL	Z,PRBR		; ..if Z, print right bracket
+	LD	A,'/'		; print slash
+	CALL	COUT
+	CALL	NZ,PLBR		; ..if NZ, print left bracket
+	LD	A,E		; print char in E
+	CALL	COUT
+	RET	Z		; ..if Z, return (no closing bracket)
+PRBR:	LD	A,']'		; print right bracket
+	JP	COUT		; ..and let return from there
+PLBR:	LD	A,'['		; print left bracket
+	JP	COUT		; ..and let return from there
+
+
+	; #### CHECK: unreferenced code (not used)
+UNUSED5: CALL	CINPUTL
+	JP	EVAL		; HL points to string to be parsed for Bin/Oct/Dec/Hex
+	; #####
+
+
+	; get line input
+	; through SYSLIB's INLINE fn, with injected code to read script file
+	; out: HL= ptr to string buffer
+	;      Z-Flag set if nothing entered
+CINPUTL: LD	HL,INLBUF	; set buffer addr
+	LD	(HL),0		; prepare for empty string (<NUL> terminator)
+	OR	0FFH		; echo ON
+	CALL	INLINE		; single line editor for CON:
+	LD	A,(HL)		; check for empty string
+	OR	A
+	RET
+
+
+	; get pointer in WSPC area
+	; (used to return addr in Config area)
+	;  in: A= offset
+	; out: HL= ptr to byte at WSPC + offset
+WSPCPTR: LD	HL,(WSPCBEG)	; addr start WSPC area
+				; ..and fall through
+
+	; add A to HL (result in HL)
+ADDHLA:	ADD	A,L		; add L
+	LD	L,A		; store result in L
+	RET	NC		; ..if no overflow, return
+	INC	H		;   else, increment H
+	RET
+
+
+	; get word (16-bit value) indirectly
+	;  in: HL= base addr
+	;      A= offset
+	; out: HL= 16-bit value at offset addr
+GWRDHLA: CALL	ADDHLA		; add offset
+	LD	A,(HL)		; get low byte
+	INC	HL		; ptr fwd
+	LD	H,(HL)		; get high byte in H
+	LD	L,A		; ..and low byte in L
+	RET
+
+
+	; check drive letter is valid ('A'..'P')
+	;  in: A= letter to check
+	; out: C-Flag set if error, NC= ok
+	; ##### another version of this routine is implemented as CKDLTR
+	;       with slightly different functionality
+CHKDLTR: CP	'A'		; below ascii letter 'A' ?
+	RET	C		; ..return with C-Flag set
+	CP	'P'+1		; greater than ascii letter 'P' ?
+	CCF			; ..reverse C-Flag and return
+	RET
+
+
+	; ask user to place disk in drive
+	;  in: DISKNO contains disk #
+DSKINDR: CALL	VPRINT
+	DEFB	CR,LF,'Place disk in drive '
+	DEFB	0
+	LD	A,(DISKNO)	; get disk number
+	ADD	A,40H		; ..convert to ascii for display
+	CALL	COUT
+	CALL	VPRINT
+	DEFB	': and press return to continue...'
+	DEFB	0
+DSKIND0: CALL	CFIN		; get input (console or script file)
+	CP	CTRLC		; is it <Ctrl-C> ?
+	JP	Z,EXIT1		; ..if so, quit program
+	CP	CR		; <CR> ?
+	JR	NZ,DSKIND0	; ..if not, loop
+	JP	CRLF		;   else, output newline and let return from there
+
+
+;::::: ERROR MESSAGES
+
+	; entry points for various error messages
+	; in most cases, the program is terminated after display
+E$BPBIO: CALL	E$MSG
+	CALL	VPRINT
+	DEFB	'Not B/P Bios +++',CR,LF
+	DEFB	0
+	SCF
+	RET
+
+E$READ:	CALL	VPRINT
+	DEFB	BEL,'*** Read Error'
+	DEFB	0
+	JR	ERREXIT
+
+E$SRC:	CALL	VPRINT
+	DEFB	BEL,'*** Bad source!'
+	DEFB	0
+	JR	ERREXIT
+
+E$WRITE: CALL	VPRINT
+	DEFB	BEL,'*** Write Error'
+	DEFB	0
+	JR	ERREXIT
+
+E$DEST:	CALL	VPRINT
+	DEFB	BEL,'*** Bad destination!'
+	DEFB	0
+	JR	ERREXIT
+
+E$NOSYS: CALL	VPRINT
+	DEFB	BEL,'*** No System!'
+	DEFB	0
+	JR	ERREXIT
+
+E$OPEN:	CALL	VPRINT
+	DEFB	BEL,"*** Can't open source file!"
+	DEFB	0
+
+ERREXIT: CALL	CRLF
+	LD	HL,0		; load HL= 0 (warm boot)
+				; ..and fall through
+
+	; "called" as a pseudo-routine that returns to caller
+	;  in: HL= target addr
+JUMPHL:	JP	(HL)		; jump to addr in HL regs
+
+
+	; every output of an error message begins
+	; with this sequence of <BEL> and "+++ "
+E$MSG:	CALL	VPRINT
+	DEFB	CR,LF,BEL,'+++ '
+	DEFB	0
+	RET
+
+
+	; print lower nybble in A as hex on CON:
+	;  in: A= number to display
+PLOWAX:	AND	00001111B	; mask off high nybble, keep lower
+	ADD	A,90H		; conversion to hex
+	DAA			;   (same as SYSLIB @B2HL)
+	ADC	A,40H
+	DAA
+	JP	COUT		; send to CON: and let return from there
+
+	; *
+
+
+;::::: MENU 6 - CNF SCRIPT FILE
+
+M6CNF:	CALL	VPRINT
+	DEFB	CR,LF,LF,'  Enter Config File (default type = .CNF) : '
+	DEFB	0
+	CALL	CINPUTL
+	LD	HL,INLBUF	; ptr to input buffer
+	LD	DE,CFFCB	; ptr to script file FCB
+	CALL	ZFNAME		; parse specified token into an FCB
+	CALL	CFINFT		; add standard filetype 'CNF', if necessary
+	CALL	CFINOPN		; open file (check if exists)
+	JP	M0MAIN
+
+
+	; read config file (script) byte-wise
+	; interpret special chars (comment, end-of-line etc.)
+	; convert closing brackets and commas to <CR>
+	; all other chars fall through and are returned as read
+CIN:
+CFIN:	LD	A,(CFBYTE)	; get current byte
+	OR	A		; is it zero ?
+	JR	Z,CINPUT	; ..if so, manual input mode is active
+	CALL	CFINCHR		;   else, get next byte from config file
+	JR	C,CFIN		; if error occurred, loop and fall through to manual input
+	CP	';'		; is it a semi-colon ?
+	JR	NZ,CFIN1	; ..if not, jump to check of end of line
+
+	; comment, skip over chars until an error occurred or end of line is reached
+CFIN0:	CALL	CFINCHR		; get next char
+	JR	C,CFIN		; ..if error occured, loop and fall through to manual input
+	CP	CR		; is it a <CR> ?
+	JR	Z,CFIN		; ..if so, get next byte from config file
+	CP	LF		; <LF> follows ?
+	JR	NZ,CFIN0	; ..if not, get next byte
+	LD	A,(CFLNNO)	;   else, get line counter
+	INC	A		;   ..increase it
+	LD	(CFLNNO),A	;   ..and save back
+	JR	CFIN		; loop
+
+	; end of line ?
+CFIN1:	CP	CR		; is it <CR> ?
+	JR	Z,CFIN		; ..if so, get next byte
+	CP	LF		; <LF> follows ?
+	JR	NZ,CFIN2	; ..if not, jump to check special chars
+	LD	A,(CFLNNO)	;   else, get line counter
+	INC	A		;   ..increase it
+	LD	(CFLNNO),A	;   ..and save back
+	JR	CFIN		; loop
+
+	; check for special characters
+CFIN2:	CP	' '		; is it <SP> ?
+	JR	Z,CFIN		; ..if so, get next byte
+	CP	TAB		; <TAB> ?
+	JR	Z,CFIN		; ..get next byte
+	CP	'['		; is it an opening bracket ?
+	JR	Z,CFIN		; ..get next byte
+	CP	']'		; is it a closing bracket ?
+	JR	Z,CFIN3		; ..exit routine
+	CP	','		; is it a comma ?
+	RET	NZ		; ..if not, return with Z-Flag cleared
+CFIN3:	LD	A,CR		; else return a <CR> in A
+	RET
+
+
+	; get one char from console
+	; (using direct call to BIOS CONIN)
+CINPUT:	PUSH	HL
+	PUSH	DE
+	PUSH	BC
+	LD	HL,(CPMBIOS+1)	; HL= warm boot addr of BIOS jump (fn #1)
+	LD	L,3*3		; adjust target addr to fn #3 (after 0xC3 JP)
+	CALL	JUMPHL		; ..and "call" into BIOS
+	POP	BC
+	POP	DE
+	POP	HL
+	RET
+
+
+	; get next char from config file
+	;  in: -
+	; out: byte stored in data segment
+	;      or A= 0 and C-Flag set if error
+CFINCHR: PUSH	HL		; save regs
+	LD	HL,CFDMA	; addr DMA transfer buffer
+	LD	A,(CFPOS)	; get last reading position
+	OR	A		; reset flags
+	INC	A		; ..move forward
+	CALL	M,CFINRD	; if negative (high-bit set), read next sector
+	JR	C,CFINCH0	; ..if end reached, jump
+	LD	(CFPOS),A	;   else, remember reading position
+	CALL	ADDHLA		; HL= ptr to byte in DMA buffer
+	LD	A,(HL)		; ..get it
+	CP	CTRLZ		; is it <Ctrl-Z> (EOF) ?
+	SCF
+	CCF			; clear C-Flag, set return status Ok (NC)
+	JR	NZ,CFINCH0	; ..if not EOF, return Ok
+	XOR	A		;   else, clear A
+	LD	(CFBYTE),A	;   ..and store zero byte
+	SCF			; set C-Flag (= error)
+CFINCH0: POP	HL		; restore regs
+	RET
+
+	; reads next sector from config file
+CFINRD:	PUSH	HL
+	PUSH	DE
+	LD	HL,CFDMA	; addr DMA transfer buffer
+	CALL	SETDMA		; ..set
+	LD	DE,CFFCB	; local FCB
+	CALL	Z3LOG		; ..log into DU: given in FCB
+	CALL	F$READ		; read one sector of file sequentially
+	CALL	NZ,CFINCLS	; close file again
+	POP	DE
+	POP	HL
+	RET
+
+	; open config file
+CFINOPN: LD	HL,CFDMA	; addr DMA transfer buffer
+	CALL	SETDMA		; ..set
+	LD	DE,CFFCB	; local FCB
+	CALL	Z3LOG		; ..log into DU: given in FCB
+	CALL	F$EXIST		; does the file exist ?
+	JR	NZ,CFINOP0	; ..if yes, try to open it
+	CALL	E$MSG		;   else, display msg and switch to interactive mode
+	CALL	VPRINT
+	DEFB	'Not Found'
+	DEFB	0
+CFINERR: CALL	VPRINT
+	DEFB	'..using Console Input!',CR,LF,'     [press any key to continue]'
+	DEFB	0
+	CALL	CINPUT
+	XOR	A
+	LD	(CFBYTE),A
+	RET
+CFINOP0: CALL	F$OPEN		; try to open config file
+	JR	Z,CFINOP1	; ..if ok, jump
+	CALL	E$MSG		;   else, display error
+	CALL	VPRINT
+	DEFB	"Can't Open"
+	DEFB	0
+	JR	CFINERR		; ..and switch to interactive mode
+
+	; set parameters for subsequent read
+CFINOP1: LD	A,1		; line #
+	LD	(CFLNNO),A
+	LD	A,0FFH		; current byte
+	LD	(CFBYTE),A
+	DEC	A		; set byte pos in DMA buffer
+	LD	(CFPOS),A	; ..to initiate reading next sector automatically
+	XOR	A		; clear A
+	LD	(CFFCB+32),A	; set sector count in FCB
+	RET
+
+	; close file
+CFINCLS: LD	DE,CFFCB	; local FCB
+	CALL	Z3LOG		; ..log into DU: given in ZCPR3 FCB
+	CALL	F$CLOSE		;   and close file
+	XOR	A
+	LD	(CFBYTE),A
+	SCF			; set Carry
+	RET
+
+	; add standard file type 'CNF' if none was specified
+CFINFT:	LD	A,(CFFCB+9)	; get first char of filetype
+	CP	' '		; is it <SP> ?
+	JR	NZ,CFINFT0	; ..if not, skip over
+	LD	DE,CFFCB+9	;   else, ptr to filetype in FCB
+	LD	HL,FTYPE+3	;   ..ptr to default type 'CNF'
+	LD	BC,3		; copy 3 bytes
+	LDIR
+CFINFT0: LD	DE,CFFCB	; ptr to FCB
+	RET
+
+	; evaluate script file, checks if current byte is zero
+	; if so, an error occured and user may switch to manual input
+CFEVAL:	PUSH	AF		; save regs
+	LD	A,(CFBYTE)	; get current byte
+	OR	A		; is is zero ?
+	JP	Z,CFEVL0	; ..if so, jump exit
+	PUSH	BC		;   else, save other regs too
+	PUSH	DE
+	PUSH	HL
+	CALL	CFINCLS		; close config file
+	CALL	VPRINT
+	DEFB	CR,LF,BEL,'+++ Error in : '
+	DEFB	0
+	LD	DE,CFFCB+1	; ptr to fn in FCB
+	CALL	PFN3		; print FCB-type fn.ft to CON:
+	CALL	VPRINT
+	DEFB	',  Line : '
+	DEFB	0
+	LD	A,(CFLNNO)	; print line number
+	CALL	PAFDC		; as decimal
+	CALL	VPRINT
+	DEFB	' ..aborting to Keyboard..',CR,LF,'    [press any key to continue]'
+	DEFB	0
+	CALL	CINPUT		; get pressed key
+	CP	CTRLC		; is it <Ctrl-C> ?
+	JP	Z,0		; ..if so, exit program w/ warm boot
+	CP	ESC		; <ESC> ?
+	JP	Z,0		; ..exit program w/ warm boot
+	CALL	CRLF
+	POP	HL		; restore regs
+	POP	DE
+	POP	BC
+CFEVL0:	POP	AF		; restore AF
+	RET
+
+
+;::::: BIOS JUMPS (for direct calls)
+
+; area is filled with actual jumps at runtime
+; to call BIOS fn's directly
+BIOSELD: JP	0		; fn #9 SELDSK select disk
+BIOSTTR: JP	0		; fn #10 SETTRK set track
+BIOSTSE: JP	0		; fn #11 SETSEC set sector
+BIOSTDM: JP	0		; fn #12 SETDMA set buffer addr
+BIOREAD: JP	0		; fn #13 READ read one sector
+BIOWRIT: JP	0		; fn #14 WRITE write one sector
+	 JP	0		; fn #15 LISTST list status (not used)
+BIOSTRN: JP	0		; fn #16 SECTRN sector translation
+
+
+
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::
+; VLIB - 0x318C
+; Z3LIB - 0x33AD
+; SYSLIB - 0x3653
+; end addr 0x3A55 (begin DSEG)
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+;::::: RAM STORAGE
+
+	DSEG
+
+		; --- RAM (menu 1.1)
+		DEFB	0	; not used
+		DEFB	0	; not used
+SELBNK:		DEFB	0	; selected RAM bank (offset in CONFIG area)
+		DEFB	0	; not used
+		DEFB	0	; not used
+
+		; --- Char IO Device (menu 2)
+BAUDRT:		DEFB	0	; baud rate / max. capabilities
+DEVASSG:	DEFB	0	; device assignment (current #, 2 bits IOBYT)
+DEVTBL:		DEFW	0	; addr of Char IO device table (DEVCFG)
+DEVLAST:	DEFB	0	; # of last/highest device as ascii
+DEV1SWP:	DEFB	0	; # first device to swap
+
+		; --- Hard Disk (menu 4)
+HDCYLNO:	DEFW	0	; # of cylinders
+HDCTRLR:	DEFB	0	; SCSI/HD controller type
+HDCTRL2:	DEFB	0	;   "  (copy)
+
+		; --- Drive Layout (menu 5)
+DRBSH:		DEFB	0	; BSH block shift factor (from DPB)
+DRNO:		DEFB	0	; # drive to configure
+DRBSTBL:	DEFW	0	; ptr to internal lookup table (vector), +0 = BSH, +1 = BLM
+DRDIRMX:	DEFW	0	; max. directory entries
+DROFFS:		DEFW	0	; track offset (start of directory)
+DRTRKS:		DEFW	0	; number of tracks (disk capacity)
+DRSECTT:	DEFW	0	; sectors per track (tmp storage when iterating over HD's)
+DRTBL:		DEFW	0	; addr of DRVTBL in workspace area
+DR1SWP:		DEFB	0	; # first drive to swap
+DRVRID:		DEFB	0	; driver ID (1= Floppy, 2= HD, 3= RAM)
+ALSIZKB:	DEFW	0	; allocation size in kB (sect/trk divided by 8)
+
+		; --- CNF Script File
+CFBYTE:		DEFB	0	; current byte
+CFMENU:		DEFB	0	; indicator when entering a new menu (##### CHECK: not used?)
+		DEFB	0	; not used
+CFLNNO:		DEFB	0	; # line (counter)
+CFPOS:		DEFB	0	; pos of current byte (in DMA buffer)
+CFFCB:		DEFS	24H	; local FCB of CNF script file
+CFDMA:		DEFS	80H	; transfer buffer
+
+		; 'other'
+BPVERS:		DEFB	0	; B/P Bios version #
+WSPCBEG:	DEFW	0	; addr begin of workspace (WSPC)
+CNFGADR:	DEFW	0	; addr Config. area
+BIOSADR:	DEFW	0	; addr Bios base
+
+		DEFS	64H	; room for stack (100 bytes)
+STACK:		DEFW	0	; stack storage location
+
+		; ..and more 'other'
+RUNMODE:	DEFB	0	; program running mode (config Memory/Disk/Image)
+OLDDU:		DEFW	0	; logged Drive/User at program start
+IMGDU:		DEFW	0	; Drive/User of image file
+INLBUF:		DEFS	20H	; buffer for INLINE routine (SYSLIB single line editor)
+DISKNO:		DEFB	0	; # of disk (in config mode Disk)
+WRKSTRT:	DEFW	0	; addr begin of WSPC (copy)
+WRKDMA:		DEFW	0	; addr of transfer buffer
+WRKEND:		DEFW	0	; addr end of WSPC
+
+		; config mode Disk (system tracks)
+SECTTRK:	DEFW	0	; sectors per track (from DPB)
+XLTADR:		DEFW	0	; addr of XLT (from DPH)
+SECTNO:		DEFW	0	; counter for sectors, if track capacity less than 0x1700 bytes
+SYSSECT:	DEFW	0	; # of sectors containing system tracks
+SCTBOOT:	DEFB	0	; # of sectors after boot code
+SYSTRK:		DEFB	0	; # of system tracks
+WRKZ3E:		DEFW	0	; addr of Z3ENV descriptor in WSPC
+BPOFFS:		DEFB	0	; offset (in # of sectors) to start writing B/P Bios in IMG file
+
+	END
+
+
+;************************************************************************
+; Remarks jxl:
+;   BPCNFG.COM, included in available B/P Bios package(s), was dis-
+; assembled and extensively commented. Labels are up to seven chars long
+; to comply with M-REL standards. However, it is recommended to use SLR
+; tools that support labels up to sixteen chars.
+;   In its current state, the compiled/linked file *almost* matches the
+; original BPCNFG.COM file. Some SYSLIB routines are located at other
+; absolute addresses. Apparently, a different version of SYSLIB was used
+; for the original BPCNFG.COM. Reproducing an exactly matching copy was
+; not possible. However, only the order of routines within SYSLIB seem
+; to have changed, not their code/functionality. (see BPCNFG.SYM)
+;
+;   The program is the most complex of tools distributed with B/P Bios.
+; It supports configuration of the running system in memory, of an image
+; file, and of system tracks; requiring an exhaustive tool chest (and
+; code). Configuration can be done manually/interactively or using a
+; script file. Programmatically, this has been intertwined, i.e. user
+; input and script input are handled in the same routine. Therefore, a
+; local implementation replaces SYSLIB's CIN routine, letting all calls
+; go through that local routine which can read console and file input.
+;
+;   From the structure and coding styles (let alone the size!) it can
+; be concluded, that the original code was divided up into several
+; files, worked on by different persons. As a byproduct of this approach
+; (and the technical limitations in those days), some unreferenced code
+; portions were found. Those are marked with "#####" in the comment, as
+; well as some other places that could be optimised. Of course, further
+; code refactoring would be possible.
+;   Similar patterns can be found for every menu displayed on screen:
+; Display, configure, support functions, and messages/strings. The
+; source code above is structured accordingly, also attemting to use
+; a common naming scheme for labels. It seems very likely that first
+; .REL files were produced for the different code portions before
+; linking them together. Not exposing all labels as public gives more
+; freedom in naming them. To provide the source code in its entirety,
+; for now it was not split up. Perhaps in a later version...
+;************************************************************************

@@ -1,0 +1,640 @@
+	TITLE	"B/P Bios System Loader"
+;************************************************************************
+;*  L D S Y S								*
+;* Load a B/P Bios based system into RAM memory for direct execution	*
+;*  by Harold F. Bower and Cameron W. Cotrill				*
+;*----------------------------------------------------------------------*
+;* Disassembly:	jxl					Dec 2024	*
+;*		public release 1.0			Apr 2025	*
+;*		see remarks at the end					*
+;*----------------------------------------------------------------------*
+;* LINK with Version 4 libraries: VLIB, Z3LIB, SYSLIB			*
+;*									*
+;* A>Z80ASM LDSYS/RS							*
+;* A>SLRNK LDSYS/N,/A:100,/D:0CF8,LDSYS,VLIBS/S,Z3LIBS/S,SYSLIBS/S,/E	*
+;************************************************************************
+
+VER	EQU	12
+REV	EQU	' '
+
+DATE	MACRO
+	DEFB	'17 Jul 96'
+	ENDM
+
+
+BEL	EQU	07H		; Bell character
+LF	EQU	0AH		; Line Feed character
+CR	EQU	0DH		; Carriage Return character
+
+CPMBDOS	EQU	5		; CP/M BDOS entry point (JP)
+CPMFCB	EQU	5CH		; CP/M standard FCB #1 (+1 filename, +9 filetype)
+CPMDMA	EQU	80H		; CP/M standard DMA buffer
+
+
+; From VLIB Get..
+	EXTRN	VPRINT, Z3VINIT
+
+; From Z3LIB Get..
+	EXTRN	GETNAME, PRTNAME, ZFNAME, Z3LOG, WHRENV
+	EXTRN	GZMTOP		; ##### not used, but linked
+
+; From SYSLIB Get..
+	EXTRN	PUTUD, GETUD, F$OPEN, F$READ, SETDMA, PFN3, PHL4HC, COUT, CODEND
+	EXTRN	F$CLOSE, CRLF	; ##### not used, but linked
+
+
+;::::: PROGRAM START
+
+	ORG	100H
+	CSEG
+
+
+LDSYS:	JP	START		; bypass header
+	DEFB	'Z3ENV'		; this is a ZCPR3 utility
+	DEFB	1		; show external environment
+
+ENVADR: DEFW	0		; addr of Z3 environment
+	DEFW	LDSYS		; type 4 filler
+
+	DEFB	'LDSYS   ',0	; configuration name
+
+FTYPE:	DEFB	'IMG'		; standard file type
+
+START:	LD	(STACK),SP
+	LD	SP,STACK
+	CALL	PUTUD		; currently logged drive/user
+	LD	HL,(CPMBDOS+1)
+	CALL	WHRENV		; find Z3 Environment Descriptor
+	PUSH	AF
+	LD	(ENVADR),HL	; store ENV addr
+	CALL	Z3VINIT		; ..and init for Z3LIB routines
+	CALL	GETNAME		; get actual program name
+	CALL	VPRINT
+	DEFB	CR,LF,1,'B/P Bios System Loader',2,'   Vers ',VER/10+'0','.'
+	DEFB	VER MOD 10 + '0',REV,' '
+	DATE
+	DEFB	CR,LF,' Copyright (C) 1991,3 by H.F.Bower & C.W.Cotrill',CR,LF
+	DEFB	0
+
+	; get first token from command line (in FCB #1)
+	LD	A,(CPMFCB+1)
+	CP	'/'		; is this a help request ?
+	JP	Z,HELP		; ..if so, jump display help screen
+	POP	AF
+	JR	Z,E$NOFIL	;   else, jump error no file specified
+
+	LD	HL,(ENVADR)	; get addr Z3ENV
+	LD	DE,70		; offset to high byte BIOS addr
+	ADD	HL,DE		; move ptr
+	LD	H,(HL)		; get high byte of B/P Bios page addr
+	LD	L,30*3		; ..and set low byte to fn #30
+	LD	A,(HL)		; check byte at ptr location
+	CP	0C3H		; is it opcode 0xC3 (JP) ?
+	JR	NZ,E$NOFIL	; ..if not, jump error and exit
+	CALL	JUMPHL		; else, "call" B/P Bios fn #30 (RETBIO)
+	LD	HL,-6		; move ptr 6 bytes backward
+	ADD	HL,DE		;   (signature string)
+	LD	A,(HL)		; get byte
+	CP	'B'		; is it 'B' ?
+	JR	NZ,E$NOFIL	; ..if not, jump error and exit
+	INC	HL		; ptr fwd
+	LD	A,(HL)		; get byte
+	CP	'/'		; is it '/' ?
+	JR	NZ,E$NOFIL	; ..if not, jump error and exit
+	INC	HL		; ptr fwd
+	LD	A,(HL)		; get byte
+	CP	'P'		; is it 'P' ?
+	JR	NZ,E$NOFIL	; ..if not, jump error and exit
+	LD	DE,6		;   else, set ptr to OPTF1 (Bios Option Flags)
+	ADD	HL,DE		;   at CONFIG+2
+	BIT	7,(HL)		; check bit 7 (0= not locked, 1= locked, can't reload)
+	JR	Z,E$NOFIL	; ..if not set, skip over
+
+
+E$RUNBP: CALL	VPRINT
+	DEFB	CR,LF,BEL,'*** Running Bios Cannot be Replaced ! ***',CR,LF
+	DEFB	0
+	JP	EXIT
+
+E$NOFIL: LD	A,(CPMFCB+1)
+	CP	' '
+	JR	NZ,EVALCMD
+	CALL	VPRINT
+	DEFB	'  *** No file specified ! ***',CR,LF,BEL
+	DEFB	0
+
+
+;::::: EXIT PROGRAM
+
+EXIT:	CALL	GETUD		; set previous drive/user
+	LD	SP,(STACK)	; set stack to initial location
+	RET			; ..and return to system
+
+
+;::::: EVALUATE COMMAND LINE
+
+EVALCMD: LD	DE,CPMFCB
+	LD	HL,CPMDMA+1	; set ptr to start of string
+ECMD1: LD	A,(HL)		; get char
+	INC	HL		; move ptr fwd
+	CP	' '		; is it <SP> ?
+	JR	Z,ECMD1		; ..if so, loop get next char
+	DEC	HL		; non-blank char found, move ptr back
+	XOR	A		;   and nullify A
+	CALL	ZFNAME		; parse token into FCB
+	JP	NZ,E$AMBIG	; filename must be unambiguous, jump if error
+	LD	HL,9		; move ptr to file type
+	ADD	HL,DE
+	LD	A,(HL)		; get char
+	CP	' '		; is it <SP> ?
+	JR	NZ,RDIMG	; ..if not, skip over
+	PUSH	DE		; else, save regs
+	EX	DE,HL		; swap regs
+	LD	HL,FTYPE	; ptr to standard file type
+	LD	BC,3		;   3 chars
+	LDIR			;   ... and copy
+	POP	DE		; restore ptr to ZCPR3 FCB
+
+
+;::::: READ IMAGE FILE
+
+RDIMG:	CALL	Z3LOG		; log in drive/user
+	CALL	F$OPEN		; attempt to open file
+	OR	A
+	JP	NZ,E$OPEN	; ..if error, jump error and exit
+	CALL	CODEND		; get first available page after code end
+	LD	(WSPCBEG),HL	; ..and store it
+RDIMG0: PUSH	HL
+	CALL	SETDMA		; set DMA buffer addr (HL)
+	LD	DE,CPMFCB	; set standard FCB #1
+	CALL	F$READ		; read one sector (128 bytes)
+	POP	HL		; restore start addr
+	JR	NZ,RDIMG1	; ..if end of file, jump exit loop
+	LD	DE,128		; else, move buffer addr forward
+	ADD	HL,DE
+	JR	RDIMG0		; ..and loop
+RDIMG1: CALL	GETUD		; set previously logged drive/user
+	CALL	VPRINT
+	DEFB	CR,LF,' CCP starts at    : '
+	DEFB	0
+
+
+;::::: READ IMAGE HEADER
+
+; header contains information at following offsets:
+; ZCPR CCP	0x10 (16) filename
+; 		0x1B (27) Unbanked base addr, 0x1D (29) Unbanked size
+; 		0x1F (31) Banked base addr,   0x22 (33) Banked size
+; ZSDOS		0x30 (48) filename
+; 		0x3B (59) Unbanked base addr, 0x3D (61) Unbanked size
+; 		0x3F (63) Banked base addr,   0x41 (65) Banked size
+; B/P Bios	0x50 (80) filename
+; 		0x5B (91) Unbanked base addr, 0x5D (93) Unbanked size
+; 		0x5F (95) Banked base addr,   0x62 (98) Banked size
+; 		0x70 (112) IMG filename
+
+RDHDR:	LD	DE,27		; offset CCP Unbanked base addr
+	CALL	PSEGAS		; display addr and size of segment
+	LD	DE,33		; offset CCP Banked size
+	CALL	GBYTEWS		; check if empty (0x0000)
+	JR	Z,RDHDR0	; ..if so, skip over
+	CALL	VPRINT
+	DEFB	'   Banked Ccp at  : '
+	DEFB	0
+	LD	DE,31		; offset to CCP Banked base addr
+	CALL	PSEGAS		; display addr and size
+RDHDR0: CALL	VPRINT
+	DEFB	' DOS starts at    : '
+	DEFB	0
+	LD	DE,59		; offset to DOS Unbanked base addr
+	CALL	PSEGAS		; display addr and size of segment
+	LD	DE,65		; offset to DOS Banked size
+	CALL	GBYTEWS		; check if empty (0x0000)
+	JR	Z,RDHDR1	; ..if so, skip over
+	CALL	VPRINT
+	DEFB	'   Banked Dos at  : '
+	DEFB	0
+	LD	DE,63		; offset to DOS Banked base addr
+	CALL	PSEGAS		; display addr and size
+RDHDR1: CALL	VPRINT
+	DEFB	' BIOS starts at   : '
+	DEFB	0
+	LD	DE,91		; offset to B/P Bios Unbanked base addr
+	CALL	PSEGAS		; display addr and size of segment
+	LD	DE,97		; offset to B/P Bios Banked size
+	CALL	GBYTEWS		; check if empty (0x0000)
+	JR	Z,LDSEG		; ..if so, skip over
+	CALL	VPRINT
+	DEFB	'   Banked Bios at : '
+	DEFB	0
+	LD	DE,95		; offset to B/P Bios Banked base addr
+	CALL	PSEGAS		; display addr and size
+
+
+;::::: LOAD SYSTEM SEGMENTS
+
+LDSEG:	CALL	VPRINT
+	DEFB	CR,LF,' ...installing '
+	DEFB	0
+	CALL	CHKBNKD		; check options flag if banked system
+	JR	Z,LDSEG0	; ..if not, skip over
+	CALL	VPRINT
+	DEFB	'Banked '
+	DEFB	0
+LDSEG0: CALL	VPRINT
+	DEFB	'System',CR,LF,LF
+	DEFB	0
+
+LDSEG1: DI			; disable interrupts
+	LD	HL,(WSPCBEG)	; get addr WSPC area
+	LD	DE,100H		; + 100H to account for file base
+	ADD	HL,DE
+
+	; ZCPR Unbanked portion
+	LD	(CCPUSTRT),HL	; store start in WSPC area
+	LD	DE,27		; file offset to ZCPR Unbanked base addr
+	CALL	G2WRDWS
+	LD	(CCPUSIZ),BC	; store size
+	LD	(CCPUADR),DE	; store base addr
+	LD	HL,(CCPUSTRT)	; get start in WSPC
+	PUSH	HL
+	ADD	HL,BC		; calc end / start of ZSDOS Unbanked portion
+	LD	(DOSUSTRT),HL	; ..and store it
+	POP	HL		; restore start
+	LDIR			; copy ZCPR Unbanked
+				; from img file to target addr
+
+	; ZCPR Banked portion
+	LD	DE,31		; offset to ZCPR Banked base addr
+	CALL	G2WRDWS
+	LD	(CCPBSIZ),BC	; store size
+	LD	(CCPBADR),DE	; store base addr
+	LD	HL,(DOSUSTRT)	; get previously calc'd end
+	LD	(CCPBSTRT),HL	; ..and store it as Banked start in WSPC
+	LD	A,B		; check if size is zero
+	OR	C
+	JR	Z,LDSEG2	; ..if so, skip over
+	ADD	HL,BC		;   else, calc new start of ZSDOS Unbanked
+	LD	(DOSUSTRT),HL	;   ..and update it
+
+	; ZSDOS Unbanked portion
+LDSEG2: LD	DE,59		; offset to ZSDOS Unbanked base addr
+	CALL	G2WRDWS		; DE= base addr, BC= size
+	LD	(DOSUSIZ),BC	; store size
+	LD	HL,(DOSUSTRT)	; get ZSDOS Unbanked start in WSPC area
+	PUSH	HL
+	ADD	HL,BC		; calc end / start of B/P Bios Unbanked portion
+	LD	(BIOUSTRT),HL	; ..and store it
+	POP	HL		; restore start
+	LDIR			; copy ZSDOS Unbanked
+				; from img file to target addr
+
+	; ZSDOS Banked portion
+	LD	DE,63		; offset to ZSDOS Banked base addr
+	CALL	G2WRDWS
+	LD	(DOSBSIZ),BC	; store size
+	LD	(DOSBADR),DE	; store base addr
+	LD	HL,(BIOUSTRT)	; get previously calc'd end
+	LD	(DOSBSTRT),HL	; ..and store it as Banked start in WSPC
+	LD	A,B		; check if size is zero
+	OR	C
+	JR	Z,LDSEG3	; ..if so, skip over
+	ADD	HL,BC		;   else, calc new start of B/P Bios Unbanked
+	LD	(BIOUSTRT),HL	;   ..and update it
+
+	; B/P Bios Unbanked portion
+LDSEG3: LD	DE,91		; offset to B/P Bios Unbanked base addr
+	CALL	G2WRDWS
+	LD	(BIOUSIZ),BC	; store size
+	LD	(BIOUADR),DE	; store base addr
+	LD	HL,(BIOUSTRT)	; get start in WSPC area
+	PUSH	HL
+	ADD	HL,BC		; calc end / beginning of Banked portion
+	LD	(BIOBSTRT),HL	; ..and store it
+	POP	HL		; restore start
+	LDIR			; copy B/P Bios Unbanked
+				; from img file to target addr
+
+	; B/P Bios Banked portion
+	LD	DE,95		; offset to B/P Bios Banked base addr
+	CALL	G2WRDWS
+	LD	(BIOBSIZ),BC	; store size
+	LD	(BIOBADR),DE	; store base addr
+
+	; use B/P Bios functions at new location (Unbanked portion was just loaded)
+	LD	HL,(BIOUADR)	; get (new) B/P Bios base addr
+	LD	L,82h		; offset to TPABNK in config area
+	LD	A,(HL)		; get value
+	LD	L,27*3		; offset to B/P Bios fn #27 (SELMEM)
+	CALL	JUMPHL		; "call" fn
+	LD	HL,CCPBSIZ	; ptr to stored ZCPR Banked size
+	CALL	LDBNKD
+	LD	HL,DOSBSIZ	; ptr to stored ZSDOS Banked size
+	CALL	LDBNKD
+	LD	HL,BIOBSIZ	; ptr to stored B/P Bios Banked size
+	CALL	LDBNKD
+
+	; Z3ENV Descriptor
+	LD	BC,(WSPCBEG)	; get (new) B/P Bios base addr
+	LD	HL,155		; offset to addr of Z3 Environment Descriptor
+	ADD	HL,BC		;   in B/P Bios config area (CONFIG+26)
+	LD	E,(HL)		; get addr in DE
+	INC	HL
+	LD	D,(HL)
+	LD	HL,128		; offset from start of WSPC area (img file)
+	ADD	HL,BC
+	LD	BC,128		; bytes to copy
+	LDIR
+
+	; boot new system
+	LD	SP,80H		; set stack pointer to default
+	XOR	A		; nullify A
+				; ..and fall through, initiating a cold boot
+
+
+;::::: SUPPORT FUNCTIONS
+
+	; call B/P Bios function (at new base addr in RAM)
+	;  in: A= offset to JP (fn # *3)
+BIOSFN: LD	HL,(BIOUADR)	; get (new) B/P Bios base addr
+	LD	L,A		; adjust to JP of fn #
+				; ..and fall through
+
+
+	; "called" as a pseudo-routine that returns to caller
+	;  in: HL= target addr
+JUMPHL:	JP	(HL)		; jump to addr in HL regs
+
+
+	; load banked portions of (new) system from WSPC area to SYSBNK
+	; segment information is stored as consecutive 16-bit words
+	; in the order  <size>  <base addr>  <start addr in WSPC>
+	;  in: HL= ptr to <size>
+	; uses B/P Bios functions at new location (Unbanked portion)
+LDBNKD:	LD	C,(HL)		; get <size> low byte
+	LD	A,C
+	INC	HL		; move ptr fwd
+	LD	B,(HL)		; get <size> high byte
+	INC	HL		; ptr fwd
+	OR	B		; check if <size> is zero
+	RET	Z		; ..if so, return
+
+	PUSH	BC		; save regs
+	PUSH	HL
+	LD	HL,(BIOUADR)	; get (new) B/P Bios base addr
+	LD	L,82H		; offset to TPABNK in config area
+	LD	C,(HL)		; get value
+	INC	HL		; move ptr to SYSBNK
+	LD	B,(HL)		; get value
+	LD	A,29*3		; offset to B/P Bios fn #29 (XMOVE)
+	CALL	BIOSFN
+	POP	DE		; restore regs, DE now ptr to <base addr>
+	POP	BC
+	LD	HL,(BIOUADR)	; get (new) B/P Bios base addr
+	LD	L,25*3		; offset to B/P Bios fn #25 (MOVE)
+	PUSH	HL		; put on stack, so it is called at return
+				;   and let Bios routine return to initial caller
+	EX	DE,HL		; swap regs
+	LD	E,(HL)		; get <base addr> in DE
+	INC	HL
+	LD	D,(HL)
+	INC	HL
+	LD	A,(HL)
+	INC	HL
+	LD	H,(HL)		; get <start addr in WSPC> in HL
+	LD	L,A
+	RET			; ..and call B/P Bios fn #25 (MOVE)
+				;   to copy banked segment to SYSBNK
+
+
+	; get _two_ consecutive 16-bit words from offset addr in WSPC area
+	;  in: DE= offset
+	; out: DE= first value (at addr)
+	;      BC= second value (at addr+2)
+	;      HL= ptr to high byte of second value in WSPC area
+	; uses BC, DE, HL
+G2WRDWS: CALL	G1WRDWS		; get first word in HL
+	EX	DE,HL		; swap regs
+	INC	HL		; move ptr fwd
+	LD	C,(HL)		; get second word in BC
+	INC	HL
+	LD	B,(HL)
+	RET
+
+
+	; print base addr and size of system segment ton CON:
+	;  in: DE= offset in WSPC area
+PSEGAS: CALL	G1WRDWS		; get 16-bit word (in HL) at offset (in DE)
+	CALL	PHL4HC		; ..and print to CON: as hex digits
+	EX	DE,HL		; swap regs
+	INC	HL		; move ptr fwd
+	LD	E,(HL)		; get next 16-bit word in DE
+	INC	HL
+	LD	D,(HL)
+	CALL	VPRINT
+	DEFB	'  ('
+	DEFB	0
+	EX	DE,HL		; swap regs
+	CALL	PHL4HC		; print value (now in HL) to CON: as hex digits
+	CALL	VPRINT
+	DEFB	'H Bytes)',CR,LF
+	DEFB	0
+	RET
+
+
+	; get _one_ 16-bit word from offset addr in WSPC area
+	;  in: DE= offset
+	; out: HL= value
+	;      DE= ptr to high byte in WSPC area
+G1WRDWS: LD	HL,(WSPCBEG)	; addr WSPC area
+	ADD	HL,DE		; add offset
+	LD	E,(HL)		; get low byte at ptr addr in E
+	INC	HL
+	LD	D,(HL)		; get high byte at ptr addr in D
+	EX	DE,HL		; swap regs
+	RET
+
+
+	; get byte from offset addr in WSPC area
+	;  in: DE= offset
+	; out: A= value, Z-Flag set if following byte is eqal
+	;      HL= ptr to next byte in WSPC area
+GBYTEWS: LD	HL,(WSPCBEG)	; addr WSPC area
+	ADD	HL,DE		; add offset
+	LD	A,(HL)		; get byte
+	INC	HL		; move ptr fwd
+	OR	(HL)		; check if next byte has same value
+	RET
+
+
+	; check if img file contains a banked system
+	;  in: -
+	; out: Z-Flag set for Unbanked Bios, NZ= Banked
+CHKBNKD: LD	HL,(WSPCBEG)	; addr WSPC area
+	INC	H		; + 100H to account for file base
+	EX	DE,HL		; swap regs, DE holds result over next calc's
+	LD	BC,29		; offset to ZCPR Unbanked size
+	CALL	SEGTSIZ		; ..add ZCPR size(s) to DE
+	LD	BC,61		; offset to ZSDOS Unbanked size
+	CALL	SEGTSIZ		; ..add ZSDOS size(s) to DE
+	LD	HL,128		; DE= offset to beginning of B/P Bios in
+	ADD	HL,DE		;   img file, move fwd by 128 more bytes
+	LD	A,(HL)		; get B/P Bios options flag OPTF1 (at CONFIG+2)
+	AND	00000001b	; check bit 0, and set Z-Flag accordingly
+	RET
+
+
+	; get total size of a system segment (add Unbanked and Banked sizes)
+	;  in: BC= offset in WSPC area to Unbanked size
+	; out: DE= sum of segment sizes
+SEGTSIZ: LD	HL,(WSPCBEG)	; addr WSPC area
+	ADD	HL,BC		; add offset
+	LD	C,(HL)		; get 16-bit word in BC
+	INC	HL		;   (Unbanked size)
+	LD	B,(HL)
+	EX	DE,HL		; swap regs
+	ADD	HL,BC		; add retrieved value
+	EX	DE,HL		; ..and swap regs back
+	INC	HL		; move ptr 3 bytes fwd
+	INC	HL
+	INC	HL
+	LD	C,(HL)		; get 16-bit value in BC
+	INC	HL		;   (Banked size)
+	LD	B,(HL)
+	EX	DE,HL		; swap regs
+	ADD	HL,BC		; add retrieved value
+	EX	DE,HL		; ..and swap regs back
+	RET
+
+
+;::::: ERROR MESSAGES
+
+E$AMBIG: CALL	VPRINT
+	DEFB	CR,LF,BEL,' --- Ambiguous File: '
+	DEFB	0
+	JR	E$FNAME
+
+E$OPEN:	CALL	VPRINT
+	DEFB	CR,LF,BEL,' --- Error Opening: '
+	DEFB	0
+
+E$FNAME: LD	DE,CPMFCB+1	; ptr to file name in standard FCB #1
+	CALL	PFN3		; print it
+	JP	EXIT
+
+
+;::::: HELP SCREEN
+
+HELP:	CALL	VPRINT
+	DEFB	CR,LF,1
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	VPRINT
+	DEFB	2,' Loads and executes a System image prepared by',CR,LF
+	DEFB	' BPBUILD containing a B/P Bios.',CR,LF,LF
+	DEFB	'  Syntax:',CR,LF
+	DEFB	'     '
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	VPRINT
+	DEFB	' //                  - print this message',CR,LF
+	DEFB	'     '
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	VPRINT
+	DEFB	' [du|dir:]name[.typ] - load system image',CR,LF,LF
+	DEFB	'  File Type Defaults to "'
+	DEFB	0
+	LD	HL,FTYPE	; ptr to default file type
+	LD	B,3		; # of chars
+HELP0:	LD	A,(HL)		; get char
+	INC	HL		; move ptr fwd
+	CALL	COUT		; display char on CON:
+	DJNZ	HELP0		; ..and loop
+	CALL	VPRINT
+	DEFB	'" if not explicitly entered',CR,LF,LF
+	DEFB	'NOTE: This utility will NOT load a system '
+	DEFB	'if the "Lock" bit in',CR,LF
+	DEFB	'the Option Byte (Bit 7 of CONFIG+2) is Set to "1"',CR,LF
+	DEFB	0
+	JP	EXIT
+
+
+	; print program name on CON: device
+	; (either the actual name, or fallback to default)
+	; only used by HELP
+PPRGNAM: LD	A,(ENVADR+1)	; get high byte of ENVPTR
+	OR	A		; check if valid (<> zero)
+	JP	NZ,PRTNAME	; ..if so, display actual name
+				;     and let return from there
+	CALL	VPRINT		; else, display default
+	DEFB	'LDSYS'
+	DEFB	0
+	RET
+
+
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::
+; VLIB - 0x06db
+; Z3LIB - 0x08fc
+; SYSLIB - 0x0bcf
+; end addr 0x0bf8 (begin DSEG)
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+;::::: RAM STORAGE
+
+	DSEG
+
+WSPCBEG: 	DEFW	0	; begin of workspace
+				; (first available page, returned by CODEND)
+
+				; addresses of new system as extracted from img file
+				; first _Unbanked_, then _Banked_
+BIOUADR:	DEFW	0	; B/P Bios Unbanked base addr
+CCPUADR:	DEFW	0	; ZCPR Unbanked base addr
+CCPUSTRT:	DEFW	0	;               start in WSPC area
+CCPUSIZ:	DEFW	0	;               size
+DOSUSTRT:	DEFW	0	; ZSDOS Unbanked start
+DOSUSIZ:	DEFW	0	;                size
+BIOUSTRT:	DEFW	0	; B/P Bios Unbanked start
+BIOUSIZ:	DEFW	0	;                   size
+
+CCPBSIZ:	DEFW	0	; ZCPR Banked size
+CCPBADR:	DEFW	0	;             base addr
+CCPBSTRT:	DEFW	0	;             start
+DOSBSIZ:	DEFW	0	; ZSDOS Banked size
+DOSBADR:	DEFW	0	;              base addr
+DOSBSTRT:	DEFW	0	;              start
+BIOBSIZ:	DEFW	0	; B/P Bios Banked size
+BIOBADR:	DEFW	0	;                 base addr
+BIOBSTRT:	DEFW	0	;                 start
+
+
+	DEFW	GZMTOP		; reference Z3LIB/SYSLIB routines, so they are linked
+	DEFW	F$CLOSE
+	DEFW	CRLF
+
+		DEFS	30H-6	; room for stack
+				; -6 to account for above ref's
+STACK:		DEFW   0       	; stack storage location
+
+	END
+
+
+;************************************************************************
+; Remarks jxl:
+;   LDSYS.COM, included in available B/P Bios package(s), was dis-
+; assembled and extensively commented. Labels are unique up to the seventh
+; character to comply with M-REL standards. However, it is recommended to
+; use SLR tools that support labels up to sixteen chars.
+;   In its current state, the compiled/linked file _almost_ matches the
+; original LDSYS.COM with the exception of Z3LIB routine GZMTOP, and
+; SYSLIB routines F$CLOSE and CRLF. Even though they are part of the
+; original program, they are neither needed nor referenced. This seems
+; to indicate that other versions of the LIB's were used. To reproduce
+; the original program, the above mentioned routines are referenced (in
+; stack area) to have them included when linking.
+;
+;   As a byproduct of the disassembly, the structure of a B/P Bios image
+; file was documented. This file contains an excerpt.
+;************************************************************************

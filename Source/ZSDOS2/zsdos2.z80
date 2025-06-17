@@ -1,0 +1,4116 @@
+	TITLE	"ZSDOS 2"
+;************************************************************************
+;*  Z S D O S v2              						*
+;* A banked CP/M 2.2 compatible replacement BDOS			*
+;*  by Harold F. Bower and Cameron W. Cotrill				*
+;*----------------------------------------------------------------------*
+;* Disassembly:	jxl					May 2025	*
+;*		public release 1.0			May 2025	*
+;*		see remarks at the end					*
+;*----------------------------------------------------------------------*
+;* Assemble with SLR Z80ASM						*
+;*									*
+;* A>Z80ASM ZSDOS2/6							*
+;************************************************************************
+
+
+	NAME	('DOS')
+
+
+VER	EQU	20H
+REV	MACRO
+	DEFB	'27g'
+	ENDM
+
+DATE	MACRO
+	DEFB	'1993'
+	ENDM
+
+
+;::::: DEFINITIONS
+
+
+RAMLOW	EQU	0000H		; Start address memory
+
+	; Bios entry points
+
+	COMMON	/_BIOS_/
+BIOS	EQU	$
+
+	CSEG
+
+;	BOOT	EQU	BIOS+0000H	; Cold Boot
+;	WBOOT	EQU	BIOS+0003H	; Warm Boot
+CONST	EQU	BIOS+0006H	; Console Status
+CONIN	EQU	BIOS+0009H	; Console Input
+CONOUT	EQU	BIOS+000CH	; Console Output
+LIST	EQU	BIOS+000FH	; List Output
+PUNCH	EQU	BIOS+0012H	; Punch Output
+READER	EQU	BIOS+0015H	; Reader Input
+HOME	EQU	BIOS+0018H	; Home Disk
+SELDSK	EQU	BIOS+001BH	; Select Disk
+SETTRK	EQU	BIOS+001EH	; Select Track
+SETSEC	EQU	BIOS+0021H	; Select Sector
+SETDMA	EQU	BIOS+0024H	; Set DMA Address
+READ	EQU	BIOS+0027H	; Read 128 Bytes
+WRITE	EQU	BIOS+002AH	; Write 128 Bytes
+;	LISTST	EQU	BIOS+002DH	; List Status
+SECTRN	EQU	BIOS+0030H	; Sector Translation
+MOVE	EQU	BIOS+004BH	; (Interbank) move
+SELMEM	EQU	BIOS+0051H	; Select memory bank
+XMOVE	EQU	BIOS+0057H	; Set memory banks for MOVE
+RETMEM	EQU	BIOS+0075H	; Return current memory bank
+
+OTPABK	EQU	BIOS+082H	; offset TPA bank (from B/P Bios base)
+OSYSBK	EQU	BIOS+083H	; offset SYS bank
+OZ3ENV	EQU	BIOS+098H	; offset Z3ENV
+
+
+	; Control chars
+
+CONTC	EQU	03H		; Key to generate warm boot
+CONTH	EQU	08H		; Backspace
+TAB	EQU	09H		; Tab
+LF	EQU	0AH		; Line feed
+CR	EQU	0DH		; Carriage return
+CONTP	EQU	10H		; Set/reset print flag
+CONTR	EQU	12H		; Retype line
+CONTS	EQU	13H		; Stop console output
+CONTX	EQU	18H		; Delete line (backspaces)
+CONTU	EQU	15H		; Same as Control-X
+RUBOUT	EQU	7FH		; Delete last char
+
+
+	; Disk related
+
+MAXEXT	EQU	1FH		; Maximum extent number
+MAXMOD	EQU	3FH		; Maximum data module number
+TDCKSM	EQU	91H		; Checksum of !!!TIME&.DAT
+
+
+	; Attribute bits
+
+PUBATT	EQU	2		; Public attribute offset
+PSFATT	EQU	7		; Public/system file (internal only)
+WHLATT	EQU	8		; Wheel protect attribute offset
+ROATT	EQU	9		; Read only attribute offset
+SYSATT	EQU	10		; System attribute offset
+ARCATT	EQU	11		; Archive attribute offset
+
+
+	; FCB positions
+
+FCBEXT	EQU	12		; Extent number
+FCBUSR	EQU	13		; User valid at offset 13 if set (internal)
+FCBMOD	EQU	14		; Data module number - D7 used as unmod flag
+FCBREC	EQU	15		; Record number
+NXTREC	EQU	32		; Next record number
+
+
+	; Internal
+
+; ZSDOS 1 = 6D / ZSDOS 2 = ED
+FLGBITS	EQU	11101101B	; PUBlic On, P/P Write Off, R/O On, 
+				; Fast Relog On, Disk Chg Warning Off, 
+				; Path On, No System Path On
+				; (Reserved) On
+
+
+
+	;_______________________//  Non-Banked  //
+
+	DEFB	'ZSDOS',VER/16+'0'
+
+	; ZSDOS entry point
+	JP	ENTRY		; jump to start of program code
+
+
+;::::: DATA / CONFIGURATION AREA
+
+	; CP/M 2.2 compatible error vector table
+STBDSC:	DEFW	ERROR		; Bad sector message
+STSEL:	DEFW	ERROR		; Select error
+STRO:	DEFW	ERROR		; Drive read only
+SFILRO:	DEFW	ERROR		; File read only
+
+	; External Path
+PATH:	DEFW	PATHAD		; Path address for file open, 0 if no Path
+
+	; Wheel Byte pointer
+WHEEL:	DEFW	0		; Address of Wheel byte, 0 if none
+
+	; User configuration byte(s)
+FLAGS:	DEFB	FLGBITS		; Flag byte (see above)
+STFLAG: DEFB	0110B		; Stamp enable/disable
+				; bit2= Modify, bit1= Create, bit0= Access
+
+	; Dispatch table for time/date stamp routines
+GSTIME:	DEFW	DOTDER		; Address of get/set time/date routine
+	DEFW	DOTDER
+UNLOAD:	DEFW	0		; Pointer to remove time stamp routine
+IPATH:	DEFW	PATHAD		; copy to restore Internal Path (see ZSCFG2)
+
+	;-----
+
+TABCNT:	DEFB	0		; tab counter
+TABCX1:	DEFB	0		; temporary tab counter (used by RDBUF)
+FCONTP:	DEFB	0		; list enable flag (Control-P) - used by BGii
+LASTCH:	DEFB	0		; last character - used by BGii
+USER:	DEFB	0		; user number - used by BGii
+DEFDRV:	DEFB	0		; default drive number - used by BGii and DS
+DRIVE:	DEFB	0		; drive number
+
+	;-----
+
+FCB0:	DEFB	0		; FCB byte 0
+DMA:	DEFW	0080H		; DMA address
+TRANS:	DEFW	0		; translation vector
+TEMP0:	DEFW	0		; number of files on drive
+DIRBUF:	DEFW	0		; directory buffer pointer - used by BGii
+IXP:	DEFW	0		; disk parameter block
+CSV:	DEFW	0		; check sum pointer
+ALV:	DEFW	0		; allocation vector pointer
+
+	;-----
+
+MAXSEC:	DEFW	0		; number of sectors/track
+NBLOCK:	DEFB	0		; block shift
+NMASK:	DEFB	0		; mask number of blocks
+NEXTND:	DEFB	0		; extent mask
+
+MAXLEN:	DEFW	0		; maximum block number-1
+NFILES:	DEFW	0		; maximum number of files-1
+NDIR0:	DEFB	0		; first two entries ALV buffer
+	DEFB	0		; ..(NDIR1)
+NCHECK:	DEFW	0		; number of checksum entries
+NFTRK:	DEFW	0		; first track number
+
+	;-----
+
+FUNCT:	DEFB	0		; function code
+PEXIT:	DEFW	0		; exit code
+
+	;-----
+
+FLDRV:	DEFB	0		; drive select used flag
+RDWR:	DEFB	0		; read/write flag
+SEARQU:	DEFB	0		; search question mark used
+SEARPU:	DEFB	0		; search public file
+
+	;-----
+
+RECDIR:	DEFW	0		; record directory (checksum)
+FILCNT:	DEFW	0		; file counter
+SECPNT:	DEFB	0		; sector pointer
+SUBFLG:	DEFB	0		; submit flag (reset disk command)
+DCOPY:	DEFW	0		; copy address FCB
+SEAREX:	DEFB	0		; exit code search
+SEARNB:	DEFB	0		; search number of bytes
+ERMODE:	DEFB	0		; BDOS error mode
+ARWORD:	DEFW	0		; DE argument on entry - used for BGii
+DEVAL:	DEFW	0		; return value for DE reg
+SPSAVE:	DEFW	0		; Stack pointer location
+
+	;-----
+
+FINITD:	DEFB	0		; INITDR flag preventing code re-execution
+TPABNK:	DEFB	0		; TPA bank number
+
+
+	DEFB	'ZSDOS ',VER/16+'0','.',VER MOD 16 + '0'
+	DEFB	' Copyright (c) '
+	DATE
+	DEFB	' by  C.W.Cotrill & H.F.Bow'
+IXSAVE:	DEFB	'er'		; User's IX register
+
+ZSDOSS:	DEFW	0		; ZSDOS Stack
+	DEFB	0,0,0,0		; ..also used as buffer to read/set clock
+
+	;-----
+
+	; Time/Date
+RWCODE:	DEFB	0		; 0= read stamp, 1= write stamp
+STOFF:	DEFB	0		; offset in stamp
+STATUS:	DEFB	0FFH		; status of first routine for exit checs
+
+	; Other
+FCBADR:	DEFW	0		; address of (target) FCB
+FCBBUP:	DEFB	0		; number of FCB bytes to copy/update
+ZSFCB:	DEFS	36		; buffer for internal FCB (36 bytes)
+ZSSTMP:	DEFS	15		; buffer for Time Stamp (15 bytes)
+
+
+
+	;::::::::::::::::::::::::::::::::::::::::
+	;:::::  ZSDOS Entry Point
+
+ENTRY:	CALL	RETMEM		; B/P Bios fn #39 (A= current memory bank)
+	LD	(TPABNK),A	; save TPA bank number
+	XOR	A		; clear A
+	LD	B,A		; for later 16-bit addr's
+	LD	L,A
+	LD	H,A		; set HL to zero
+	LD	(PEXIT),HL	; clear exit code
+	LD	(FLDRV),HL	; reset drive select and R/W flags
+	LD	(SPSAVE),SP	; save stack pointer
+	LD	SP,ZSDOSS	; get internal stack pointer
+	PUSH	IX		; save index register on our stack
+	PUSH	DE		; save parameter register
+	POP	IX		; get it back in IX
+	LD	(ARWORD),DE	; save in memory for BGii
+	LD	HL,DOSEXIT	; get exit address ZSDOS
+	PUSH	HL		; save it on stack to return from ZSDOS
+	LD	A,C		; get function code (reg B= 0)
+	LD	(FUNCT),A	; save it for later use
+	CP	12		; is it a non-disk function ?
+	JR	C,ENTRY0	; ..if so, jump
+	CP	MAXCMD		; fcn < maximum command number (49) ?
+	JR	C,ENTRY1	; ..if so, jump
+
+	; extended function scanner for added functions
+	CP	98		; is it less than cmnd 98 ?
+	RET	C		; ..if so, return (fcn not known/valid)
+	CP	152		; is it cmnd 152 ?
+	JP	Z,CMD152	; ..if so, execute it
+	CP	103+1		; is it greater than cmnd 103 ?
+	RET	NC		; ..if so, return (fcn not known/valid)
+	SUB	98-MAXCMD	; rework 98..103 --> 50..55
+	LD	C,A		; save reworked function number
+				; ..and fall through to ENTRY0
+
+	; for Non-disk functions (ie. fcn # less than 12), push address of
+	; SAVEA routine on Stack (save A reg as return code). Saves code in
+	; Console Routines, as a simple RET can be used in most cases.
+ENTRY0:	LD	HL,SAVEA
+	PUSH	HL		; vector return through A reg save
+ENTRY1:	LD	HL,CTABLE	; load table
+	ADD	HL,BC		; add
+	ADD	HL,BC		; add twice to get word value
+	LD	A,(HL)		; get LSB
+	INC	HL		; pointer to MSB
+	LD	H,(HL)		; get MSB
+	LD	L,A		; save LSB in L
+
+	; copy byte argument into A and C to simplify Function calls
+	; allows direct Bios jumps for several fcn's with code savings
+	LD	C,E		; place arg in C for BIOS
+	LD	A,E		; and in A for others
+	JP	(HL)		; jump to routine
+
+
+	;::::::::::::::::::::::::::::::::::::::::
+	;:::::  Command Table
+
+CTABLE:	DEFW	ERROR5		; Warm boot (Bios) with ERMODE clear
+	DEFW	CMND01		; Console input
+	DEFW	WRCON		; Console output
+	DEFW	READER		; Reader input (BIOS)
+	DEFW	PUNCH		; Punch output (BIOS)
+	DEFW	LIST		; List output (BIOS)
+	DEFW	CMND06		; Direct console I/O
+	DEFW	CMND07		; Get I/O byte
+	DEFW	CMND08		; Set I/O byte
+	DEFW	CMND09		; Print string
+	DEFW	CMND10		; Read console buffer
+	DEFW	CMND11		; Get console status
+	DEFW	CMND12		; Return version number
+	DEFW	CMND13		; Reset disk system
+	DEFW	CMND14		; Select disk
+	DEFW	CMND15		; Open file
+	DEFW	CMND16		; Close file
+	DEFW	CMND17		; Search for first
+	DEFW	CMND18		; Search for next
+	DEFW	CMND19		; Delete file
+	DEFW	CMND20		; Read sequential
+	DEFW	CMND21		; Write sequential
+	DEFW	CMND22		; Make file
+	DEFW	CMND23		; Rename file
+	DEFW	CMND24		; Return login vector
+	DEFW	CMND25		; Return current disk
+	DEFW	CMND26		; Set DMA address
+	DEFW	CMND27		; Get address allocation vector
+	DEFW	CMND28		; Write protect disk
+	DEFW	CMND29		; Get R/O vector
+	DEFW	CMND30		; Set file attributes
+	DEFW	CMND31		; Get address disk parameter header (DPH)
+	DEFW	CMND32		; Get/set user code
+	DEFW	CMND33		; Read random
+	DEFW	CMND34		; Write random
+	DEFW	CMND35		; Compute file size
+	DEFW	CMND36		; Set random record
+	DEFW	CMND37		; Reset multiple drive
+	DEFW	DUMMY		; Function 38 (unused)
+	DEFW	CMND39		; Return fixed disk login vector
+	DEFW	CMND40		; Write random with zero fill
+	DEFW	DUMMY		; Function 41 (unused)
+	DEFW	DUMMY		; Function 42 (unused)
+	DEFW	DUMMY		; Function 43 (unused)
+	DEFW	DUMMY		; Function 44 (unused)
+	DEFW	CMND45		; Set Error Mode
+	DEFW	CMND46		; Return Disk Free Space
+	DEFW	CMND47		; Return DMA
+	DEFW	CMND48		; Return DOS version
+	DEFW	CMND49		; Return Environment Descriptor Address
+MAXCMD	EQU	($-CTABLE)/2
+	DEFW	CMD98		; Get Time
+	DEFW	CMD99		; Set Time
+	DEFW	CMD100		; Get Flags
+	DEFW	CMD101		; Set Flags
+	DEFW	CMD102		; Get Stamp
+	DEFW	CMD103		; Put Stamp
+
+
+	;::::::::::::::::::::::::::::::::::::::::
+	;:::::  I/O Routines
+
+	;--------------------------------------------------
+	; fn #1 CONIN
+	;   enter: none,    exit: A= char
+	;--------------------------------------------------
+	; read char fron Console
+	; and echo if char = CR, LF, TAB, CONTH or >=Space
+CMND01:	CALL	GETCH		; get character (and test it)
+	RET	C		; ..if less than Space, exit
+PUTCH:	PUSH	HL		; save regs for other calls
+	CALL	WRCON		; echo character
+	POP	HL
+	RET
+
+
+	;--------------------------------------------------
+	; fn # 6 Direct Console I/O
+	;   enter: E= 0FFH (In),   exit: A= Input Character
+	;             0FEH (In)             Console Status
+	;             0FDH (In)             Input Character
+	;             00H..0FCH (Out)       00H
+	;--------------------------------------------------
+	; enhanced to CP/M 3 spec
+	; checks ZSDOS typeahead for reliable Console I/O under all
+	; conditions as per a suggestion by Bridger Mitchell
+CMND06:	INC	E		; test if get char is available
+	JR	Z,DCIO1		; ..if yes, do input
+	INC	E		; test for 0xFE
+	JR	Z,DCIO2		; ..if so, get status
+	INC	E		; test for 0xFD
+	JR	Z,GETCH		; ..if so, wait for input char
+	JP	CONOUT		;   else, print char (Bios Console Output)
+DCIO2:	LD	A,(LASTCH)	; check for buffered char
+	OR	A
+	LD	A,00000001B	; preset ready
+	CALL	Z,CONST		; call Bios Console Status
+	AND	A		; test it
+	RET			; and return to caller
+DCIO1:	CALL	DCIO2		; get console status
+	RET	Z		; ..if no character present, exit
+				;   else, fall through
+
+	; get char from Console
+GETCH:	LD	HL,LASTCH	; check ZSDOS type ahead for char
+	LD	A,(HL)
+	LD	(HL),0		; reset last character
+	OR	A		; set flags
+	CALL	Z,CONIN		; call Bios Console Input
+				; get char and fall through to test it
+
+	; test char
+	; out: Carry= 0 for CR, LF, TAB, CONTH, or >=Space
+	;      Carry= 1 for all other characters
+	CP	CR		; is it a Carriage Return ?
+	RET	Z		; ..if so, return
+	CP	LF		; Line Feed ?
+	RET	Z		; ..return
+	CP	TAB		; Tab ?
+	RET	Z		; ..return
+	CP	CONTH		; Backspace ?
+	RET	Z		; ..return
+	CP	' '		; test >= Space
+	RET			; ..and return to caller
+
+
+	;--------------------------------------------------
+	; fn # 8 Set I/O Byte
+	;   enter: E= I/O Byte,   exit: A= 00H
+	;--------------------------------------------------
+CMND08:	LD	(RAMLOW+0003H),A	; save it in RAM and fall through
+
+
+	;--------------------------------------------------
+	; fn # 7 Get I/O Byte
+	;   enter: None,   exit: A= I/O Byte (0003H)
+	;--------------------------------------------------
+CMND07:	LD	A,(RAMLOW+0003H)	; get I/O byte from RAM
+	RET
+
+
+	;--------------------------------------------------
+	; fn # 10 Read Console Buffer
+	;   enter: DE= address Buffer,   exit: A= 00H
+	;--------------------------------------------------
+CMND10:	LD	A,(TABCNT)
+	LD	(TABCX1),A	; save start Tab position
+	INC	DE
+	XOR	A
+	LD	(DE),A		; set char count to zero
+	INC	DE		; point to actual buffer start
+RDBUF1:	PUSH	DE		; save buffer pointer
+	CALL	GETCH		; get next byte from user
+	POP	DE
+	LD	HL,RDBUF1
+	PUSH	HL		; return address to stack
+	LD	HL,(ARWORD)
+	LD	C,(HL)		; put buffer length in C
+	INC	HL		; and point to current length
+	CP	CR
+	JR	Z,JZRBX		; ..if CR, then exit
+	CP	LF
+JZRBX:	JP	Z,RDBUFX	; ..or if LF, then exit
+
+	; delete char from buffer
+	; (Rubout, Backspace, CR, LF are _never_ in the buffer)
+RDBUF2:	CP	RUBOUT		; delete char ?
+	JR	Z,DOBACK	; ..if so, jump
+	CP	CONTH		; Control-H also deletes
+	JR	NZ,RDBUF3	; ..if no delete, skip to next test
+DOBACK:	LD	A,(HL)
+	AND	A		; test if attempting to del from empty line
+	RET	Z		; ..if so, then exit
+DOBAK0:	DEC	DE		; back up to last character
+	DEC	(HL)		; erase from buffer
+	PUSH	DE		; save buffer pointer
+	LD	B,(HL)		; get new char count
+	INC	HL		; point to first char
+	EX	DE,HL
+	LD	HL,TABCNT
+	LD	C,(HL)		; save current Tab count
+	INC	HL
+	LD	A,(HL)		; get starting Tab position
+	DEC	HL
+	LD	(HL),A		; init the counter
+	INC	B		; insure non-zero
+	JR	DOBAK2		; jump to done test
+DOBAK1:	LD	A,(DE)		; get char from buffer
+	CALL	WRCON2		; counts chars
+	INC	DE
+DOBAK2:	DJNZ	DOBAK1		; continue count until done
+	LD	A,C		; get prior Tab count
+	SUB	(HL)		; get diff between new and old
+	LD	B,A		; set up as count
+	LD	(HL),C		; restore prior count
+	POP	DE		; restore pointer
+
+	; delete B chars from Console
+	PUSH	DE		; save pointer
+DOBAK5:	LD	C,CONTH
+	PUSH	BC		; save counter from destruction
+	CALL	CONOUT		; call Bios Console Output
+	LD	C,' '
+	CALL	CONOUT		; output Backspace, Space to CON: only
+	LD	A,CONTH
+	CALL	WRCON		; now Backspace CON:, counter, and printer
+	POP	BC		; restore counter
+	DJNZ	DOBAK5		; loop until all done
+	POP	DE		; restore pointer
+	RET
+
+	; erase buffer
+RDBUF3:	CP	CONTU		; test erase line
+	JR	Z,ERALIN	; ..if so, do it
+	CP	CONTX
+	JR	NZ,RDBUF4	; skip to next test if no erase line
+ERALIN:	XOR	A
+	OR	(HL)		; line empty ?
+	RET	Z		; ..if so, exit
+	PUSH	HL
+	CALL	DOBAK0		;   else, delete another (skip empty check)
+	POP	HL
+	JR	ERALIN		; if Ctrl-R=True, do following code
+				;    else bypass
+
+RDBUF4:	CP	CONTR		; if Ctrl-R type clean buffer version on CON:
+	JR	NZ,RDBUF5
+	PUSH	HL		; save pointer to buffer length
+	CALL	CROUT		; do CR/LF
+	LD	HL,TABCNT
+	LD	(HL),0		; init Tab count
+	INC	HL
+	LD	B,(HL)		; and get Tab offset count
+	LD	A,' '
+	INC	B		; insure nz value
+	JR	RETY1A		; so case of lh side of screen ok
+RETYP1:	CALL	WRCON		; space off start of line
+RETY1A:	DJNZ	RETYP1
+	POP	HL		; point to buffer length
+	LD	B,(HL)		; get how many chars to print
+	INC	HL		; restore buffer pointer
+	EX	DE,HL		; put buffer pointer in DE
+	INC	B		; comp for first djnz
+	JR	RETYP3		; skip to done test
+RETYP2:	LD	A,(DE)		; get char from buffer
+	CALL	WRCTL		; output it
+	INC	DE		; bump pointer
+RETYP3:	DJNZ	RETYP2		; loop until done
+	RET
+
+	; toggle line printer echo
+RDBUF5:	CP	CONTP		; toggle printer ?
+	JR	NZ,RDBUF6	; ..if not, next test
+	LD	HL,FCONTP
+	LD	A,(HL)		; get printer echo flag
+	CPL			; toggle it
+	LD	(HL),A		; put back
+	RET
+
+	; check if Ctrl-C is first char in BUFF, exit if so
+RDBUF6:	LD	(DE),A		; put character in buffer
+	PUSH	HL
+	CALL	WRCTL		; echo the character
+	POP	HL
+	INC	(HL)		; increment the character count
+	LD	A,(HL)		; get current length
+	CP	C		; test against buffer size
+	JR	Z,RDBUFX
+	DEC	A		; set Z flag for first character
+	LD	A,(DE)		; get the character back
+	INC	DE		; and bump the pointer
+	RET	NZ		; ..if not the first character, return
+	CP	CONTC		; possible user abort ?
+	RET	NZ		; ..if not, return
+	JP	ERROR5		;   else, jump to error reset exit
+
+	; done with Read Console Buffer function
+RDBUFX:	POP	HL		; clear RDBUF1 return address
+	LD	A,CR
+	JR	WRCON		; ..and echo a CR
+
+	; print Control char as '^X'
+WRCTL:	CP	' '		; test if Control char
+	JR	NC,WRCON	; ..if not, send it out
+	CP	TAB		; test if Tab
+	JR	Z,WRCON0	; ..if it is, then expand with spaces
+	PUSH	AF		; save char
+	LD	A,'^'		; output a caret
+	CALL	WRCON1		; no need for Tab test here
+	POP	AF
+	ADD	A,40H		; convert to printable
+				; ..and fall through to WRCON
+
+
+	;--------------------------------------------------
+	; fn #2 CONOUT
+	;   enter: E= char,    exit: none (A= Bios reg A)
+	;--------------------------------------------------
+	; output char with list echo, Tab expansion
+WRCON:	CP	TAB		; is it a Tab ?
+	JR	NZ,WRCON1	; ..if not, jump
+WRCON0:	LD	A,' '		; expand Tab with spaces
+	CALL	WRCON1		; write space
+	LD	A,(TABCNT)	; get Tab count
+	AND	7		; test if done
+	JR	NZ,WRCON0	; ..if not, then repeat
+	LD	A,TAB		; return Tab
+	RET			; return to caller
+WRCON1:	PUSH	BC		; save pointers
+	PUSH	DE
+	LD	C,A		; save character
+	PUSH	BC
+
+BGPTCH0	EQU	$+1	; <--- BGii patches this addr
+
+	CALL	CMND11		; test status and CONTS/CONTC
+	POP	BC		; get character back
+	PUSH	BC		; save it again
+	CALL	CONOUT		; call Bios Console Output
+	POP	BC		; get character back
+	PUSH	BC		; save it again
+	LD	A,(FCONTP)	; get printer echo flag
+	OR	A		; test it
+	CALL	NZ,LIST		; ..if non-zero, output char to printer
+	POP	BC		; restore character
+	LD	A,C		; fall through to count routine
+	POP	DE		; restore pointers
+	POP	BC
+
+	; count characters in line as shown by f10
+	LD	HL,TABCNT	; get pointer to Tab counter
+WRCON2:	INC	(HL)		; increment Tab counter
+	CP	RUBOUT		; test if character = Rubout
+	JR	Z,WRCON3	; ..if so, treat like Backspace
+	CP	' '
+	RET	NC		; ok if not Control char
+	CP	TAB		; only DOBACK ever gets Tabs through here
+	JR	Z,WRCON4	; ..if Tab, handle differently
+	CP	CONTH
+	JR	Z,WRCON3	; ..or Backspace
+	INC	(HL)		; must have been echoed as two chars
+	CP	LF
+	JR	Z,WRCON3	; unless it's LF
+	CP	CR		; ..or CR
+	RET	NZ
+	LD	(HL),2		; reset Tab counter
+WRCON3:	DEC	(HL)		; decrement Tab counter
+	DEC	(HL)
+	RET			; and exit
+
+WRCON4:	LD	A,7		; bumped by one already
+	ADD	A,(HL)		; Tabs are every 8 spaces
+	AND	0F8H		; ..MOD 8
+	LD	(HL),A		; save updated Tab count
+	RET			; ..and continue
+
+
+	;--------------------------------------------------
+	; fn # 11 Get Console Status
+	;   enter: None,   exit: A= 00H No character
+	;                           01H Char. present
+	;--------------------------------------------------
+	; BGii uses this routine
+BGCONST:
+CMND11:	CALL	DCIO2		; get character present status
+	RET	Z		; ..if none, then exit
+	CALL	GETCH		; get next console char
+	CP	CONTS		; is it stop char ?
+	JR	NZ,GCONS2	; ..if not, jump
+	CALL	CONIN		; call Bios Console Input to get next char
+	CP	CONTC		; does the user want to exit (Ctrl-C) ?
+	JR	NZ,CMND11	; ..if not, check for another character
+	JP	ERROR5		;   else, jump to warm boot and clear ERMODE
+GCONS2:	LD	(LASTCH),A	; save character
+	LD	A,1		; character present code
+	RET			; return to caller
+
+	; echo CR,LF
+CROUT:	LD	DE,MCRLF	; fall through to output routine
+
+
+	;--------------------------------------------------
+	; fn # 9 Print String
+	;   enter: DE= address String,   exit: None (A= '$')
+	;--------------------------------------------------
+CMND09:	LD	A,(DE)		; get byte from buffer
+	CP	'$'		; test, last byte ?
+	RET	Z		; ..if yes, then return to caller
+	INC	DE		;   else, point to next byte
+	CALL	WRCON		;   ..and output character
+	JR	CMND09		; loop, test again
+
+
+	;::::::::::::::::::::::::::::::::::::::::
+	;:::::  Error Routines
+
+PRDEC:	LD	BC,100
+	CALL	NUM
+	LD	C,10
+	CALL	NUM
+	LD	BC,0101H
+
+	; display number
+NUM:	LD	D,-1		; load number -1
+NUM1:	INC	D		; increment number
+	SUB	C		; divide by C
+	JR	NC,NUM1		; ..if not finished, then loop
+	ADD	A,C		; restore last value
+	PUSH	AF		; save it
+	LD	A,D		; test if '0'
+	OR	B		; and if leading zero
+	JR	Z,NUM2		; ..if yes, then exit
+	LD	B,A		; set no leading zero
+	LD	A,D		; get number
+	ADD	A,'0'		; make ascii
+	CALL	PUTCH		; echo number preserving BC
+NUM2:	POP	AF		; restore number
+	RET			; and exit
+
+
+;::::: ERROR MESSAGES
+
+MDSKCH:	DEFB	'Changed$'
+MBADSC:	DEFB	'Bad Sector$'
+MSEL:	DEFB	'No Drive$'
+MFILRO:	DEFB	'File '
+MRO:	DEFB	'W/P$'
+MBERR:	DEFB	'ZSDOS Error on $'
+MBFUNC:	DEFB	CR,LF,'Call'
+MDRIVE:	DEFB	': $'
+MFILE:	DEFB	'  File: $'
+MCRLF:	DEFB	CR,LF,'$'
+
+
+	; new ZDSOS error handler
+	;  in:  B= error code
+	;      DE= message pointer
+ERROR:	LD	A,(ERMODE)
+	LD	C,A		; save error mode
+	RRCA			; test suppress print
+	JR	C,ERROR3	; ..if suppressed, then skip to display
+
+	; print ZSDOS Error on X: explanation
+	PUSH	BC
+	PUSH	DE		; save params
+	CALL	CROUT		; output CR,LF
+	LD	DE,MBERR
+	CALL	CMND09		; output 'ZSDOS Error on'
+	LD	A,(DEFDRV)	; get current default drive
+	ADD	A,'A'		; convert to ascii
+	CALL	WRCON		; output to Console
+	LD	DE,MDRIVE	; point to Drive tag
+	CALL	CMND09		; ouput also
+	POP	DE		; restore error message pointer
+	CALL	CMND09		; send message
+
+	; now print CALL: XXX [FILE: XXXXXXXX.XXX]
+	LD	DE,MBFUNC
+	CALL	CMND09		; display 'Call: '
+	LD	A,(FUNCT)	; get function number
+	CALL	PRDEC		; output it
+	LD	A,(FLDRV)
+	AND	A		; was FCB used ?
+	JR	Z,ERROR2	; ..if not, skip file name display
+	POP	BC		; get error type
+	PUSH	BC
+	PUSH	IX		; save FCB pointer
+	LD	A,(FUNCT)	; are we erasing a file ?
+	CP	19		; ..if so, get name from DIRBUF
+	JR	NZ,ERROR0	; ..ambiguous name may have been used
+	CALL	CALDIR		; get Dir buffer pointer
+	EX	(SP),HL		; to show that we are really gagged on
+ERROR0:	LD	DE,MFILE
+	CALL	CMND09		; output 'File: '
+	POP	HL		; point to FCB
+	LD	B,11		; output this many chars
+ERROR1:	INC	HL
+	LD	A,3
+	CP	B		; time to send '.' ?
+	LD	A,46		; get ready for it
+	CALL	Z,PUTCH		; ..and send it if time
+	LD	A,(HL)		; get char
+	AND	7FH		; mask attributes
+	CALL	PUTCH		; output it
+	DJNZ	ERROR1
+
+ERROR2:	CALL	CROUT		; send CR,LF
+	POP	BC		; get error mode back
+ERROR3:	LD	A,4
+	SUB	B		; test if select error
+	JR	NZ,ERROR4	; ..if not, skip
+	LD	HL,DRIVE	; point to old default
+	LD	A,(HL)		; get it
+	DEC	HL		; point to bad drive
+	CP	(HL)		; same ?
+	JR	Z,ERROR4	; ..if so, skip relog
+	PUSH	BC
+	CALL	SELSYB		; switch System bank
+	CALL	SELDK		; get Bios back in step
+	POP	BC
+ERROR4:	BIT	1,C		; test if return error mode
+	JR	NZ,ERROR7	; ..if return error, go
+	LD	A,1
+	SUB	B		; test if fatal error
+	JR	NC,ERROR6	; ..if not a fatal error, jump
+				;   else, fall through
+
+
+	;--------------------------------------------------
+	; fn # 0 Boot
+	;   enter: None,  exit: None
+	;--------------------------------------------------
+ERROR5:	XOR	A		; clear A
+	LD	(ERMODE),A	; set DOS error mode to default CP/M
+	LD	A,(OTPABK)	; store TPABNK = 0 (at B/P Bios base +0x82)
+	CALL	SELMEM		; ..and also set it, BIOS fn #27 SELMEM (A= bank #)
+	RST	0		; ..and leave
+
+ERROR6:	CALL	DCIO1		; get console char if present
+	AND	A		; test if any
+	JR	NZ,ERROR6	; keep getting them until typeahead eaten
+	CALL	GETCH		; now get operator's response
+	CP	CONTC		; test if abort
+	RET	NZ		; ..if operator said ignore error
+	JR	ERROR5		;   else, boot
+
+ERROR7:	LD	A,B		; get error
+	LD	H,A		; save code in H reg for return
+	AND	A		; test if disk changed warning
+	RET	Z		; ..if so, continue relog
+	LD	L,0FFH		; set extended error code
+	LD	(PEXIT),HL	; save as return code
+				; ..and fall through to DOS exit
+
+
+	;::::::::::::::::::::::::::::::::::::::::
+	;:::::  DOS Exit Routine
+
+DOSEXIT: LD	A,(FLDRV)	; test Drive select used flag
+	OR	A
+	JR	Z,DOSEXT0	; ..if no, then exit
+	LD	A,(FCB0)	; get FCB byte 0
+	LD	(IX+0),A	; save it
+	CALL	SELTPB		; select TPA bank
+	LD	HL,ZSFCB	; buffer internal FCB
+	LD	DE,(FCBADR)
+	LD	A,(FCBBUP)	; get number of bytes to copy
+	OR	A		; test if empty
+	JR	Z,DOSEXT1	; ..if zero, skip
+	LD	C,A		;   else, set byte counter (16-bit)
+	LD	B,0
+	LDIR			; and copy
+DOSEXT1: LD	A,(DRIVE)	; get old Drive number
+	CALL	SELSYB		; switch System bank
+	CALL	SELDK		; select disk
+
+
+	; Stack is in an undefined condition at this point, if error handler
+	; was invoked. Independent of Stack position, the user's IX register
+	; has to be restored. (Thanks to Joe Wright for catching this one!)
+DOSEXT0: CALL	SELTPB		; select TPA bank
+	LD	SP,(SPSAVE)	; restore user stack
+	LD	IX,(IXSAVE)	; restore IX
+	LD	HL,(PEXIT)	; get exit code
+	LD	DE,(DEVAL)	; and DE reg for DateStamper
+	LD	A,L		; copy function code
+	LD	B,H
+	RET			; and return to caller
+
+
+	;::::::::::::::::::::::::::::::::::::::::
+	;:::::  Disk Routines
+
+	;--------------------------------------------------
+	; fn # 13 Reset Disk System
+	;   enter: None,   exit: A= 00H No $*.* on A
+	;                           FFH $*.* on A
+	;--------------------------------------------------
+CMND13:	CALL	SELSYB		; switch System bank
+	JP	CMD13B		; and continue in Banked code
+
+
+
+	;_______________________//  Banked  //
+	COMMON	/BANK2/
+
+	;--------------------------------------------------
+	; Reset Disk System
+	; (continue CMND13)
+	;--------------------------------------------------
+CMD13B:	LD	HL,RAMLOW+80H	; set up default DMA address
+	LD	(DMA),HL	; and save it
+	CALL	STDMA		; do Bios call
+	XOR	A		; set default drive = 'A'
+	LD	(DEFDRV),A	; save it
+	LD	DE,0FFFFH	; reset all drives
+				; ..and fall through to CMD37B
+
+
+
+	;_______________________//  Non-Banked  //
+	CSEG
+
+	;--------------------------------------------------
+	; fn # 37 Reset Mult Drive
+	;   enter: DE= Bit Mask,   exit: A= 00H
+	;--------------------------------------------------
+	; fixed disk login vector is also altered by this call
+CMND37:	CALL	SELSYB		; switch System bank
+	JP	CMD37B		; and continue in Banked code
+
+
+
+	;_______________________//  Banked  //
+	COMMON	/BANK2/
+
+	;--------------------------------------------------
+	; Reset Multiple Login Drive
+	; (continue CMND37)
+	;--------------------------------------------------
+	; fixed disk login vector is also altered by this call
+CMD37B:	CALL	UNLOG		; clear selected Drives in DE from login
+	LD	A,(FLAGS)
+	BIT	2,A		; test hard R/O enabled
+	JR	NZ,UNWPT1	; ..if enabled, jump
+	LD	HL,DSKWP	; get Drive W/P vector
+	CALL	ANDDEM		; reset W/P stat only of requested Drives
+UNWPT1:	LD	A,(FUNCT)
+	CP	13		; skip hard disk login change ?
+	LD	HL,HDLOG
+	CALL	NZ,ANDDEM	; clear HD login vector if fcn 37
+RELOG1:	LD	HL,(HDLOG)
+	CALL	HLORDE		; don't clear fixed disks from T/D
+	EX	DE,HL		; place modified logout in DE
+	LD	HL,TDFVCT
+	CALL	ANDDEM		; clear T/D vector as needed
+	LD	A,(DEFDRV)	; get default drive
+	CALL	SELDK
+
+
+	; check for possible existance of submit file
+
+	; ZSDOS watches for any $*.* file in any User on any Drive during
+	; re-log, make, and delete. In this manner, SUBFLG will always be
+	; valid - even under Fast Relog and NZCOM.  (Thanks to Joe Wright
+	; for suggesting the need for this, and suggesting ways to do it.)
+SUBEXT:	LD	A,(SUBFLG)	; get submit flag
+	JP	SAVEA		; exit
+
+
+	; check first byte of Dir entry or FCB for '$'
+	;  in: HL= pointer to Dir or FCB
+CKSUB:	INC	HL		; point to file name
+	LD	A,(HL)		; get first char file name
+	DEC	HL
+	SUB	'$'		; test if '$'
+	RET	NZ		; ..if not, then exit
+	DEC	A		; load with 0xFF
+	LD	(SUBFLG),A	; save it in subflg
+	RET
+
+	; unlog Drive mask in DE
+UNLOG:	LD	A,E		; get LSB
+	CPL			; complement it
+	LD	E,A
+	LD	A,D		; get MSB
+	CPL			; complement it
+	LD	D,A		; DE = not reset
+	LD	HL,LOGIN	; get address of login vector
+ANDDEM:	LD	A,E		; clear login bits of reset drives
+	AND	(HL)		; ..a byte at a time
+	LD	(HL),A		; put to memory
+	INC	HL
+	LD	A,D
+	AND	(HL)
+	LD	(HL),A
+	RET
+
+
+
+	;_______________________//  Non-Banked  //
+	CSEG
+
+	;--------------------------------------------------
+	; fn # 17 Search for First Entry of File
+	;   enter: DE= Address of FCB,   exit: A= Directory Code
+	;--------------------------------------------------
+CMND17:	CALL	SELDRV		; select drive from FCB
+	LD	A,(IX+0)
+	SUB	'?'		; test if '?'
+	JR	Z,CMD17B	; ..if so, all entries match
+	LD	A,(IX+FCBMOD)	; get system byte
+	CP	'?'		; test if '?'
+	JR	Z,CMD17A	; ..if yes, jump
+	LD	(IX+FCBMOD),0	; load system byte with zero
+CMD17A:	LD	A,15		; test first 15 items in FCB
+CMD17B:	CALL	SEARCH		; do search
+CMD17C:	CALL	SELTPB		; select TPA bank
+	LD	HL,(DIRBUF)	; copy Directory buffer
+	LD	BC,128		; Directory = 128 bytes
+	LD	DE,(DMA)	; to DMA address
+	LDIR
+	RET			; exit
+
+
+	;--------------------------------------------------
+	; fn # 18 Search for Next Occurrence of File
+	;   enter: DE= Address of FCB,   exit: A= Directory Code
+	;--------------------------------------------------
+CMND18:	LD	IX,(DCOPY)	; get last FCB used by search
+	LD	(ARWORD),IX	; save FCB pointer for BGii
+	CALL	SELDRV		; select drive from FCB
+	CALL	SEARCN		; search next file match
+	XOR	A		; clear A (zero)
+	LD	(FCBBUP),A	; ..save as num of bytes to update in FCB
+	JR	CMD17C		; and copy Directory to DMA address
+
+
+	;--------------------------------------------------
+	; fn # 19 Delete File
+	;   enter: DE= Address of FCB,   exit: A= Error Code
+	;--------------------------------------------------
+CMND19:	CALL	SELDRV		; select drive from FCB
+				;   (also switches System bank)
+	CALL	DELETE		; ..and continue in Banked code
+
+CMND19A: LD	A,(SEAREX)	; get exit byte 00= file found, 0FFH= not
+	JR	SAVEA		; and exit
+
+
+	;--------------------------------------------------
+	; fn # 23 Rename File
+	;   enter: DE= Address of FCB,   exit: A= Error Code
+	;--------------------------------------------------
+CMND23:	CALL	SELDRV		; select drive from FCB
+	CALL	RENAM		; rename file
+	JR	CMND19A		; and exit
+
+
+	;--------------------------------------------------
+	; fn # 25 Get Current Disk
+	;   enter: None,   exit: A= Current Disk
+	;--------------------------------------------------
+CMND25:	LD	A,(DEFDRV)	; get current drive
+SAVEA:	LD	(PEXIT),A	; return character
+DUMMY:	RET			; ..and exit ZSDOS
+
+
+	;--------------------------------------------------
+	; fn # 101 Set Flags
+	;   enter: DE=Flags,   exit: None
+	;--------------------------------------------------
+CMD101:	LD	(FLAGS),A	; set ZSDOS flags
+				; ..and fall through
+
+
+	;--------------------------------------------------
+	; fn # 100 Get flags
+	;   enter: None,   exit: HL= Flags
+	;--------------------------------------------------
+CMD100:	LD	A,(FLAGS)	; get ZSDOS flags
+	JR	SAVEA		; ..and exit
+
+
+	;--------------------------------------------------
+	; fn # 30 Set File Attributes
+	;   enter: DE= Address of FCB,   exit: A= Error Code
+	;--------------------------------------------------
+CMND30:	CALL	SELDRV		; select drive from FCB
+	CALL	CSTAT		; change status bits of file
+	JR	CMND19A		; and exit
+
+
+	;--------------------------------------------------
+	; fn # 12 Get Version Number
+	;   enter: None,   exit: A= Version Number (22H, CP/M compatible)
+	;--------------------------------------------------
+ZDPCH1:
+CMND12:	LD	HL,22H		; set CP/M compatible version number
+	LD	A,E
+	CP	'D'		; is caller testing for DateStamper ?
+	JR	NZ,CMD12A	; ..if not, jump exit
+	LD	H,E		; otherwise return DS Active flag
+	LD	DE,CMD98A	; have a clock, so get clock address
+CMD12A:	LD	(DEVAL),DE	; in case DS gave us a clock address
+	JR	SAVHL		; for speed
+
+
+	; The following code section may seem a bit obscure. When the Z80 jumps
+	; in at a label, it executes the LD HL instruction. The DEFB 0DDH turns
+	; the LD HL instructions that follow into LD IX. In effect, this turns
+	; the DEFB 0DDH into a one byte relative jump to SAVHL.  As IX is never
+	; used by these calls, its loss is of no consequence.
+	; A similar trick is used in SEAR15.
+
+
+	;--------------------------------------------------
+	; fn # 48 Get DOS and Version
+	;   enter: None,   exit: H= DOS type: 'S'=ZSDOS, 'D'=ZDDOS
+	;                        L= BCD Version Number
+	;--------------------------------------------------
+CMND48:	LD	HL,'S' SHL 8 + VER	; 'S' indicates ZSDOS, ZRDOS returns 0
+	DEFB	0DDH		; trash IX and fall through
+
+
+	;--------------------------------------------------
+	; fn # 29 Get R/O Vector
+	;   enter: None,   exit: HL= R/O Vector
+	;--------------------------------------------------
+CMND29:	LD	HL,(DSKWP)	; get disk W/P vector
+	DEFB	0DDH		; trash IX and fall through
+
+
+	;--------------------------------------------------
+	; fn # 39 Get Fixed Disk Vector
+	;   enter: None,   exit: HL= Fixed Disk Vector
+	;--------------------------------------------------
+CMND39:	LD	HL,(HDLOG)	; return fixed disk login vector
+	DEFB	0DDH		; trash IX and fall through
+
+
+	;--------------------------------------------------
+	; fn # 27 Get Alloc. Address (ALV)
+	;   enter: None,   exit: HL= Address of Allocation Vector
+	;--------------------------------------------------
+CMND27:	LD	HL,(ALV)	; get allocation vector
+	DEFB	0DDH		; trash IX and fall through
+
+
+	;--------------------------------------------------
+	; fn # 49 Return ENV Address 
+	;   enter: None,   exit: HL= Address Env. Descriptor
+	;--------------------------------------------------
+CMND49:	LD	HL,(OZ3ENV)	; get Z3ENV address (Bios base +0x98)
+	DEFB	0DDH		; trash IX and fall through
+
+
+	;--------------------------------------------------
+	; fn # 24 Get Login Vector
+	;   enter: None,   exit: HL= Login Vector
+	;--------------------------------------------------
+CMND24:	LD	HL,(LOGIN)	; get login vector
+	DEFB	0DDH		; trash IX and fall through
+
+
+	;--------------------------------------------------
+	; fn # 31 Get DPB Address
+	;   enter: None,   exit: HL= Address of DPB
+	;--------------------------------------------------
+CMND31:	LD	HL,(IXP)	; get drive table
+	DEFB	0DDH		; trash IX and fall through
+
+
+	;--------------------------------------------------
+	; fn # 47 Get DMA address
+	;   enter: None,   exit : HL= Current DMA Address
+	;--------------------------------------------------
+CMND47:	LD	HL,(DMA)	; get current DMA address
+	LD	A,H		; test if valid (<> zero)
+	OR	L
+SAVHL:	LD	(PEXIT),HL	; save it
+	RET			; and exit
+
+
+	;--------------------------------------------------
+	; fn # 45 Set error mode
+	;   enter: E= FFH (Get),   exit: A=0 0H
+	;             FEH (Get Err/Disp)
+	;             01H (Set ZSDOS)
+	;             00H (Set CP/M)
+	;--------------------------------------------------
+	; ##### implementation does not comply with documentation
+CMND45:	LD	(ERMODE),A
+	RET
+
+
+	;--------------------------------------------------
+	; fn # 32 Set/Get User Code
+	;   enter: E= FFH (Get),   exit: A= User Number
+	;             User Number (Set)     00H
+	;--------------------------------------------------
+CMND32:	LD	HL,USER		; point to User byte location
+	INC	A		; test if 0xFF
+	LD	A,(HL)		; get old user code
+	JR	Z,SAVEA		; ..if 0xFF, then exit
+	LD	A,E		; get new User code
+	AND	1FH		; mask it
+	LD	(HL),A		; save it
+	RET			; and exit
+
+
+	;--------------------------------------------------
+	; fn # 35 Compute File Size
+	;   enter: DE= Address of FCB,   exit: A= Error Code
+	;--------------------------------------------------
+CMND35:	CALL	SELDR1		; select drive from FCB
+	LD	A,36		; 36 bytes
+	LD	(FCBBUP),A	; ..to update in FCB
+	CALL	FILSZ		; compute file size
+	JR	CMND19A		; and exit
+
+
+	;--------------------------------------------------
+	; fn # 36 Set Random Record
+	;   enter: DE= Address of FCB,   exit: A= 00H
+	;--------------------------------------------------
+CMND36:	LD	HL,32		; set pointer to next record
+	CALL	CALRRC		; calculate random record count
+LDRRC:	LD	(IX+33),D	; and save it
+	LD	(IX+34),C
+	LD	(IX+35),B
+	RET			; ..exit
+
+
+		; ##### CHECK: unreferenced code
+	PUSH	IX
+	CALL	SELDRV
+	JP	NOTUSE2
+		; #####
+
+
+	;-----
+	; Select Disk From FCB
+BGSELDRV:
+SELDRV:	LD	A,(ERMODE)	; are we in modified User mode ?
+	AND	A
+	JR	NZ,SELDR1	; ..if so, jump
+	LD	HL,(ARWORD)
+	LD	BC,FCBUSR	;   else, point to User number
+	ADD	HL,BC
+	LD	(HL),A		; clear User flag
+SELDR1:	LD	A,0FFH		; set disk select done flag
+	LD	(FLDRV),A
+	LD	HL,(ARWORD)	; get argument of fcn call (DE= FCB address)
+	LD	(FCBADR),HL	; ..and save it
+	LD	DE,ZSFCB	; set to internal FCB
+	PUSH	DE
+	POP	IX		; ..copy to IX
+	LD	(ARWORD),DE	;   ..and save
+	LD	BC,36		; byte count
+	LDIR			; ..and copy
+	LD	A,16		; 16 bytes
+	LD	(FCBBUP),A	; save # bytes to update in FCB
+	LD	A,(DEFDRV)	; get current drive
+	LD	E,A		; save it in register E
+	LD	HL,(ARWORD)
+	LD	A,(HL)		; get drive from FCB
+	LD	(FCB0),A	; save it
+	CP	'?'		; test if '?'
+	JR	Z,CMND14	; ..if yes, then select drive from reg E
+	PUSH	IX		; save BGii's IX register
+
+	; IX won't be altered on cmnd14
+	LD	IX,(ARWORD)	; get FCB pointer
+	AND	1FH		; mask drive
+	PUSH	HL
+	JR	Z,SELDR0	; select drive from register E
+	LD	E,(HL)		; get drive from FCB
+	DEC	E		; decrement drive number, so A= 0
+SELDR0:	CALL	CMND14		; do select of drive
+	POP	HL		; restore FCB pointer
+
+	; resolve User for FCB
+	;  in: IX= FCB ptr
+	; out:  A= User
+	LD	A,(IX+FCBUSR)	; ..get potential User in case
+	BIT	7,A		; is this a valid User ?
+	JR	NZ,RESUS1	; ..if there is, then skip
+	LD	A,(USER)	; get User number
+	JR	RESUS1		; ..and bypass push IX
+
+	; set User in FCB to value passed in A
+RESUSR:	PUSH	IX
+RESUS1:	LD	IX,(ARWORD)
+	AND	1FH		; user number in A
+	LD	(IX+0),A	; save in FCB 0 byte
+	OR	80H		; set valid DOS user flag
+	LD	(IX+FCBUSR),A	; ..and in FCB 13 byte
+	POP	IX		; restore caller's IX
+	RET
+
+
+
+	;_______________________//  Banked  //
+	COMMON	/BANK2/
+
+	; select disk error exit
+	; Stack is off by one level here, but there is a one way trip around
+SELDK3:	LD	HL,(STSEL)	; load error message address
+	LD	B,4		; select error
+	LD	DE,MSEL		; load select error message
+	JP	JUMPHL		; Select Disk from E register
+
+
+
+	;_______________________//  Non-Banked  //
+	CSEG
+
+	;--------------------------------------------------
+	; fn # 14 Select Disk
+	;   enter: E= Disk Number,   exit: A= 00H No $*.* File
+	;                                     FFH $*.* File
+	;--------------------------------------------------
+CMND14:	LD	A,(DEFDRV)	; get current drive
+	LD	(DRIVE),A	; save it in memory
+	CALL	SELSYB		; switch System bank
+	JP	CMD14B		; ..and continue in Banked code
+
+
+
+	;_______________________//  Banked  //
+	COMMON	/BANK2/
+
+	;--------------------------------------------------
+	; Select Disk
+	; (continue CMND14)
+	;--------------------------------------------------
+CMD14B:	LD	A,E		; copy Drive number
+
+	; call w/ A= drive no. (0..15 = A..P)
+SELDK:	LD	HL,(LOGIN)	; get login vector
+	AND	0FH		; mask Drive number
+	LD	B,A		; save counter
+	CALL	NZ,SHRHLB
+SELDK0:	EX	DE,HL		; put Drive bit mask in DE
+	LD	HL,DEFDRV	; get pointer last drive
+	BIT	0,E		; test if Drive logged in
+	JR	Z,SELDK2	; ..if not, log it in
+	CP	(HL)		; test same Drive ?
+	RET	Z		; ..if yes, then exit
+
+	; NOTE:
+	; A long standing DOS bug concerns the SELECT function. If fcn 14 is
+	; called and the drive doesn't exist, the default will still point
+	; to the bad drive unless we fix it in the error routine.
+	; It is for this reason that drive is saved above. We must allow
+	; default to assume the illegal drive value long enough for the
+	; error handler to print ot, then re-select the old default.
+SELDK2:	LD	(HL),A		; save new current Drive
+	PUSH	DE		; save Drive logged in flag
+	LD	C,A		; copy Drive number
+	LD	B,A
+	CALL	DRVOK		; test if Drive is valid (Z3ENV Drive vector)
+	JR	NC,SELDK3	; ..if not, exit
+	CALL	SELDSK		; do Bios call Select Disk
+	LD	A,H		; test if error
+	OR	L
+	JR	Z,SELDK3	; ..if yes, illegal Drive number
+	LD	DE,TRANS	; point to local translation storage
+	LD	BC,2		; ..and move 2-byte ptr in
+	LDIR
+	LD	(TEMP0),HL	; save address in temp0
+	LD	C,6		; advance to Dirbuf part of DPH
+	ADD	HL,BC		; as TEMP1 and TEMP2 unused in P?DOS
+	LD	DE,DIRBUF	; load Dirbuf pointer
+	LD	C,8		; copy 8 bytes
+	LDIR
+	LD	HL,(IXP)	; get Drive parameter address
+	LD	C,15		; copy 15 bytes
+	LDIR
+	POP	DE		; get Drive logged in flag
+	BIT	0,E		; test it
+	RET	NZ		; Drive logged in, so return
+	CALL	GETCDM
+	EX	DE,HL		; Drive mask in DE
+	LD	HL,(LOGIN)	; get login vector
+	CALL	HLORDE		; set Drive bit in login vector
+	LD	(LOGIN),HL	; save login vector
+	LD	A,(FLAGS)	; get flags
+	BIT	3,A		; fast relog enabled ?
+	JR	Z,INITDR	; if disabled, skip
+
+
+	; The following code checks the WACD size to determine if the drive
+	; being selected is a fixed disk. If WACD is 0, the disk is non-
+	; removable.  However, BIOS may support remapping of logical drives.
+	; Therefore BDOS must catch the swap and clear the Hard Disk ALV and
+	; allow the allocation bitmaps to be rebuilt.  Hence, every disk
+	; that is being selected for the first time traverses this code.
+	; If a disk was logged as a fixed disk and all of the sudden has a
+	; WACD buffer, the Fixed Disk Login Vector is cleared.
+	; For bug-free operation of Fast Fixed Disk Logging, if drives are
+	; swapped, NEVER SWAP TWO FIXED DRIVES!
+
+	LD	HL,(NCHECK)	; is this a fixed Drive ?
+	LD	A,H
+	OR	L
+	LD	C,A		; save fixed disk flag (Z= true)
+	LD	HL,(HDLOG)
+	LD	A,E		; see if logged as fixed disk
+	AND	L
+	LD	L,A
+	LD	A,D
+	AND	H		; MSB
+	OR	L		; Z flag set if HL and DE = 0
+	LD	A,0FFH		; don't alter flags
+	JR	Z,SELDK4	; ..if not logged as fixed disk, skip over
+	INC	A		;   else, flag as logged
+SELDK4:	LD	B,A		; save logged as fixed disk flag (Z= true)
+	OR	C		; test if still fixed disk
+	RET	Z		; skip re-map if logged and not swapped
+	XOR	A
+	LD	H,A
+	LD	L,A		; null vector
+	OR	B		; was it logged as fixed disk ?
+	JR	Z,SELDK5	; invalidate HDLOG vector
+				;   (drive no longer considered fixed disk)
+	LD	A,C
+	OR	A		; wasn't fixed disk before - is it now ?
+	JR	NZ,INITDR	; ..if it isn't, skip vector update
+	LD	HL,(HDLOG)
+	CALL	HLORDE		;   else, add this drive to fixed disk vector
+SELDK5:	LD	(HDLOG),HL	; update fixed disk vector
+				; ..and fall through to INITDR
+
+
+	; init drive
+	; clear ALV bit buffer after Drive reset
+INITDR:	LD	HL,(MAXLEN)	; get length ALV buffer-1 (bits)
+	CALL	SHRHL3		; divide by 8 to get bytes
+	LD	B,H
+	LD	C,L		; counter to BC (will be count+1 cleared)
+	LD	HL,(ALV)	; get pointer ALV buffer
+	PUSH	HL
+	LD	D,H
+	LD	E,L
+	INC	DE		; ALV buffer +1 in DE
+	XOR	A
+	LD	(HL),A		; clear first 8 bits
+	LDIR			; and remainder of buffer
+	POP	HL		; get ALV pointer
+	LD	DE,(NDIR0)	; get first two bytes ALV buffer
+	LD	(HL),E		; save LSB
+	INC	HL		; increment pointer
+	LD	(HL),D		; save MSB
+	LD	HL,(TEMP0)	; clear number of files on this Drive
+	LD	(HL),A		; clear LSB (A still has 0)
+	INC	HL		; increment pointer
+	LD	(HL),A		; clear MSB
+	LD	A,0FFH		; set initial value for flag
+	LD	(FINITD),A
+
+ZDPCH2	EQU	$	; <--- Intercept first scan (ZDS Patch)
+
+	CALL	SETFCT		; set file count
+INITD2:	LD	A,0FFH		; update Directory checksum
+	CALL	RDDIR		; read FCB's from Directory
+	CALL	TSTFCT		; test last FCB
+	JP	Z,SUBEXT	; return subflg for strict CP/M compat
+	CALL	CALDIR		; calculate entry point FCB
+	LD	A,(HL)		; get first byte FCB
+	CP	0E5H		; test empty Directory entry
+	JR	Z,INITD2	; ..if yes, then get next FCB
+	AND	7FH		; mask
+	CP	21H		; test time stamp
+	JR	Z,INITD2	; ..if yes, then get next FCB
+
+
+	; check if FCB belongs to !!!TIME&.DAT file
+	LD	A,(FINITD)	; get first loop flag
+	OR	A		; test if zero
+	JR	Z,INITD5	; ..if yes, then jump
+				;   to prevent re-execution of following code
+	INC	A		;   ..else, increment
+	LD	(FINITD),A	; and save flag again
+	LD	BC,00C00H	; set counter B=12, and clear C
+	PUSH	HL
+INITD3:	LD	A,(HL)		; get byte from FCB
+	AND	7FH		; mask high bit
+	ADD	A,C		; add in previous result
+	LD	C,A		; ..and save it in C
+	INC	HL		; move ptr forward
+	DJNZ	INITD3		; loop till done
+	CP	TDCKSM		; test if matches checksum of !!!TIME&.DAT
+	JR	NZ,INITD4	; ..if not, skip over
+	LD	HL,(TDFVCT)	;   else, get T/D vector
+	CALL	SDRVB		; set drive bit in HL
+	LD	(TDFVCT),HL	; and save T/D vector again
+INITD4:	POP	HL
+
+ZDPCH3	EQU	$	; <--- Test for T&D if first time (ZDS Patch)
+
+INITD5:	CALL	CKSUB		; test for submit file
+	LD	C,1		; set bit in ALV buffer
+	CALL	FILLBB		; set bits from FCB in ALV buffer
+	CALL	TSTLF		; test for last file
+	CALL	NC,SETLF0	; ..and update the last file count if so
+	JR	INITD2		; get next FCB
+
+
+
+	;_______________________//  Non-Banked  //
+	CSEG
+
+	;-----
+	; return mask for current Drive in HL
+GETCDM:	LD	HL,0		; no drives to Or
+
+	; set Drive bit in HL
+SDRVB:	EX	DE,HL		; copy HL=>DE
+	LD	HL,1		; get mask drive 'A'
+	LD	A,(DEFDRV)	; get current drive
+	OR	A		; test if drive 'A'
+	JR	Z,HLORDE	; ..if yes, then done
+SDRVB0:	ADD	HL,HL		; get next mask
+	DEC	A		; decrement drive number
+	JR	NZ,SDRVB0	; ..and test if done
+HLORDE:	LD	A,D		; HL= HL or DE
+	OR	H
+	LD	H,A
+	LD	A,E
+	OR	L
+	LD	L,A
+	RET			; exit
+
+
+SHRHL3:	LD	B,3		; ZSDOS v1 comment: "used in a few places"
+				; ##### used exactly once - make INITDR inline
+
+	;-----
+	; shift HL right logical B bits
+SHRHLB:	SRL	H
+	RR	L		; Shift HL right one bit (divide by 2)
+	DJNZ	SHRHLB
+	RET
+
+
+
+	;_______________________//  Banked  //
+	COMMON	/BANK2/
+
+	;-----
+	; calculate Sector/Track directory
+STDIR:	LD	HL,(FILCNT)	; get FCB counter Directory
+	SRL	H		; divide by 4
+	RR	L
+	SRL	H
+	RR	L
+	LD	(RECDIR),HL	; save value (used by checksum)
+STDIR2:	EX	DE,HL		; move to DE
+STDIR1:	LD	HL,0		; clear HL
+
+
+	; calculate Sector/Track
+	; Track= HL,DE / MAXSEC, Sector= HL,DE MOD MAXSEC
+	;  in: HL, DE= sector number (128 byte sector)
+CALST:	LD	BC,(MAXSEC)	; get sectors/track
+	LD	A,17		; set up loop counter
+CALST0:	OR	A
+	SBC	HL,BC		; HL > BC ?
+	CCF
+	JR	C,CALST1	; ..if yes, then jump
+	ADD	HL,BC		;   else, restore HL
+	OR	A		; clear Carry
+CALST1:	RL	E		; shift result in DE
+	RL	D
+	DEC	A		; test last bit done
+	JR	Z,CALST2	; ..if yes, then exit
+	ADC	HL,HL		;   else, shift next bit in HL
+	JR	CALST0		; continue
+
+CALST2:	PUSH	HL		; save sector number
+	LD	HL,(NFTRK)	; get first track
+	ADD	HL,DE		; add track number
+	LD	B,H		; copy it to BC
+	LD	C,L
+	CALL	SETTRK		; Bios call Set Track
+	POP	BC		; restore sector number
+	LD	DE,(TRANS)	; get translation table address
+	CALL	SECTRN		; Bios call Sector Translation
+	LD	B,H		; copy result in BC
+	LD	C,L
+	JP	SETSEC		; Bios call Set Sector
+
+
+	; get Disk map block number from FCB
+	;  out: HL= FCB address
+	;       DE= DM
+	;       BC= offset in DM
+	;       Zero Flag set (Z) if DM= 0, else reset (NZ)
+	; (squeezed by Joe Wright)
+GETDM:	LD	L,(IX+NXTREC)	; get record number in L
+	RL	L		; shift it left once
+	LD	A,(NEXTND)	; get EXM
+	AND	(IX+FCBEXT)	; And the extent number
+	LD	H,A		; to H
+	LD	A,(NBLOCK)	; get BSH
+	LD	B,A		; to B
+	INC	B		; +1
+	CALL	SHRHLB		; shift HL right B times
+	LD	D,B		; zero to D
+	LD	A,L		; result in A
+
+GETDM4:	LD	HL,(ARWORD)
+	LD	C,16		; add offset 16 to point to DM
+	ADD	HL,BC
+	LD	C,A		; add entry FCB
+	ADD	HL,BC
+	LD	A,(MAXLEN+1)	; test 8 bits/16 bits FCB entry
+	OR	A
+	LD	E,(HL)		; get 8 bit value
+	JR	Z,GETDMX	; ..if 8-bit entries, exit
+
+	ADD	HL,BC		; add twice (16-bit values)
+	LD	E,(HL)		; get LSB
+	INC	HL		; increment pointer
+	LD	D,(HL)		; get MSB
+	DEC	HL		; decrement pointer
+GETDMX:	LD	A,D		; check for zero DM value
+	OR	E
+	RET			; and exit
+
+
+	; calculate Sector number
+	;  in: DE= block number from FCB
+CALSEC:	LD	HL,0		; clear MSB sector number
+	LD	A,(NBLOCK)	; get loop counter
+	LD	B,A		; save it in B
+	EX	DE,HL
+CALSC0:	ADD	HL,HL		; shift L,D,E
+	RL	E
+	DJNZ	CALSC0		; B times
+	EX	DE,HL
+	LD	A,(NMASK)	; get sector mask
+	AND	(IX+NXTREC)	; And with next record
+	OR	E		; set up LSB sector number
+	LD	E,A
+	RET			; and exit
+
+
+
+	;_______________________//  Non-Banked  //
+	CSEG
+
+	;-----
+	; check file Read-Only status, then fall through to CALDIR
+CKRODI:	CALL	CHKFRO		; abort if the file is R/O
+				; ..fall through
+
+
+	;-----
+	; calculate DIRBUF entry point
+CALDIR:	LD	A,(SECPNT)	; get sector pointer
+CALDIR1: LD	HL,(DIRBUF)	; get start address dirbuf
+CALDI0:	ADD	A,L		; add L=L+A
+	LD	L,A
+	RET	NC		; ..if no Carry, then exit
+	INC	H		; increment H
+	RET			; and exit
+
+
+	;-----
+	; init file count
+SETFCT:	LD	HL,-1		; set up file count
+	LD	(FILCNT),HL	; save it
+	RET			; and exit
+
+
+	;--------------------------------------------------
+	; fn # 28 Write Protect Disk
+	;   enter: None,   exit: A= 00H
+	;--------------------------------------------------
+CMND28:	LD	HL,(DSKWP)	; get disk W/P vector
+	CALL	SDRVB		; include drive bit
+	LD	(DSKWP),HL	; save disk W/P vector
+	LD	DE,(NFILES)	; get max number of files-1 (bumped below)
+	LD	HL,(TEMP0)	; get pointer to disk parameter block
+	INC	HL		; correct pointer
+
+	; setlf0 relocated inline here
+SETLF0:	INC	DE		; increment last file
+	LD	(HL),D		; save it in TEMP0
+	DEC	HL
+	LD	(HL),E
+	RET			; and exit
+
+
+
+	;_______________________//  Banked  //
+	COMMON	/BANK2/
+
+	;-----
+	; search using first 15 bytes of FCB, test if found
+SRCT15:	CALL	SEAR15		; search on 15-bytes..
+				; ..fall through to test presence
+
+
+	;-----
+	; test file count
+TSTFCT:	LD	HL,(FILCNT)	; test file count= 0xFFFF
+	LD	A,H		; get MSB
+	AND	L		; And LSB
+	INC	A		; test if result= 0xFF
+	RET			; and exit
+
+
+	;-----
+	; test last file
+TSTLF:	LD	HL,(TEMP0)	; get pointer to last file
+	LD	DE,(FILCNT)	; get file counter
+	LD	A,E		; subtract DE-(HL)
+	SUB	(HL)
+	INC	HL
+	LD	A,D
+	SBC	A,(HL)
+	RET			; and exit
+
+
+	;-----
+	; get next FCB from Drive
+	;  in: A= 0 check checksum, A= 0FFH update checksum
+RDDIR:	LD	C,A		; save checksum flag
+	LD	HL,(FILCNT)	; get file counter
+	INC	HL		; increment it
+	LD	(FILCNT),HL	; and save it
+	LD	DE,(NFILES)	; get maximum number of files
+	LD	A,E		; is this the last file ?
+	SUB	L
+	LD	A,D
+	SBC	A,H
+	JP	C,SETFCT	; ..if so, set file count to 0xFFFF
+	LD	A,L		; get file count LSB
+	RRCA			; *32
+	RRCA
+	RRCA
+	AND	60H		; mask it
+	LD	(SECPNT),A	; save it for later use
+	RET	NZ		; ..if not first FCB sector, return
+	PUSH	BC		; save checksum flag
+	CALL	STDIR		; calculate sector/track Directory
+RDDIR2:	CALL	DMADIR		; set up DMA Directory
+	CALL	READR		; read a record
+	CALL	STDMA		; ..and set up user's DMA
+	POP	BC		; check/update checksum Directory
+
+	; C= 0 check checksum, C= 0FFH update checksum
+CHKDIR:	LD	HL,(NCHECK)	; get number of checked records
+	LD	DE,(RECDIR)	; get current record
+	XOR	A		; clear Carry
+	SBC	HL,DE		; test current record
+	RET	Z		; ..if zero, exit
+	RET	C		; ..if greater than NCHECK, exit
+	CALL	CKS127		; checksum first 127 bytes
+	ADD	A,(HL)		; ..then 128th byte
+	LD	HL,(CSV)	; get pointer checksum directory
+	ADD	HL,DE		; add current record
+	INC	C		; test checksum flag
+	JR	NZ,CHKDR1	; 0xFF -> update checksum
+	LD	(HL),A		; update checksum
+	RET			; and exit
+
+CHKDR1:	CP	(HL)		; test checksum
+	RET	Z		; ..if ok, exit
+
+	; checksum differs, so Disk has changed - relog and continue
+	LD	A,(FLAGS)
+	BIT	4,A		; inform user ?
+	LD	B,0		; disk change error code
+	LD	DE,MDSKCH	; disk changed message
+	CALL	NZ,ERROR	; inform user
+
+	; relog current Drive after media change detected
+	CALL	GETCDM		; get current Drive mask in HL
+	EX	DE,HL		; transfer mask to DE
+	CALL	UNLOG		; reset login vector for logged Drive
+	CALL	RELOG1		; do the meat of relogging
+
+	; Caveat emptor: this call is recursive..
+	CALL	SETFCT		; re-initialize search file count
+	XOR	A		; we only get here by checking
+	JR	RDDIR		; ..and all checking is done in RDDIR
+
+
+	;-----
+	; read sector from Drive
+READR:	CALL	READ		; Bios call Read Sector
+	JR	WRITE0
+
+
+	;-----
+	; write sector on Drive
+WRITER:	CALL	WRITE		; Bios call Write Sector
+WRITE0:	OR	A		; test exit code
+	RET	Z		; ..if ok, exit
+	LD	B,1		; disk I/O error code
+	LD	DE,MBADSC	; load bad sector message
+	LD	HL,(STBDSC)	; load bad sector vector
+	JP	JUMPHL		; output error
+
+
+
+	;_______________________//  Non-Banked  //
+	CSEG
+
+		; ##### CHECK: unreferenced code
+	PUSH	IX
+	CALL	CMND16
+		; #####
+
+
+	; JP target of unreferenced code between CMND36 and SELDRV
+NOTUSE2: LD	HL,(FCBADR)
+	LD	(ARWORD),HL
+	; JP target of unreferenced code between CMND34 and CMND21
+NOTUSE3: POP	IX
+	JP	SELTPB		; select TPA bank
+
+
+	;--------------------------------------------------
+	; fn # 16 Close File
+	;   enter: DE= Address of FCB,   exit: A= Directory Code
+	;--------------------------------------------------
+
+BGPTCH2	EQU	$+1	; <--- BGii patch point
+
+CMND16:	CALL	SELDR1		; select Drive from FCB
+				;  (also switches System bank)
+	JP	CLOSE		; ..and continue in Banked code
+
+
+
+	;_______________________//  Banked  //
+	COMMON	/BANK2/
+
+	;--------------------------------------------------
+	; Close File
+	; (continue CMND16)
+	;--------------------------------------------------
+CLOSE:	BIT	7,(IX+FCBMOD)	; test FCB/file modified
+	RET	NZ		; ..if not, no close required
+	CALL	CHKRO		; test disk W/P
+	CALL	SRCT15		; search file and test present
+	RET	Z		; ..if not, then exit with error
+	CALL	CKRODI		; check file W/P, get Directory entry
+	LD	BC,16		; offset to DM block
+	ADD	HL,BC		; add offset
+	EX	DE,HL		; save DIR ptr in DE
+	LD	HL,(ARWORD)	; get FCB ptr
+	ADD	HL,BC		; add offset
+	EX	DE,HL
+	LD	B,C		; transfer counter
+
+	; copy FCB (DE) to DIR (HL), if and only if DIR= 0 or DIR= FCB
+CLOSE0:	INC	(HL)
+	DEC	(HL)		; test DIR for 0
+	LD	A,(DE)		; get byte from FCB
+	JR	Z,CLOSE1	; ..if 0, ok to copy
+	CP	(HL)		; test if same as DIR
+	JP	NZ,RETCFF	; ..if not, abort close and return error
+CLOSE1:	LD	(HL),A		;   else save in DIR
+	INC	DE
+	INC	HL
+	DJNZ	CLOSE0		; bump pointers and loop until done
+
+	LD	DE,-20		; add -20 to get extent number from DIR
+	ADD	HL,DE		; HL= pointer to extent number
+	LD	A,(IX+FCBEXT)	; get extent number FCB
+	CP	(HL)		; compare with extent number Directory
+	JR	C,CLOSE3	; ..if FCB < Directory, then jump
+	LD	(HL),A		; save extent number in Directory
+	INC	HL		; get pointer to next record
+	INC	HL
+	INC	HL
+	LD	A,(IX+FCBREC)	; get next record FCB
+	LD	(HL),A		; save next record in Directory
+CLOSE3:	CALL	CLOSE6		; clear Archive bit and write FCB
+	CALL	GETDME		; get data module and extent
+	JR	Z,CLOSE4
+	PUSH	BC		; save prior module and extent
+	LD	BC,0
+	CALL	SETDME		; set FCB data module and extent to 0
+	CALL	SRCT15		; find proper DIR entry
+	POP	BC
+	JR	Z,JSETDME	; ..if extent 0 not found, exit
+CLOSE4:	PUSH	BC
+	CALL	CLOSE6		; clear Archive bit and write FCB
+	LD	B,4		; mask for STFLAG (bit2 = Modify stamp)
+	LD	HL,STUP		; address of stamp update routine
+	CALL	STPMSK		; mask stamp type and update if enabled
+	POP	BC		; get original module and extent bak
+JSETDME: JP	SETDME		; restore to FCB and exit
+
+CLOSE6:	CALL	CALDIR		; get directory entry
+	LD	BC,11		; point to Archive byte
+	ADD	HL,BC
+	RES	7,(HL)		; reset Archive bit
+	RES	7,(IX+ARCATT)	; reset bit in FCB
+
+	; write FCB to disk
+WRFCB:	CALL	CALDIR		; point to Dir entry to write
+	LD	A,FCBUSR	; offset to User byte in FCB
+	CALL	CALDI0		; ..do the add here
+	LD	(HL),0		; prevent writing it to disk
+	CALL	STDIR		; calculate setor/track Directory
+	LD	C,0FFH		; update checksum Directory
+	CALL	CHKDIR
+WRITD1:	CALL	DMADIR		; set up DMA Directory (label for DS)
+	LD	C,1		; write Directory flag
+	CALL	WRITER		; write record
+	JP	STDMA		; set up DMA user
+
+
+
+	;_______________________//  Non-Banked  //
+	CSEG
+
+	;--------------------------------------------------
+	; fn # 26 Set DMA Address
+	;   enter: DE= DMA Address,   exit: A= 00H
+	;--------------------------------------------------
+CMND26:	LD	(DMA),DE	; save DMA address
+
+	; set DMA address
+STDMA:	LD	BC,(DMA)	; get DMA address
+	JR	DMADR0		; ..and do Bios call
+
+	; set DMA address Directory
+DMADIR:	LD	BC,(DIRBUF)	; get DMA address Directory
+DMADR0:	JP	SETDMA		; Bios call Set DMA
+
+
+
+	;_______________________//  Banked  //
+	COMMON	/BANK2/
+
+	;-----
+	; get bit from ALV buffer
+	;  in: DE= block number
+	; out:  A= bit in LSB
+	;       B= bit number in A
+	;      HL= pointer in ALV buffer
+GETBIT:	LD	A,E		; get bit number
+	AND	7		; mask it
+	INC	A		; +1
+	LD	C,A		; save it
+	SRL	D		; get byte number
+	RR	E		; divide DE by 8
+	SRL	D
+	RR	E
+	SRL	D
+	RR	E
+	LD	HL,(ALV)	; get start address ALV buffer
+	LD	B,A		; save bit number for next shift
+	ADD	HL,DE		; add byte number
+	LD	A,(HL)		; get 8 bits
+GETBT0:	RLCA			; get correct bit
+	DJNZ	GETBT0
+	LD	B,C		; restore bit number
+	RET			; and return to caller
+
+
+	;--------------------------------------------------
+	; Delete File
+	; (continue CMND19)
+	;--------------------------------------------------
+DELETE:	CALL	COMCOD		; call common code w/ VDEL on stack
+
+	; delete core routine
+VDEL:	CALL	CKRODI		; check file W/P, get Directory entry
+	LD	(HL),0E5H	; remove file
+	INC	HL
+	LD	A,(HL)		; get first char
+	SUB	'$'		; see if submit file
+	JR	NZ,VDEL1	; ..if not, skip over
+	LD	(SUBFLG),A	; clear subflag if $*.* erased
+VDEL1:	INC	HL
+	RES	7,(HL)		; ensure erased files are not public
+	LD	C,0		; remove bits ALV buffer
+				; ..fall through and return to caller
+
+
+	; fill bit buffer from FCB in DIRBUF
+	;  in: C= 0 reset bit, C= 1 set bit
+FILLBB:	CALL	CALDIR		; get directory entry
+	LD	DE,16		; get offset DM block
+	ADD	HL,DE		; add offset
+	LD	B,E		; get block counter
+FILLB0:	LD	E,(HL)		; get LSB block number
+	INC	HL		; increment pointer
+	LD	D,0		; reset MSB block counter
+	LD	A,(MAXLEN+1)	; test >256 blocks present
+	OR	A
+	JR	Z,FILLB1	; ..if not, jump
+	DEC	B		; decrement block counter
+	LD	D,(HL)		; get correct MSB
+	INC	HL		; increment block counter
+FILLB1:	LD	A,D		; test block number
+	OR	E
+	JR	Z,FILLB2	; ..if zero, then get next block
+	PUSH	HL		; save pointer
+	PUSH	BC		; save counter and set/reset bit
+	LD	HL,(MAXLEN)	; get maximum length ALV buffer
+	OR	A		; reset Carry
+	SBC	HL,DE		; test DE <= maxlen ALV buffer
+	JR	C,FILLB3	; ..if yes, skip insert bit
+
+	; set/reset bit in ALV buffer
+SETBIT:	PUSH	BC		; save set/reset bit
+	CALL	GETBIT		; get bit
+	AND	0FEH		; mask it
+	POP	DE		; get set/reset bit
+	OR	E		; set/reset bit
+SETBT0:	RRCA			; rotate bit in correct position
+	DJNZ	SETBT0
+	LD	(HL),A		; save 8 bits
+FILLB3:	POP	BC		; get counter and set/reset bit
+	POP	HL		; get pointer
+FILLB2:	DJNZ	FILLB0		; repeat for all DM entries
+	RET			; and return to caller
+
+
+
+	;_______________________//  Non-Banked  //
+	CSEG
+
+	;-----
+	; check file W/P bit - SEARCH called first
+CHKFRO:	CALL	CALDIR		; get Directory entry
+	LD	DE,WHLATT	; offset to R/O bit
+	ADD	HL,DE		; add offset
+	LD	DE,(WHEEL)	; get Wheel byte address
+	LD	A,(DE)		; retrieve the actual byte
+	AND	A		; ..and check it
+	JR	NZ,CHKFR4	; we have Wheel, so allow writes
+	BIT	7,(HL)		; else, check Wheel attribute
+	JR	NZ,CHKFR2	; ..if yes, then jump error
+CHKFR4:	INC	HL		; check W/P bit
+	BIT	7,(HL)		; test file W/P
+	JR	NZ,CHKFR2	; ..if W/P, then jump
+CHKFR3:	BIT	7,(IX+PSFATT)	; was file accessed as Pubic or Path ?
+	RET	Z		; ..if normal access, return
+	LD	A,(FLAGS)	;   else, test for writes allowed
+	AND	0010B
+	RET	NZ		; ..if writes allowed, go ahead
+CHKFR2:	LD	HL,(SFILRO)	; ptr file W/P message (CP/M 2.2 vector table)
+	LD	B,3		; file W/P error code
+	LD	DE,MFILRO	; load file W/P message
+	JP	JUMPHL		; display message
+
+
+	;-----
+	; check Drive Write Protect
+BGCKDRO:
+CHKRO:	CALL	CHKRO1		; is the disk W/P ?
+	RET	NZ		; ..if disk is R/W, then return
+	LD	B,2		;   else, set disk W/P error code
+	LD	DE,MRO		; load drive W/P message
+	LD	HL,(STRO)	; ptr Drive W/P message (CP/M 2.2 vector table)
+	JP	JUMPHL		; display message
+
+CHKRO1:	LD	HL,(DSKWP)	; get W/P drive vector
+	CALL	SDRVB		; set the bit for this drive
+	SBC	HL,DE		; see if extra bit added (Carry is clear)
+	RET
+
+
+
+	;_______________________//  Banked  //
+	COMMON	/BANK2/
+
+	;-----
+	; search using first 12 bytes of FCB
+SEAR12:	LD	A,12
+	DEFB	21H		; trash HL and fall through
+
+	; search using first 15 bytes of FCB
+SEAR15:	LD	A,15
+
+	; search for File Name
+	;  in: A= number of bytes for which to search
+SEARCH:	LD	(SEARNB),A	; save number of bytes
+	LD	A,0FFH		; set exit code to 0xFF (not found)
+	LD	(SEAREX),A
+	LD	(DCOPY),IX	; copy FCB pointer to RAM (search next)
+	CALL	SETFCT		; initiate file counter
+
+	; force directory read with call home (Floppy only)
+	LD	HL,(NCHECK)	; is this a fixed media ?
+	LD	A,H
+	OR	L
+	CALL	NZ,HOME		; if removable, invoke Bios call Home routine
+
+	; search next File Name
+SEARCN:	XOR	A		; checksum Directory
+	LD	H,A
+	LD	L,A
+	LD	(SEARQU),HL	; clear flags, question mark and PUBlic found
+	RES	7,(IX+PSFATT)	; reset PUBlic/SYStem file flag
+	CALL	RDDIR		; get FCB from Directory
+	CALL	TSTFCT		; test if past last entry
+	JR	Z,JSEAR8	; ..if yes, jump (note Carry always clear)
+	LD	DE,(DCOPY)	; get FCB pointer
+	LD	A,(DE)		; get first byte
+	CP	0E5H		; test if searching empty Directory
+	JR	Z,SEARC1	; ..if yes, then jump
+	PUSH	DE		; save FCB pointer
+	CALL	TSTLF		; test last file on this Drive
+	POP	DE		; restore FCB pointer
+JSEAR8:	JR	NC,SEARC8	; ..if yes, then jump
+
+SEARC1:	CALL	CALDIR		; get entry in Directory
+	LD	A,(HL)		; get first byte Directory entry
+	AND	7FH		; mask high bit
+	CP	21H		; test time stamp
+	JR	Z,SEARCN	; ..if yes, then get next Directory entry
+	LD	C,0		; clear counter
+	LD	A,(SEARNB)	; get number of bytes to search for
+	LD	B,A		; save it in counter
+SEARC2:	LD	A,B		; test if character is zero
+	OR	A
+	JR	Z,SEARC9	; ..if yes, then jump
+	LD	A,(DE)		; get byte from FCB
+	XOR	'?'		; test if question mark
+	AND	7FH		; mask it
+	JR	Z,SEARC6	; ..if yes, then jump
+	LD	A,C		; get FCB counter
+	OR	A		; test first byte
+	JR	NZ,SEARC3	; ..if not, then jump
+	LD	A,(FLAGS)	; get flag byte
+	RRA			; test PUBlic file enable
+	JR	NC,SEARC3	; ..if not, jump
+	INC	HL		; get pointer to PUBlic bit
+	INC	HL
+	BIT	7,(HL)		; test PUBlic bit Directory
+	DEC	HL		; restore pointer
+	DEC	HL
+	JR	Z,SEARC3	; ..if no PUBlic file, then jump
+	LD	A,(DE)		; get first byte FCB
+	CP	0E5H		; test if searching empty Directory
+	JR	Z,SEARC3	; ..if yes, then jump
+
+
+	; The following 3 lines of code represent a deviation from description
+	; of PUBlic files as given in DDJ article by Bridger Mitchell and Derek
+	; McKay of Plu*Perfect Systems. The specification states that PUBlic
+	; files will _NOT_ be found by any wildcard reference, except when a
+	; '?' is in the FCB+0 byte.  The code here relaxes that as follows:
+	; If we are in the same User area as the PUBlic file, then don't report
+	; file as PUBlic, but find it.  This has a nasty side effect - PUBlic
+	; files can be erased if we are in the same area. However, these files
+	; also show up on the directory (they wouldn't otherwise), so at least
+	; we should know we're blasting them.
+
+	XOR	(HL)		; test FCB = Directory entry
+	AND	7FH		; mask it (setting Zero flag)
+	JR	Z,SEARC5	; ..if user is same, jump
+
+	LD	A,0FFH
+	LD	(SEARPU),A	; set PUBlic file found
+	SET	7,(IX+PSFATT)	; set PUBlic/SYStem file flag
+	JR	SEARC5		; jump found
+
+SEARC3:	LD	A,C		; get FCB counter
+	CP	13		; is it User code ?
+	JR	Z,SEARC5	; ..if so, jump (don't test)
+	CP	12		; is it an extent number ?
+	LD	A,(DE)		; get byte from FCB
+	JR	Z,SEARC7	; ..if extent number, then jump
+	XOR	(HL)		; is FCB byte = Directory Entry byte ?
+	AND	7FH		; mask it
+SEARC4:	JR	NZ,SEARCN	; ..if not the same, jump and get next entry
+SEARC5:	INC	DE		; increment FCB pointer
+	INC	HL		; increment Directory Entry pointer
+	INC	C		; increment counter
+	DEC	B		; decrement counter
+	JR	SEARC2		; test next byte
+
+SEARC6:	DEC	A		; set question mark found flag
+	LD	(SEARQU),A
+	JR	SEARC5		; jump found
+
+SEARC7:	XOR	(HL)		; test extent
+	CALL	SEARC7A		; mask extent
+	JR	SEARC4		; ..and test result
+
+SEARC7A: PUSH	BC
+	LD	B,A		; save extent
+	LD	A,(NEXTND)	; get extent mask
+	CPL			; complement it
+	AND	MAXEXT		; mask it
+	AND	B		; mask extent
+	POP	BC		; restore counters
+	RET
+
+SEARC8:	CALL	SETFCT		; error set file counter
+	JP	RETCFF		; set return code to 0xFF and exit
+
+SEARC9:	LD	HL,(SEARQU)	; get question mark and PUBlic found flags
+	LD	A,H
+	AND	L
+	JR	NZ,SEARC4	; ..if yes, then search for next entry
+	CALL	TSTLF		; test for last file
+	CALL	NC,SETLF0	; and update if so
+	LD	HL,(RECDIR)	; set DE return to Directory record
+	LD	(DEVAL),HL	; ..for DateStamper simulation
+	LD	A,(FILCNT)	; get file counter
+	AND	3		; mask it
+	LD	(PEXIT),A	; and set exit code
+	XOR	A		; clear exit code search
+	LD	(SEAREX),A
+	RET			; and return to caller
+
+
+	;-----
+	; common code of DELETE, RENAME, and CSTAT
+	; (coded in a manner that is compatible with Z280 in protected mode)
+COMCOD:	CALL	CHKRO		; check disk W/P
+	CALL	SEAR12		; search file
+COMCO1:	CALL	TSTFCT		; test if file found
+	POP	HL		; routine addr to HL (in case not found)
+	RET	Z		; ..if not, then exit
+	PUSH	HL		;   else, found so routine back to stack
+	PUSH	HL		;   ..twice as RET pops first push
+	LD	HL,COMCO2
+	EX	(SP),HL		; COMCO2 to stack, routine addr to HL
+	JP	(HL)		; ..branch to routine
+
+COMCO2:	CALL	WRFCB		; write Directory buffer on disk
+	CALL	SEARCN		; search next entry
+	JR	COMCO1		; and test it
+
+
+	;-----
+	; Rename File
+	; note wildcard support
+RENAM:	CALL	COMCOD		; go to common code w/ VRENAM on stack
+
+	; rename core routine
+VRENAM:	CALL	CHKFRO		; check file W/P
+	LD	HL,(ARWORD)	; get FCB address
+	LD	DE,16		; offset to new name
+	ADD	HL,DE		; add offset
+	EX	DE,HL		; swap regs
+	CALL	CALDIR		; get Directory entry
+	INC	HL
+	INC	HL
+	RES	7,(HL)		; make any renamed file private
+	DEC	HL
+	DEC	HL
+	LD	B,11		; set up loop counter
+
+RENAM1:	INC	HL		; increment Directory pointer
+	INC	DE		; increment FCB pointer
+	LD	A,(DE)		; get character from FCB
+	AND	7FH		; mask it
+	CP	'?'		; test if question mark
+	JR	NZ,RENAM2	; ..if not, then change character on disk
+	LD	A,(HL)		;   else, no change, so get what's there
+RENAM2:	RLA			; clear MSB
+	RL	(HL)		; get MSB from directory
+	RRA			; and move to FCB
+	LD	(HL),A		; save in directory
+	DJNZ	RENAM1		; loop until done
+	RET
+
+
+	;-----
+	; Change Status Bits for File
+CSTAT:	CALL	COMCOD		; got to common code w/ VCSTAT on stack
+
+	; change core routine
+VCSTAT:	PUSH	IX
+	POP	DE		; FCB pointer in DE
+	CALL	CALDIR		; get Directory entry
+	LD	B,11		; set up loop counter
+
+CSTAT1:	INC	HL		; increment Directory pointer
+	INC	DE		; increment FCB pointer
+	LD	A,4		; are we pointing to Wheel Attribute ?
+	CP	B
+	JR	NZ,CSTAT2	; ..if not, jump
+	PUSH	HL
+	LD	HL,(WHEEL)	;   else, do we have Wheel privileges ?
+	LD	A,(HL)
+	POP	HL
+	AND	A		; set flags to show
+	JR	NZ,CSTAT2	; ..if we have Wheel, jump
+	BIT	7,(HL)		; is file Wheel protected ?
+	JP	NZ,CHKFR2	; ..if so, jump
+CSTAT2:	LD	A,(DE)		; get status bit from FCB
+	RL	(HL)		; remove MSB of Directory
+	RLA			; get MSB from FCB
+	RR	(HL)		; and move into Directory char
+	DJNZ	CSTAT1		; loop till done
+	RET
+
+
+	;-----
+	; Compute File Size
+FILSZ:	LD	BC,0		; reset file size length
+	LD	D,C
+	CALL	LDRRC		; save it in FCB+33,34,35
+	CALL	SEAR12		; search file
+FILSZ0:	CALL	TSTFCT		; test if file found
+	RET	Z		; ..if not, exit
+
+	CALL	CALDIR		; get Directory entry
+	EX	DE,HL		; copy to DE
+	LD	HL,15		; offset to next record
+	CALL	CALRRC		; calculate random record count
+	LD	A,D		; test LSB < (IX+33)
+	SUB	(IX+33)
+	LD	A,C		; test ISB < (IX+34)
+	SBC	A,(IX+34)
+	LD	A,B		; test MSB < (IX+35)
+	SBC	A,(IX+35)
+	CALL	NC,LDRRC	; write new maximum
+	CALL	SEARCN		; search next file
+	JR	FILSZ0		; and test it
+
+
+	;--------------------------------------------------
+	; Find File
+	; (called by CMND15)
+	;--------------------------------------------------
+FINDF:	CALL	SRCT15		; search file
+	RET	NZ		; ..if found, then exit
+	LD	A,(FLAGS)
+	BIT	5,A		; test if Path enabled
+	RET	Z		; ..if not, exit
+	LD	HL,(PATH)	; get Path address
+	LD	A,H		; test if zero (no Path)
+	OR	L
+	RET	Z		; ..if so, exit
+
+FINDF0:	CALL	DUPATH		; test if current DU: is in Path
+	JP	Z,SEARC8	; ..if not, then jump
+	LD	A,B		; Drive in A
+	PUSH	BC		; save DU
+	PUSH	HL
+	CALL	SELDK
+		; ##### PUSH HL first, then BC
+		;       saves POP HL + next PUSH HL (2 bytes)
+	POP	HL
+	POP	BC
+	LD	A,C		; User in A
+	PUSH	HL		; save Path pointer
+	CALL	RESUSR		; add new User number in FCB+0 and FCB+13
+	CALL	SRCT15		; search file and test if present
+	POP	HL		; restore Path pointer
+	JR	Z,FINDF0	; ..if not present, then test next Path entry
+	PUSH	HL		; save Path pointer
+	CALL	CALDIR		; get Directory entry
+	LD	DE,10		; add offset SYStem bit
+	ADD	HL,DE
+	BIT	7,(HL)		; test SYStem file
+	LD	A,(FLAGS)	; test for relaxed Path definition
+	RLA			; ..by rotating bit
+	RLA			;   ..into Carry flag
+	POP	HL		; restore Path pointer
+	JR	C,FINDF3	; ..if Carry, SYStem attribute not required
+	JR	Z,FINDF0	;   else, SYStem file, so test next Path entry
+FINDF3:	LD	A,(DEFDRV)	; get current Drive
+	INC	A		; increment Drive number
+	LD	(FCB0),A	; save it in exit FCB0
+	SET	7,(IX+PSFATT)	; set PUBlic/SYStem file flag
+	RET			; and return to caller
+
+
+
+	;_______________________//  Non-Banked  //
+	CSEG
+
+	;--------------------------------------------------
+	; fn # 15 Open File
+	;   enter: DE= address of FCB,   exit: A= Directory Code
+	;--------------------------------------------------
+CMND15:	CALL	SELDRV		; select Drive from FCB
+				;  (also switches System bank)
+	LD	A,32		; 32 bytes
+	LD	(FCBBUP),A	; ..to update in FCB
+	LD	(IX+FCBMOD),0	; clear data module number
+	CALL	FINDF		; find file using Path (..in Banked code)
+	CALL	TSTFCT		; test file found (..in Banked code)
+	RET	Z		; ..if not, then exit
+
+OPENF0:	LD	A,(IX+PSFATT)	; get PUBlic/SYStem file bit
+	PUSH	AF		; save it
+	LD	A,(IX+FCBEXT)	; get extent number from FCB
+	PUSH	AF		; save it
+	CALL	CALDIR		; get Directory entry
+	LD	A,(HL)		; find real User number file is in
+	OR	80H		; set User valid flag
+	PUSH	IX		; save FCB entry
+	POP	DE		; get in DE
+	LD	BC,32		; number of bytes to move
+	LDIR			; move Directory to FCB
+	LD	(IX+FCBUSR),A	; and put User byte back
+	SET	7,(IX+FCBMOD)	; set FCB/File not modified
+	LD	B,(IX+FCBEXT)	; get extent number
+	LD	C,(IX+FCBREC)	; get next record number
+	POP	AF		; get old extent number
+	LD	(IX+FCBEXT),A	; save it
+	CP	B		; compare old and new extent number
+	JR	Z,OPENF1	; ..if same, then jump
+	LD	C,0		; set next record count to 0
+	RR	C		; record count to max (0x80) if need new extent
+OPENF1:	LD	(IX+FCBREC),C	; save next record count
+	POP	AF		; get PUBlic/SYStem file bit
+	RL	(IX+PSFATT)	; remove MSB from IX+7
+	RLA			; set new MSB in Carry
+	RR	(IX+PSFATT)	; save Carry in IX+7
+	LD	B,1		; mask for STFLAG (bit0 = Access stamp)
+	LD	HL,STLA		; address of last accessed routine
+	JP	STPMSK		; ..and continue in Banked code
+
+
+	;--------------------------------------------------
+	; fn # 22 Make File
+	;   enter: DE= Address of FCB,   exit: A= Directory Code
+	;--------------------------------------------------
+CMND22:	CALL	SELDRV		; select Drive from FCB
+	LD	(IX+FCBMOD),0	; clear data module number
+	LD	A,32		; 32 bytes
+	LD	(FCBBUP),A	; save # bytes to update in FCB
+MAKES:	CALL	CHKRO		; check drive W/P
+	CALL	SELSYB		; switch System bank
+	JP	MAKESB		; ..and continue in Banked code
+
+
+
+	;_______________________//  Banked  //
+	COMMON	/BANK2/
+
+	;--------------------------------------------------
+	; Make File
+	; (continue CMND22 / MAKES)
+	;--------------------------------------------------
+MAKESB:	LD	HL,(ARWORD)
+	LD	A,(HL)		; get first byte of FCB
+	PUSH	AF		; save it
+	LD	(HL),0E5H	; set first byte to empty file
+	LD	A,1		; search for 1 byte
+	CALL	SEARCH		; search empty file
+	POP	AF		; get first byte of FCB
+	LD	(IX+0),A	; restore it
+	CALL	TSTFCT		; test empty file found
+	RET	Z		; ..if not, return error
+	LD	HL,(ARWORD)	; get FCB pointer
+	CALL	CKSUB		; check if this is a submit file
+	LD	DE,15		; prepare offset
+	ADD	HL,DE		; add it
+	LD	B,17		; set counter
+	CALL	CLRMEM		; clear FCB+15 up to FCB+31
+	RES	7,(IX+PSFATT)	; reset PUBlic/SYStem file bit
+	RES	7,(IX+ARCATT)	; reset Archive bit if present
+	CALL	CALDIR		; get Directory entry
+	PUSH	IX		; save FCB entry
+	POP	DE		; get it in DE
+	EX	DE,HL		; exchange FCB and Directory entry
+	LD	BC,32		; number of bytes to copy
+	LDIR
+	CALL	WRFCB		; write FCB on disk
+	SET	7,(IX+FCBMOD)	; set FCB/File not modified
+	LD	B,2		; mask for STFLAG (bit1 = Create stamp)
+	LD	HL,STCR		; address stamp create routine
+	JP	STPMSK		; mask type and stamp file if enabled
+
+
+	;-----
+	; open next extent
+OPENEX:	BIT	7,(IX+FCBMOD)	; test if FCB/File modified (write)
+	JR	NZ,OPENX2	; ..if not, jump
+	CALL	CLOSE		; close current FCB
+	LD	A,(PEXIT)	; get exit code
+	INC	A		; test if error
+	RET	Z		; ..if so, exit
+OPENX2:	CALL	CALNEX		; calculate next extent
+	JR	C,OPENX3	; ..if error, jump
+
+OPENX0:	CALL	SRCT15		; search for 15-char match and test presence
+	JR	NZ,OPENX5	; ..if yes, jump
+	LD	A,(RDWR)	; test Read/Write flag
+	OR	A		; test if read
+	JR	Z,OPENX3	; ..if yes, then error
+	CALL	MAKES		; make new extent if write
+	CALL	TSTFCT		; test if successful
+	JR	NZ,OPENX6	; ..if yes, then exit
+OPENX3:	SET	7,(IX+FCBMOD)	; set FCB/File not modified
+RETCFF:	LD	A,0FFH		; set exit code
+OPENX4:	JP	SAVEA		; and return to caller
+
+OPENX5:	CALL	OPENF0		; open file
+OPENX6:	XOR	A		; clear exit code
+	JR	OPENX4		; use same code to exit routine
+
+
+	;-----
+	; calculate next extent
+	; out: Carry set (C) if overflow detected
+CALNEX:	CALL	GETDME		; get extent number, data module number
+	BIT	6,B		; test error bit random record
+	SCF			; set error flag
+	RET	NZ		; ..if non-zero, error exit
+	INC	C		; increment extent number
+	LD	A,C		; get extent number
+	AND	MAXEXT		; mask it for max extent
+	LD	C,A		; save it in C
+	JR	NZ,CALNE1	; ..if new data module not required, jump
+	INC	B		; set next data module
+	LD	A,B		; get it in A
+	AND	MAXMOD		; mask it for max module
+	LD	B,A		; save it in B
+	SCF			; set error flag
+	RET	Z		; ..if file overflow, return
+CALNE1:	LD	(IX+NXTREC),0	; zero next record count
+SETDME:	LD	(IX+FCBEXT),C	; save extent number
+	LD	(IX+FCBMOD),B	; save data module number
+	AND	A		; clear flag
+	RET
+
+GETDME:	LD	C,(IX+FCBEXT)	; get extent number
+	LD	B,(IX+FCBMOD)	; get data module number
+	LD	A,C
+	CALL	SEARC7A		; mask extent
+	RES	7,B		; clear unmodified flag
+	OR	B		; test for module and extent = 0
+	RET			; ..and return to caller
+
+
+
+	;_______________________//  Non-Banked  //
+	CSEG
+
+	;--------------------------------------------------
+	; fn # 33 Read Random Record
+	;   enter: DE= Address of FCB,   exit: A= Read/Write Code
+	;--------------------------------------------------
+CMND33:	CALL	SELDR1		; select Drive from FCB
+	LD	A,36
+	LD	(FCBBUP),A	; save # bytes to update in FCB
+
+	; read random sector
+	XOR	A		; set Read/Write flag
+	CALL	LDFCB		; load FCB random record (..in Banked code)
+	JR	Z,READS		; ..if no error, then read sector
+	RET
+
+
+	;--------------------------------------------------
+	; fn # 20 Read Sequential
+	;   enter: DE= Address of FCB,   exit: A= Read/Write Code
+	;--------------------------------------------------
+CMND20:	CALL	SELDR1		; select Drive from FCB
+				;  (also switches System bank)
+	LD	A,33		; 33 bytes
+	LD	(FCBBUP),A	; save # bytes to update in FCB
+
+	; read sector
+READS:	JP	READSB		; ..continue in Banked code
+
+
+
+	;_______________________//  Banked  //
+	COMMON	/BANK2/
+
+	;--------------------------------------------------
+	; Read Sector
+	; (continue CMND20 / READS)
+	;--------------------------------------------------
+READSB:	XOR	A		; set Read/Write flag
+	LD	(RDWR),A	; save it
+	LD	A,(IX+NXTREC)	; get record counter
+	CP	80H		; test if last record in this extent
+	JR	Z,READSB1	; ..if yes, then open next extent
+	CP	(IX+FCBREC)	; test if greater than current record
+	JR	C,READSB2	; ..if not, then get record
+READSB0: LD	A,1		; set end of file flag
+	JP	SAVEA		; and exit
+
+READSB1: CALL	OPNXCK		; open next extent
+READSB2: CALL	GETDM		; get block number from DM in FCB
+	JR	Z,READSB0	; ..if block number= 0, jump to end of file
+	CALL	CALSEC		; calculate sector number (128 bytes)
+	CALL	CALST		; calculate sector/track number
+	CALL	READR		; read data
+	JP	WRITS7		; increment elsewhere if necessary
+
+
+	;-----
+	; consolidated routine to open extent and check status
+OPNXCK:	CALL	OPENEX		; open next extent
+	LD	A,(PEXIT)	; get exit code
+	OR	A
+	RET	Z		; return if open OK
+	POP	HL		;   else, pop return address to abort R/W
+	JR	READSB0		;   ..and set error code to EOF
+
+
+
+	;_______________________//  Non-Banked  //
+	CSEG
+
+	;--------------------------------------------------
+	; fn # 34 Write Random
+	; fn # 40 Write random with zero fill
+	;   enter: DE= Address of FCB,   exit: A= Read/Write Code
+	;--------------------------------------------------
+CMND34:
+CMND40:	CALL	SELDR1		; select Drive from FCB
+	LD	A,36		; 36 bytes
+	LD	(FCBBUP),A	; save # bytes to update in FCB
+
+	; write random sector and write random with zero fill
+	LD	A,0FFH		; set Read/Write flag
+	CALL	LDFCB		; load FCB random record (..in Banked code)
+	JR	Z,WRITES	; ..if no error, then write record
+	RET			;   else, return error
+
+
+		; ##### CHECK: unreferenced code
+	CALL	CHKRO		; check drive W/P status
+	PUSH	IX
+	LD	IX,ZSFCB	; buffer internal FCB
+	CALL	NOTUSE1		; write sector
+	JP	NOTUSE3
+	RET
+		; #####
+
+
+	;--------------------------------------------------
+	; fn # 21 Write Sequential
+	;   enter: DE= Address of FCB,   exit: A= Read/Write Code
+	;--------------------------------------------------
+CMND21:	CALL	SELDR1		; select Drive from FCB
+	LD	A,33		; 33 bytes
+	LD	(FCBBUP),A	; save # bytes to update in FCB
+
+	; write sector - permitted to PUBlic file and those found along Path
+WRITES:	LD	A,0FFH		; set Read/Write flag
+	LD	(RDWR),A	; save it
+
+BGPTCH1	EQU	$+1	; <--- patched location for BGii
+
+	CALL	CHKRO		; check disk W/P
+NOTUSE1: CALL	SELSYB		; switch System bank
+	JP	WRITESB		; ..and continue in Banked code
+
+
+
+	;_______________________//  Banked  //
+	COMMON	/BANK2/
+
+	;--------------------------------------------------
+	; Write Sector
+	; (continue CMND21 / WRITES)
+	;--------------------------------------------------
+WRITESB: BIT	7,(IX+ROATT)	; test if file W/P
+	JR	NZ,WRITSA	; ..if yes, then file W/P message
+	CALL	CHKFR3		; test W/P if Path or Public used
+	LD	HL,(WHEEL)	; get address of Wheel byte
+	LD	A,(HL)		; do we have Wheel privileges ?
+	AND	A
+	JR	NZ,WRITSB	; ..if yes, allow write
+	BIT	7,(IX+WHLATT)	;   else, test if file is Wheel protected
+WRITSA:	JP	NZ,CHKFR2	;   ..if so, then file W/P message
+WRITSB:	BIT	7,(IX+NXTREC)	; end of this extent ?
+	CALL	NZ,OPNXCK	; open next extent and check status
+	CALL	GETDM		; get block number from FCB
+	JP	NZ,WRITS5	; ..if not zero, then jump to write sector
+	PUSH	HL		; save pointer to block number
+	LD	A,C		; test first block number in extent
+	OR	A
+	JR	Z,WRITS1	; ..if yes, then jump
+	DEC	A		; decrement pointer to block number
+	CALL	GETDM4		; get previous block number
+
+
+	; get free block from ALV buffer
+	;  in: DE= old block number
+	; out: DE= new block number, 0 if no free block
+	; (HL counts up, DE counts down)
+WRITS1:	LD	H,D		; copy old block to HL
+	LD	L,E
+GETFR0:	LD	A,D		; test down counter is zero
+	OR	E
+	JR	Z,GETFR1	; ..if so, jump
+	DEC	DE		; decrement down counter
+	PUSH	HL		; save up/down counter
+	PUSH	DE
+	CALL	GETBIT		; get bit from ALV buffer
+	RRA			; test if zero
+	JR	NC,GETFR3	; ..if yes, then found empty block
+	POP	DE		; get up/down counter
+	POP	HL
+GETFR1:	LD	BC,(MAXLEN)	; get maximum ALV length-1 in BC
+	LD	A,L		; is HL >= length ALV-1 ?
+	SUB	C		; ..do while preserving HL
+	LD	A,H
+	SBC	A,B
+	JR	NC,GETFR2	; ..if end of buffer, then jump
+	INC	HL		; increment up counter
+	PUSH	DE		; save down/up counter
+	PUSH	HL
+	EX	DE,HL		; up counter in DE
+	CALL	GETBIT		; get bit from ALV buffer
+	RRA			; test if zero
+	JR	NC,GETFR3	; ..if yes, then found empty block
+	POP	HL		; get down/up counter
+	POP	DE
+	JR	GETFR0		; and test next block
+
+GETFR2:	LD	A,D		; test if last block testet
+	OR	E
+	JR	NZ,GETFR0	; ..if not, then test next block
+	JR	WRITSG		; continue with DE= 0
+
+GETFR3:	SCF			; set block number used
+	RLA			; save bit
+
+	; SETBT0 code now inline
+GETFR4:	RRCA			; rotate bit in correct position
+	DJNZ	GETFR4
+	LD	(HL),A		; save 8 bits
+	POP	DE		; get correct counter
+	POP	HL		; restore stack pointer
+				; ..continue with (DE= block number)
+
+WRITSG:	POP	HL		; get pointer to block number
+	LD	A,D		; test if block number = 0
+
+	; WRITS8 code now inline
+	OR	E
+	LD	A,2		; set disk full error
+	JP	Z,SAVEA		; and return to caller
+	RES	7,(IX+FCBMOD)	; reset FCB/File modified
+	LD	(HL),E		; save block number
+	LD	A,(MAXLEN+1)	; get number of blocks
+	OR	A		; is it < 256 ?
+	JR	Z,WRITS2	; ..if so, jump
+	INC	HL		; increment to MSB block number
+	LD	(HL),D		; ..and save MSB block number
+WRITS2:	LD	C,2		; set write new block flag
+	LD	A,(NMASK)	; get sector mask
+	AND	(IX+NXTREC)	; mask with record number
+	JR	Z,WRITSX	; ..if zero, then Ok (at start new record)
+	LD	C,0		;   else, clear new block flag
+WRITSX:	LD	A,(FUNCT)	; get function number
+	SUB	40		; test if Write Random Record with zero fill
+	JR	NZ,WRITS6	; ..if not, then jump
+	PUSH	DE		; save block number
+	LD	HL,(DIRBUF)	; use Directory buffer for zero fill
+	LD	B,128		; 128 bytes to clear
+	CALL	CLRMEM		; do clear
+	CALL	CALSEC		; calculate sector number (128 bytes)
+	LD	A,(NMASK)	; get sector mask
+	LD	B,A		; copy it
+	INC	B		; increment it to get number of writes
+	CPL			; complement sector mask
+	AND	E		; mask sector number
+	LD	E,A		; and save it
+	LD	C,2		; set write new block flag
+WRITS4:	PUSH	HL		; save registers
+	PUSH	DE
+	PUSH	BC
+	CALL	CALST		; calculate sectors/track
+	CALL	DMADIR		; set DMA Directory buffer
+	POP	BC		; get write new block flag
+	PUSH	BC		; save it again
+	CALL	WRITER		; write record on disk
+	POP	BC		; restore registers
+	POP	DE
+	POP	HL
+	LD	C,0		; clear write new block flag
+	INC	E		; increment sector number
+	DJNZ	WRITS4		; write all blocks
+	CALL	STDMA		; set user DMA address
+	POP	DE		; get block number
+WRITS5:	LD	C,0		; clear write new block flag
+WRITS6:	RES	7,(IX+FCBMOD)	; reset FCB/File modified flag
+	PUSH	BC		; save it
+	CALL	CALSEC		; calculate sector number (128 bytes)
+	CALL	CALST		; calculate sectors/track
+	POP	BC		; get write new block flag
+	CALL	WRITER		; write record on disk
+	LD	A,(IX+NXTREC)	; get record counter
+	CP	(IX+FCBREC)	; compare with next record
+	JR	C,WRITS7	; ..if less, then jump
+	INC	A		; increment record count
+	LD	(IX+FCBREC),A	; save it on next record position
+	RES	7,(IX+FCBMOD)	; reset FCB/File modified flag
+WRITS7:	LD	A,(FUNCT)	; get function number
+	CP	20
+	RET	C		; return if < 20
+	CP	21+1
+	RET	NC		; return if > 21
+	INC	(IX+NXTREC)	; increment record count
+	RET			; and return to caller
+
+
+	;--------------------------------------------------
+	; Load FCB for random read/write
+	; (called by CMND33 / CMND34 / CMND40)
+	;--------------------------------------------------
+	; out: Zero Flag set (Z) = no error, reset (NZ) if error
+LDFCB:	LD	(RDWR),A	; save Read/Write flag
+	LD	A,(IX+33)	; get first byte random record
+	LD	D,A		; save it in D
+	RES	7,D		; reset MSB to get next record
+	RLA			; shift MSB in Carry
+	LD	A,(IX+34)	; load next byte random record
+	RLA			; shift Carry
+	PUSH	AF		; save it
+	AND	MAXEXT		; mask next extent
+	LD	C,A		; save it in C
+	POP	AF		; get byte
+	RLA			; shift 4 times
+	RLA
+	RLA
+	RLA
+	AND	00FH		; mask it
+	LD	B,A		; save data module number
+	LD	A,(IX+35)
+	LD	E,6		; set random record too large flag
+	CP	4		; test random record too large
+	JR	NC,LDFCB8	; ..if yes, then error
+	RLCA			; shift 4 times
+	RLCA
+	RLCA
+	RLCA
+	ADD	A,B		; add byte
+	LD	B,A		; save data module number in B
+	LD	(IX+NXTREC),D	; set next record count
+	LD	D,(IX+FCBMOD)	; get data module number
+	BIT	6,D		; test error random record
+	JR	NZ,LDFCB0	; ..if yes, then jump
+	LD	A,C		; get new extent number
+	CP	(IX+FCBEXT)	; compare with FCB
+	JR	NZ,LDFCB0	; ..if not equal, then open next extent
+	LD	A,B		; get new data module number
+	XOR	(IX+FCBMOD)	; compare with data module number
+	AND	MAXMOD		; mask it
+	JR	Z,LDFCB6	; ..if equal, then return
+LDFCB0:	BIT	7,D		; test FCB modified (write)
+	JR	NZ,LDFCB1	; ..if no, then jump
+	PUSH	DE		; save registers
+	PUSH	BC
+	CALL	CLOSE		; close extent
+	POP	BC		; restore registers
+	POP	DE
+	LD	E,3		; set close error
+	LD	A,(PEXIT)	; get exit code
+	INC	A
+	JR	Z,LDFCB7	; ..if error, then exit
+LDFCB1:	CALL	SETDME		; save data module and extent
+	CALL	SEAR15		; search next FCB
+	LD	A,(PEXIT)	; get error code
+	INC	A
+	JR	NZ,LDFCB5	; if no error, then exit
+	LD	A,(RDWR)	; get Read/Write flag
+	LD	E,4		; set read empty record
+	INC	A
+	JR	NZ,LDFCB7	; ..if read error, then jump
+	CALL	MAKES		; make new FCB
+	LD	E,5		; set make error
+	LD	A,(PEXIT)	; get error code
+	INC	A
+	JR	Z,LDFCB7	; ..if error, then exit
+	JR	LDFCB6		;   else, exit w/ zero set (no error)
+LDFCB5:	CALL	OPENF0		; open file
+LDFCB6:	JP	OPENX6		; set zero flag and clear error code
+LDFCB7:	LD	(IX+FCBMOD),0C0H	; set random record error
+LDFCB8:	LD	A,E		; get error code
+	LD	(PEXIT),A	; and save it
+	OR	A		; clear Zero flag
+SETB14:	SET	7,(IX+FCBMOD)	; set FCB/File not modified
+	RET			; and return to caller
+
+
+
+	;_______________________//  Non-Banked  //
+	CSEG
+
+	;-----
+	; calculate random record
+	;  in: HL= offset in FCB
+	;      DE= FCB pointer
+	; out: D= LSB random record
+	;      C= ISB
+	;      B= MSB
+CALRRC:	ADD	HL,DE		; pointer to FCB+15 or FCB+32
+	LD	A,(HL)		; get record number
+	LD	HL,12		; offset to extent number
+	ADD	HL,DE		; get pointer to extent byte
+	LD	D,A		; save record number
+	LD	A,(HL)		; get extent byte
+	AND	MAXEXT		; mask it (000eeeee)
+	RL	D		; shift MSB in Carry (Cy= R, D= rrrrrrr0)
+	ADC	A,0		; add Carry (00xeeeeex)
+	RRA			; shift 1 time (16 bits, 000xeeee)
+	RR	D		; D= xrrrrrrr
+	LD	C,A		; save ISB
+	INC	HL		; increment to data module number
+	INC	HL
+	LD	A,(HL)		; get data module number 00mmmmmmm
+	RRCA			; divide module by 16
+	RRCA
+	RRCA
+	RRCA
+	PUSH	AF		; save it mmmm00mm
+	AND	03H		; mask for maximum module
+	LD	B,A		; save it 000000mm
+	POP	AF		; get LSB
+	AND	0F0H		; mask it mmmm0000
+	ADD	A,C		; add with ISB mmmxeeee
+	LD	C,A		; save ISB
+	RET	NC		; no Carry then return
+	INC	B		; increment MSB 000000mm
+	RET			; and return to caller
+				; 000000mm mmmxeeee xrrrrrrr
+
+
+	;-----
+	; clear/fill memory
+CLRM4:	LD	B,4		; clear memory area (used by MAKES and WRITSX)
+
+CLRMEM:	XOR	A		; clear A
+
+	; fill memory with byte in A
+	;  in:  A= byte
+	;       B= counter (# bytes)
+	;      HL= destination
+FILLM:	LD	(HL),A		; store byte
+	INC	HL		; increment pointer
+	DJNZ	FILLM		; and clear all bytes
+	RET
+
+
+	;-----
+	; check/update !!!TIME&.DAT checksum
+	; calc checksum of 127 bytes, return with HL pointing to 128th byte
+	;  in: DIRBUF= pointer to T&D record
+	; out:  A= checksum
+	;      HL= points to checksum byte in record
+CKS127:	LD	HL,(DIRBUF)	; directory buffer pointer
+	XOR	A		; clear A
+	LD	B,127		; test first 127 bytes
+CKSLP:	ADD	A,(HL)		; sum all bytes to A
+	INC	HL
+	DJNZ	CKSLP
+	RET
+
+
+	;-----
+	; get word (16-bit value) indirectly
+	;  in: HL= base addr
+	;       A= offset
+	; out: HL= 16-bit value at offset addr
+	;      Z-Flag set if HL= 0
+GWHLA:	CALL	CALDI0		; add A to HL
+	LD	A,(HL)		; get low byte at memory location
+	INC	HL
+	LD	H,(HL)		; get high byte
+	LD	L,A
+	OR	H		; test if zero (set return status)
+	RET
+
+
+
+	;_______________________//  Banked  //
+	COMMON	/BANK2/
+
+	;-----
+	; test if Drive is valid
+	;  in: B= drive number
+	; out: Carry flag set (C) = ok, NC= not ok
+DRVOK:	LD	HL,(OZ3ENV)	; B/P Bios base +0x98 (addr Z3 ENV decriptor)
+	LD	A,H		; test if valid (<> zero)
+	OR	L
+	JR	Z,DRVOK1	; ..if not, jump exit (assume drive is valid)
+	LD	A,8		;   else, offset to Env type (ENV base +8)
+	CALL	CALDI0		; move ptr fwd
+	BIT	7,(HL)		; is it extended (=> 0x80) ?
+	JR	Z,DRVOK1	; ..if not, jump
+	LD	A,44		; move ptr fwd to DRVEC
+	CALL	GWHLA		; ..and get vector of valid drives in HL
+	LD	A,16		; set up loop counter
+	SUB	B		; adjust to drive in scope
+DRVOK0:	DEC	A		; counter -1
+	ADD	HL,HL		; "shift" MSB into Carry
+	JR	NZ,DRVOK0	; loop
+	RET			; ..and return with status in Carry
+DRVOK1:	SCF			; set return status (Carry set = Ok)
+	RET
+
+
+
+	;_______________________//  Non-Banked  //
+	CSEG
+
+	;-----
+	; test if current DU: is in Path
+	;  in: HL= path address
+	; out: B= current drive, C= current user
+	;      A= 0xFF, Z-Flag clear (NZ) if match or '$$'
+	;      Z-Flag set if no match
+DUPATH:	LD	BC,(USER)	; get default drive (B) and user number (C)
+	LD	A,(HL)		; get byte of path entry
+	OR	A		; test for end
+	RET	Z		; ..if yes, then return with Z-Flag set
+	CP	'$'		; test if current drive
+	JR	Z,DUPAT0	; ..if so, then jump
+	DEC	A		; decrement drive number of path entry
+	LD	B,A		; ..and save in B
+DUPAT0:	INC	HL		; advance pointer
+	LD	A,(HL)		; get user number
+	CP	'$'		; test if current user
+	JR	Z,DUPAT1	; ..if so, then jump
+	LD	C,A		;   else, save in C
+DUPAT1:	INC	HL		; advance pointer
+	OR	0FFH		; set exit code to 0xFF (match)
+	RET			; and return to caller
+
+
+	;--------------------------------------------------
+	; fn # 46 Return Free Space
+	;   enter: E= Disk Number,   exit: A= Error Code
+	;                                     Space in DMA+0..DMA+3
+	;--------------------------------------------------
+CMND46:	CALL	CMND14		; select disk from E register
+	CALL	SELSYB		; switch System bank
+	CALL	CMD46B		; ..and continue in Banked code
+	JP	DOSEXT1
+
+
+
+	;_______________________//  Banked  //
+	COMMON	/BANK2/
+
+	;--------------------------------------------------
+	; Return Free Space
+	; (continue CMND46)
+	;--------------------------------------------------
+CMD46B:	LD	HL,DFCALC
+	CALL	CLRM4		; clear 4 bytes
+	LD	DE,(MAXLEN)	; get maximum blocks-1
+	INC	DE		; +1
+	LD	HL,(ALV)	; get ptr to allocation vector
+
+	; process one byte of ALV - outer loop
+DFREE1:	LD	C,(HL)		; get bit pattern of allocation byte
+	PUSH	HL		; save pointer
+	LD	B,8		; process 8 bits
+DFREE2:	RL	C		; shift MSB to Carry
+	CCF			; invert
+	JR	NC,DFREE4	; ..if MSB was 1, then jump
+
+	; count zeros - inner loop
+	PUSH	BC
+	LD	B,4
+	LD	HL,DFCALC
+DFREE3:	LD	A,(HL)
+	ADC	A,0		; add Carry
+	LD	(HL),A		; ..and save back
+	INC	HL		; move ptr
+	DJNZ	DFREE3		; loop till done
+
+	POP	BC
+DFREE4:	DEC	DE		; decrease number of blocks
+	LD	A,E		; test if zero
+	OR	D
+	JR	Z,DFREE5	; ..if zero, exit inner loop
+	DJNZ	DFREE2
+	POP	HL		; restore ALV ptr
+	INC	HL		; move to next byte
+	JR	DFREE1		; ..and loop (outer)
+
+	; allocation is measured in blocks, convert to kB
+DFREE5:	POP	HL		; clear stack
+	LD	A,(NBLOCK)	; get block shift factor
+	SUB	3		;   (BSH= 3 -> 1k, 4 -> 2k, ...8 -> 32k)
+	JR	Z,DFREEX	; if BSH-3 = 0, then we're done
+
+	; multiply 32-bit (4 bytes)
+DFREE6:	LD	HL,DFCALC	; set ptr to data storage
+	LD	B,4		; bytes to work
+DFREE7:	RL	(HL)		; shift MSB into Carry
+	INC	HL		; move ptr
+	DJNZ	DFREE7		; ..and loop
+	DEC	A
+	JR	NZ,DFREE6	; if not zero, loop for next block size
+				; ..else, fall through and transfer data
+
+
+	; transfer to DMA using interbank move
+	; (destination could be in a disabled memory bank)
+DFREEX:	LD	A,(TPABNK)	; get TPA bank #
+	LD	B,A		; ..in B
+	LD	A,(OSYSBK)	; get SYS bank # (Bios base +0x83 SYSBNK)
+	LD	C,A		; ..in C
+	CALL	XMOVE		; call Bios fn #29 XMOVE, set banks for MOVE
+	LD	HL,DFCALC	; source address
+	LD	DE,(DMA)	; destination address
+	LD	BC,4		; bytes to move
+	JP	MOVE		; ..and do it (Bios fn #25)
+
+
+
+	;_______________________//  Banked Data Segment  //
+	COMMON	/B2RAM/
+
+	; Disk free calculation data area (4 bytes)
+DFCALC:	DEFS	4
+;	DEFB	0,0,0,0
+
+
+
+	;_______________________//  Non-Banked  //
+	CSEG
+
+	;--------------------------------------------------
+	; fn # 152 Parse FileSpec
+	;   enter: DE= FCB Address,   exit: A= Number of '?'s in Fn.Ft
+	;          String in DMA Buffer    DE= Address of delimiter char
+	;                              FCB+15= 0 if Parse Ok, 0FFH if Error(s)
+	;--------------------------------------------------
+CMD152:	PUSH	DE		; save ptr to FCB
+	XOR	A
+	LD	(DE),A		; clear FCB Drive field
+	INC	DE		; move ptr fwd
+	LD	A,' '		; prepare to init FCB name and type fields
+	LD	B,8+3
+CM152A:	LD	(DE),A
+	INC	DE
+	DJNZ	CM152A
+
+	; destination FCB initialized
+	POP	DE		; restore ptr to FCB
+	LD	HL,(DMA)	; get DMA address
+	LD	BC,(USER)	; get User number
+	LD	A,C		; ..in A
+	LD	(STATUS),A	;   and save as status
+	CALL	SCANF8		; place first token (8-bytes) in name field
+	CP	':'		; is the delimiter a Colon ?
+	LD	A,0		; prepare status flag for ok DU/DIR
+	JP	NZ,SCAN1	; ..if only a file name, then jump
+
+	INC	HL		; point to char after Colon
+	PUSH	HL
+	PUSH	DE
+	CALL	CMND49		; get address of Z3 Environment
+		; ##### CHECK: should jump further down ? (repeats CALL CMND49)
+	JR	Z,DUSCAN	; ..if none found, jump
+	LD	A,21		; offset to Z3NDIR (addr Named Dir Buffer)
+	CALL	GWHLA		; get vector at offset memory location
+	JR	Z,DUSCAN	; ..if address not valid, jump to DU scan
+	INC	DE
+
+	; scan Named Dir entries
+DIRS1:	CALL	DUPATH		; test if current DU: in Path
+	JR	Z,DUSCAN	; ..if not, then jump
+	PUSH	BC		; save DU
+	PUSH	HL		; save ptr to file name
+	PUSH	DE		; save ptr to NDR entry
+	LD	B,8		; max 8 chars
+DIRS2:	LD	A,(DE)		; get char
+	CP	(HL)		; compare to NDR entry
+	JR	NZ,DIRS3	; ..if no match, exit loop
+	INC	HL		;   else, point to next char
+	INC	DE
+	DJNZ	DIRS2		; loop
+
+DIRS3:	POP	DE		; restore regs
+	POP	HL
+	POP	BC
+	JR	Z,CHKVVC	; ..if ok, then jump
+	LD	BC,16		; 8 bytes name + 8 bytes password
+	ADD	HL,BC		; advance ptr
+	JR	DIRS1
+
+	; scan Drive/User
+DUSCAN:	CALL	CMND49		; get address of Z3 Environment
+	JR	Z,DUS0		; ..if none found, jump
+
+	LD	A,46		; offset to DU Flag
+	CALL	CALDI0		; move ptr fwd
+	LD	A,(HL)		; get byte at memory location
+	OR	A
+	JR	Z,DUSERR	; ..if zero, then jump
+				;   (1= ok to accept DU:, 0= not ok)
+
+	; no Z3 Envorionment, assume DU: form and scan/extract Drive/User
+DUS0:	LD	L,C
+	EX	DE,HL
+	CALL	DELIM
+	EX	DE,HL
+	CP	' '+1		; legal char ?
+	JR	C,DUSOK		; ..if only delimiter, jump w/ current DU
+	SUB	41H		; convert possible drive spec to number
+	JR	C,DUS1		; ..if less than 'A', must be digit
+
+	; set Drive number (0= A)
+	LD	B,A		; save drive in B
+	INC	DE		; point to next input char
+	LD	A,(DE)		; get char
+	CP	' '+1		; end of string ?
+	JR	C,DUCHEK	; ..if so, jump to check limits
+
+	; set User number
+DUS1:	LD	HL,2*256	; get up to 2 digits
+DUS1A:	LD	A,(DE)
+	CP	' '+1		; is it a delimiter ?
+	JR	C,DUS2		; ..if so, jump to end
+	SUB	'0'		; digit ?
+	JR	C,DUSERR	; ..if not, jump
+	CP	10		; number in range (0..9) ?
+	JR	NC,DUSERR	; ..if not, jump
+	LD	C,A		; save
+	LD	A,L		; ..and multiply old digit
+	ADD	A,A		; *2
+	ADD	A,A		; *4
+	ADD	A,L		; *5
+	ADD	A,A		; *10
+	ADD	A,C
+	LD	L,A
+	INC	DE		; advance to next byte
+	DEC	H		; count down
+	JR	NZ,DUS1A	; ..loop if more to go
+	LD	A,(DE)
+DUS2:	CP	' '		; is it the proper delimiter ?
+	JR	NZ,DUSERR	; ..if not, jump error exit
+	LD	C,L		; save good User in C
+
+
+	; BC now has parsed DU:, check legality
+DUCHEK:	LD	HL,(USER)	; get currently logged DU
+	OR	A
+	SBC	HL,BC		; same as that parsed ?
+	JR	Z,DUSOK		; ..if so, take good exit
+
+CHKVVC:	CALL	SELSYB		; switch System bank
+	CALL	DRVOK		; check if drive is valid
+	CALL	SELTPB		; switch back to TPA bank
+	JR	C,DUSOK
+
+DUSERR:	LD	BC,(USER)	; get current DU
+	DEFB	0F6H		; fall through with OR A,0AFH
+
+DUSOK:	XOR	A		; set return status OK
+	POP	DE
+	POP	HL
+	PUSH	AF
+	LD	A,B		; get drive #
+	INC	A		; change to A= 1 base
+	LD	(DE),A		; store in FCB+0
+	LD	A,C		; get User #
+	LD	(STATUS),A	; store in mem
+	CALL	SCANF8		; scan token (8-byte)
+	POP	AF		; restore A cleared
+				; ..and fall through
+
+
+	; skip to file type field
+	;  in: HL= ptr to next char
+	;      DE= ptr to DN field of FCB
+SCAN1:	PUSH	AF		; save error flag for exit
+	EX	DE,HL
+	LD	BC,8		; point to before file type field of FCB
+	ADD	HL,BC
+	EX	DE,HL		; Extract file type field
+	LD	B,3
+	LD	A,(HL)		; get the delimiter char
+	CP	'.'		; is it '.' ?
+	JR	NZ,SCAN2	; ..if no type, then jump
+	INC	HL		;   else, point to char after '.'
+	CALL	SCANF		;   ..and get file type
+SCAN2:	LD	(DEVAL),HL
+	INC	DE		; move ptr from last char of name to T1
+	INC	DE		; ..to T2
+	INC	DE		; ..to T3
+	INC	DE		; ..to EXM
+	XOR	A		; zero
+	LD	(DE),A		; store here at FCB+12 (EXM)
+	INC	DE		; move to S1
+	LD	A,(STATUS)	; get User number
+	LD	(DE),A		; ..and store it here at FCB+13 (S1)
+	INC	DE		; move ptr to S2
+	XOR	A		; zero
+	LD	(DE),A		; store here at FCB+14 (S2)
+	INC	DE		; move ptr to FCB+15
+	POP	AF		; restore error flag
+	LD	(DE),A		; ..and save it in FCB+15
+	RET
+
+
+	;-----
+	; scan up to 8 chars
+SCANF8:	XOR	A		; get a 0
+	LD	(PEXIT),A	; ..and clear question mark counter
+	LD	B,8		; scan for up to 8 chars
+				; ..fall through to main scan routine
+
+	; scan token with interpreting/expanding '*' and '?' wild cards
+	;  in:  B= max number of bytes
+	;      HL= ptr to token
+	;      DE= destination addr (FCB file name field)
+	; out: HL= ptr to terminating delimiter
+SCANF:	PUSH	DE		; preserve FCB address
+SCANF0:	INC	DE		; ptr to next byte in FCB
+	CALL	DELIM		; is it a delimiter ?
+	JR	Z,SCANF2	; ..if so, jump
+	INC	HL		;   else, point to next char
+	CP	'*'		; is (DE) a wild card ?
+	JR	NZ,SCANF1	; ..if not, continue
+	DEC	HL		;   else, back up to same char
+	LD	A,'?'		;   ..and expand with '?'
+
+SCANF1:	LD	(DE),A
+	CP	'?'		; is it wild ?
+	JR	NZ,SCNOQ	; ..if not, jump
+	PUSH	HL		;   else, save HL
+	LD	HL,PEXIT	; point to count storage
+	INC	(HL)		; ..and increment
+	POP	HL		; restore HL
+SCNOQ:	DJNZ	SCANF0		; ..loop till done
+	INC	DE		; then advance to next FCB char
+
+	; flush to next delimiter
+SCANF3:	CALL	DELIM
+	JR	Z,SCANFX	; ..if delimiter found, then jump
+	INC	HL		; point to next char
+	JR	SCANF3		; and loop
+
+	; preserve present char, and fill remaining chars in field w/ spaces
+SCANF2:	PUSH	AF		; save char
+SCANFA:	LD	A,' '		; store this char
+	LD	(DE),A		; ..in FCB field
+	INC	DE		; point to next
+	DJNZ	SCANFA		; loop till done
+	POP	AF		; restore char
+SCANFX:	POP	DE		; restore FCB address
+	RET			; ..and exit
+
+
+	; capitalize char, then fall through to check for delimiter
+DELIM:	LD	A,(HL)		; get char
+	CP	'a'		; less than small letter A ?
+	JR	C,SDELM
+	CP	'z'+1		; between small A and small Z ?
+	JR	NC,SDELM
+	AND	5FH		; remove bit 5 to capitalize
+
+	; check for delimiter
+	;  in: HL= ptr to char
+	; out:  A= addressed char
+	;       Zero Flag set (Z) if delimiter, end-of-line or cmd separator
+	;       Zero Flag cleard (NZ) if char is not a delimiter
+SDELM:	CP	'_'		; is it an Underscore ?
+	RET	Z
+	CP	'.'		; a Period ?
+	RET	Z
+	CP	','		; a Comma ?
+	RET	Z
+	CP	'>'		; greater than a Greater Sign ?
+	RET	NC		; ..if so, return
+	CP	':'		; is it any of  : ; < = >  ?
+	JR	NC,SDEL0	; ..if so, jump to set status
+	CP	' '		; is it less than a Space ?
+	RET	NC		; ..if so, return (Space has zero set)
+	XOR	A		;   else, must be less than Space,
+	RET			;   so return with zero in A
+SDEL0:	CP	A		; set Z-Flag retaining char
+	RET
+
+
+	;::::::::::::::::::::::::::::::::::::::::
+	;:::::  Time and Date Routines
+
+
+	;--------------------------------------------------
+	; fn # 98 Get time
+	;   enter: DE= Address to Put Time,   exit: A= Time/Date Code
+	;--------------------------------------------------
+CMD98A:	EX	DE,HL		; entry point for cmnd12
+
+CMD98:	LD	C,0		; set parameter to get time/date
+	DEFB	21H		; ..and fall through to GSTD (trashing HL)
+
+
+	;--------------------------------------------------
+	; fn # 99 Set time
+	;   enter: DE= Address of Time,   exit: A= Time/Date Code
+	;--------------------------------------------------
+CMD99:	LD	C,1		; set parameter to set time/date
+GSTD:	LD	HL,(GSTIME)	; get time/date get/set routine address
+	PUSH	HL		; ..to stack for pseudo 'Jump'
+DOTDER:	OR	0FFH		; save 1 T state while setting flags
+	RET			; vector to service routine
+
+
+	;--------------------------------------------------
+	; fn # 103 Set file stamp
+	;   enter: DE= Address of FCB,   exit: A= Time/Date Code
+	;          Stamp in DMA Buffer
+	;--------------------------------------------------
+	; wildcards allowed in FCB
+	; ##### ZSDOS-GP.Z80 (v1) refers to "10 byte stamp from DMA" ??
+CMD103:	LD	HL,(DMA)	; address DMA buffer
+	LD	DE,ZSSTMP	; time stamp buffer
+	CALL	STPCP0		; ..and copy
+
+
+	;--------------------------------------------------
+	; fn # 102 Get file stamp
+	;   enter: DE= Address of FCB,   exit: A= Time/Date Code
+	;                                      Stamp in DMA Buffer
+	;--------------------------------------------------
+	; wildcards allowed in FCB
+CMD102:	CALL	SELDRV		; select Drive in FCB
+				;  (also switches System bank)
+	JP	CMD103B		; copy stamp (..in Banked code)
+
+
+
+	;_______________________//  Banked  //
+	COMMON	/BANK2/
+
+	; ZSDOS2 supports DateStamper and P2DOS (CP/M+) file stamping.
+	; Internally, the Universal T&D format is used, and converted
+	; as needed when reading from / writing to disk. Similarly,
+	; all stamps are converted to/from the Universal stamp format
+	; (15 bytes packed BCD), and stuffed into ZSSTMP buffer.
+
+	;-----
+	; Universal Stamp format
+	; Bytes  0..4 Create      5..9 Access      10..14 Modify
+	;      | YY MM DD HH MM | YY MM DD HH MM | YY MM DD HH MM |
+	;
+	; YY MM DD HH MM SS   - Universal T&D format
+	; (all BCD, prefix 19 assumed for years 79-99, else 20)
+
+	;-----
+	; P2DOS (CP/M+) Stamp format
+	; Bytes  0..3 Create   4..7 Modify
+	;      | nn nn HH MM | nn nn HH MM |
+	;
+	; nnnn HH MM SS       - P2DOS (CP/M+) format
+	; (nnnn = binary number of das since 1 Jan 1978)
+	; (HH MM SS = time in BCD)
+
+
+	;--------------------------------------------------
+	; Get/Set file stamp
+	; (continue from CMD102/CMD103)
+	;--------------------------------------------------
+CMD102B:
+CMD103B: CALL	SRCT15		; find the FCB
+	JP	Z,DOTDER	; ..if not found, exit w/ error
+	LD	HL,GETSTR	; address of get time stamp routine
+	LD	A,(FUNCT)	; check function
+	CP	102		; get stamp ?
+	JR	Z,DOTDR3	; ..if yes, jump
+	LD	HL,PUTSTR	; address of put (set) time stamp routine
+	JR	STAMPT		; mask for enabled stamp type(s) in B
+STPMSK:	LD	A,(STFLAG)	; get time stamp flags
+	AND	B		; mask
+	RET	Z		; ..if not selected, then return
+
+	; enter here for stamp Create/Access/Modify
+STAMPT:	PUSH	HL
+	CALL	CHKRO1		; test for disk W/P but avoid error trap
+	POP	HL
+	JP	Z,DOTDER	; no stamp if disk is W/P
+DOTDR3:	CALL	GETDME		; get data module and extent number
+	JP	NZ,DOTDER	; ..if not extent 0 of module 0, then quit
+	JP	(HL)		;   else, continue in GETSTR/PUTSTR routine
+
+
+	;-----
+	; Stamp Create
+STCR:	CALL	P2CR		; call P2D Create routine
+	LD	B,0		; offset into stamp in B
+	JR	STT		; Stamp Update
+
+	;-----
+	; Stamp Modify
+STUP:	CALL	P2UP		; call P2D Update routine
+	LD	B,10		; offset into stamp in B
+	JR	STT		; Stamp Access
+
+	;-----
+	; Stamp Access
+STLA:	LD	B,5		; offset into stamp in B
+	LD	A,0FFH		; set correct value to validate status
+
+	; update stamp
+STT:	LD	(STATUS),A	; save first routine status
+	LD	C,2		; show as stamp
+	LD	A,(SECPNT)	; get sector pointer
+	ADD	A,3		; point to no date attribute
+	LD	L,A
+	LD	H,0
+	LD	DE,(DIRBUF)	; get Directory buffer pointer
+	ADD	HL,DE		; point to Dir entry
+	BIT	7,(HL)
+	LD	A,(STATUS)	; get prev routine status for possible ret
+	RET	NZ		; ..if no date attribute, return (don't update)
+	JR	STPSV0		;   else, jump to service routine
+
+
+	;-----
+	; get/put Stamp routines
+GETSTR:	CALL	GSTAMP		; get file stamp in Universal format
+	CP	1		; test if OK
+	JR	Z,GETST0	; ##### not needed if following code is removed
+
+		; ##### CHECK unreferenced code
+	LD	BC,0		; flag as read
+	CALL	STPSVC
+		; #####
+
+GETST0:	JP	STPCPY
+
+
+
+	;_______________________//  Non-Banked  //
+	CSEG
+
+STPCPY:	CALL	SELTPB		; select TPA bank
+	LD	HL,ZSSTMP	; time stamp buffer
+	LD	DE,(DMA)	; address DMA buffer
+STPCP0:	LD	BC,15		; copy 15 bytes
+	LDIR
+	RET
+
+
+
+	;_______________________//  Banked  //
+	COMMON	/BANK2/
+
+	RET			; ##### unreferenced, will not be executed
+
+	; get/put Stamp routines contd.
+PUTSTR:	CALL	PSTAMP		; put file stamp in Universal format
+	LD	BC,1		; flag as write
+				; ..and fall through
+
+
+	;-----
+	; Stamp service routine, combined get/put
+	;  in:  A= index to Dir entry (00H, 20H, 40H, 60H)
+	;       B= offset in stamp (0, 5, 10)
+	;       C= function (0= read, 1= write, 2= update)
+STPSVC:	LD	(STATUS),A	; save first routine status
+STPSV0:	LD	(RWCODE),BC	; save function code and sector offset
+	LD	BC,(TDFVCT)	; get T/D vector
+	CALL	GETCDM		; get mask for current Drive in HL
+	LD	A,H
+	AND	B
+	LD	H,A
+	LD	A,L
+	AND	C
+	OR	H		; test if Drive has T/D vector
+	JR	Z,STPSVE	; ..if it doesn't, jump error
+
+	CALL	DMADIR		; set DMA address to Directory buffer
+	LD	BC,(RECDIR)	; get current Directory record
+	XOR	A
+	SRL	B		; calculate buffer offset
+	RR	C		; divide record by two, lsb to carry
+	RRA			; place in msb of A
+	LD	HL,SECPNT	; get sector pointer
+	ADD	A,(HL)		; get offset to stamp in buffer
+	RRA			; divide by 2 (8 stamps/rec)
+	PUSH	AF		; save index for later
+	PUSH	BC		; ..and save relative record number
+
+	; now calculate record number needed
+	LD	HL,(NDIR0)	; first entry ALV buffer
+	LD	DE,(NMASK)	; mask number of blocks
+	INC	E		; now is number of records per block
+	XOR	A		; clear A (cheap zero)
+	LD	D,A		; ..to D for 16-bit math
+	LD	B,16		; check all bits
+STPSV1:	ADD	HL,HL		; shift MSB into Carry
+	JR	NC,STPSV2	; ..if bit was zero, then jump
+	EX	(SP),HL		;   else, get relative record
+	ADD	HL,DE		; add records for this directory block
+	EX	(SP),HL		; back to top-of-stack
+STPSV2:	DJNZ	STPSV1		; loop until done
+	POP	DE		; has actual record number now
+
+	CALL	STDIR1		; set track/sector and read
+	CALL	READ
+	POP	DE		; get index (was in A before)
+	AND	A		; test if read ok
+	JR	NZ,STPSVE	; ..if error, jump
+	CALL	CKS127		; checksum first 127 bytes
+	CP	(HL)		; test against DS's checksum
+	JR	NZ,STPSVE	; ..if error, jump exit
+	LD	BC,15		; size of Universal Stamp
+	LD	E,D		; index in E
+	LD	D,B		; D= 0
+	LD	HL,(DIRBUF)
+	ADD	HL,DE		; now pointing to correct stamp
+	LD	DE,ZSSTMP	; time stamp buffer
+	LD	A,(RWCODE)	; get Read/Write code
+	AND	A		; is it Get stamp ?
+	JR	NZ,PUTSTP	; ..if not, we're supposed to write
+	LDIR			; copy bytes
+	JR	STPSVX		; ..and exit
+
+
+	;-----
+	; copy Stamp from User DMA to local buffer
+PUTSTP:	SUB	2		; is this a simple put
+	JR	Z,UPSTMP	; ..if not, read the clock
+	EX	DE,HL		; swap pointers
+PUTS1:	LDIR			; move new stamp into place
+	CALL	CKS127		; checksum first 127 bytes of local buffer
+	LD	(HL),A		; ..and save checksum in last byte of record
+	INC	C		; flag as non-deferred (0 from ldir -> 01)
+	CALL	WRITE		; write sector to disk
+	AND	A		; test if error
+	JR	NZ,STPSVE
+STPSVX:	LD	A,1		; indicate all is well (OL status)
+	DEFB	01H		; ..fall through the LD A,FF with LD BC,FF3E
+
+	; return error status
+STPSVE:	LD	A,0FFH		; set status
+	PUSH	AF		; save return code
+	CALL	STDMA		; set DMA
+	POP	AF		; restore return code
+	CP	1		; is it OK ?
+	RET	Z		; ..if so, return
+	LD	A,(STATUS)	;   else, get first routine status
+	RET			; ..and return
+
+
+	;-----
+	; read Clock, place in proper Stamp field
+UPSTMP:	LD	D,A		; reg A= 0
+	LD	A,(STOFF)	; get offset in stamp
+	LD	E,A		; make word length in DE
+	ADD	HL,DE		; pointer to target address
+	PUSH	HL		; save it
+	OR	A		; is it Create time ?
+	LD	B,15		; prepare to clear 15 bytes
+	CALL	Z,CLRMEM	; ..if Create, then zero entire stamp entry
+	LD	DE,ZSDOSS	; point to Time and Date buffer
+	PUSH	DE
+	CALL	CMD98		; call fn 98 to read clock
+	POP	HL		; get buffer start
+	POP	DE		; get stamp target address
+	DEC	A		; was the clock read OK ?
+	JR	NZ,STPSVE	; ..if not, jump error exit
+	LD	BC,5		;   else, move 5 bytes
+	JR	PUTS1		; ..and finish up
+
+
+	;-----
+	; update Create/Modify field in T&D buffer
+P2CR:	LD	E,0		; set to Create field in stamp
+	DEFB	21H		; trash HL and fall through
+
+P2UP:	LD	E,4		; set to Modify field in stamp
+	CALL	SETREC		; calculate offset in stamp
+	LD	C,E		; move  offset to C (B= 0)
+	ADD	HL,BC		; destination now in HL
+	LD	DE,ZSDOSS	; set address to read time
+	PUSH	HL		; save destination address
+	PUSH	DE		; ..and source address
+	CALL	CMD98		; call fn 98 to get time
+	POP	DE		; restore addresses
+	POP	HL
+	DEC	A		; was the clock read OK ?
+	JR	NZ,NOTIM0	; ..if not, jump error exit
+
+		; ##### move label/target PSTMP1 up by one instruction
+		;       this CALL U2PTIM could be saved (3 bytes)
+	CALL	U2PTIM		;   else, convert DE= U-time -> HL= P-time
+	JR	PSTMP1		; jump to write FCB
+
+
+	;-----
+	; Put File Stamp in Universal format
+	; convert Create and Modify time fields from Universal T&D format
+	; to P2DOS (CP/M+) form and insert in Directory buffer, call WRFCB
+	; routine to write on exit
+	;  in: A= index to Dir entry (00H, 20H, 40H)
+	; out: A= time/date code
+PSTAMP:	CALL	SETREC		; calculate the Stamp area address for file
+	LD	DE,ZSSTMP	; time stamp buffer
+	CALL	U2PTIM		; convert Create (DE= U-time -> HL= P-time)
+	JR	NZ,NOTIM0	; ..if invalid date, jump error exit
+	INC	DE		; bypass Last Access field of input
+	INC	DE
+	INC	DE
+	INC	DE
+	INC	DE
+	CALL	U2PTIM		; convert Modify field
+PSTMP1:	JR	NZ,NOTIM0	; ..if invalid date, jump error exit
+	CALL	WRFCB		; write stamp
+OKRET:	LD	A,1		; set status ok and return
+	RET
+
+NOSTD:	POP	AF		; remove return address from Stack
+NOTIM0:	OR	0FFH		; set error flags
+	RET			; back to caller
+
+
+	;-----
+	; Get File Stamp in Universal format
+	; read Create and Modify stamps and convert to Universal T&D format,
+	; null the Access time field
+	;  in: A= index to Dir entry (00H, 20H, 40H)
+	; out: A= time/date code
+GSTAMP:	CALL	SETREC		; calculate source Stamp address in HL
+	LD	DE,ZSSTMP	; time stamp buffer
+	CALL	P2UTIM		; convert Create (HL= P-time -> DE= U-time)
+	LD	B,5		; zero Last Access field for this type
+	XOR	A		; clear A
+GSLOOP:	LD	(DE),A		; ..and poke a zero
+	INC	DE
+	DJNZ	GSLOOP		; ..in each location
+	CALL	P2UTIM		; convert Modify field
+	JR	OKRET		; ..jump to return OK status
+
+
+	;-----
+	; convert Universal T&D to P2DOS (CP/M+) form
+	;  in: DE= ptr to Universal T&D string
+	;      HL= ptr to destination buffer for P2DOS (CP/M+) T&D
+	; out:  A= 0, Zero Flag set (Z), if conversion OK
+	;       A= 0FFH, Zero Flag clear (NZ), error (dest nulled)
+	;      DE= ptr to Seconds byte in Universal T&D (not moved)
+	;      HL= ptr to Seconds byte in P2DOS (CP/M+) T&D (not filled)
+U2PTIM:	PUSH	HL		; save destination address
+	LD	A,(DE)		; get BCD year
+	LD	B,A		; ..to B
+	INC	DE		; advance to month
+	LD	A,(DE)		; get BCD month
+	OR	B		; is it invalid (YY = MM = 0) ?
+	JR	Z,NODATE	; ..if invalid stamp, jump to error exit
+	LD	A,B		; get BCD year again from B
+	CALL	BCDBIN		; convert year to binary
+	CP	78		; is it 20th century ?
+	JR	NC,YR19		; ..if so, jump
+	ADD	A,100		;   else, make it 21st century
+YR19:	LD	BC,1900		; set base century
+	ADD	A,C		; add current year to base
+	LD	C,A
+	LD	A,0
+	ADC	A,B
+	LD	B,A
+	LD	A,(DE)		; get BCD month
+	INC	DE
+	CALL	BCDBIN		; ..convert to binary
+	LD	H,A
+	LD	A,(DE)		; get day
+	INC	DE		; point to U-hours
+	PUSH	DE		; ..and save address on stack
+	CALL	BCDBIN		; convert day to Binary
+	LD	L,A		; day to L (Binary)
+
+	; check validity of day, month year   (CHKDAT from DATE.ASM)
+	; L= binary day, H= binary month, BC= binary year (1978..2077)
+	LD	A,H		; month
+	DEC	A		; convert to 0-11 range
+	CP	12		; is it a valid month ?
+	JR	NC,BADDAT	; ..if invalid, then jump error
+	PUSH	HL		; save day/month
+	LD	E,A		; month-1 in E
+	LD	D,0
+	LD	HL,DMTABLE	; set lookup table for months
+	ADD	HL,DE
+	LD	D,(HL)		; get days in this month
+	POP	HL		; restore day/month
+	CP	2-1		; is this February ?
+	CALL	Z,LEAPYR	; ..if so, check for leap year
+	JR	NZ,CHKDT0	;   else, jump
+	INC	D		; make 29 days
+CHKDT0:	LD	A,L		; check for day within range
+	DEC	A		; have day > 0, check for <= max. days
+	CP	D
+	JR	NC,BADDAT	; ..anything else is error
+
+	; calculate 16-bit binary date since 1978 in days, works til 2157
+	PUSH	HL		; save month (H) and day (L)
+	LD	H,0		; null out month, leaving just days
+	EX	DE,HL		; ..move to DE
+	LD	L,C		; year in HL
+	LD	H,B
+	LD	BC,1978		; start with base year in BC
+DAYS0:	OR	A
+	SBC	HL,BC		; is this the starting year ?
+	ADD	HL,BC
+	JR	Z,DAYS1		; ..if so, jump
+	PUSH	HL
+	LD	HL,365		; add days in non-leap year
+	ADD	HL,DE		; ..to total days count in DE
+	EX	DE,HL		;   ..and put new days total in DE
+	POP	HL
+	CALL	LEAPYR		; is this a leap year ?
+	INC	BC		; advance to next year
+	JR	NZ,DAYS0	; ..if not leap year, then loop
+	INC	DE		;   else, add a day
+	JR	DAYS0		;   ..then loop
+
+
+	; error routines, destination P2DOS field nulled
+NODATE:	INC	DE		; advance source ptr for same routine
+	INC	DE
+	DEFB	3EH		; ..fall through to 2nd POP with LD A,0D1H
+BADDAT:	POP	DE		; restore Universal T&D string (-> hours)
+	POP	HL		; restore destination addr for P2DOS date
+BADDA1:	CALL	CLRM4		; fill with 4 nulls
+	INC	DE		; ..advance ptr to exit position
+	INC	DE
+	DEC	A		; set error flags (A= 0FFH, Zero clear (NZ))
+	RET
+
+
+	; DE= total days (year + day), BC= binary year, (Stack)= month and day
+	;     first day 0001H : Su 01 Jan 1978
+	;      last day 8EADH : Fr 31 Dec 2077
+	; real last day FFFFH : Su 05 Jun 2157
+DAYS1:	POP	HL		; restore month and day
+	EX	DE,HL		; date to HL, month/day to DE
+	PUSH	HL		; ..and save binary date
+	LD	HL,DMTABLE	; address days-of-month table
+	LD	E,1
+DAYS2:	LD	A,D		; check for matching month
+	CP	E
+	JR	Z,DAYS4		; ..exit when match
+	LD	A,(HL)		; get days in this month
+	EX	(SP),HL		; put table on stack, binary date to HL
+	ADD	A,L		; add month's days to cum binary date
+	LD	L,A
+	LD	A,0
+	ADC	A,H
+	LD	H,A
+	LD	A,E		; check this month
+	CP	2		; is it February ?
+	CALL	Z,LEAPYR	; ..if so, check if leap year
+	JR	NZ,DAYS3A	; jump if not Feb and/or leap year
+	INC	HL		;   else, bump cum binary date by 29 Feb
+DAYS3A:	EX	(SP),HL		; put cum binary date to stack
+				; ..and days-of-month table to HL
+	INC	HL		; point to next month
+	INC	E		; bump index counter
+	JR	DAYS2		; ..and loop
+
+DAYS4:	POP	BC		; exit here, put cum binary date to BC
+	POP	DE		; restore Universal T&D string (-> Hrs)
+	POP	HL		; ..and destination address
+	LD	(HL),C		; put binary date in string
+	INC	HL
+	LD	(HL),B
+MOVHM:	INC	HL
+	EX	DE,HL		; swap src/dest pointers
+	LDI			; move BCD hours
+	LDI			; ..and BCD minutes
+	EX	DE,HL		; restore pointers into correct regs for exit
+	XOR	A		; set OK flags
+	RET			; and return
+
+
+	;-----
+	; calculate leap year correction
+	;  in: BC= year (binary, leap years = xxxxxx00B)
+	; out: Zero Flag set (Z) = correction necessary, reset (NZ) = no corr
+LEAPYR:	BIT	0,C		; get lower part of date
+	RET	NZ		; ..if not leap year, return
+	BIT	1,C		; test other bit
+	RET			; ..and return
+
+
+	;-----
+	; convert BCD to Binary
+	;  in: A= BCD digit
+	; out: A= binary number
+BCDBIN:	OR	A		; test if zero
+	RET	Z		; ..if so, return (it's the same)
+	PUSH	BC		; save register
+	LD	B,0		; set counter
+BCDBI0:	INC	B		; bump counter
+	SUB	1		; count down BCD
+	DAA
+	JR	NZ,BCDBI0	; ..till all gone
+	LD	A,B
+	POP	BC
+	RET
+
+
+	;----
+	; convert Binary to BCD
+	;  in: A= byte to be converted
+	; out: A= two packed BCD digits
+	; Convert byte in A register to two packed BCD digits
+BINBCD:	PUSH	BC		; save register
+	LD	B,0FFH		; preset counter
+BINBCL:	INC	B		; bump counter output
+	SUB	10
+	JR	NC,BINBCL	; loop bumping counter till no more 10's
+	ADD	A,10		; ..correct for underflow
+	LD	C,A		; save low nybble here for a while
+	LD	A,B		; ..and bring high nybble in A
+	ADD	A,A		; move it into position
+	ADD	A,A
+	ADD	A,A
+	ADD	A,A
+	ADD	A,C		; add in low nybble
+	POP	BC		; restore regs
+	RET
+
+
+	;-----
+	; convert P2DOS (CP/M+) form to Universal T&D string
+	;  in: HL= ptr to P2DOS (CP/M+) T&D
+	;      DE= ptr to destination buffer for Universal T&D
+	; out:  A= 0, Zero Flag set (Z), if conversion OK
+	;       A= 0FFH, Zero Flag clear (NZ), error (dest nulled)
+	;      HL= ptr to Seconds byte in P2DOS (CP/M+) T&D (not moved)
+	;      DE= ptr to Seconds byte in Universal T&D (not filled)
+P2UTIM:	PUSH	DE		; save destination addr
+	LD	E,(HL)		; get binary date to DE
+	INC	HL
+	LD	D,(HL)
+	INC	HL
+	EX	DE,HL		; put binary day/date in HL, P2D ptr in DE
+	LD	A,H		; check for valid entry
+	OR	L		; is date present ?
+	JR	NZ,P2UTI0	; ..if not null, then jump
+	POP	HL		; get destination addr back
+	LD	B,5
+	CALL	BADDA1		; ..and null the U-time field
+	EX	DE,HL		; put pointers in correct regs
+	RET			; ..and return to caller
+
+P2UTI0:	PUSH	DE		; save P2D pointer (-> Min)
+	LD	BC,1978		; beginning year
+DMJ0:	LD	DE,365		; set days in normal year
+	CALL	LEAPYR		; check for leap year
+	JR	NZ,DMJ1		; ..if not leap year, then jump
+	INC	DE		;   else, add one day
+DMJ1:	OR	A		; when # of days left..
+	SBC	HL,DE		; ..is less than days in year..
+	JR	C,DMJ2		;   ..year is in HL, so exit
+	JR	Z,DMJ2		;   ..or if last day of year
+	INC	BC		; bump starting year
+	JR	DMJ0		; ..and back for another try
+
+	; BC= binary year, HL= remaining days
+DMJ2:	ADD	HL,DE		; compensate for underflow
+	LD	A,1		; start with month 1 (Jan)
+	LD	D,0		; prepare for 16-bit math
+	PUSH	HL		; save days remaining
+	LD	HL,DMTABLE	; address days-of-month table
+DMJ3:	LD	E,(HL)		; get days in current month to E
+	CP	2		; is it February ?
+	CALL	Z,LEAPYR	; ..if so, check for leap year
+	JR	NZ,DMJ4		; ..if not leap year, then jump
+	INC	E		;   else, make 29 days
+DMJ4:	EX	(SP),HL		; swap ptr (HL) with days remaining (Stack)
+	OR	A
+	SBC	HL,DE		; subtract days in month from remaining days
+	JR	C,DMJ5		; ..if we've gone too far, then exit
+	JR	Z,DMJ5		;   ..or just far enough (last day of month)
+	EX	(SP),HL		; swap back
+	INC	HL		; point to next month in table
+	INC	A		; bump month counter
+	JR	DMJ3		; ..and try again
+
+	; arrive here with binary year on Stack, relative month in A (Jan = 1),
+	; days in that month in E, and binary year in BC
+DMJ5:	ADD	HL,DE		; compensate for underflow
+	EX	(SP),HL		; ..and put back on Stack
+	POP	HL		; restore day in L
+	CALL	BINBCD		; convert month (in A) to BCD
+	LD	H,B		; ..moving year to HL
+	LD	B,A
+	LD	A,L		; convert day
+	LD	L,C
+	CALL	BINBCD		; ..to BCD
+	LD	C,A
+	LD	DE,100		; subtract centuries, one by one..
+DMJ7A:	OR	A
+	SBC	HL,DE
+	JR	NC,DMJ7A	; ..until we go too far
+	ADD	HL,DE		; then correct for underflow
+	LD	A,L		; get year (tens and ones)
+	CALL	BINBCD		; ..to BCD
+	POP	DE		; restore P2D pointer (-> Min)
+	POP	HL		; get Universal T&D string address
+	LD	(HL),A		; store years
+	INC	HL
+	LD	(HL),B		; ..months
+	INC	HL
+	LD	(HL),C		; ..days
+	CALL	MOVHM		; store hours and minutes, and set flags
+	EX	DE,HL		; put U-time exit address in DE
+	RET			; ..and finish up elsewhere
+
+
+	;------
+	; calculate offset within T&D entry, if one exists
+	; out: HL= ptr to first byte of Create field
+SETREC:	LD	HL,(DIRBUF)
+	LD	BC,60H		; offset to Time and Date fields
+	ADD	HL,BC
+	LD	A,(HL)		; get byte
+	SUB	21H		; is TimeStamping present
+	JP	NZ,NOSTD	; ..if not, quit here
+
+	LD	A,(SECPNT)	; get sector pointer
+	RRCA			; shift 2 times
+	RRCA
+	LD	C,A		; save temporarily
+	RRCA			; shift 2 more times
+	RRCA
+	ADD	A,C		; ..and add in again
+	LD	C,A		; set for offset (C= 0, 10, 20)
+	ADD	HL,BC		; add offset
+	INC	HL		; ..and bump to Create Time start
+	XOR	A		; set return status OK
+	RET
+
+	; day-of-month table
+DMTABLE: DEFB	31,28,31,30,31,30,31,31,30,31,30,31
+
+
+
+	;_______________________//  Non-Banked  //
+	CSEG
+
+	;-----
+	; JP (HL) with bank context switching
+JUMPHL:	CALL	RETMEM		; get current mem bank (BIOS fn #39 RETMEM)
+	LD	(CURBNK),A	; save it
+	CALL	SELTPB		; select TPA bank
+	CALL	JPHL		; do the actual JP (HL)
+	LD	A,(CURBNK)	; get bank # back
+	JP	SELMEM		; select mem bank again (BIOS fn #27 SELMEM)
+				; ..and let return from there
+JPHL:	JP	(HL)
+
+CURBNK:	DEFS	1
+
+
+
+	;_______________________//  Non-Banked  //
+	CSEG			; technically not needed
+				; but necessary to assemble identical REL file
+
+	;::::::::::::::::::::::::::::::::::::::::
+	;:::::  Memory Bank Switching Routines
+
+	; bring SYSBNK into context (Banked mode)
+SELSYB:	PUSH	AF
+	LD	A,(OSYSBK)	; B/P Bios base +0x83 (offset SYSBNK)
+	JR	SELBNK		; switch bank
+
+	; bring TPABNK into context (Non-banked mode)
+SELTPB:	PUSH	AF
+	LD	A,(TPABNK)	; get TPA bank number
+				; ..and fall through
+
+	; select memory bank
+SELBNK:	CALL	SELMEM		; BIOS fn #27 SELMEM (A= bank #)
+	POP	AF
+	RET
+
+
+;::::: DATA AREA (in CSEG)
+
+PATHAD:	DEFB	1,0		; Internal path - Drive A, User 0
+	DEFB	0,0		; blank entry
+	DEFB	0,0		; blank entry
+	DEFB	0		; ..and ending null
+
+	;-----
+
+TDFVCT:	DEFW	0		; time and date vector
+
+	;-----
+
+LOGIN:	DEFW	0		; Login vector
+DSKWP:	DEFW	0		; Disk write protect vector
+HDLOG:	DEFW	0		; Fixed disk login vector
+
+
+	END
+
+
+;************************************************************************
+; Remarks jxl:
+;   When assembled as M-REL, this source file produces an _exact_ copy
+; of ZS227G.ZRL included in available B/P Bios package(s).
+;   Compared to v1 (ZSDOS-GP.Z80) many code portions are unaltered, or
+; show only slight modifications. Major changes result from banking and
+; addition of universal T&D stamp routines, supporting DateStamper
+; as well as P2DOS (CP/M+) stamps.
+;   Besides basic functionality (e.g. error handling), all I/O routines
+; are located in non-banked memory. Many Disk routines begin in non-banked
+;  memory with just a small footprint, and are continued in banked memory.
+; This is also the case for T&D stamp routines. With the exception of
+; 4 bytes stored in /B2RAM/, all data bytes are located in non-banked
+; CSEG code segment.
+;
+;   A comment on function 152 Parse FileSpec: ZCPR 4.1 (Z41.ZRL) relies
+; on that function. Thus, it cannot be removed. Even though most probably
+; no other application might use it. Currently, the entire function is
+; located in non-banked memory. A considerable amount of space could be
+; reclaimed by moving this function (or parts of it) to banked memory.
+;
+;   Possible optimisations noticed during disassembly are marked with
+; "#####" in the comment. Speaking of which - non-banked and banked parts
+; need to be sector-aligned, ie. BPBUILD fills the remainder of the last
+; 128-byte block with zeros. In its current state, the non-banked part
+; leaves 71 bytes unused. Or, in other words, a block could be saved
+; if 57 bytes could be eliminated and/or moved to banked code section.
+;************************************************************************
