@@ -97,5 +97,3 @@
 97	"EOF in #asm"
 98	"Too many cases in switch"
 99	"unexpected EOF"
-
-
