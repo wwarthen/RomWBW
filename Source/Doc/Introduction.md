@@ -4,7 +4,7 @@ $include{"Book.h"}$
 # Overview
 
 RomWBW software provides a complete, commercial quality
-implementation of CP/M (and workalike) operating systems and
+implementation of CP/M (and work-alike) operating systems and
 applications for modern Z80/180/280 retro-computing hardware systems.
 
 A wide variety of platforms are supported including those
@@ -174,6 +174,9 @@ There are several documents that form the core of the RomWBW documentation:
 * $doc_sys$ discusses much of the internal design and construction
   of RomWBW.  It includes a reference for the RomWBW HBIOS API
   functions.
+
+An online HTML version of this documentation is hosted at
+<https://wwarthen.github.io/RomWBW>.
 
 Each of the operating systems and ROM applications included with RomWBW
 are sophisticated tools in their own right. It is not reasonable to

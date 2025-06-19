@@ -11,7 +11,7 @@ This is the Jun 2, 2025 update 19 released by Tony Nicholson who currently
 maintains HI-TECH C at https://github.com/agn453/HI-TECH-Z80-C.
 
 The manual is available in the Doc/Language directory,
-HI-TECH Z80 C Compiler Manual.txt
+HI-TECH Z80 C Compiler Manual.txt.
 
 A good blog post about the HI-TECH C Compiler is available at
 https://techtinkering.com/2008/10/22/installing-the-hi-tech-z80-c-compiler-for-cpm/.
@@ -45,3 +45,9 @@ The enhanced files are:
 
 A thread discussing this enhanced version of HI-TECH C is found at
 https://groups.google.com/g/rc2014-z80/c/sBCCIpOnnGg.
+
+One of the size optimizations of P1.COM is the removal of the textual
+warning and error messages.  The code number for each of these
+messages will still be printed.  The textual description for all of
+these warnings/errors can be found in the Doc/Language directory,
+HI-TECH Z80 C Compiler Messages.txt.

@@ -1054,7 +1054,7 @@ from his GitHub repository at <https://github.com/Laci1953/Cowgol_on_CP_M>.
 The primary distribution site for Cowgol 2.0 is at
 <https://github.com/davidgiven/cowgol>.
 The user manual is available in the Doc/Language directory
-Cowgol Language.pdf
+Cowgol Language.pdf.
 
 The following files are found in
 
@@ -1190,7 +1190,9 @@ currently maintains HI-TECH C at
 <https://github.com/agn453/HI-TECH-Z80-C>.
 
 The manual is available in the Doc/Language directory,
-HI-TECH Z80 C Compiler Manual.txt
+HI-TECH Z80 C Compiler Manual.txt.  A textual description of all error
+and warning messages is found in the same directory, HI-TECH Z80 C
+Compiler Messages.txt. 
 
 A good blog post about the HI-TECH C Compiler is available at
 <https://techtinkering.com/2008/10/22/installing-the-hi-tech-z80-c-compiler-for-cpm>.
