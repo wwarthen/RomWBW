@@ -10,7 +10,7 @@ FROM ubuntu:jammy-20240111 as basebuilder
 # After you have built the above image (called romwbw-chain), you can use it to compile and build the RomWBW images
 # as per the standard make scripts within RomWBW.
 # Start a new terminal, cd to where you have clone RomWBW, and then run this command: 
-# docker run -v ${PWD}:/src/ --privileged=true -u $(id -u ${USER}):$(id -g ${USER}) -it romwbw-chain:latest
+# docker run --rm -v ${PWD}:/src/ --privileged=true -u $(id -u ${USER}):$(id -g ${USER}) -it romwbw-chain:latest
 
 # you can now compile and build the required images:
 
