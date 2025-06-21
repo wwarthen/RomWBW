@@ -169,6 +169,9 @@ Source/Fonts/font8x16u.asm
 Source/Fonts/font8x8c.asm
 Source/Fonts/font8x8c.bin
 Source/Fonts/font8x8u.asm
+Source/Fonts/font6x8c.asm
+Source/Fonts/font6x8c.bin
+Source/Fonts/font6x8u.asm
 Source/Fonts/fontcgac.asm
 Source/Fonts/fontcgac.bin
 Source/Fonts/fontcgau.asm
