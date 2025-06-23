@@ -5,7 +5,7 @@ MOREDIFF = game.bin hbios_rom.bin nascom.bin usrrom.bin \
 
 DEST = ../../Binary
 TOOLS =../../Tools
-OTHERS =  *.img *.rom *.com *.upd *.bin *.hex cpm.sys zsys.sys Build.inc font*.asm *.dat hbios_env.sh netboot.mod
+OTHERS =  *.img *.rom *.com *.upd *.bin *.hex cpm.sys zsys.sys Build.inc font*.asm *.dat hbios_env.sh
 
 # DIFFMAKE = 1
 
@@ -25,7 +25,6 @@ include $(TOOLS)/Makefile.inc
 
 FONTS := font6x8c.asm font6x8u.asm font8x8c.asm font8x8u.asm \
 	font8x11c.asm font8x11u.asm font8x16c.asm font8x16u.asm
-	
 
 ifeq ($(CPUFAM),2)
 	TASM=$(BINDIR)/uz80as -t hd64180
@@ -33,7 +32,7 @@ else ifeq ($(CPUFAM),3)
 	TASM=$(BINDIR)/uz80as -t z280
 endif
 
-DEPS=prereq dbgmon.bin romldr.bin nascom.bin tastybasic.bin game.bin eastaegg.bin updater.bin sysconf.bin sysconf.com usrrom.bin
+DEPS=prereq dbgmon.bin romldr.bin nascom.bin tastybasic.bin game.bin eastaegg.bin updater.bin sysconf.bin sysconf.com usrrom.bin romfonts.bin
 
 ifeq ($(ROM_PLATFORM),UNA)
 	ROMDEPS=romldr.bin dbgmon.bin
@@ -44,8 +43,18 @@ else
 endif
 
 ifeq ($(ROM_PLATFORM),S100)
-	ROMDEPS += s100mon.bin
+	HWMON=s100mon.bin
+else
+	HWMON=hwmon.bin
 endif
+
+ifeq ($(ROM_PLATFORM),DUO)
+	NETBOOT=netboot-duo.mod
+else
+	NETBOOT=netboot-mt.mod
+endif
+
+DEPS += $(HWMON) $(NETBOOT)
 
 ROMNAME=${ROM_PLATFORM}_${ROM_CONFIG}
 
@@ -61,18 +70,9 @@ ROMNAME=${ROM_PLATFORM}_${ROM_CONFIG}
 $(OBJECTS) : $(ROMDEPS)
 	@cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$(BIOS).bin ../CPM22/cpm_$(BIOS).bin >rom1.bin
 	cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$(BIOS).bin >appboot.bin
-	if [ $(ROM_PLATFORM) = DUO ] ; then \
-		cat netboot-duo.mod >netboot.mod ; \
-	else \
-		cat netboot-mt.mod >netboot.mod  ; \
-	fi
 	if [ $(ROM_PLATFORM) != UNA ] ; then \
-		cat camel80.bin nascom.bin tastybasic.bin game.bin eastaegg.bin netboot.mod updater.bin sysconf.bin usrrom.bin >rom2.bin ; \
-		if [ $(ROM_PLATFORM) = S100 ] ; then \
-			cat s100mon.bin >rom3.bin ; \
-		else \
-			>rom3.bin ; \
-		fi ; \
+		cat camel80.bin nascom.bin tastybasic.bin game.bin eastaegg.bin $(NETBOOT) updater.bin sysconf.bin usrrom.bin >rom2.bin ; \
+		cat $(HWMON) romfonts.bin >rom3.bin ; \
 		for f in hbios_rom.bin rom1.bin rom2.bin rom3.bin ; do \
 			srec_cat $$f -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o $$f -Binary ; \
 		done \
@@ -135,6 +135,9 @@ dbgmon.bin:	build.inc
 nascom.bin:	build.inc
 eastaegg.bin:	build.inc
 updater.bin:	build.inc
+romfonts.bin:	build.inc
+hwmon.bin:	build.inc
+s100mon.bin:	build.inc
 
 dumps:
 	for i in $(MOREDIFF) ; do \
