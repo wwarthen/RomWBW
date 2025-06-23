@@ -23,8 +23,9 @@ endif
 
 include $(TOOLS)/Makefile.inc
 
-FONTS := font8x11c.asm font8x11u.asm font8x16c.asm font8x16u.asm font8x8c.asm font8x8u.asm \
-	font6x8c.asm font6x8u.asm fontcgac.asm fontcgau.asm fontvgarcc.asm fontvgarcu.asm
+FONTS := font6x8c.asm font6x8u.asm font8x8c.asm font8x8u.asm \
+	font8x11c.asm font8x11u.asm font8x16c.asm font8x16u.asm
+	
 
 ifeq ($(CPUFAM),2)
 	TASM=$(BINDIR)/uz80as -t hd64180

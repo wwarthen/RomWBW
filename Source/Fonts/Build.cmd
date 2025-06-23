@@ -8,7 +8,7 @@ set PATH=%TOOLS%\lzsa;%TOOLS%\fonttool;%PATH%
 echo.
 echo Preparing compressed font files...
 
-for %%f in (font6x8 font8x8 font8x11 font8x16 fontcga fontvgarc) do call :genfont %%f
+for %%f in (font6x8 font8x8 font8x11 font8x16) do call :genfont %%f
 
 goto :eof
 
