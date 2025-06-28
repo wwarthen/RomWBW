@@ -290,8 +290,8 @@ please let me know if I missed you!
   - significant content in the Disk Catalog and User Guide
   - creation of the Introduction and Hardware documents
   - Z3PLUS operating system disk image
-  - COPYSL utility
-  - SLABEL utility
+  - COPYSL, and SLABEL utilities
+  - Display of bootable slices via "S" command during startup
   - a feature for RomWBW configuration by NVRAM
   - the /B bulk mode of disk assignment to the ASSIGN utility
 

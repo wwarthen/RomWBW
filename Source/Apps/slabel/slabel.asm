@@ -4,6 +4,9 @@
 ;==============================================================================
 ;
 ; Author: Mark Pruden
+;
+; This is a SUPERSET of INVNTSLC.ASM -> Please See this program also when
+; making changes, as code ( in routine prtslc: ) exists there also
 ;______________________________________________________________________________
 ;
 ; Usage:

@@ -71,7 +71,7 @@ if %Platform%==DUO (
 )
 
 ::
-:: Bring the previously build font files into this directory 
+:: Bring the previously build font files into this directory
 ::
 
 copy ..\Fonts\font*.asm . || exit /b
@@ -91,6 +91,7 @@ tasm -t%CPUType% -g3 -dAPPBOOT hbios.asm hbios_app.bin hbios_app.lst || exit /b
 call :asm dbgmon || exit /b
 call :asm romldr || exit /b
 
+call :asm invntslc || exit /b
 call :asm eastaegg || exit /b
 call :asm nascom || exit /b
 :: call :asm tastybasic || exit /b
@@ -124,7 +125,7 @@ if %Platform%==S100 (
 
 copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_wbw.bin + ..\cpm22\cpm_wbw.bin rom1.bin || exit /b
 copy /b ..\Forth\camel80.bin + nascom.bin + ..\tastybasic\src\tastybasic.bin + game.bin + eastaegg.bin + %NETBOOT% + updater.bin + sysconf.bin + usrrom.bin rom2.bin || exit /b
-copy /b %HwMon% + romfonts.bin rom3.bin
+copy /b %HwMon% + invntslc.bin + romfonts.bin rom3.bin
 copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_wbw.bin appboot.bin || exit /b
 
 ::
