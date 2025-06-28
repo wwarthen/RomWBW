@@ -625,6 +625,8 @@ runcmd0:
 	cp	'R'			; R = reboot system
 	jp	z,reboot		; if so, do it
 #if (BIOS == BIOS_WBW)
+	cp	'S'			; S = Slice Inventory
+	jp	z,slclst		; if so, do it
 	cp	'I'			; C = set console interface
 	jp	z,setcon		; if so, do it
 	cp	'V'			; V = diagnostic verbosity
@@ -632,18 +634,8 @@ runcmd0:
 #endif
 ;
 	; Attempt ROM application launch
-	ld	ix,(ra_tbl_loc)		; point to start of ROM app tbl
-	ld	c,a			; save command in C
-runcmd1:
-	ld	a,(ix+ra_conkey)	; get match char
-	and	~$80			; clear "hidden entry" bit
-	cp	c			; compare
-	jp	z,romload		; if match, load it
-	ld	de,ra_entsiz		; table entry size
-	add	ix,de			; bump IX to next entry
-	ld	a,(ix)			; check for end
-	or	(ix+1)			; ... of table
-	jr	nz,runcmd1		; loop till done
+	call	findcon			; find the application from console Key in A REG
+	jp	z,romload		; if match found, then load it
 ;
 	; Attempt disk boot
 	ld	de,cmdbuf		; start of buffer
@@ -905,6 +897,12 @@ applst2:
 devlst:
 	jp	prtall			; do it
 ;
+; Slice list
+;
+slclst:
+	ld	a,'S'			; "S"lice Inv App
+	jp	romcall			; Call a Rom App with Return
+;
 ; Set console interface unit
 ;
 #if (BIOS == BIOS_WBW)
@@ -1054,6 +1052,27 @@ reboot:
 #endif
 ;
 ;=======================================================================
+; Call a ROM Application (with return)
+; This is same as romload: but doesnt display load messages
+; Intended for Utility applications (part of RomWBW) not third part apps
+; these apps are on Help menu, hidden from Application List
+; Parameters A - The app to call.
+;=======================================================================
+;
+romcall:
+	call	findcon			; find the application based on A reg
+	ret	nz			; if not found then return to prompt
+;
+	call	romcopy			; Copy ROM App into working memory
+;
+	ld	l,(ix+ra_ent)		; HL := app entry address
+	ld	h,(ix+ra_ent+1)		; IX register returned from findcon
+	jp	(hl)			; call to the routine.
+	;
+	; NOTE It is assumed the Rom App should perform a RET,
+	; returning control to the caller of this sub routine.
+;
+;=======================================================================
 ; Load and run a ROM application, IX=ROM app table entry
 ;=======================================================================
 ;
@@ -1066,36 +1085,49 @@ romload:
 	ld	h,(ix+ra_name+1)
 	call	pstr
 ;
-	;ld	hl,msg_load		; point to load message
-	;call	dsky_show		; display message
 	ld	c,DSKY_MSG_LDR_LOAD	; point to load message
 	call	dsky_msg                ; display message
 ;
+	call	romcopy			; Copy ROM App into working memory
+	ld	a,'.'			; dot character
+	call	cout			; show progress
+;
+	ld	c,DSKY_MSG_LDR_GO	; point to go message
+	call	dsky_msg                ; display message
+;
+	ld	l,(ix+ra_ent)		; HL := app entry address
+	ld	h,(ix+ra_ent+1)		; ...
+	jp	(hl)			; go
+;
+;=======================================================================
+; Routine - Copy Rom App from Rom to it's running location
+; param : IX - Pointer to the Rom App to copy into RAM
+;=======================================================================
+;
+romcopy:
+;
 #if (BIOS == BIOS_WBW)
 ;
-	; Copy image to it's running location
 	ld	a,(ix+ra_bnk)		; get image source bank id
 	cp	bid_cur			; special value?
-	jr	nz,romload1		; if not, continue
+	jr	nz,romcopy1		; if not, continue
 	ld	a,(bid_ldr)		; else substitute
-romload1:
+romcopy1:
 	push	af			; save source bank
+	;
 	ld	e,a			; source bank to E
 	ld	d,BID_USR		; dest is user bank
 	ld	l,(ix+ra_siz)		; HL := image size
 	ld	h,(ix+ra_siz+1)		; ...
 	ld	b,BF_SYSSETCPY		; HBIOS func: setup bank copy
 	rst	08			; do it
-	ld	a,'.'			; dot character
-	call	cout			; show progress
+	;
 	ld	e,(ix+ra_dest)		; DE := run dest adr
 	ld	d,(ix+ra_dest+1)	; ...
 	ld	l,(ix+ra_src)		; HL := image source adr
 	ld	h,(ix+ra_src+1)		; ...
 	ld	b,BF_SYSBNKCPY		; HBIOS func: bank copy
 	rst	08			; do it
-	ld	a,'.'			; dot character
-	call	cout			; show progress
 ;
 	; Record boot information
 	pop	af			; recover source bank
@@ -1104,8 +1136,6 @@ romload1:
 	ld	b,BF_SYSSET		; HBIOS func: system set
 	ld	c,BF_SYSSET_BOOTINFO	; BBIOS subfunc: boot info
 	rst	08			; do it
-	ld	a,'.'			; dot character
-	call	cout			; show progress
 ;
 #endif
 ;
@@ -1121,8 +1151,6 @@ romload1:
 	ld	bc,$01FB		; UNA func: set bank
 	ld	de,(bid_ldr)		; select user bank
 	rst	08			; do it
-	ld	a,'.'			; dot character
-	call	cout			; show progress
 ;
 	; Copy image to running location
 	ld	l,(ix+ra_src)		; HL := image source adr
@@ -1132,15 +1160,11 @@ romload1:
 	ld	c,(ix+ra_siz)		; BC := image size
 	ld	b,(ix+ra_siz+1)		; ...
 	ldir				; copy image
-	ld	a,'.'			; dot character
-	call	cout			; show progress
 ;
 	; Switch back to user bank
 	ld	bc,$01FB		; UNA func: set bank
 	ld	de,(bid_ldr)		; select user bank
 	rst	08			; do it
-	ld	a,'.'			; dot character
-	call	cout			; show progress
 ;
 	; Record boot information
 	ld	de,(bid_ldr)		; original bank
@@ -1150,15 +1174,7 @@ romload1:
 ;
 #endif
 ;
-	;ld	hl,msg_go		; point to go message
-	;call	dsky_show		; display message
-	ld	c,DSKY_MSG_LDR_GO	; point to go message
-	call	dsky_msg                ; display message
-;
-	ld	l,(ix+ra_ent)		; HL := app entry address
-	ld	h,(ix+ra_ent+1)		; ...
-	jp	(hl)			; go
-;
+	ret
 ;=======================================================================
 ; Boot ROM Application
 ;=======================================================================
@@ -1166,20 +1182,32 @@ romload1:
 ; Enter with ROM application menu selection (command) character in A
 ;
 romboot:
+	call	findcon			; Match the application base on console command in A
+	jp	z,romload		; if match application found then load it
+	ret				; no match, just return to - prompt:
+;
+;=======================================================================
+; Find App For Console Command
+; Pass in A, the console command character
+; Return IX pointer, and Z if found; NZ if not found
+;=======================================================================
+;
+findcon:
 	call	upcase			; force uppercase for matching
 	ld	ix,(ra_tbl_loc)		; point to start of ROM app tbl
 	ld	c,a			; save command char in C
-romboot1:
+findcon1:
 	ld	a,(ix+ra_conkey)	; get match char
 	and	~$80			; clear "hidden entry" bit
 	cp	c			; compare
-	jp	z,romload		; if match, load it
+	ret	z			; if matched, return
 	ld	de,ra_entsiz		; table entry size
 	add	ix,de			; bump IX to next entry
 	ld	a,(ix)			; check for end
 	or	(ix+1)			; ... of table
-	jr	nz,romboot1		; loop till done
-	ret				; no match, just return
+	jr	nz,findcon1		; loop if still more table entries
+	or	0ffh			; set NZ flag, signal not found
+	ret				; no match, and return
 ;
 ;=======================================================================
 ; Boot disk unit/slice
@@ -2537,6 +2565,9 @@ str_diaglvl	.db	"\r\n\r\nHBIOS Diagnostic Level: ",0
 str_help	.db	"\r\n"
 		.db	"\r\n  L           - List ROM Applications"
 		.db	"\r\n  D           - Device Inventory"
+#if (BIOS == BIOS_WBW)
+		.db	"\r\n  S           - Slice Inventory"
+#endif
 		.db	"\r\n  R           - Reboot System"
 #if (BIOS == BIOS_WBW)
 		.db	"\r\n  W           - RomWBW Configure"
@@ -2632,15 +2663,15 @@ ra_tbl:
 ;      Name	  Key	   Dsky	  Bank	     Src	   Dest	    Size     Entry
 ;      ---------  -------  -----  --------   -----         -------  -------  ----------
 ra_ent(str_mon,	  'M',	   KY_CL, MON_BNK,   MON_IMGLOC,   MON_LOC, MON_SIZ, MON_SERIAL)
-ra_entsiz	.equ	$ - ra_tbl                         
-#if (BIOS == BIOS_WBW)                                     
-  #if (PLATFORM == PLT_S100)                               
+ra_entsiz	.equ	$ - ra_tbl
+#if (BIOS == BIOS_WBW)
+  #if (PLATFORM == PLT_S100)
 ra_ent(str_smon,  'S',	   $FF,	  bid_cur,   $8000,        $8000,   $0001,   s100mon)
-  #endif                                                   
-#endif                                                     
+  #endif
+#endif
 ra_ent(str_cpm22, 'C',	   KY_BK, CPM22_BNK, CPM22_IMGLOC, CPM_LOC, CPM_SIZ, CPM_ENT)
 ra_ent(str_zsys,  'Z',	   KY_FW, ZSYS_BNK,  ZSYS_IMGLOC,  CPM_LOC, CPM_SIZ, CPM_ENT)
-#if (BIOS == BIOS_WBW)                                     
+#if (BIOS == BIOS_WBW)
 ra_ent(str_bas,	  'B',	   KY_DE, BAS_BNK,   BAS_IMGLOC,   BAS_LOC, BAS_SIZ, BAS_LOC)
 ra_ent(str_tbas,  'T',	   KY_EN, TBC_BNK,   TBC_IMGLOC,   TBC_LOC, TBC_SIZ, TBC_LOC)
 ra_ent(str_fth,	  'F',	   KY_EX, FTH_BNK,   FTH_IMGLOC,   FTH_LOC, FTH_SIZ, FTH_LOC)
@@ -2648,12 +2679,13 @@ ra_ent(str_play,  'P',	   $FF,	  GAM_BNK,   GAM_IMGLOC,   GAM_LOC, GAM_SIZ, GAM_
 ra_ent(str_net,   'N',	   $FF,	  NET_BNK,   NET_IMGLOC,   NET_LOC, NET_SIZ, NET_LOC)
 ra_ent(str_upd,   'X',	   $FF,	  UPD_BNK,   UPD_IMGLOC,   UPD_LOC, UPD_SIZ, UPD_LOC)
 ra_ent(str_nvr,   'W'+$80, $FF,	  NVR_BNK,   NVR_IMGLOC,   NVR_LOC, NVR_SIZ, NVR_LOC)
+ra_ent(str_blnk,  'S'+$80, $FF,	  SLC_BNK,   SLC_IMGLOC,   SLC_LOC, SLC_SIZ, SLC_LOC)
 ra_ent(str_user,  'U',	   $FF,	  USR_BNK,   USR_IMGLOC,   USR_LOC, USR_SIZ, USR_LOC)
 #endif
 #if (DSKYENABLE)
 ra_ent(str_dsky,  'Y'+$80, KY_GO, MON_BNK,   MON_IMGLOC,   MON_LOC, MON_SIZ, MON_DSKY)
 #endif
-ra_ent(str_egg,	  'E'+$80, $FF,   EGG_BNK,   EGG_IMGLOC,   EGG_LOC, EGG_SIZ, EGG_LOC)
+ra_ent(str_blnk,  'E'+$80, $FF,   EGG_BNK,   EGG_IMGLOC,   EGG_LOC, EGG_SIZ, EGG_LOC)
 ;
 		.dw	0		; table terminator
 ;
@@ -2680,7 +2712,7 @@ str_play	.db	"Play a Game",0
 str_upd		.db	"XModem Flash Updater",0
 str_nvr		.db	"RomWBW Configure", 0
 str_user	.db	"User App",0
-str_egg		.db	"",0
+str_blnk	.db	"",0
 str_net		.db	"Network Boot",0
 str_switches	.db	"FP Switches = 0x",0
 str_nvswitches	.db	"NV Switches Found",0
