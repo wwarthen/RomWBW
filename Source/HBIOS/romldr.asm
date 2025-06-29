@@ -2666,7 +2666,7 @@ ra_ent(str_mon,	  'M',	   KY_CL, MON_BNK,   MON_IMGLOC,   MON_LOC, MON_SIZ, MON_
 ra_entsiz	.equ	$ - ra_tbl                         
 #if (BIOS == BIOS_WBW)                                     
   #if (PLATFORM == PLT_S100)                               
-ra_ent(str_smon,  '1',	   $FF,	  bid_cur,   $8000,        $8000,   $0001,   s100mon)
+ra_ent(str_smon,  'O',	   $FF,	  bid_cur,   $8000,        $8000,   $0001,   s100mon)
   #endif                                                   
 #endif                                                     
 ra_ent(str_cpm22, 'C',	   KY_BK, CPM22_BNK, CPM22_IMGLOC, CPM_LOC, CPM_SIZ, CPM_ENT)
