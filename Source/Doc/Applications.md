@@ -56,8 +56,22 @@ User Guide, and for the sake of completeness there is some overlap here.
 When a RomWBW system is started the user is presented with a sign-on
 message at the default console detailing the RomWBW version and build
 date. The system follows this with the list of hardware that it has
-discovered, a list of devices and the system units assigned to them,
-before finally inviting the to select a boot device with the prompt:
+discovered, a list of devices and the system units assigned to them.
+
+If autoboot is configured then the message (below) will count down
+and once 0 is reached the system will automatically boot with the configured
+options
+
+```
+AutoBoot in 3 Seconds (<esc> aborts, <enter> now)...
+```
+
+Pressing `esc` - will bypass the auto boot process going immediately 
+to the `Boot` prompt, or pressing `enter` - will proceed with autoboot 
+immediately. Auto boot is configured using the `W` boot menu option.
+
+If autoboot is bypassed (or not configured) the user is asked to 
+select a boot device with the prompt:
 
 ```
 Boot [H=Help]:
@@ -74,7 +88,7 @@ Furthermore, a ROM application may also be started from this prompt.
 This start-up process is described in some detailed in the RomWBW User Guide,
 and there is some overlap here.
 
-## Help
+#### Help
 
 After pressing H or ? at the boot prompt the user will be presented with
 the following list of available commands:
@@ -82,7 +96,9 @@ the following list of available commands:
 ```
 L           - List ROM Applications
 D           - Device Inventory
+S           - Slice Inventory
 R           - Reboot System
+W           - RomWBW Configure
 I <u> [<c>] - Set Console Interface/Baud code
 V [<n>]     - View/Set HBIOS Diagnostic Verbosity
 <u>[.<s>]   - Boot Disk Unit/Slice
@@ -102,10 +118,22 @@ D:
    system was started.
 
 
+S:
+
+:  Displays the list of disk Slices that contain a label indicating that
+   they may be bootable. See [SLABEL (Slice Label)] for more details about labels.
+
+
 R:
 
 :  Will restart the system. Note that this does not reset hardware devices
    in the same way that power-on or pressing the reset button would.
+
+
+W:
+
+:  Runs the [SYSCONF (System Configuration)] utility allowing RomWBW 
+   configuration stored in Non Volatile memory to be changed. 
 
 
 I:
@@ -127,7 +155,7 @@ system software is located - eg 2, 4.1, 5.3
 Alternatively, a RomWBW ROM application may be started by pressing the appropriate
 key from the applications menu, shown in the following section.
 
-## List ROM Applications
+#### List ROM Applications
 
 If the user presses the L key at the Boot Loader prompt then the system will
 display the list of ROM applications that are built into RomWBW. If a command
@@ -168,11 +196,11 @@ language and there is no ability to save to persistent storage (disks).
 The available memory area for programming is `0100h-EDFFh`.
 The following areas are reserved:
 
-Memory Area | Function
-------------|-----------------------------------
-`0000-00FFh`| Jump and restart (RST) vectors
-`EE00-FDFFh`| Monitor
-`FE00-FFFFh`| HBIOS proxy
+| Memory Area    | Function                        |
+|----------------|---------------------------------|
+| `0000-00FFh`   | Jump and restart (RST) vectors  |
+| `EE00-FDFFh`   | Monitor                         |
+| `FE00-FFFFh`   | HBIOS proxy                     |
 
 The monitor uses a prompt in the format of `xx>` where xx is the
 RomWBW bank id number.  For example, the prompt may look like this
@@ -198,7 +226,7 @@ allow selecting alternate banks.
 There now follows a more detailed guide to using the RomWBW
 Monitor program:
 
-### Command Summary
+### Monitor Commands
 
 **`?`** - Will display a summary of the available commands.
 
@@ -222,13 +250,13 @@ T xxxx	             - X-modem transfer to memory location xxxx
 X                    - Exit monitor
 ```
 
-### Cold Boot
+#### Cold Boot
 
 **`B`** - Performs a cold boot of the RomWBW system. A complete
 re-initialization of the system is performed and the system
 returns to the Boot Loader prompt.
 
-### Dump Memory
+#### Dump Memory
 
 **`D xxxx [yyyy]`** - Dump memory from hex location xxxx to yyyy
 on the screen as lines of 16 hexadecimal bytes with their
@@ -261,7 +289,7 @@ Example: `D 100 1FF`
 01F0: 01 C5 01 F0 F8 CF E5 26 00 0E 0A CD 39 02 7D 3C  .Å.ðøÏå&...Í9.}<
 ```
 
-### Fill Memory
+#### Fill Memory
 
 **`F xxxx yyyy zz`** - Fill memory from hex xxxx to yyyy with
 a single value of zz over the full range. The Dump command
@@ -269,7 +297,7 @@ can be used to confirm that the fill completed as expected. A
 good way to zero out memory areas before writing machine data
 for debug purposes.
 
-### Halt System
+#### Halt System
 
 **`H`** - Halt system. A Z80 HALT instruction is executed. The
 system remains in the halt state until the system is
@@ -277,20 +305,20 @@ physically rebooted. Interrupts will not restart the
 system. On systems that support a HALT status LED, the
 LED will be illuminated.
 
-### Input from Port
+#### Input from Port
 
 **`I xxxx`** - Input data from port xxxx and display to the screen.
 This command is used to read values from hardware I/O ports
 and display the contents in hexadecimal.
 
-### Keyboard Echo
+#### Keyboard Echo
 
 **`K`** - Echo any key-presses from the terminal. Press 'ESC' key
 to quit. This facility provides that any key stroke sent to
 the computer will be echoed back to the terminal. File down
 loads will be echoed as well while this facility is ‘on’.
 
-### Load Hex
+#### Load Hex
 
 **`L`** - Load a Intel Hex data via the terminal program.
 The load address is defined in the hex file of the
@@ -304,21 +332,21 @@ Keep in mind that this will be transient unless the
 system supports battery backed memory. Saving to memory drive
 is not supported.
 
-### Move Memory
+#### Move Memory
 
 **`M xxxx yyyy zzzz`** - Move hex memory block xxxx to yyyy to
 memory starting at hex location zzzz. Care should be taken
 to insure that there is enough memory at the destination so
 that code does not get over-written or memory wrapped around.
 
-### Output to Port
+#### Output to Port
 
 **`O xxxx yy`** - Output data byte xx to port xxxx. This command is
 used to send hexadecimal values to hardware I/O ports to
 verify their operation and is the companion to the I operation.
 Use clip leaded LEDs to confirm the data written.
 
-### Program Memory
+#### Program Memory
 
 **`P xxxx`** - Program memory location xxxx. This routine will
 allow you to program a hexadecimal value 'into memory starting
@@ -333,7 +361,7 @@ remote computer.
 An excellent online resource for looking up opcodes for entry
 can be found here: <https://clrhome.org/table>.
 
-### Run Program
+#### Run Program
 
 **`R xxxx [[yy] [zzzz]]`** - Run program at location xxxx. If optional
 arguments yy and zzzz are entered they are loaded into the
@@ -342,7 +370,7 @@ Monitor is saved on the stack so the program can return
 to the monitor. On return to the monitor, the contents of
 the A, HL, DE and BC registers are displayed.
 
-### Set Bank
+#### Set Bank
 
 **`S xx`** - Set the physical memory bank to the RomWBW Bank Id
 indicated by xx.  Memory addresses
@@ -367,12 +395,12 @@ Section 4 of the $doc_sys$ provides detail on how Bank Ids map to the
 physical memory of the system and also how specific banks are utilized
 by RomWBW.
 
-### Undo Bank
+#### Undo Bank
 
 **`U`** - Change the bank in memory back to the previously selected bank.
 This command should be used in conjunction with the S command.
 
-### X-Modem Transfer
+#### X-Modem Transfer
 
 **`T xxxx`** - Receive an X-modem file transfer and load it into
 memory starting at location xxxx.
@@ -380,115 +408,9 @@ memory starting at location xxxx.
 128 byte blocks and checksum mode is the only supported
 protocol.
 
-### Exit Monitor
+#### Exit Monitor
 
 **`X`** - Exit the monitor program back to the main boot menu.
-
-## RomWBW System Configuration
-
-System Configuration (`SYSCONF`) is a utility that allows system configuration to
-be set, dynamically and stored in NVRAM provided by an RTC chip.
-
-(`SYSCONF`) is both a ROM application ('W' Menu option), and a CP/M utility.
-Noting however the CP/M utility is not included on an disk image, it is found in
-the `Binary/Applications` folder of the RomWBW distribution.
-
-The $doc_user$ has additional information on the use of NVRAM to set your
-system configuration.
-
-### Basic Operation
-
-The application is an interactive application; it does not have a command line syntax.
-Instead commands are executed from within the application in a command line structure.
-
-When you first start the (`SYSCONF`) utility it will display the current switches
-followed by a command listing.
-
-When you first run the (`SYSCONF`) utility the NVRAM will be uninitialised, and can
-be initialised using the (R)eset command, which writes default values to NVRAM.
-
-Updates are done immediately to NVRAM as you enter them, i.e. there is no confirm
-changes step. If you make any incorrect changes, you simply need to enter a new
-command to set the Switch value correctly.
-
-Once a change has been made it is available, however it may not take effect until
-the next system reboot. This is dependent on the Switch itself.
-
-If no NVRAM is provided by your hardware, then running this application will just
-report the missing hardware and exit immediately.
-
-To exit from the application use the (Q)uit command.
-
-### Commands and Syntax
-
-The following are the accepted commands, unless otherwise specified a "Space"
-character is used to delimit parameters in the command.
-
-| Command    | Argument(s)      | Description                                   |
-|------------|------------------|-----------------------------------------------|
-| (P)rint    | -none-           | Display a list of the current switch value(s) |
-| (S)et      | {SW} {val},...   | Sets an Switch {SW} with specific values(s)   |
-| (R)eset    | -none-           | Reset all setting to default                  |
-| (H)elp     | {SW}             | Provides help on the syntax (values)          |
-| (Q)uit     | -none-           | Exit the application                          |
-
-**Where**
-
-| Argument  | Description                                                          |
-|-----------|----------------------------------------------------------------------|
-| {SW}      | Switch ID, typically this is 2 character name to identify the switch |
-| {val},... | a "Comma" separated list of values to set into the switch            |
-
-### Switch Options
-
-#### Auto Boot (AB)
-
-This switch will define if the system will perform auto boot at the RomWBW boot prompt.
-Enabling this will not prevent a user from typing a boot command, so long as the timeout is not
-exceeded. When configured this replaces the (`AUTO_CMD`) variable
-defined in build configuration.
-
-Making changes to auto boot has no affect until the next reboot.
-
-**Arguments**
-
-| Type     | Arguments  | Description                                            |
-|----------|------------|--------------------------------------------------------|
-| Enable   | 'E'        | Auto Boot. eg. "E,10" will auto boot, after 10 seconds |
-|          | Timout     | Timeout in seconds in the range 0-15, 0 = immediate    |
-| Disabled | 'D'        | No Auto Boot. e.g. "D" will disable autoboot           |
-
-**Examples**
-
-| Command               | Description                                       |
-|-----------------------|---------------------------------------------------|
-| S AB E,10             | Enable Auto Boot with 10 second delay             |
-| S AB D                | Disable Auto Boot                                 |
-
-#### Boot Options (BO)
-
-This switch will define the boot command to be executed when auto boot is
-enabled.  When configured this replaces the (`AUTO_CMD`) variable
-defined in the ROM build configuration.
-
-Making changes to boot options has no affect until the next reboot.
-
-**Arguments**
-
-| Type | Arguments        | Description                                              |
-|------|------------------|----------------------------------------------------------|
-| Disk | 'D'              | Disk Boot. eg. "D,2,14" will boot, disk unit 2, slice 14 |
-|      | Disk Unit Number | Unit number in the range 0-127                           |
-|      | Disk Slice       | Slice in the range 0-255, use 0 for floppy boot          |
-| ROM  | 'R'              | ROM App. e.g. "R,M" will boot the Monitor App            |
-|      | Rom App Name     | single character used on the Menu to identify the app    |
-
-**Examples**
-
-| Command     | Description                                              |
-|-------------|----------------------------------------------------------|
-| S BO D,2,14 | Set the default boot from Disk; Unit 2, Slice 14         |
-| S BO R,M    | Set the default boot to be the (M)onitor Rom Application |
 
 ## CP/M 2.2
 
@@ -624,15 +546,15 @@ above.
 
 ### Structure of Forth source files
 
-File          | Description
---------------|-----------------------------
-camel80.azm   | Code Primitives
- camel80d.azm | CPU Dependencies
- camel80h.azm | High Level words
- camel80r.azm | RomWBW additions
-glosshi.txt   | Glossary of high level words
-glosslo.txt   | Glossary of low level words
-glossr.txt    | Glossary of RomWBW additions
+| File         | Description                  |
+|--------------|------------------------------|
+| camel80.azm  | Code Primitives              |
+| camel80d.azm | CPU Dependencies             |
+| camel80h.azm | High Level words             |
+| camel80r.azm | RomWBW additions             |
+| glosshi.txt  | Glossary of high level words | 
+| glosslo.txt  | Glossary of low level words  |
+| glossr.txt   | Glossary of RomWBW additions |
 
 ### RomWBW Additions
 
@@ -648,19 +570,17 @@ Extensions and changes to this implementation compared to the original distribut
 - James Bowman's double precision words have been added from his RC2014 version:
   <https://github.com/jamesbowman/camelforth-z80>.
 
-Word    | Syntax                     | Description
---------|----------------------------|---------------------------------
-D+	| d1 d2 -- d1+d2             | Add double numbers
-2>R	| d --                       | 2 to R
-2R>	| d --                       | fetch 2 from R
-M*/	| d1 n2 u3 --  d=(d1*n2)/u3  | double precision mult. div
-SVC	| hl de bc n -- hl de bc af  | Execute a RomWBW function
-P!	| n p --                     | Write a byte to a I/O port
-P@      | p -- n                     | Read a byte from and I/O port
+| Word | Syntax                     | Description                   |
+|------|----------------------------|-------------------------------|
+| D+	| d1 d2 -- d1+d2             | Add double numbers            |
+| 2>R	| d --                       | 2 to R                        |
+| 2R>	| d --                       | fetch 2 from R                |
+| M*/	| d1 n2 u3 --  d=(d1*n2)/u3  | double precision mult. div    |
+| SVC	| hl de bc n -- hl de bc af  | Execute a RomWBW function     |
+| P!	| n p --                     | Write a byte to a I/O port    |
+| P@   | p -- n                     | Read a byte from and I/O port |
 
-## Play a Game
-
-### 2048
+## Play a Game (2048)
 
 2048 is a puzzle game that can be both mindless and challenging. It
 appears deceptively simple but failure can creep up on you suddenly.
@@ -750,29 +670,38 @@ including a section on network booting.
 
 ## Xmodem Flash Updater
 
-The RomWBW Xmodem flash updater provides the capability to update RomWBW from the boot loader using  an x-modem file transfer. It offers similar capabilities to Will Sowerbutts FLASH4 utility except that the flashing process occurs during the file transfer.
+The RomWBW Xmodem flash updater provides the capability to update RomWBW 
+from the boot loader using  an x-modem file transfer. It offers similar 
+capabilities to Will Sowerbutts FLASH4 utility except that the flashing 
+process occurs during the file transfer.
 
 These are the key differences between the two methods are:
 
-Xmodem Flash Updater            | FLASH.COM (aka FLASH4)
---------------------------------|-----------------
-Available from the boot loader   | Well proven and tested
-Xmodem transfer is integrated    | Wider range of supported chips and hardware
-Integrated checksum utilities    | Wider range of supported platforms
-Capability to copy a ROM image   | Only reprograms sectors that have changed
-More convenient one step process | Ability save and verify ROM images
-No intermediate storage required | Progress display while flashing
-.                                | Displays chip identification information
-.                                | Faster file transfer
+| Xmodem Flash Updater             | FLASH.COM (aka FLASH4)                       |
+|----------------------------------|----------------------------------------------|
+| Available from the boot loader   | Well proven and tested                       |
+| Xmodem transfer is integrated    | Wider range of supported chips and hardware  | 
+| Integrated checksum utilities    | Wider range of supported platforms           | 
+| Capability to copy a ROM image   | Only reprograms sectors that have changed    | 
+| More convenient one step process | Ability save and verify ROM images           | 
+| No intermediate storage required | Progress display while flashing              | 
+| .                                | Displays chip identification information     | 
+| .                                | Faster file transfer                         | 
 
-The major disadvantages of the Updater is that it is new and relatively untested. There is the risk that a failed transfer will result in a partially flashed and unbootable ROM. There are some limitations on serial transfer speeds.
+The major disadvantages of the Updater is that it is new and relatively 
+untested. There is the risk that a failed transfer will result in a 
+partially flashed and unbootable ROM. There are some limitations on 
+serial transfer speeds.
 
-The updater utility was initially intended to support the Retrobrew SBC-V2-005 platform using Atmel 39SF040 flash chips but has now been extended to be more generic in operation.
+The updater utility was initially intended to support the Retrobrew SBC-V2-005 
+platform using Atmel 39SF040 flash chips but has now been extended to be 
+more generic in operation.
 
 Supported flash chips are
 39SF040, 29F040,  AT49F040, AT29C040, M29F040 , MX29F040,  A29010B, A29040B
 
-The Atmel 39SF040 chip is recommended as it can erase and write 4Kb sectors. Other chips require the whole chip to be erased.
+The Atmel 39SF040 chip is recommended as it can erase and write 4Kb sectors. 
+Other chips require the whole chip to be erased.
 
 ### Usage
 
@@ -784,11 +713,21 @@ In most cases, completing a ROM update is a simple as:
 4. Initiating an X-modem transfer of your ROM image on your console device
 5. Selecting option R - Reboot
 
-If your console device is not able to transfer a ROM image i.e. your console is a VDU then you will have to use the console options to identify which character-input/output device is to be used as the serial device for transfer.
+If your console device is not able to transfer a ROM image i.e. your console 
+is a VDU then you will have to use the console options to identify which 
+character-input/output device is to be used as the serial device for transfer.
 
-When your console is the serial device used for the transfer, no progress information is displayed as this would disrupt the x-modem file transfer. If you use an alternate character-input/output devices as the serial device for the transfer then progress information will be displayed on the console device.
+When your console is the serial device used for the transfer, no progress 
+information is displayed as this would disrupt the x-modem file transfer. 
+If you use an alternate character-input/output devices as the serial device 
+for the transfer then progress information will be displayed on the console device.
 
-Due to different platform processor speeds,  serials speeds and flow control capabilities the default console or serial device speed may need to be reduced for a successful transfer and flash to occur. The **Set Console Interface/Baud code** option at the Boot Loader can be used to change the speed if required. Additionally, the Updater has options to set to and revert from a recommended speed.
+Due to different platform processor speeds,  serials speeds and flow 
+control capabilities the default console or serial device speed may 
+need to be reduced for a successful transfer and flash to occur. 
+The **Set Console Interface/Baud code** option at the Boot Loader can 
+be used to change the speed if required. Additionally, the Updater has 
+options to set to and revert from a recommended speed.
 
 See the RomWBW Applications guide for additional information on performing upgrades.
 
@@ -797,11 +736,16 @@ Option ( C ) - Set Console Device
 
 Option ( S ) - Set Serial Device
 
-By default the updater assumes that the current console is a serial device and that the ROM file to be flashed will also be transferred across this device, so the Console and Serial device are both the same.
+By default the updater assumes that the current console is a serial device 
+and that the ROM file to be flashed will also be transferred across this 
+device, so the Console and Serial device are both the same.
 
-Either device can be can be change to another character-input/output device but the updater will always expect to receive the x-modem transfer on the **Serial Device**
+Either device can be can be change to another character-input/output 
+device but the updater will always expect to receive the x-modem 
+transfer on the **Serial Device**
 
-The advantage of transferring on a different device to the console is that progress information can be displayed during the transfer.
+The advantage of transferring on a different device to the console 
+is that progress information can be displayed during the transfer.
 
 Option ( > ) - Set Recommended Baud Rate
 
@@ -870,21 +814,32 @@ load CP/M and perform the normal x-modem / flash process to recover.
 Option ( 1 ) and ( 2 ) - Calculate and display CRC32 of 1st or 2nd 512k ROM.
 Option ( 3 ) - Calculate and display CRC32 of a 1024k (2x512Kb) ROM.
 
-Can be used to verify if a ROM image has been transferred and flashed correctly. Refer to the Tera Term section below for details on configuring the automatic display of a files CRC after it has been transferred.
+Can be used to verify if a ROM image has been transferred and flashed 
+correctly. Refer to the Tera Term section below for details on 
+configuring the automatic display of a files CRC after it has been 
+transferred.
 
-In Windows, right clicking on a file should also give you a context menu option CRC SHA which will allow you to select a CRC32 calculation to be done on the selected file.
+In Windows, right clicking on a file should also give you a context 
+menu option CRC SHA which will allow you to select a CRC32 calculation 
+to be done on the selected file.
 
 ### Tera Term macro configuration
 
-Macros are a useful tool for automatic common tasks. There are a number of instances where using macros to facilitate the update process could be worthwhile if you are:
+Macros are a useful tool for automatic common tasks. There are a 
+number of instances where using macros to facilitate the update 
+process could be worthwhile if you are:
 
 * Following the RomWBW development builds.
 * Doing lots of configuration changes.
 * Doing development on RomWBW drivers
 
-Macros can be used to automate sending ROM updates or images and for my own purposed I have set up a separate macro for transferring each of the standard build ROM, my own custom configuration ROM and update ROM.
+Macros can be used to automate sending ROM updates or images and 
+for my own purposed I have set up a separate macro for transferring 
+each of the standard build ROM, my own custom configuration ROM 
+and update ROM.
 
-An example macro file to send an *.upd file, using checksum mode and display the crc32 value of the transmitted file:
+An example macro file to send an *.upd file, using checksum mode 
+and display the crc32 value of the transmitted file:
 
 ```
 Xmodem send, checksum, display crc32
@@ -896,39 +851,45 @@ messagebox inputstr 'crc32'
 
 ### Serial speed guidelines
 
-As identified in the introduction, there are limitations on serial speed depending on processor speed and flow control settings. Listed below are some of the results identified during testing.
+As identified in the introduction, there are limitations on serial 
+speed depending on processor speed and flow control settings. 
+Listed below are some of the results identified during testing.
 
-Configuration          | Processor Speed | Maximum Serial Speed
------------------------|-----------------|---------------------
-UART no flow control   | 2MHz            | 9600
-UART no flow control   | 4MHz            | 19200
-UART no flow control   | 5MHz            | 19200
-UART no flow control   | 8MHz            | 38400
-UART no flow control   | 10MHz           | 38400
-USB-fifo 2MHz+         |                 | n/a
-ASCI no flow control   | 18.432MHz       | 9600
-ASCI with flow control | 18.432MHz       | 38400
+| Configuration          | Processor Speed | Maximum Serial Speed |
+|------------------------|-----------------|----------------------|
+| UART no flow control   | 2MHz            | 9600                 |           
+| UART no flow control   | 4MHz            | 19200                |            
+| UART no flow control   | 5MHz            | 19200                |             
+| UART no flow control   | 8MHz            | 38400                |              
+| UART no flow control   | 10MHz           | 38400                |                
+| USB-fifo               | 2MHz+           | n/a                  |                 
+| ASCI no flow control   | 18.432MHz       | 9600                 |
+| ASCI with flow control | 18.432MHz       | 38400                |
 
 The **Set Recommend Baud Rate** option in the Updater menu follows the following guidelines.
 
-Processor Speed | Baud Rate
-----------------|----------
-1MHz            | 4800
-2-3MHz          | 9600
-4-7MHz          | 19200
-8-20MHz         | 38400
+| Processor Speed | Baud Rate |
+|-----------------|-----------|
+| 1MHz            | 4800      |
+| 2-3MHz          | 9600      |
+| 4-7MHz          | 19200     |
+| 8-20MHz         | 38400     |
 
 These can be customized in the updater.asm source code in the CLKTBL table  if desired.
 Feedback to the RomWBW developers on these guidelines would be appreciated.
 
 ### Notes
 
-All testing was done with Tera Term x-modem, Forcing checksum mode using macros was found to give  the most reliable transfer.
-Partial writes can be completed with 39SF040 chips. Other chips require entire flash to be erased before being written.
-An SBC V2-005 MegaFlash or Z80 MBC required for 1mb flash support. The Updater assumes both chips are same type
-Failure handling has not been tested.
-Timing broadly calibrated on a Z80 SBC-v2
-Unabios not supported
+Notes
+* All testing was done with Tera Term x-modem, Forcing checksum mode 
+  using macros was found to give  the most reliable transfer.
+* Partial writes can be completed with 39SF040 chips. Other chips  
+  require entire flash to be erased before being written.
+* An SBC V2-005 MegaFlash or Z80 MBC required for 1mb flash support. 
+  The Updater assumes both chips are same type
+* Failure handling has not been tested.
+* Timing broadly calibrated on a Z80 SBC-v2
+* Unabios not supported
 
 ## User Application
 
@@ -2189,6 +2150,146 @@ CP/M's CCP (Console Command Processor),and BDOS (Basic Disk Operating System).
 The mechanism by which `SURVEY` discovers I/O ports is very conservative and
 therefore the list returned may not be exhaustive. In particular, it may fail to
 discover ports that are 'write-only'.
+
+`\clearpage`{=latex}
+
+## SYSCONF (System Configuration)
+
+| SURVEY              |   |
+| --------------------|---|
+| ROM-based           |Yes|
+| Disk-based          |Yes|
+
+System Configuration (`SYSCONF`) is a utility that allows system configuration to
+be set, dynamically and stored in NVRAM provided by an RTC chip.
+
+(`SYSCONF`) is both a ROM application ('W' Menu option), and a CP/M utility.
+Noting however the CP/M utility is not included on an disk image, it is found in
+the `Binary/Applications` folder of the RomWBW distribution.
+
+The section "Setting NVRAM Options" in the $doc_user$ has additional information 
+on the use of NVRAM to set your system configuration.
+
+#### Syntax
+
+The application is an interactive application; it does not have a command line syntax.
+Instead commands are executed from within the application in a command line structure.
+`SYSCONF` command takes no arguments.
+
+| `SYSCONF`
+
+#### Usage
+
+When you first start the (`SYSCONF`) utility it will display the current switches
+followed by a command listing. e.g.
+
+```
+RomWBW System Config Utility
+
+Current Configuration: 
+  [BO] / Boot Options: ROM (App = "H")
+  [AB] / Auto Boot: Disabled
+
+Commands:
+  (P)rint - Display Current settings
+  (S)et {SW} {val}[,{val}[,{val}]]- Set a switch value(s)
+  (R)eset - Init NVRAM to Defaults
+  (H)elp [{SW}] - This help menu, or help on a switch
+  (Q)uit - Quit
+  
+$
+```
+
+When you run (`SYSCONF`) for the first time the NVRAM will be uninitialised, and can
+be initialised using the (R)eset command, which writes default values to NVRAM.
+
+Updates are done immediately to NVRAM as you enter them, i.e. there is no confirm
+changes step. If you make any incorrect changes, you simply need to enter a new
+command to set the Switch value correctly.
+
+Once a change has been made it is available, however it may not take effect until
+the next system reboot. This is dependent on the Switch itself.
+
+If no NVRAM is provided by your hardware, then running this application will just
+report the missing hardware and exit immediately.
+
+To exit from the application use the (Q)uit command.
+
+#### Commands and Syntax
+
+The following are the accepted commands, unless otherwise specified a "Space"
+character is used to delimit parameters in the command.
+
+| Command    | Argument(s)      | Description                                   |
+|------------|------------------|-----------------------------------------------|
+| (P)rint    | -none-           | Display a list of the current switch value(s) |
+| (S)et      | {SW} {val},...   | Sets an Switch {SW} with specific values(s)   |
+| (R)eset    | -none-           | Reset all setting to default                  |
+| (H)elp     | {SW}             | Provides help on the syntax (values)          |
+| (Q)uit     | -none-           | Exit the application                          |
+
+**Where**
+
+| Argument  | Description                                                          |
+|-----------|----------------------------------------------------------------------|
+| {SW}      | Switch ID, typically this is 2 character name to identify the switch |
+| {val},... | a "Comma" separated list of values to set into the switch            |
+
+#### Switch Options
+
+#### Auto Boot (AB)
+
+This switch will define if the system will perform auto boot at the RomWBW boot prompt.
+Enabling this will not prevent a user from typing a boot command, so long as the timeout is not
+exceeded. When configured this replaces the (`AUTO_CMD`) variable
+defined in build configuration.
+
+Making changes to auto boot has no affect until the next reboot.
+
+**Arguments**
+
+| Type     | Arguments  | Description                                            |
+|----------|------------|--------------------------------------------------------|
+| Enable   | 'E'        | Auto Boot. eg. "E,10" will auto boot, after 10 seconds |
+|          | Timout     | Timeout in seconds in the range 0-15, 0 = immediate    |
+| Disabled | 'D'        | No Auto Boot. e.g. "D" will disable autoboot           |
+
+**Examples**
+
+| Command               | Description                                       |
+|-----------------------|---------------------------------------------------|
+| S AB E,10             | Enable Auto Boot with 10 second delay             |
+| S AB D                | Disable Auto Boot                                 |
+
+#### Boot Options (BO)
+
+This switch will define the boot command to be executed when auto boot is
+enabled.  When configured this replaces the (`AUTO_CMD`) variable
+defined in the ROM build configuration.
+
+Making changes to boot options has no affect until the next reboot.
+
+**Arguments**
+
+| Type | Arguments        | Description                                              |
+|------|------------------|----------------------------------------------------------|
+| Disk | 'D'              | Disk Boot. eg. "D,2,14" will boot, disk unit 2, slice 14 |
+|      | Disk Unit Number | Unit number in the range 0-127                           |
+|      | Disk Slice       | Slice in the range 0-255, use 0 for floppy boot          |
+| ROM  | 'R'              | ROM App. e.g. "R,M" will boot the Monitor App            |
+|      | Rom App Name     | single character used on the Menu to identify the app    |
+
+**Examples**
+
+| Command     | Description                                              |
+|-------------|----------------------------------------------------------|
+| S BO D,2,14 | Set the default boot from Disk; Unit 2, Slice 14         |
+| S BO R,M    | Set the default boot to be the (M)onitor Rom Application |
+
+#### Etymology
+
+The `SYSCONF` utility is an original product specifc to RomWBW, source code is included.
+`SYSCONF` was contributed by Mark Pruden.
 
 `\clearpage`{=latex}
 
