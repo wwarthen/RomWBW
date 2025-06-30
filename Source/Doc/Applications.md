@@ -94,14 +94,17 @@ After pressing H or ? at the boot prompt the user will be presented with
 the following list of available commands:
 
 ```
-L           - List ROM Applications
-D           - Device Inventory
-S           - Slice Inventory
-R           - Reboot System
-W           - RomWBW Configure
-I <u> [<c>] - Set Console Interface/Baud code
-V [<n>]     - View/Set HBIOS Diagnostic Verbosity
-<u>[.<s>]   - Boot Disk Unit/Slice
+Boot [H=Help]: H
+
+  L           - List ROM Applications
+  D           - Device Inventory
+  S           - Slice Inventory
+  R           - Reboot System
+  W           - RomWBW Configure
+  I <u> [<c>] - Set Console Interface/Baud code
+  V [<n>]     - View/Set HBIOS Diagnostic Verbosity
+  N           - Network Boot
+  <u>[.<s>]   - Boot Disk Unit/Slice
 ```
 
 The function performed by each command is described below:
@@ -142,11 +145,20 @@ I:
    optionally the Baud rate. This could be used to allow the system to be
    operated from a second console.
 
+
 V:
 
 :  Enables the display of invalid RomWBW HBIOS API calls.  This option
    is very unlikely to be used by a user and is used for development
    purposes.
+
+
+N:
+
+:  Boot into CP/M via an RCBus Wiznet MT011 network module if configured.
+   Section 10 of the $doc_user$ provides complete instructions for setting 
+   up a CP/NET based network under RomWBW including network booting.
+
 
 And, finally, the system may be booted by specifying the unit number,
 and optional slice, separated by a period('.'), of where the disk operating
@@ -165,16 +177,19 @@ first displaying the menu.
 The ROM applications available from the boot prompt are:
 
 ```
-M: Monitor
-C: CP/M 2.2
-Z: Z-System
-B: BASIC
-T: Tasty BASIC
-F: Forth
-P: Play a Game
-N: Network Boot
-X: XModem Flash Updater
-U: User App
+Boot [H=Help]: L
+
+ROM Applications:
+
+  M: Monitor
+  Z: Z-System
+  C: CP/M 2.2
+  F: Forth
+  B: BASIC
+  T: Tasty BASIC
+  P: Play a Game
+  X: XModem Flash Updater
+  U: User App
 ```
 
 Each of these will now be described in greater detail.
@@ -655,19 +670,6 @@ This is how I lost this game:
 
 Press Q at any time to bring up the option to Quit or Restart the game.
 
-## Network Boot
-
-If your RomWBW system is equipped with an RCBus MT011 module, it is
-possible to boot into CP/M 2.2 directly from a CP/NET network server.
-This means that the operating system will be loaded directly from the
-network server and all of your drive letters will be provided by the
-network server.
-
-This function requires substantial knowledge of CP/NET and it's
-implementation within RomWBW.  Section 10 of the $doc_user$ provides
-complete instructions for setting up a CP/NET based network under RomWBW
-including a section on network booting.
-
 ## Xmodem Flash Updater
 
 The RomWBW Xmodem flash updater provides the capability to update RomWBW 
@@ -732,6 +734,7 @@ options to set to and revert from a recommended speed.
 See the RomWBW Applications guide for additional information on performing upgrades.
 
 ### Console Options
+
 Option ( C ) - Set Console Device
 
 Option ( S ) - Set Serial Device
@@ -2155,7 +2158,7 @@ discover ports that are 'write-only'.
 
 ## SYSCONF (System Configuration)
 
-| SURVEY              |   |
+| SYSCONF             |   |
 | --------------------|---|
 | ROM-based           |Yes|
 | Disk-based          |Yes|
@@ -2163,8 +2166,8 @@ discover ports that are 'write-only'.
 System Configuration (`SYSCONF`) is a utility that allows system configuration to
 be set, dynamically and stored in NVRAM provided by an RTC chip.
 
-(`SYSCONF`) is both a ROM application ('W' Menu option), and a CP/M utility.
-Noting however the CP/M utility is not included on an disk image, it is found in
+(`SYSCONF`) is both a ROM utility ('W' Menu option), and a CP/M application.
+Noting however the CP/M application is not included on an disk image, it is found in
 the `Binary/Applications` folder of the RomWBW distribution.
 
 The section "Setting NVRAM Options" in the $doc_user$ has additional information 
@@ -2195,7 +2198,7 @@ Commands:
   (S)et {SW} {val}[,{val}[,{val}]]- Set a switch value(s)
   (R)eset - Init NVRAM to Defaults
   (H)elp [{SW}] - This help menu, or help on a switch
-  (Q)uit - Quit
+  e(X)it - Exit Configuration
   
 $
 ```
@@ -2220,13 +2223,13 @@ To exit from the application use the (Q)uit command.
 The following are the accepted commands, unless otherwise specified a "Space"
 character is used to delimit parameters in the command.
 
-| Command    | Argument(s)      | Description                                   |
-|------------|------------------|-----------------------------------------------|
-| (P)rint    | -none-           | Display a list of the current switch value(s) |
-| (S)et      | {SW} {val},...   | Sets an Switch {SW} with specific values(s)   |
-| (R)eset    | -none-           | Reset all setting to default                  |
-| (H)elp     | {SW}             | Provides help on the syntax (values)          |
-| (Q)uit     | -none-           | Exit the application                          |
+| Command   | Argument(s)      | Description                                   |
+|-----------|------------------|-----------------------------------------------|
+| (P)rint   | -none-           | Display a list of the current switch value(s) |
+| (S)et     | {SW} {val},...   | Sets an Switch {SW} with specific values(s)   |
+| (R)eset   | -none-           | Reset all setting to default                  |
+| (H)elp    | {SW}             | Provides help on the syntax (values)          |
+| e(X)it    | -none-           | Exit the application                          |
 
 **Where**
 
@@ -2288,7 +2291,7 @@ Making changes to boot options has no affect until the next reboot.
 
 #### Etymology
 
-The `SYSCONF` utility is an original product specifc to RomWBW, source code is included.
+The `SYSCONF` utility is an original product specific to RomWBW, source code is included.
 `SYSCONF` was contributed by Mark Pruden.
 
 `\clearpage`{=latex}

@@ -174,12 +174,15 @@ start1:
 ;
 	; For app mode startup, use alternate table
 	ld	hl,ra_tbl		; assume ROM application table
+	ld	de,str_help		; assume ROM help menu
 	ld	a,(bootmode)		; get boot mode
 	cp	BM_ROMBOOT		; ROM boot?
 	jr	z,start2		; if so, ra_tbl OK, skip ahead
 	ld	hl,ra_tbl_app		; switch to RAM application table
+	ld	de,str_help_app		; switch to RAM help menu
 start2:
 	ld	(ra_tbl_loc),hl		; and overlay pointer
+	ld	(str_help_loc),de	; and overlay help menu pointer
 ;
 ; Copy original page zero into user page zero
 ;
@@ -627,6 +630,8 @@ runcmd0:
 #if (BIOS == BIOS_WBW)
 	cp	'S'			; S = Slice Inventory
 	jp	z,slclst		; if so, do it
+	cp	'W'			; W = Rom WBW NVR Config Rom App
+	jp	z,nvrconfig		; if so, do it
 	cp	'I'			; C = set console interface
 	jp	z,setcon		; if so, do it
 	cp	'V'			; V = diagnostic verbosity
@@ -850,7 +855,7 @@ dskycmd1:
 ; Display Help
 ;
 help:
-	ld	hl,str_help		; point to help string
+	ld	hl,(str_help_loc)	; point to help string
 	call	pstr			; display it
 	ret
 ;
@@ -901,6 +906,12 @@ devlst:
 ;
 slclst:
 	ld	a,'S'			; "S"lice Inv App
+	jp	romcall			; Call a Rom App with Return
+;
+; RomWBW Config
+;
+nvrconfig:
+	ld	a,'W'			; "W" Rom WBW Configure App
 	jp	romcall			; Call a Rom App with Return
 ;
 ; Set console interface unit
@@ -2573,9 +2584,21 @@ str_help	.db	"\r\n"
 		.db	"\r\n  W           - RomWBW Configure"
 		.db	"\r\n  I <u> [<c>] - Set Console Interface/Baud Rate"
 		.db	"\r\n  V [<n>]     - View/Set HBIOS Diagnostic Verbosity"
+		.db	"\r\n  N           - Network Boot"
 #endif
 		.db	"\r\n  <u>[.<s>]   - Boot Disk Unit/Slice"
 		.db	0
+;
+str_help_app	.db	"\r\n"
+		.db	"\r\n  L           - List ROM Applications"
+		.db	"\r\n  R           - Reboot System"
+#if (BIOS == BIOS_WBW)
+		.db	"\r\n  I <u> [<c>] - Set Console Interface/Baud Rate"
+		.db	"\r\n  V [<n>]     - View/Set HBIOS Diagnostic Verbosity"
+#endif
+		.db	"\r\n  <u>[.<s>]   - Boot Disk Unit/Slice"
+		.db	0
+
 ;
 ;=======================================================================
 ; DSKY keypad led matrix masks
@@ -2663,12 +2686,12 @@ ra_tbl:
 ;      Name	  Key	   Dsky	  Bank	     Src	   Dest	    Size     Entry
 ;      ---------  -------  -----  --------   -----         -------  -------  ----------
 ra_ent(str_mon,	  'M',	   KY_CL, MON_BNK,   MON_IMGLOC,   MON_LOC, MON_SIZ, MON_SERIAL)
-ra_entsiz	.equ	$ - ra_tbl                         
-#if (BIOS == BIOS_WBW)                                     
-  #if (PLATFORM == PLT_S100)                               
+ra_entsiz	.equ	$ - ra_tbl
+#if (BIOS == BIOS_WBW)
+  #if (PLATFORM == PLT_S100)
 ra_ent(str_smon,  'O',	   $FF,	  bid_cur,   $8000,        $8000,   $0001,   s100mon)
-  #endif                                                   
-#endif                                                     
+  #endif
+#endif
 ra_ent(str_cpm22, 'C',	   KY_BK, CPM22_BNK, CPM22_IMGLOC, CPM_LOC, CPM_SIZ, CPM_ENT)
 ra_ent(str_zsys,  'Z',	   KY_FW, ZSYS_BNK,  ZSYS_IMGLOC,  CPM_LOC, CPM_SIZ, CPM_ENT)
 #if (BIOS == BIOS_WBW)
@@ -2676,9 +2699,9 @@ ra_ent(str_bas,	  'B',	   KY_DE, BAS_BNK,   BAS_IMGLOC,   BAS_LOC, BAS_SIZ, BAS_
 ra_ent(str_tbas,  'T',	   KY_EN, TBC_BNK,   TBC_IMGLOC,   TBC_LOC, TBC_SIZ, TBC_LOC)
 ra_ent(str_fth,	  'F',	   KY_EX, FTH_BNK,   FTH_IMGLOC,   FTH_LOC, FTH_SIZ, FTH_LOC)
 ra_ent(str_play,  'P',	   $FF,	  GAM_BNK,   GAM_IMGLOC,   GAM_LOC, GAM_SIZ, GAM_LOC)
-ra_ent(str_net,   'N',	   $FF,	  NET_BNK,   NET_IMGLOC,   NET_LOC, NET_SIZ, NET_LOC)
+ra_ent(str_net,   'N'+$80, $FF,	  NET_BNK,   NET_IMGLOC,   NET_LOC, NET_SIZ, NET_LOC)
 ra_ent(str_upd,   'X',	   $FF,	  UPD_BNK,   UPD_IMGLOC,   UPD_LOC, UPD_SIZ, UPD_LOC)
-ra_ent(str_nvr,   'W'+$80, $FF,	  NVR_BNK,   NVR_IMGLOC,   NVR_LOC, NVR_SIZ, NVR_LOC)
+ra_ent(str_blnk,  'W'+$80, $FF,	  NVR_BNK,   NVR_IMGLOC,   NVR_LOC, NVR_SIZ, NVR_LOC)
 ra_ent(str_blnk,  'S'+$80, $FF,	  SLC_BNK,   SLC_IMGLOC,   SLC_LOC, SLC_SIZ, SLC_LOC)
 ra_ent(str_user,  'U',	   $FF,	  USR_BNK,   USR_IMGLOC,   USR_LOC, USR_SIZ, USR_LOC)
 #endif
@@ -2710,7 +2733,6 @@ str_bas		.db	"BASIC",0
 str_tbas	.db	"Tasty BASIC",0
 str_play	.db	"Play a Game",0
 str_upd		.db	"XModem Flash Updater",0
-str_nvr		.db	"RomWBW Configure", 0
 str_user	.db	"User App",0
 str_blnk	.db	"",0
 str_net		.db	"Network Boot",0
@@ -2740,6 +2762,7 @@ mediaid		.db	0		; media id
 ;
 bootmode	.db	0		; ROM, APP, or IMG boot
 ra_tbl_loc	.dw	0		; points to active ra_tbl
+str_help_loc	.dw	0		; points to active str_help
 bootunit	.db	0		; boot disk unit
 bootslice	.db	0		; boot disk slice
 loadcnt		.db	0		; num disk sectors to load
