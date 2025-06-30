@@ -174,15 +174,12 @@ start1:
 ;
 	; For app mode startup, use alternate table
 	ld	hl,ra_tbl		; assume ROM application table
-	ld	de,str_help		; assume ROM help menu
 	ld	a,(bootmode)		; get boot mode
 	cp	BM_ROMBOOT		; ROM boot?
 	jr	z,start2		; if so, ra_tbl OK, skip ahead
 	ld	hl,ra_tbl_app		; switch to RAM application table
-	ld	de,str_help_app		; switch to RAM help menu
 start2:
 	ld	(ra_tbl_loc),hl		; and overlay pointer
-	ld	(str_help_loc),de	; and overlay help menu pointer
 ;
 ; Copy original page zero into user page zero
 ;
@@ -855,8 +852,16 @@ dskycmd1:
 ; Display Help
 ;
 help:
-	ld	hl,(str_help_loc)	; point to help string
+	ld	hl,str_help1		; load first help string
 	call	pstr			; display it
+	ld	a,(bootmode)		; get boot mode
+	cp	BM_ROMBOOT		; ROM boot?	
+	jr	nz,help1		; if not, skip str_help2
+	ld	hl,str_help2		; load second help string
+	call	pstr			; display it
+help1:
+	ld	hl,str_help3		; load third help string
+	call	pstr                    ; display it
 	ret
 ;
 ; List ROM apps
@@ -2573,32 +2578,36 @@ str_binfo5	.db	"]",0
 str_ldsec	.db	", Sector 0x",0
 str_diaglvl	.db	"\r\n\r\nHBIOS Diagnostic Level: ",0
 ;
-str_help	.db	"\r\n"
+;
+; Help text is broken into 3 pieces because an application mode boot
+; does allow access to the ROM-hosted features.  The str_help2 portion
+; is only displayed for a ROM boot.
+; 
+str_help1:
+		.db	"\r\n"
 		.db	"\r\n  L           - List ROM Applications"
-		.db	"\r\n  D           - Device Inventory"
-#if (BIOS == BIOS_WBW)
-		.db	"\r\n  S           - Slice Inventory"
-#endif
-		.db	"\r\n  R           - Reboot System"
-#if (BIOS == BIOS_WBW)
-		.db	"\r\n  W           - RomWBW Configure"
-		.db	"\r\n  I <u> [<c>] - Set Console Interface/Baud Rate"
-		.db	"\r\n  V [<n>]     - View/Set HBIOS Diagnostic Verbosity"
-		.db	"\r\n  N           - Network Boot"
-#endif
 		.db	"\r\n  <u>[.<s>]   - Boot Disk Unit/Slice"
 		.db	0
 ;
-str_help_app	.db	"\r\n"
-		.db	"\r\n  L           - List ROM Applications"
-		.db	"\r\n  R           - Reboot System"
+str_help2:
 #if (BIOS == BIOS_WBW)
+		.db	"\r\n  N           - Network Boot"
+#endif
+		.db	"\r\n  D           - Device Inventory"
+#if (BIOS == BIOS_WBW)
+		.db	"\r\n  S           - Slice Inventory"
+		.db	"\r\n  W           - RomWBW Configure"
+#endif
+		.db	0
+;
+str_help3:
+#if (BIOS == BIOS_WBW)
+
 		.db	"\r\n  I <u> [<c>] - Set Console Interface/Baud Rate"
 		.db	"\r\n  V [<n>]     - View/Set HBIOS Diagnostic Verbosity"
 #endif
-		.db	"\r\n  <u>[.<s>]   - Boot Disk Unit/Slice"
+		.db	"\r\n  R           - Reboot System"
 		.db	0
-
 ;
 ;=======================================================================
 ; DSKY keypad led matrix masks
@@ -2762,7 +2771,6 @@ mediaid		.db	0		; media id
 ;
 bootmode	.db	0		; ROM, APP, or IMG boot
 ra_tbl_loc	.dw	0		; points to active ra_tbl
-str_help_loc	.dw	0		; points to active str_help
 bootunit	.db	0		; boot disk unit
 bootslice	.db	0		; boot disk slice
 loadcnt		.db	0		; num disk sectors to load
