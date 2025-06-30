@@ -8,7 +8,7 @@
 ; and RomWBW Operation. Write to RTC NVRAM to store config
 ; is reliant on HBIOS
 ;
-; NOTE: This program is built as both a CP/M COM and Rom WBW Applicaton
+; NOTE: This program is built as both a CP/M COM and Rom WBW Application
 ;
 ; ROM APPLICATION THAT IS AUTOMATICALLY INCLUDED IN THE ROMWBW ROM.
 ; IT IS INVOKED FROM THE BOOT LOADER USING THE 'W' OPTION. (See RomLDR)
@@ -18,7 +18,16 @@
 ; BASED ON USEROM.ASM
 ; THANKS AND CREDIT TO MARTIN R. FOR PROVIDING THIS APPLICATION!
 ; Also Based on The Tasty Basic Configuration
-; Utilitity function were also copied from RomLdr, Assign.
+; Utility function were also copied from RomLdr, Assign.
+;
+;-----------------------------------------------------------------------
+;
+; Change Log:
+;   2024-11-08 [MAP] Initial v1.0 release
+;   2024-12-06 [WBW] Misc Fixes Improvements after initial release
+;   2025-06-30 [MAP] 1.1 Changed to be invoked in CALL RET fashion from RomLdr
+;
+;-----------------------------------------------------------------------
 ;
 #include "../ver.inc"
 #include "hbios.inc"
@@ -56,8 +65,9 @@ DEL		.EQU	127		; ASCII del/rubout
 		.ORG	NVR_LOC
 ;
 #ifdef ROMWBW
+	; Reuse the stack provided by Rom LDR
 	; PLACE STACK AT THE TOP OF AVAILABLE RAM (JUST BELOW THE HBIOS PROXY).
-	LD	SP,HBX_LOC
+	; LD	SP,HBX_LOC
 #endif
 #ifdef CPM
 	; setup stack (save old value)
@@ -75,9 +85,10 @@ exit:
 	; call	crlf			; formatting
 ;
 #ifdef ROMWBW
-	LD	B,BF_SYSRESET		; SYSTEM RESTART
-	LD	C,BF_SYSRES_WARM	; WARM START
-	RST	08			; CALL HBIOS (DOES NOT RETURN)
+	RET				; Return to Rom LDR
+	; LD	B,BF_SYSRESET		; SYSTEM RESTART
+	; LD	C,BF_SYSRES_WARM	; WARM START
+	; RST	08			; CALL HBIOS (DOES NOT RETURN)
 #endif
 #ifdef CPM
 ;
@@ -205,7 +216,7 @@ helpandloop:				; HELP MENU
 	JR	z,printmainhelp		; if empty line, print main help
 	call	upcase
 ;
-	; the folloiwng is just testing a single charater
+	; the following is just testing a single character
 	cp	'A'			; Auto Boot help menu
 	JP	Z,HELP_AB
 	cp	'B'			; Boot Options help menu
@@ -234,7 +245,7 @@ setvalueandloop:
 	JR	z,setvalueerror		; if empty line, print ?
 	call	upcase
 ;
-	; the folloiwng is just testing a single charater
+	; the following is just testing a single character
 	cp	'A'			; Auto Boot help menu
 	JP	Z,SET_AB
 	cp	'B'			; Boot Options help menu
@@ -265,7 +276,7 @@ PRT_STATUS:
 	LD	BC,BC_SYSGET_SWITCH
 	LD	D,$FF			; check for existence of switches
 	RST	08
-	JR	NZ,STAT_NOTFOUND	; error means switchs are not enabled
+	JR	NZ,STAT_NOTFOUND	; error means switches are not enabled
 ;
 ; print invdividual stats, on all per switch
 ;
@@ -499,7 +510,7 @@ err_ret:
 ;=======================================================================
 ;
 str_banner	.db	"\r\n"
-		.db	"RomWBW System Config Utility, Version 1.0 Nov-2024\r\n",0
+		.db	"RomWBW System Config Utility, Version 1.1 June-2025\r\n",0
 ;
 MSG_MENU	.DB	"\r\n"
 		.DB	"Commands:\r\n"
@@ -507,7 +518,7 @@ MSG_MENU	.DB	"\r\n"
 		.DB	"  (S)et {SW} {val}[,{val}[,{val}]]- Set a switch value(s)\r\n"
 		.DB	"  (R)eset - Init NVRAM to Defaults\r\n"
 		.DB	"  (H)elp [{SW}] - This help menu, or help on a switch\r\n"
-		.DB	"  (Q)uit - Quit\r\n"
+		.DB	"  e(X)it - Exit Configuration\r\n"
 		.DB	0
 MSG_PROMPT:	.DB	"\r\n"
 		.DB	"$", 0
@@ -1015,7 +1026,7 @@ CIN:	PUSH	BC
 ;
 stksav		.dw	0		; stack pointer saved at start
 ;
-cmdbuf:		.FILL	cmdmax,0	; cmd inut buffer
+cmdbuf:		.FILL	cmdmax,0	; cmd input buffer
 ;
 		.fill	stksiz,0	; stack
 stack		.equ	$		; stack top
