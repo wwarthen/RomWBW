@@ -535,7 +535,7 @@
 <p><strong>RomWBW User Guide</strong> \
 Version 3.6 \
 Wayne Warthen  (<a href="mailto:wwarthen@gmail.com">wwarthen@gmail.com</a>) \
-27 Jun 2025</p>
+30 Jun 2025</p>
 <h4 id="preface">Preface</h4>
 <p>This document is a general usage guide for the RomWBW software and is
 generally the best place to start with RomWBW.</p>
@@ -834,14 +834,16 @@ any of the RomWBW operating systems or ROM applications. It also allows
 you to manage some basic settings of the system. To enter a command,
 just enter the command followed by <strong><em>\&lt;enter&gt;</em></strong>.</p>
 <p>For example, typing <code>H&lt;enter&gt;</code> will display a short command summary:</p>
-<pre><code>Boot [H=Help]: h
+<pre><code>Boot [H=Help]: H
 
   L           - List ROM Applications
   D           - Device Inventory
+  S           - Slice Inventory
   R           - Reboot System
   W           - RomWBW Configure
   I &lt;u&gt; [&lt;c&gt;] - Set Console Interface/Baud Rate
   V [&lt;n&gt;]     - View/Set HBIOS Diagnostic Verbosity
+  N           - Network Boot
   &lt;u&gt;[.&lt;s&gt;]   - Boot Disk Unit/Slice
 </code></pre>
 <p>Likewise the <code>L</code> command (List ROM Applications) will display the list
@@ -857,7 +859,6 @@ ROM Applications:
   B: BASIC
   T: Tasty BASIC
   P: Play a Game
-  N: Network Boot
   X: XModem Flash Updater
   U: User App
 </code></pre>
@@ -920,10 +921,6 @@ prompt:</p>
 <tr>
 <td>Play</td>
 <td>A simple video game (requires ANSI terminal emulation)</td>
-</tr>
-<tr>
-<td>Network Boot</td>
-<td>Boot system via Wiznet MT011 device</td>
 </tr>
 <tr>
 <td>Flash Update</td>
