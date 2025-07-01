@@ -28,15 +28,6 @@
 ; INIT CODE
 ;*****************************************************************************
 ;
-#if (BIOS == BIOS_WBW)
-	; Get the current console unit
-	ld	b,BF_SYSPEEK		; HBIOS func: PEEK
-	ld	d,BID_BIOS		; BIOS bank
-	ld	hl,HCB_LOC + HCB_CONDEV	; console unit num in HCB
-	rst	08			; do it
-	ld	a,e			; put in A
-	ld	(curcon),a		; save it
-#endif
 ;
 ;*****************************************************************************
 ; Main Code starts here
@@ -506,7 +497,7 @@ PS_PAD1:
 ;*****************************************************************************
 ;
 #include	"util.asm"
-#INCLUDE 	"decode.asm"
+#include 	"decode.asm"
 #include	"bcd.asm"
 ;
 ;=======================================================================
@@ -526,8 +517,7 @@ COUT:
 ;
 	; Output character to console via HBIOS
 	ld	e,a			; output char to E
-	ld	a,(curcon)		; get current console
-	ld	c,a			; console unit to C
+	ld	c,CIO_CONSOLE		; output to current HBIOS console
 	ld	b,BF_CIOOUT		; HBIOS func: output char
 	rst	08			; HBIOS outputs character
 ;
@@ -691,10 +681,6 @@ PS_STRHDR	.TEXT	"Unit        Device      Type              Capacity/Mode\r\n"
 ;===============================================================================
 ;
 HB_BCDTMP	.FILL	5,0		; BCD NUMBER STORAGE (TEMP)
-;
-#if (BIOS == BIOS_WBW)
-curcon		.db	CIO_CONSOLE	; current console unit
-#endif
 ;
 ;===============================================================================
 ;
