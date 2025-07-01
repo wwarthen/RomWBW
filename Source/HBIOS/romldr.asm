@@ -225,6 +225,17 @@ start2:
 
 ;
 ;=======================================================================
+; Print Device List
+;=======================================================================
+;
+#if (BIOS == BIOS_WBW)
+;
+	; note we dont call this for UNA, assume UNA already does this
+	call	prtall			; Display Device List.
+;
+#endif
+;
+;=======================================================================
 ; Boot Loader Banner
 ;=======================================================================
 ;
@@ -2306,18 +2317,20 @@ CST	.equ	cst
 ;
 ; Print list of all drives (WBW)
 ;
-; Just invoke the existing HBIOS routine...
+; Call the Rom App to perform this
 ;
 prtall:
-	ld	a,BID_BIOS		; BIOS Bank please
-	ld	ix,$0406		; HBIOS PRTSUM vector
-	jp	HB_BNKCALL		; do it
+	ld	a,'D'			; "D"evice Inventory App
+	jp	romcall			; Call a Rom App with Return
 ;
 #endif
 ;
 #if (BIOS == BIOS_UNA)
 ;
 ; Print list of all drives (UNA)
+;
+; TODO Ideally the following code should be moved into InvntDev.ASM
+; Rom application ("D") which is called from above.
 ;
 prtall:
 	ld	hl,str_devlst		; device list header string
@@ -2702,6 +2715,7 @@ ra_ent(str_play,  'P',	   $FF,	  GAM_BNK,   GAM_IMGLOC,   GAM_LOC, GAM_SIZ, GAM_
 ra_ent(str_net,   'N'+$80, $FF,	  NET_BNK,   NET_IMGLOC,   NET_LOC, NET_SIZ, NET_LOC)
 ra_ent(str_upd,   'X',	   $FF,	  UPD_BNK,   UPD_IMGLOC,   UPD_LOC, UPD_SIZ, UPD_LOC)
 ra_ent(str_blnk,  'W'+$80, $FF,	  NVR_BNK,   NVR_IMGLOC,   NVR_LOC, NVR_SIZ, NVR_LOC)
+ra_ent(str_blnk,  'D'+$80, $FF,	  DEV_BNK,   DEV_IMGLOC,   DEV_LOC, DEV_SIZ, DEV_LOC)
 ra_ent(str_blnk,  'S'+$80, $FF,	  SLC_BNK,   SLC_IMGLOC,   SLC_LOC, SLC_SIZ, SLC_LOC)
 ra_ent(str_user,  'U',	   $FF,	  USR_BNK,   USR_IMGLOC,   USR_LOC, USR_SIZ, USR_LOC)
 #endif
