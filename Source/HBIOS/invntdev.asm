@@ -710,7 +710,7 @@ SLACK	.EQU	(DEV_END - $)
 #ENDIF
 ;
 	.FILL	SLACK,$00
-	.ECHO	"Slice Inventory space remaining: "
+	.ECHO	"INVNTDEV Device Inventory space remaining: "
 	.ECHO	SLACK
 	.ECHO	" bytes.\n"
 ;

@@ -353,7 +353,7 @@ SLACK	.EQU	(SLC_END - $)
 #ENDIF
 ;
 	.FILL	SLACK,$00
-	.ECHO	"Slice Inventory space remaining: "
+	.ECHO	"INVNTSLC Slice Inventory space remaining: "
 	.ECHO	SLACK
 	.ECHO	" bytes.\n"
 ;
