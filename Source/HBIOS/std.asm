@@ -329,11 +329,11 @@ SYQMODE_MG014	.EQU	2		; RCBUS MG014 STYLE INTERFACE
 ;
 ; PCF CLOCK CHIP FREQUENCIES
 ;
-PCFCLK_3   	.EQU	$00		;  3    MHz 
+PCFCLK_3   	.EQU	$00		;  3    MHz
 PCFCLK_443 	.EQU	$10            ;  4.43 MHz
-PCFCLK_6   	.EQU	$14            ;  6    MHz 
-PCFCLK_8   	.EQU	$18            ;  8    MHz 
-PCFCLK_12  	.EQU	$1C            ; 12    MHz 
+PCFCLK_6   	.EQU	$14            ;  6    MHz
+PCFCLK_8   	.EQU	$18            ;  8    MHz
+PCFCLK_12  	.EQU	$1C            ; 12    MHz
 ;
 ; PCF TRANSMISSION FREQUENCIES
 ;
@@ -978,9 +978,7 @@ APP_BNKS	.SET	0
 ;
 #INCLUDE "layout.inc"
 ;
-;
-MON_DSKY	.EQU	MON_LOC + (0 * 3)	; MONITOR ENTRY (DSKY)
-MON_SERIAL	.EQU	MON_LOC + (1 * 3)	; MONITOR ENTRY (SERIAL PORT)
+; ---------------------------
 ;
 ; INTERRUPT MODE 2 SLOT ASSIGNMENTS
 ;
