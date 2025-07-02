@@ -119,6 +119,7 @@ bid_cur	.equ	-1	; used below to indicate current bank
 ;
 ; Note: at startup, we should not assume which bank we are operating in.
 ;
+	ld	a,e			; save startup mode
 	; Relocate to start of common ram at $8000
 	ld	hl,0
 	ld	de,$8000
@@ -131,6 +132,7 @@ bid_cur	.equ	-1	; used below to indicate current bank
 ;
 start:
 	ld	sp,bl_stack		; setup private stack
+	ld	(startmode),a		; save startup mode
 	call	delay_init		; init delay functions
 ;
 ; Disable interrupts if IM1 is active because we are switching to page
@@ -227,8 +229,11 @@ start2:
 ;
 #if (BIOS == BIOS_WBW)
 ;
-	; note we dont call this for UNA, assume UNA already does this
-	call	prtall			; Display Device List.
+	; We don't have a start mode for UNA.  So, the device display
+	; will only occur when selected from the menu.
+	ld	a,(startmode)		; get start mode
+	cp	START_COLD		; cold start?
+	call	z,prtall		; if so, display Device List.
 ;
 #endif
 ;
@@ -2334,6 +2339,8 @@ prtall:
 ;
 ; Print list of all drives (UNA)
 ;
+; UNA has no place to put this in ROM, so it is done here.
+;
 prtall:
 	ld	hl,str_devlst		; device list header string
 	call	pstr			; display it
@@ -2781,6 +2788,7 @@ sps		.dw	0		; sectors per slice
 mediaid		.db	0		; media id
 ;
 bootmode	.db	0		; ROM, APP, or IMG boot
+startmode	.db	0		; START_WARM or START_COLD
 ra_tbl_loc	.dw	0		; points to active ra_tbl
 bootunit	.db	0		; boot disk unit
 bootslice	.db	0		; boot disk slice
