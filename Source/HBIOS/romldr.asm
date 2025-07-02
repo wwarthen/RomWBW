@@ -866,7 +866,7 @@ help:
 	ld	hl,str_help1		; load first help string
 	call	pstr			; display it
 	ld	a,(bootmode)		; get boot mode
-	cp	BM_ROMBOOT		; ROM boot?	
+	cp	BM_ROMBOOT		; ROM boot?
 	jr	nz,help1		; if not, skip str_help2
 	ld	hl,str_help2		; load second help string
 	call	pstr			; display it
@@ -2334,9 +2334,6 @@ prtall:
 ;
 ; Print list of all drives (UNA)
 ;
-; TODO Ideally the following code should be moved into InvntDev.ASM
-; Rom application ("D") which is called from above.
-;
 prtall:
 	ld	hl,str_devlst		; device list header string
 	call	pstr			; display it
@@ -2595,7 +2592,7 @@ str_diaglvl	.db	"\r\n\r\nHBIOS Diagnostic Level: ",0
 ; Help text is broken into 3 pieces because an application mode boot
 ; does allow access to the ROM-hosted features.  The str_help2 portion
 ; is only displayed for a ROM boot.
-; 
+;
 str_help1:
 		.db	"\r\n"
 		.db	"\r\n  L           - List ROM Applications"

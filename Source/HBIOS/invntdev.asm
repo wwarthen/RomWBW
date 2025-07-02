@@ -496,6 +496,9 @@ PS_PAD1:
 ; Support Routines
 ;*****************************************************************************
 ;
+; TODO Ideally we wouldnt import all these here, as they take up quite a
+; bit of space. Util.asm needs to be broken up, or copy required code here
+;
 #include	"util.asm"
 #include 	"decode.asm"
 #include	"bcd.asm"
