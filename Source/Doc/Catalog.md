@@ -1267,6 +1267,86 @@ The following files are found in
 | `UNIXIO.H`     | Language include file (see manual) |
 | `ZAS.COM`      | The assembler - in fact a general purpose macro  assembler |
 
+## INFOCOM (Games)
+
+| Hard Disk Image: **hd_infocom.img**
+
+A collection of all Official releases of the interactive fiction games
+produced by Infocom in the 1980's
+
+| **File**    | **Description**                                |
+|-------------|------------------------------------------------|
+| amfv.z4     | A Mind Forever Voyaging                        |
+| arthur.z6   | Arthur - The Quest for Excalibur               |
+| ballyhoo.z3 | Ballyhoo                                       |
+| beyond.z5   | Beyond Zork                                    |
+| border.z5   | Border Zone                                    |
+| bureau.z4   | Bureaucracy                                    |
+| cutthr.z3   | Cutthroats                                     |
+| deadline.z3 | Deadline                                       |
+| enchant.z3  | Enchanter                                      |
+| hitchhik.z3 | Hitchhiker's Guide to the Galaxy               |
+| hollywoo.z3 | Hollywood Hijinx                               |
+| infidel.z3  | Infidel                                        |
+| journey.z6  | Journey                                        |
+| leather.z3  | Leather Goddesses of Phobos                    |
+| lurking.z3  | The Lurking Horror                             |
+| moonmist.z3 | Moonmist                                       |
+| nordbert.z4 | Nord and Bert Couldn't Make Head or Tail of It |
+| planet.z3   | Planetfall                                     |
+| plunder.z3  | Plundered Hearts                               |
+| readme.txt  | Additional Documentation                       |
+| seastalk.z3 | Seastalker                                     |
+| sherlock.z5 | Sherlock                                       |
+| shogun.z6   | Shogun                                         |
+| sorcerer.z3 | Sorcerer                                       |
+| spellb.z3   | Spellbreaker                                   |
+| starcros.z3 | Starcross                                      |
+| stationf.z3 | Stationfall                                    |
+| suspect.z3  | Suspect                                        |
+| suspend.z3  | Suspended                                      |
+| trinity.z4  | Trinity                                        |
+| wishbr.z3   | Wishbringer                                    |
+| witness.z3  | Witness                                        |
+| zork0.z6    | Zork Zero                                      |
+| zork1.z3    | Zork I                                         |
+| zork2.z3    | Zork II                                        |
+| zork3.z3    | Zork III                                       |
+
+The above games have been curated from here <https://eblong.com/infocom/>.
+Documentation can be found here <https://infodoc.plover.net/>
+
+To run these you need a Z-Machine interpreter
+
+#### VEZZA (User Area 15)
+
+Vezza is a modern Infocom/Inform/Z-machine text adventure interpreter for 8 bit
+z80 based computers.  What makes it modern is that it is written in hand-crafted
+z80 assembler for maximum speed, and can load not only the classics such as
+Zork 1,2 and 3 but also the later games.
+
+It can run v1-v8* inform format interactive fiction game files
+
+This tool is free but the developer accepts your support by letting
+you pay what you think is fair for the tool. If you find this useful
+consider donating at https://sijnstra.itch.io/vezza
+
+You should (test and) choose one that works on you configuration,
+and best to copy and rename it as vezza.com
+
+| **File**     | **Description**                                                   |
+|--------------|-------------------------------------------------------------------|
+| vezza-B.com  | 80x24, VT52 + Banked CP/M 3                                       |
+| vezza-FG.com | 80x25, VT100/ANSI (16 color) + CP/M 3                             |
+| vezza-C2.com | 80x24, VT100 - CP/M 2.2 large memory, no timed input              |
+| vezza-CC.com | 80x24, VT100 (256 colour) - CP/M 2.2 large memory, no timed input |
+| vezza-AV.com | 80x24, VT100 (16 colour) - CP/M 2.2 high RAM.                     |
+| vezza-AX.com | 80x25, VT100/ANSI (16 colour) - CP/M 2.2 high RAM.                |
+| vezza-RW.com | 80x24, VT100 - CP/M 2.2                                           |
+
+The above is a subset of available builds. The full repository is available at
+https://gitlab.com/sijnstra1/vezza/
+
 ## MSX ROMS
 
 | Hard Disk Image: **hd_msxroms1.img**

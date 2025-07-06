@@ -15,6 +15,7 @@ Version 3.6
 - WBW: Support ROM-based font storage
 - MAP: New Slice Inventory Rom App "S" display bootable slices, during boot
 - MAP: Device Inventory moved from HBIOS to Rom App, saving >1k space in HBIOS
+- MAP: Added disk image for all Infocom text adventure Games
 
 Version 3.5.1
 -------------

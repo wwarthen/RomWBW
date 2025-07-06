@@ -1806,6 +1806,7 @@ The following table shows the disk images available.
 | xxx_fortran.img   | Microsoft Fortran-80 Compiler        | No       |
 | xxx_games.img     | Games Disk for CP/M                  | No       |
 | xxx_hitechc.img   | HI-TECH Z80 CP/M C compiler          | No       |
+| xxx_infocom.img   | Infocom Games Disk                   | No       |
 | xxx_msxroms1.img  | MSX ROMs Disk 1                      | No       |
 | xxx_msxroms2.img  | MSX ROMs Disk 2                      | No       |
 | xxx_nzcom.img     | NZCOM ZCPR 3.4 Operating System      | Yes      |

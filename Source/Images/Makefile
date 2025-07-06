@@ -14,7 +14,7 @@ HD512IMGS = hd512_cpm22.img hd512_zsdos.img hd512_nzcom.img \
 HD512XIMGS = hd512_z80asm.img hd512_aztecc.img hd512_hitechc.img \
 	hd512_bascomp.img hd512_fortran.img hd512_games.img \
 	hd512_tpascal.img hd512_dos65.img hd512_qpm.img \
-	hd512_z3plus.img \
+	hd512_z3plus.img hd512_infocom.img \
 	hd512_cowgol.img hd512_msxroms1.img hd512_msxroms2.img \
 	hd512_cobol.img  hd512_blank.img
 HD1KIMGS = hd1k_cpm22.img hd1k_zsdos.img hd1k_nzcom.img \
@@ -22,7 +22,7 @@ HD1KIMGS = hd1k_cpm22.img hd1k_zsdos.img hd1k_nzcom.img \
 HD1KXIMGS = hd1k_z80asm.img hd1k_aztecc.img hd1k_hitechc.img \
 	hd1k_bascomp.img hd1k_fortran.img hd1k_games.img \
 	hd1k_tpascal.img hd1k_qpm.img \
-	hd1k_z3plus.img \
+	hd1k_z3plus.img hd1k_infocom.img \
 	hd1k_cowgol.img hd1k_msxroms1.img hd1k_msxroms2.img \
 	hd1k_cobol.img hd1k_blank.img
 HD1KXIMGS += hd1k_bp.img
