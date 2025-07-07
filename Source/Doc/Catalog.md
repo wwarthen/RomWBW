@@ -1121,7 +1121,7 @@ The following files are found in
 | `TESTAS.SUB`   | SUBMIT file to build TESTAS sample program |
 | `Z80AS.COM`    | Z80 assembler which assembles the output of COWFIX and other Z80 source files (see <https://github.com/Laci1953/Z80AS>) |
 
-## Microsoft Fortran 80 (Fortran)
+## Microsoft Fortran 80
 
 | Floppy Disk Image: **fd_fortran.img**
 | Hard Disk Image: **hd_fortran.img**
@@ -1267,12 +1267,16 @@ The following files are found in
 | `UNIXIO.H`     | Language include file (see manual) |
 | `ZAS.COM`      | The assembler - in fact a general purpose macro  assembler |
 
-## INFOCOM (Games)
+## Infocom (Text Adventure Games)
 
 | Hard Disk Image: **hd_infocom.img**
 
 A collection of all Official releases of the interactive fiction games
 produced by Infocom in the 1980's
+
+The following files are found in
+
+*  /Source/Images/d_infocom
 
 | **File**    | **Description**                                |
 |-------------|------------------------------------------------|
@@ -1285,8 +1289,8 @@ produced by Infocom in the 1980's
 | cutthr.z3   | Cutthroats                                     |
 | deadline.z3 | Deadline                                       |
 | enchant.z3  | Enchanter                                      |
-| hitchhik.z3 | Hitchhiker's Guide to the Galaxy               |
-| hollywoo.z3 | Hollywood Hijinx                               |
+| h2g2.z3     | The Hitchhiker's Guide to the Galaxy           |
+| hollyw.z3   | Hollywood Hijinx                               |
 | infidel.z3  | Infidel                                        |
 | journey.z6  | Journey                                        |
 | leather.z3  | Leather Goddesses of Phobos                    |
@@ -1314,7 +1318,7 @@ produced by Infocom in the 1980's
 | zork3.z3    | Zork III                                       |
 
 The above games have been curated from here <https://eblong.com/infocom/>.
-Documentation can be found here <https://infodoc.plover.net/>
+Full documentation can be found here <https://infodoc.plover.net/>
 
 To run these you need a Z-Machine interpreter
 
@@ -1329,7 +1333,9 @@ It can run v1-v8* inform format interactive fiction game files
 
 This tool is free but the developer accepts your support by letting
 you pay what you think is fair for the tool. If you find this useful
-consider donating at https://sijnstra.itch.io/vezza
+consider donating at: 
+
+<https://sijnstra.itch.io/vezza>
 
 You should (test and) choose one that works on you configuration,
 and best to copy and rename it as vezza.com
@@ -1344,8 +1350,8 @@ and best to copy and rename it as vezza.com
 | vezza-AX.com | 80x25, VT100/ANSI (16 colour) - CP/M 2.2 high RAM.                |
 | vezza-RW.com | 80x24, VT100 - CP/M 2.2                                           |
 
-The above is a subset of available builds. The full repository is available at
-https://gitlab.com/sijnstra1/vezza/
+The above is a subset of available builds. The full repository including 
+documentation is available at <https://gitlab.com/sijnstra1/vezza/>
 
 ## MSX ROMS
 
@@ -1409,7 +1415,7 @@ The following files are found in
 | `TURBO.OVR`    | Part of TURBO Pascal           |
 | `TURBOMSG.OVR` | Part of TURBO Pascal           |
 
-## WordStar 4
+## WordStar 4 (Word processor)
 
 | Floppy Disk Image: **fd_ws4.img**
 | Hard Disk Image: **hd_ws4.img**

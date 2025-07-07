@@ -1,8 +1,8 @@
 
 INFOCOM GAMES
 
-A collection of all Official releases of the interactive fiction games
-produced by Infocom in the 1980's
+A collection of all official releases of the interactive fiction games
+produced by Infocom in the 1980's. The copyright rests with Activision.
 
 Game List follows including the revision number and release date
 
@@ -15,8 +15,8 @@ bureau.z4 - (Bureaucracy) - r116-s870602
 cutthr.z3 - (Cutthroats) - r23-s840809
 deadline.z3 - (Deadline) - r27-s831005
 enchant.z3 - (Enchanter) - r29-s860820
-hitchhik.z3 - (Hitchhiker's Guide) - r59-s851108
-hollywoo.z3 - (Hollywood Hijinx) - r37-s861215
+h2g2.z3 - (The Hitchhiker's Guide to the Galaxy) - r59-s851108
+hollyw.z3 - (Hollywood Hijinx) - r37-s861215
 infidel.z3 - (Infidel) - r22-s830916
 journey.z6 - (Journey) - r83-s890706
 leather.z3 - (Leather Goddesses of Phobos) - r59-s860730
@@ -42,31 +42,32 @@ zork1.z3 - (Zork 1) - r88-s840726
 zork2.z3 - (Zork 2) - r48-s840904
 zork3.z3 - (Zork 3) - r17-s840727
 
-The versions above are generally from The Text Adventure
-Masterpieces of Infocom CD (1996) is the source of most
-modern releases and downloads. The copyright rests with Activision.
+The versions above are generally from the "Classic Text Adventure
+Masterpieces" released by Activision in (1996) which is the source of most modern releases.
 
-The "official" version of Hitchhiker is the one that Douglas
-Adams posted on his web site in the mid-90s. The BBC later
-posted an illustrated version based on the same game file.
+The version of Hitchhiker is the one that Douglas Adams postedon his web
+site in the mid-90s. The BBC later posted an illustrated version based
+on the same game file.
 
 The above games have been curated from here <https://eblong.com/infocom/>.
-Game documentation can be found here <https://infodoc.plover.net/>
+Full game documentation can be found here <https://infodoc.plover.net/>
 
 To run these you need a Z-Machine interpreter
 
 VEZZA
 
-Vezza is a modern Infocom/Inform/Z-machine text adventure interpreter for 8 bit
-z80 based computers.  What makes it modern is that it is written in hand-crafted
-z80 assembler for maximum speed, and can load not only the classics such as
-Zork 1,2 and 3 but also the later games.
+Vezza is a modern Infocom/Inform/Z-machine text adventure interpreter for
+8 bit z80 based computers.  What makes it modern is that it is written in
+hand-crafted z80 assembler for maximum speed, and can load not only the
+classics such as Zork 1,2 and 3 but also the latter games.
 
 It can run v1-v8* inform format interactive fiction game files
 
-This tool is free but the developer accepts your support by letting
-you pay what you think is fair for the tool. If you find this useful
-consider donating at https://sijnstra.itch.io/vezza
+This tool is free but the developer accepts your support by letting you
+pay what you think is fair for the tool. If you find this useful consider
+donating at:
+
+https://sijnstra.itch.io/vezza
 
 The following files are located in user area 15
 
@@ -78,7 +79,8 @@ Other builds (Large memory CP/M 2.2, no timed input):
   vezza-C2.com - 80x24 RunCPM VT100 - no colour
   vezza-CC.com - 80x24 RunCPM VT100 with 256 ANSI colour codes
 
-Slow builds due to BIOS limitations (extra register presevation, less cache, smaller memory build):
+Slow builds due to BIOS limitations (extra register presevation, less cache,
+smaller memory build):
   vezza-AV.com - CP/M 2.2 with VT100 codes plus 16 bit ANSI colour & high
                  RAM. Works on Agon Light CP/M 2.2
                  Note: Issues with very high I/O such as screen animations
@@ -88,11 +90,11 @@ Slow builds due to BIOS limitations (extra register presevation, less cache, sma
   vezza-RW.com - CP/M 2.2 with VT100 codes plus 16 bit ANSI colour with low
                  RAM. Tested on RC 2014 SC-126 using TeraTerm
 
-You should (test and) choose one that works on you configuration,
-and possibly copy and rename it as vezza.com.
+You should (test and) choose one that works on you configuration, and
+possibly copy and rename it as vezza.com.
 
-The above is a subset of available builds. The full repository is avalable at
-https://gitlab.com/sijnstra1/vezza/
+The above is a subset of available builds. The full repository is available
+at https://gitlab.com/sijnstra1/vezza/
 
 
 
