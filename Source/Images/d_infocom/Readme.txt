@@ -35,7 +35,7 @@ stationf.z3 - (Stationfall) - r107-s870430
 suspect.z3 - (Suspect) - r14-s841005
 suspend.z3 - (Suspended) - r8-s840521
 trinity.z4 - (Trinity) - r12-s860926
-wishbr.z3 - (Wishbringer) - r69-s850920
+wishb.z3 - (Wishbringer) - r69-s850920
 witness.z3 - (Witness) - r22-s840924
 zork0.z6 - (Zork 0) - r393-s890714
 zork1.z3 - (Zork 1) - r88-s840726
@@ -48,6 +48,8 @@ Masterpieces" released by Activision in (1996) which is the source of most moder
 The version of Hitchhiker is the one that Douglas Adams postedon his web
 site in the mid-90s. The BBC later posted an illustrated version based
 on the same game file.
+
+Version C Updated FEB 5, 85                       C
 
 The above games have been curated from here <https://eblong.com/infocom/>.
 Full game documentation can be found here <https://infodoc.plover.net/>

@@ -1310,7 +1310,7 @@ The following files are found in
 | suspect.z3  | Suspect                                        |
 | suspend.z3  | Suspended                                      |
 | trinity.z4  | Trinity                                        |
-| wishbr.z3   | Wishbringer                                    |
+| wishb.z3    | Wishbringer                                    |
 | witness.z3  | Witness                                        |
 | zork0.z6    | Zork Zero                                      |
 | zork1.z3    | Zork I                                         |
