@@ -1,6 +1,7 @@
 ;======================================================================
 ;
-;	BIT MODE SOUND DRIVER FOR SBC V2 USING BIT 0 OF RTC DRIVER
+;	BIT MODE SOUND DRIVER FOR USING 1 BIT OF AN IO PORT
+;	TAKING CARE NOT TO CHANGE OTHER BITS
 ;
 ;======================================================================
 ;
@@ -338,8 +339,8 @@ BE_END:
 ;	leaves the bit set to the opposite value it started at.  This
 ;	ensures that the bit is properly reset to its original value.
 ;
-	LD	A,(SPKSHADOW)		; Get the current RTC latch value
-	OUT	(RTCIO),A		; Set it
+	LD	A,(SPKSHADOW)		; Get the current port value (typically RTC latch)
+	OUT	(SPKPORT),A		; Set it
 ;
 	RET				; ALWAYS EXITS WITH SUCCESS STATUS (A=0)
 ;
@@ -361,7 +362,7 @@ SP_DEVICE:
 	LD	E,0			; E := PHYSICAL UNIT
 	LD	C,$00			; C := DEVICE TYPE
 	LD	H,0			; H := 0, DRIVER HAS NO MODES
-	LD	L,RTCIO			; L := BASE I/O ADDRESS
+	LD	L,SPKPORT		; L := BASE I/O ADDRESS
 	XOR	A
 	RET
 ;
