@@ -7,7 +7,7 @@
 **RomWBW Introduction** \
 Version 3.6 \
 Wayne Warthen  ([wwarthen@gmail.com](mailto:wwarthen@gmail.com)) \
-29 Jun 2025
+06 Jul 2025
 
 # Overview
 
@@ -307,8 +307,10 @@ let me know if I missed you!
   - significant content in the Disk Catalog and User Guide
   - creation of the Introduction and Hardware documents
   - Z3PLUS operating system disk image
+  - Infocom text adventure game disk image
   - COPYSL, and SLABEL utilities
   - Display of bootable slices via “S” command during startup
+  - Optimisations of HBIOS and CBIOS to reduce overall code size
   - a feature for RomWBW configuration by NVRAM
   - the /B bulk mode of disk assignment to the ASSIGN utility
 

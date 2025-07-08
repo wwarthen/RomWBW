@@ -1121,7 +1121,7 @@ The following files are found in
 | `TESTAS.SUB`   | SUBMIT file to build TESTAS sample program |
 | `Z80AS.COM`    | Z80 assembler which assembles the output of COWFIX and other Z80 source files (see <https://github.com/Laci1953/Z80AS>) |
 
-## Microsoft Fortran 80 (Fortran)
+## Microsoft Fortran 80
 
 | Floppy Disk Image: **fd_fortran.img**
 | Hard Disk Image: **hd_fortran.img**
@@ -1267,6 +1267,106 @@ The following files are found in
 | `UNIXIO.H`     | Language include file (see manual) |
 | `ZAS.COM`      | The assembler - in fact a general purpose macro  assembler |
 
+## Infocom (Text Adventure Games)
+
+| Hard Disk Image: **hd_infocom.img**
+
+A collection of all Official releases of the interactive fiction games
+produced by Infocom in the 1980's
+
+The following files are found in
+
+*  /Source/Images/d_infocom
+
+| **File**    | **Description**                                    |
+|-------------|----------------------------------------------------|
+| amfv.z4     | A Mind Forever Voyaging (*)                        |
+| arthur.z6   | Arthur - The Quest for Excalibur (*)               |
+| ballyhoo.z3 | Ballyhoo                                           |
+| beyond.z5   | Beyond Zork (*)                                    |
+| border.z5   | Border Zone (*)                                    |
+| bureau.z4   | Bureaucracy (*)                                    |
+| cutthr.z3   | Cutthroats                                         |
+| deadline.z3 | Deadline                                           |
+| enchant.z3  | Enchanter                                          |
+| h2g2.z3     | The Hitchhiker's Guide to the Galaxy               |
+| hollyw.z3   | Hollywood Hijinx                                   |
+| infidel.z3  | Infidel                                            |
+| journey.z6  | Journey (*)                                        |
+| leather.z3  | Leather Goddesses of Phobos                        |
+| lurking.z3  | The Lurking Horror                                 |
+| moonmist.z3 | Moonmist                                           |
+| nordbert.z4 | Nord and Bert Couldn't Make Head or Tail of It (*) |
+| planet.z3   | Planetfall                                         |
+| plunder.z3  | Plundered Hearts                                   |
+| readme.txt  | Additional Documentation                           |
+| seastalk.z3 | Seastalker                                         |
+| sherlock.z5 | Sherlock (*)                                       |
+| shogun.z6   | Shogun (*)                                         |
+| sorcerer.z3 | Sorcerer                                           |
+| spellb.z3   | Spellbreaker                                       |
+| starcros.z3 | Starcross                                          |
+| stationf.z3 | Stationfall                                        |
+| suspect.z3  | Suspect                                            |
+| suspend.z3  | Suspended                                          |
+| trinity.z4  | Trinity (*)                                        |
+| wishb.z3    | Wishbringer                                        |
+| witness.z3  | Witness                                            |
+| zork0.z6    | Zork Zero (*)                                      |
+| zork1.z3    | Zork I                                             |
+| zork2.z3    | Zork II                                            |
+| zork3.z3    | Zork III                                           |
+
+The above games have been curated from here <https://eblong.com/infocom/>.
+Full game documentation can be found here <https://infodoc.plover.net/>
+
+The game files are a virtual machine code commonly known as Z-Machine, they
+are portable and will run on any machine that has a Z-Machine interpreter.
+
+* All the Z3 games come with the official CP/M interpreter (the `COM` file) 
+  version C last updated by Inforcom on 5th Feb 1985. You can simply run the
+  game by running it from the `COM` program  
+* All latter games Z4, Z5,.. and above, (Marked as * in the listing above)
+  are more sophisticated and require a better interpreter. i.e. VEZZA. 
+
+#### VEZZA (User Area 15)
+
+Vezza is a modern Infocom/Inform/Z-machine text adventure interpreter for 8 bit
+z80 based computers.  What makes it modern is that it is written in hand-crafted
+z80 assembler for maximum speed, and can load not only the classics such as
+Zork 1,2 and 3 but also the later games.
+
+It can run Z1 up to Z8 inform format interactive fiction game files. To run 
+a game with Vezza just type Vezza followed by the game you want to run. e.g.
+
+`VEZZA ZORK0.Z6`
+
+**Note:** One of the bigger constraints is available RAM. An OS such as ZPM
+since it uses banked RAM does have a good amount of available RAM and was 
+used to test these games work.
+
+This tool is free but the developer accepts your support by letting
+you pay what you think is fair for the tool. If you find this useful
+consider donating at: 
+
+<https://sijnstra.itch.io/vezza>
+
+You should (test and) choose one that works on you configuration,
+and best to copy and rename it as vezza.com
+
+| **File**     | **Description**                                                   |
+|--------------|-------------------------------------------------------------------|
+| vezza-B.com  | 80x24, VT52 + Banked CP/M 3                                       |
+| vezza-FG.com | 80x25, VT100/ANSI (16 color) + CP/M 3                             |
+| vezza-C2.com | 80x24, VT100 - CP/M 2.2 large memory, no timed input              |
+| vezza-CC.com | 80x24, VT100 (256 colour) - CP/M 2.2 large memory, no timed input |
+| vezza-AV.com | 80x24, VT100 (16 colour) - CP/M 2.2 high RAM.                     |
+| vezza-AX.com | 80x25, VT100/ANSI (16 colour) - CP/M 2.2 high RAM.                |
+| vezza-RW.com | 80x24, VT100 - CP/M 2.2                                           |
+
+The above is a subset of available builds. The full repository including 
+documentation is available at <https://gitlab.com/sijnstra1/vezza/>
+
 ## MSX ROMS
 
 | Hard Disk Image: **hd_msxroms1.img**
@@ -1329,7 +1429,7 @@ The following files are found in
 | `TURBO.OVR`    | Part of TURBO Pascal           |
 | `TURBOMSG.OVR` | Part of TURBO Pascal           |
 
-## WordStar 4
+## WordStar 4 (Word processor)
 
 | Floppy Disk Image: **fd_ws4.img**
 | Hard Disk Image: **hd_ws4.img**
