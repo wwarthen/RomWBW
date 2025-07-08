@@ -1,5 +1,5 @@
 
-INFOCOM GAMES
+===== INFOCOM GAMES =====
 
 A collection of all official releases of the interactive fiction games
 produced by Infocom in the 1980's. The copyright rests with Activision.
@@ -43,18 +43,24 @@ zork2.z3 - (Zork 2) - r48-s840904
 zork3.z3 - (Zork 3) - r17-s840727
 
 The versions above are generally from the "Classic Text Adventure
-Masterpieces" released by Activision in (1996) which is the source of most modern releases.
+Masterpieces" released by Activision in (1996) which is the source of
+most modern releases.
 
 The version of Hitchhiker is the one that Douglas Adams postedon his web
 site in the mid-90s. The BBC later posted an illustrated version based
 on the same game file.
 
-Version C Updated FEB 5, 85                       C
-
 The above games have been curated from here <https://eblong.com/infocom/>.
 Full game documentation can be found here <https://infodoc.plover.net/>
 
-To run these you need a Z-Machine interpreter
+The game files are a virtual machine code commonly known as Z-Machine, they
+are portable and will run on any machine that has a Z-Machine interpreter.
+
+All the Z3 games come with the official CP/M interpreter (Version C) last
+updated by Inforcom on 5th Feb 1985
+
+All latter games Z4, Z5,.. and above, are more sophisticated and require
+a better interpreter. i.e. VEZZA.
 
 VEZZA
 
@@ -63,7 +69,14 @@ Vezza is a modern Infocom/Inform/Z-machine text adventure interpreter for
 hand-crafted z80 assembler for maximum speed, and can load not only the
 classics such as Zork 1,2 and 3 but also the latter games.
 
-It can run v1-v8* inform format interactive fiction game files
+It can run Z1 up to Z8 inform format interactive fiction game files. To run
+a game with Vezza just type Vezza followed by the game you want to run. e.g.
+
+`VEZZA ZORK0.Z6`
+
+**Note:** One of the bigger constraints is available RAM. An OS such as ZPM
+since it uses banked RAM does have a good amount of available RAM and was
+used to test these games work.
 
 This tool is free but the developer accepts your support by letting you
 pay what you think is fair for the tool. If you find this useful consider
@@ -93,7 +106,8 @@ smaller memory build):
                  RAM. Tested on RC 2014 SC-126 using TeraTerm
 
 You should (test and) choose one that works on you configuration, and
-possibly copy and rename it as vezza.com.
+ideally copy and rename it as vezza.com, so the Alias COM files can find
+and execute the game.
 
 The above is a subset of available builds. The full repository is available
 at https://gitlab.com/sijnstra1/vezza/

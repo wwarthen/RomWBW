@@ -2,6 +2,8 @@
 
 This disk contains several games for CP/M including the Infocom games
 Zork 1 through 3, Planetfall and Hitchhiker's Guide to the Galaxy.
+A complete collection of all infocom games is available on the separate
+INFOCOM disk image
 
 Nemesis and Dungeon Master is a Rogue-like game released in 1981. It is playable
 on a text terminal using ASCII graphics to represent the dungeon. Only a few

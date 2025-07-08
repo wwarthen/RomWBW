@@ -1278,49 +1278,56 @@ The following files are found in
 
 *  /Source/Images/d_infocom
 
-| **File**    | **Description**                                |
-|-------------|------------------------------------------------|
-| amfv.z4     | A Mind Forever Voyaging                        |
-| arthur.z6   | Arthur - The Quest for Excalibur               |
-| ballyhoo.z3 | Ballyhoo                                       |
-| beyond.z5   | Beyond Zork                                    |
-| border.z5   | Border Zone                                    |
-| bureau.z4   | Bureaucracy                                    |
-| cutthr.z3   | Cutthroats                                     |
-| deadline.z3 | Deadline                                       |
-| enchant.z3  | Enchanter                                      |
-| h2g2.z3     | The Hitchhiker's Guide to the Galaxy           |
-| hollyw.z3   | Hollywood Hijinx                               |
-| infidel.z3  | Infidel                                        |
-| journey.z6  | Journey                                        |
-| leather.z3  | Leather Goddesses of Phobos                    |
-| lurking.z3  | The Lurking Horror                             |
-| moonmist.z3 | Moonmist                                       |
-| nordbert.z4 | Nord and Bert Couldn't Make Head or Tail of It |
-| planet.z3   | Planetfall                                     |
-| plunder.z3  | Plundered Hearts                               |
-| readme.txt  | Additional Documentation                       |
-| seastalk.z3 | Seastalker                                     |
-| sherlock.z5 | Sherlock                                       |
-| shogun.z6   | Shogun                                         |
-| sorcerer.z3 | Sorcerer                                       |
-| spellb.z3   | Spellbreaker                                   |
-| starcros.z3 | Starcross                                      |
-| stationf.z3 | Stationfall                                    |
-| suspect.z3  | Suspect                                        |
-| suspend.z3  | Suspended                                      |
-| trinity.z4  | Trinity                                        |
-| wishb.z3    | Wishbringer                                    |
-| witness.z3  | Witness                                        |
-| zork0.z6    | Zork Zero                                      |
-| zork1.z3    | Zork I                                         |
-| zork2.z3    | Zork II                                        |
-| zork3.z3    | Zork III                                       |
+| **File**    | **Description**                                    |
+|-------------|----------------------------------------------------|
+| amfv.z4     | A Mind Forever Voyaging (*)                        |
+| arthur.z6   | Arthur - The Quest for Excalibur (*)               |
+| ballyhoo.z3 | Ballyhoo                                           |
+| beyond.z5   | Beyond Zork (*)                                    |
+| border.z5   | Border Zone (*)                                    |
+| bureau.z4   | Bureaucracy (*)                                    |
+| cutthr.z3   | Cutthroats                                         |
+| deadline.z3 | Deadline                                           |
+| enchant.z3  | Enchanter                                          |
+| h2g2.z3     | The Hitchhiker's Guide to the Galaxy               |
+| hollyw.z3   | Hollywood Hijinx                                   |
+| infidel.z3  | Infidel                                            |
+| journey.z6  | Journey (*)                                        |
+| leather.z3  | Leather Goddesses of Phobos                        |
+| lurking.z3  | The Lurking Horror                                 |
+| moonmist.z3 | Moonmist                                           |
+| nordbert.z4 | Nord and Bert Couldn't Make Head or Tail of It (*) |
+| planet.z3   | Planetfall                                         |
+| plunder.z3  | Plundered Hearts                                   |
+| readme.txt  | Additional Documentation                           |
+| seastalk.z3 | Seastalker                                         |
+| sherlock.z5 | Sherlock (*)                                       |
+| shogun.z6   | Shogun (*)                                         |
+| sorcerer.z3 | Sorcerer                                           |
+| spellb.z3   | Spellbreaker                                       |
+| starcros.z3 | Starcross                                          |
+| stationf.z3 | Stationfall                                        |
+| suspect.z3  | Suspect                                            |
+| suspend.z3  | Suspended                                          |
+| trinity.z4  | Trinity (*)                                        |
+| wishb.z3    | Wishbringer                                        |
+| witness.z3  | Witness                                            |
+| zork0.z6    | Zork Zero (*)                                      |
+| zork1.z3    | Zork I                                             |
+| zork2.z3    | Zork II                                            |
+| zork3.z3    | Zork III                                           |
 
 The above games have been curated from here <https://eblong.com/infocom/>.
-Full documentation can be found here <https://infodoc.plover.net/>
+Full game documentation can be found here <https://infodoc.plover.net/>
 
-To run these you need a Z-Machine interpreter
+The game files are a virtual machine code commonly known as Z-Machine, they
+are portable and will run on any machine that has a Z-Machine interpreter.
+
+* All the Z3 games come with the official CP/M interpreter (the `COM` file) 
+  version C last updated by Inforcom on 5th Feb 1985. You can simply run the
+  game by running it from the `COM` program  
+* All latter games Z4, Z5,.. and above, (Marked as * in the listing above)
+  are more sophisticated and require a better interpreter. i.e. VEZZA. 
 
 #### VEZZA (User Area 15)
 
@@ -1329,7 +1336,14 @@ z80 based computers.  What makes it modern is that it is written in hand-crafted
 z80 assembler for maximum speed, and can load not only the classics such as
 Zork 1,2 and 3 but also the later games.
 
-It can run v1-v8* inform format interactive fiction game files
+It can run Z1 up to Z8 inform format interactive fiction game files. To run 
+a game with Vezza just type Vezza followed by the game you want to run. e.g.
+
+`VEZZA ZORK0.Z6`
+
+**Note:** One of the bigger constraints is available RAM. An OS such as ZPM
+since it uses banked RAM does have a good amount of available RAM and was 
+used to test these games work.
 
 This tool is free but the developer accepts your support by letting
 you pay what you think is fair for the tool. If you find this useful
