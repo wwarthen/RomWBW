@@ -3,5 +3,5 @@ rmn	equ	6
 rup	equ	0
 rtp	equ	0
 biosver	macro
-	db	"3.6.0-dev.10"
+	db	"3.6.0-dev.11"
 	endm

@@ -3,65 +3,71 @@ Final Output Files
 ------------------
 
 ROM Output File [512K] -> <config>.rom
-  hbios_rom [32K]
-  OSIMG  [32K]
-  OSIMG1 [32K]
-  OSIMG2 [32K]
-  romdisk - [384K]
+  HBIOS_ROM   [32K]
+  ROM1        [32K]
+  ROM2        [32K]
+  ROM3        [32K]
+  ROMDISK     [384K] (size varies with ROM in system)
 
 UPD Output File [128K] -> <config>.upd
-  hbios_rom [32K]
-  OSIMG  [32K]
-  OSIMG1 [32K]
-  OSIMG2 [32K]
+  HBIOS_ROM   [32K]
+  ROM1        [32K]
+  ROM2        [32K]
+  ROM3        [32K]
 
 COM Output File -> <config>.com
-  hbios_app [varies]
-  OSIMG_SMALL [32K]
+  HBIOS_APP   [<32K] (size varies, no padding]
+  APPBOOT     [ 20K]
 
 -------------------------
 Intermediate Output Files
 -------------------------
 
-OSIMG [32K] -> osimg.bin
-  romldr [4K]
-  dbgmon [4K]
-  ZSYS (zcpr/zsdos/cbios) [12K]
-  CPM (ccp/bdos/cbios) [12K]
+ROM1 [32K] -> rom1.bin
+  romldr      [ 4K]
+  dbgmon      [ 4K]
+  ZSYS        [12K] (zcpr/zsdos/cbios)
+  CPM         [12K] (ccp/bdos/cbios)
 
-OSIMG_SMALL [20K] -> osimg_small.bin
-  romldr [4K]
-  dbgmon [4K]
-  ZSYS (zcpr/zsdos/cbios) [12K]
-
-OSIMG1 [32K] -> osimg1.bin
+ROM2 [32K] -> rom2.bin
   camel80     [5.75K]
-  nascom      [8K]
-  tastybasic  [2.5K]
+  nascom      [8.00K]
+  tastybasic  [2.50K]
   game        [2.25K]
-  eastaegg    [0.5K]
-  netboot     [4K]
+  eastaegg    [0.50K]
+  netboot     [4.00K]
   updater.bin [3.25K]
-  sysconf.bin [2K]
-  usrrom.bin  [3.75K (padded)]
+  sysconf.bin [2.00K]
+  usrrom.bin  [3.75K]
 
-OSIMG2 [32K] -> osimg2.bin
-  s100mon     [8.25kb (optional)]
-  (OR) not populated
+ROM3 [32K] -> rom3.bin
+  hwmon       [ 8.00K]
+  invntdev    [ 2.75K]
+  invntslc    [ 0.50K]
+  fonts       [ 8.00K]
+  slack       [12.75K]
+
+APPBOOT [20K] -> appboot.bin
+  romldr      [ 4K]
+  dbgmon      [ 4K]
+  ZSYS        [12K] (zcpr/zsdos/cbios)
 
 CPM [12K] -> cpm.bin
-  ccp [2K]
-  bdos [3.5K]
-  cbios [6.5K]
+  ccp         [2.0K]
+  bdos        [3.5K]
+  cbios       [6.5K]
 
 ZSYS [12K] -> zsys.bin
-  zcpr [2K]
-  zsdos [3.5K]
-  cbios [6.5K]
+  zcpr        [2.0K]
+  zsdos       [3.5K]
+  cbios       [6.5K]
 
 -----------------
 Compilation Units
 -----------------
+
+NOTE: The following need to be reviewed.  They are probably out
+of date.
 
 hbios.asm -> hbios_rom.bin, hbios_app.bin
   std.asm
@@ -76,7 +82,7 @@ hbios.asm -> hbios_rom.bin, hbios_app.bin
   bcd.asm
   dsky.asm
 
-romldr.asm -> romldr.bin:	loader?
+romldr.asm -> romldr.bin
   std.asm
     ver.inc
     hbios.inc
@@ -125,18 +131,16 @@ tastybasic.asm -> tastybasic.bin
       <config>.asm
     plt_<platform>.inc
 
-
 =======================================================================
 HBIOS Loading Modes:
   ROMBOOT: Startup from ROM Bank BID_BOOT
   APPBOOT: Startup as CP/M application
-  IMGBOOT: Startup from RAM Bank BID_USR
+  IMGBOOT: Startup from RAM Bank BID_USR (deprecated)
 =======================================================================
 
  - If not (APPBOOT), include page 0
 
  - Base Hardware Init
-   - Iff (ROMBOOT), init BBR
 
  - Install Proxy
    - Set CURBNK:
@@ -149,6 +153,6 @@ HBIOS Loading Modes:
 
  - Copy OS Image to USR Bank
    - If (ROM_MODE), copy BID_OS:0 --> BID_USR:0
-   - Else, copy BID_USR:<os image start> --> BID_USR:0
+   - Else, copy BID_BIOS:<os image start> --> BID_USR:0
 
  - Chain to BID_USR:0
