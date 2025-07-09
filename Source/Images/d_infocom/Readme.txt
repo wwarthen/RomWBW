@@ -2,7 +2,8 @@
 ===== INFOCOM GAMES =====
 
 A collection of all official releases of the interactive fiction games
-produced by Infocom in the 1980's. The copyright rests with Activision.
+produced by Infocom in the 1980's. The copyright rests with Activision,
+and since 2022 that transferred to Microsoft
 
 Game List follows including the revision number and release date
 

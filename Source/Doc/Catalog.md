@@ -1278,44 +1278,45 @@ The following files are found in
 
 *  /Source/Images/d_infocom
 
-| **File**    | **Description**                                    |
-|-------------|----------------------------------------------------|
-| amfv.z4     | A Mind Forever Voyaging (*)                        |
-| arthur.z6   | Arthur - The Quest for Excalibur (*)               |
-| ballyhoo.z3 | Ballyhoo                                           |
-| beyond.z5   | Beyond Zork (*)                                    |
-| border.z5   | Border Zone (*)                                    |
-| bureau.z4   | Bureaucracy (*)                                    |
-| cutthr.z3   | Cutthroats                                         |
-| deadline.z3 | Deadline                                           |
-| enchant.z3  | Enchanter                                          |
-| h2g2.z3     | The Hitchhiker's Guide to the Galaxy               |
-| hollyw.z3   | Hollywood Hijinx                                   |
-| infidel.z3  | Infidel                                            |
-| journey.z6  | Journey (*)                                        |
-| leather.z3  | Leather Goddesses of Phobos                        |
-| lurking.z3  | The Lurking Horror                                 |
-| moonmist.z3 | Moonmist                                           |
-| nordbert.z4 | Nord and Bert Couldn't Make Head or Tail of It (*) |
-| planet.z3   | Planetfall                                         |
-| plunder.z3  | Plundered Hearts                                   |
-| readme.txt  | Additional Documentation                           |
-| seastalk.z3 | Seastalker                                         |
-| sherlock.z5 | Sherlock (*)                                       |
-| shogun.z6   | Shogun (*)                                         |
-| sorcerer.z3 | Sorcerer                                           |
-| spellb.z3   | Spellbreaker                                       |
-| starcros.z3 | Starcross                                          |
-| stationf.z3 | Stationfall                                        |
-| suspect.z3  | Suspect                                            |
-| suspend.z3  | Suspended                                          |
-| trinity.z4  | Trinity (*)                                        |
-| wishb.z3    | Wishbringer                                        |
-| witness.z3  | Witness                                            |
-| zork0.z6    | Zork Zero (*)                                      |
-| zork1.z3    | Zork I                                             |
-| zork2.z3    | Zork II                                            |
-| zork3.z3    | Zork III                                           |
+| **File**     | **Description**                                    |
+|--------------|----------------------------------------------------|
+| amfv.z4      | A Mind Forever Voyaging (*)                        |
+| arthur.z6    | Arthur - The Quest for Excalibur (*)               |
+| ballyhoo.z3  | Ballyhoo                                           |
+| beyond.z5    | Beyond Zork (*)                                    |
+| border.z5    | Border Zone (*)                                    |
+| bureau.z4    | Bureaucracy (*)                                    |
+| cutthr.z3    | Cutthroats                                         |
+| deadline.z3  | Deadline                                           |
+| enchant.z3   | Enchanter                                          |
+| h2g2.z3      | The Hitchhiker's Guide to the Galaxy               |
+| hollyw.z3    | Hollywood Hijinx                                   |
+| infidel.z3   | Infidel                                            |
+| journey.z6   | Journey (*)                                        |
+| leather.z3   | Leather Goddesses of Phobos                        |
+| lurking.z3   | The Lurking Horror                                 |
+| moonmist.z3  | Moonmist                                           |
+| nordbert.z4  | Nord and Bert Couldn't Make Head or Tail of It (*) |
+| planet.z3    | Planetfall                                         |
+| plunder.z3   | Plundered Hearts                                   |
+| readme.txt   | Documentation about the Infocom games              |
+| seastalk.z3  | Seastalker                                         |
+| sherlock.z5  | Sherlock (*)                                       |
+| shogun.z6    | Shogun (*)                                         |
+| sorcerer.z3  | Sorcerer                                           |
+| spellb.z3    | Spellbreaker                                       |
+| starcros.z3  | Starcross                                          |
+| stationf.z3  | Stationfall                                        |
+| suspect.z3   | Suspect                                            |
+| suspend.z3   | Suspended                                          |
+| trinity.z4   | Trinity (*)                                        |
+| wishb.z3     | Wishbringer                                        |
+| witness.z3   | Witness                                            |
+| zork0.z6     | Zork Zero (*)                                      |
+| zork1.z3     | Zork I                                             |
+| zork2.z3     | Zork II                                            |
+| zork3.z3     | Zork III                                           |
+| zorknote.txt | Documentation about terminal config of COM files   |
 
 The above games have been curated from here <https://eblong.com/infocom/>.
 Full game documentation can be found here <https://infodoc.plover.net/>
