@@ -36,6 +36,13 @@ OBJECTS += $(HD1KIMGS) $(HD1KXIMGS) $(HD1KPREFIX)
 
 # OBJECTS =
 
+# add base images used in *.def files
+
+BASEIMG = $(shell grep -vEh "^\#" *.def)
+BASEIMG := $(addprefix hd512_,$(BASEIMG)) $(addprefix hd1k_,$(BASEIMG))
+BASEIMG := $(addsuffix .img,$(BASEIMG))
+OBJECTS += $(BASEIMG)
+
 TEMP = $(wildcard *.def)
 TEMP := $(addprefix hd512_,$(TEMP)) $(addprefix hd1k_,$(TEMP))
 TEMP := $(TEMP:.def=.img)
