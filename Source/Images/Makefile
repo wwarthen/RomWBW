@@ -31,8 +31,16 @@ HD512PREFIX =
 HD1KPREFIX = hd1k_prefix.dat
 
 OBJECTS = $(FDIMGS)
-OBJECTS += $(HD512IMGS) $(HD512XIMGS) hd512_combo.img $(HD512PREFIX)
-OBJECTS += $(HD1KIMGS) $(HD1KXIMGS) hd1k_combo.img $(HD1KPREFIX)
+OBJECTS += $(HD512IMGS) $(HD512XIMGS) $(HD512PREFIX)
+OBJECTS += $(HD1KIMGS) $(HD1KXIMGS) $(HD1KPREFIX)
+
+# OBJECTS =
+
+TEMP = $(wildcard *.def)
+TEMP := $(addprefix hd512_,$(TEMP)) $(addprefix hd1k_,$(TEMP))
+TEMP := $(TEMP:.def=.img)
+OBJECTS += $(TEMP)
+
 
 OTHERS = blank144 blankhd512 blankhd1k *.cat
 
@@ -47,11 +55,41 @@ include $(TOOLS)/Makefile.inc
 
 DIFFPATH = $(DIFFTO)/Binary
 
-hd512_combo.img: $(HD512PREFIX) $(HD512IMGS)
-	cat $^ > $@
+# hd512_%.img: %.def $(HD512IMGS) $(HD512XIMGS)
 
-hd1k_combo.img: $(HD1KPREFIX) $(HD1KIMGS)
-	cat $^ > $@
+hd512_%.img: %.def
+	@echo "Making hd512 $^"; \
+	file_list=""; \
+	while read line; do \
+	  line=$$(echo "$${line}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$$//') ; \
+	  if [ -z "$${line}" ]; then \
+	    continue;
+	  fi; \
+	  if [ "`expr substr "$$line" 1 1`" = "#" ]; then \
+	    continue; \
+	  fi; \
+	  file_list="$${file_list} hd512_$${line}.img"; \
+	done < $^ ; \
+	echo "$${file_list}"; \
+	cat $${file_list} > $@
+
+# hd1k_%.img: %.def $(HD1KIMGS) $(HD1KXIMGS)
+
+hd1k_%.img: %.def
+	@echo "Making hd1k $^"; \
+	file_list=""; \
+	while read line; do \
+	  line=$$(echo "$${line}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$$//') ; \
+	  if [ -z "$${line}" ]; then \
+	    continue;
+	  fi; \
+	  if [ "`expr substr "$$line" 1 1`" = "#" ]; then \
+	    continue; \
+	  fi; \
+	  file_list="$${file_list} hd1k_$${line}.img"; \
+	done < $^ ; \
+	echo "$${file_list}"; \
+	cat $(HD1KPREFIX) $${file_list} > $@
 
 #
 # this somewhat impenetrable and fragile code is used to build each of the images
