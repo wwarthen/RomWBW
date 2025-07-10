@@ -36,15 +36,17 @@ OBJECTS += $(HD1KIMGS) $(HD1KXIMGS) $(HD1KPREFIX)
 
 # OBJECTS =
 
+# add base images used in *.def files
+
+BASEIMG = $(shell grep -vEh "^\#" *.def)
+BASEIMG := $(addprefix hd512_,$(BASEIMG)) $(addprefix hd1k_,$(BASEIMG))
+BASEIMG := $(addsuffix .img,$(BASEIMG))
+OBJECTS += $(BASEIMG)
+
 TEMP = $(wildcard *.def)
 TEMP := $(addprefix hd512_,$(TEMP)) $(addprefix hd1k_,$(TEMP))
 TEMP := $(TEMP:.def=.img)
 OBJECTS += $(TEMP)
-
-TEMP2 = $(shell grep -vEh "^\#" *.def)
-TEMP2 := $(addprefix hd512_,$(TEMP2)) $(addprefix hd1k_,$(TEMP2))
-TEMP2 := $(addsuffix .img,$(TEMP2))
-OBJECTS += $(TEMP2)
 
 
 OTHERS = blank144 blankhd512 blankhd1k *.cat
