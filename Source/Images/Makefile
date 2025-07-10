@@ -41,10 +41,10 @@ TEMP := $(addprefix hd512_,$(TEMP)) $(addprefix hd1k_,$(TEMP))
 TEMP := $(TEMP:.def=.img)
 OBJECTS += $(TEMP)
 
-TEMP = $(shell grep -vEh "^\#" *.def)
-TEMP := $(addprefix hd512_,$(TEMP)) $(addprefix hd1k_,$(TEMP))
-TEMP := $(addsuffix .img,$(TEMP))
-OBJECTS += $(TEMP)
+TEMP2 = $(shell grep -vEh "^\#" *.def)
+TEMP2 := $(addprefix hd512_,$(TEMP2)) $(addprefix hd1k_,$(TEMP2))
+TEMP2 := $(addsuffix .img,$(TEMP2))
+OBJECTS += $(TEMP2)
 
 
 OTHERS = blank144 blankhd512 blankhd1k *.cat
