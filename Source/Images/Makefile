@@ -63,9 +63,9 @@ hd512_%.img: %.def
 	while read line; do \
 	  line=$$(echo "$${line}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$$//') ; \
 	  if [ -z "$${line}" ]; then \
-	    continue;
+	    continue; \
 	  fi; \
-	  if [ "`expr substr "$$line" 1 1`" = "#" ]; then \
+	  if [ "`echo ""$${line}"" | awk '{print substr($$0,1,1);exit}'`" = "#" ]; then \
 	    continue; \
 	  fi; \
 	  file_list="$${file_list} hd512_$${line}.img"; \
@@ -81,9 +81,9 @@ hd1k_%.img: %.def
 	while read line; do \
 	  line=$$(echo "$${line}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$$//') ; \
 	  if [ -z "$${line}" ]; then \
-	    continue;
+	    continue; \
 	  fi; \
-	  if [ "`expr substr "$$line" 1 1`" = "#" ]; then \
+	  if [ "`echo ""$${line}"" | awk '{print substr($$0,1,1);exit}'`" = "#" ]; then \
 	    continue; \
 	  fi; \
 	  file_list="$${file_list} hd1k_$${line}.img"; \
