@@ -340,14 +340,16 @@ enter the command followed by ***\<enter\>***.
 For example, typing `H<enter>` will display a short command summary:
 
 ```
-Boot [H=Help]: h
+Boot [H=Help]: H
 
   L           - List ROM Applications
   D           - Device Inventory
+  S           - Slice Inventory
   R           - Reboot System
   W           - RomWBW Configure
   I <u> [<c>] - Set Console Interface/Baud Rate
   V [<n>]     - View/Set HBIOS Diagnostic Verbosity
+  N           - Network Boot
   <u>[.<s>]   - Boot Disk Unit/Slice
 ```
 
@@ -366,7 +368,6 @@ ROM Applications:
   B: BASIC
   T: Tasty BASIC
   P: Play a Game
-  N: Network Boot
   X: XModem Flash Updater
   U: User App
 ```
@@ -410,7 +411,6 @@ prompt:
 | BASIC             | Microsoft ROM BASIC                                            |
 | Tasty&nbsp;BASIC  | Dimitri Theuling's Tiny BASIC implementation                   |
 | Play              | A simple video game (requires ANSI terminal emulation)         |
-| Network&nbsp;Boot | Boot system via Wiznet MT011 device                            |
 | Flash&nbsp;Update | Upload and flash a new ROMWBW image using xmodem               |
 | User App          | User written application placeholder                           |
 
@@ -1806,6 +1806,7 @@ The following table shows the disk images available.
 | xxx_fortran.img   | Microsoft Fortran-80 Compiler        | No       |
 | xxx_games.img     | Games Disk for CP/M                  | No       |
 | xxx_hitechc.img   | HI-TECH Z80 CP/M C compiler          | No       |
+| xxx_infocom.img   | Infocom Games Disk                   | No       |
 | xxx_msxroms1.img  | MSX ROMs Disk 1                      | No       |
 | xxx_msxroms2.img  | MSX ROMs Disk 2                      | No       |
 | xxx_nzcom.img     | NZCOM ZCPR 3.4 Operating System      | Yes      |

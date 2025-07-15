@@ -14,7 +14,7 @@ HD512IMGS = hd512_cpm22.img hd512_zsdos.img hd512_nzcom.img \
 HD512XIMGS = hd512_z80asm.img hd512_aztecc.img hd512_hitechc.img \
 	hd512_bascomp.img hd512_fortran.img hd512_games.img \
 	hd512_tpascal.img hd512_dos65.img hd512_qpm.img \
-	hd512_z3plus.img \
+	hd512_z3plus.img hd512_infocom.img \
 	hd512_cowgol.img hd512_msxroms1.img hd512_msxroms2.img \
 	hd512_cobol.img  hd512_blank.img
 HD1KIMGS = hd1k_cpm22.img hd1k_zsdos.img hd1k_nzcom.img \
@@ -22,7 +22,7 @@ HD1KIMGS = hd1k_cpm22.img hd1k_zsdos.img hd1k_nzcom.img \
 HD1KXIMGS = hd1k_z80asm.img hd1k_aztecc.img hd1k_hitechc.img \
 	hd1k_bascomp.img hd1k_fortran.img hd1k_games.img \
 	hd1k_tpascal.img hd1k_qpm.img \
-	hd1k_z3plus.img \
+	hd1k_z3plus.img hd1k_infocom.img \
 	hd1k_cowgol.img hd1k_msxroms1.img hd1k_msxroms2.img \
 	hd1k_cobol.img hd1k_blank.img
 HD1KXIMGS += hd1k_bp.img
@@ -31,8 +31,23 @@ HD512PREFIX =
 HD1KPREFIX = hd1k_prefix.dat
 
 OBJECTS = $(FDIMGS)
-OBJECTS += $(HD512IMGS) $(HD512XIMGS) hd512_combo.img $(HD512PREFIX)
-OBJECTS += $(HD1KIMGS) $(HD1KXIMGS) hd1k_combo.img $(HD1KPREFIX)
+OBJECTS += $(HD512IMGS) $(HD512XIMGS) $(HD512PREFIX)
+OBJECTS += $(HD1KIMGS) $(HD1KXIMGS) $(HD1KPREFIX)
+
+# OBJECTS =
+
+# add base images used in *.def files
+
+BASEIMG = $(shell grep -vEh "^\#" *.def)
+BASEIMG := $(addprefix hd512_,$(BASEIMG)) $(addprefix hd1k_,$(BASEIMG))
+BASEIMG := $(addsuffix .img,$(BASEIMG))
+OBJECTS += $(BASEIMG)
+
+TEMP = $(wildcard *.def)
+TEMP := $(addprefix hd512_,$(TEMP)) $(addprefix hd1k_,$(TEMP))
+TEMP := $(TEMP:.def=.img)
+OBJECTS += $(TEMP)
+
 
 OTHERS = blank144 blankhd512 blankhd1k *.cat
 
@@ -47,11 +62,41 @@ include $(TOOLS)/Makefile.inc
 
 DIFFPATH = $(DIFFTO)/Binary
 
-hd512_combo.img: $(HD512PREFIX) $(HD512IMGS)
-	cat $^ > $@
+# hd512_%.img: %.def $(HD512IMGS) $(HD512XIMGS)
 
-hd1k_combo.img: $(HD1KPREFIX) $(HD1KIMGS)
-	cat $^ > $@
+hd512_%.img: %.def
+	@echo "Making hd512 $^"; \
+	file_list=""; \
+	while read line; do \
+	  line=$$(echo "$${line}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$$//') ; \
+	  if [ -z "$${line}" ]; then \
+	    continue; \
+	  fi; \
+	  if [ "`echo ""$${line}"" | awk '{print substr($$0,1,1);exit}'`" = "#" ]; then \
+	    continue; \
+	  fi; \
+	  file_list="$${file_list} hd512_$${line}.img"; \
+	done < $^ ; \
+	echo "$${file_list}"; \
+	cat $${file_list} > $@
+
+# hd1k_%.img: %.def $(HD1KIMGS) $(HD1KXIMGS)
+
+hd1k_%.img: %.def
+	@echo "Making hd1k $^"; \
+	file_list=""; \
+	while read line; do \
+	  line=$$(echo "$${line}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$$//') ; \
+	  if [ -z "$${line}" ]; then \
+	    continue; \
+	  fi; \
+	  if [ "`echo ""$${line}"" | awk '{print substr($$0,1,1);exit}'`" = "#" ]; then \
+	    continue; \
+	  fi; \
+	  file_list="$${file_list} hd1k_$${line}.img"; \
+	done < $^ ; \
+	echo "$${file_list}"; \
+	cat $(HD1KPREFIX) $${file_list} > $@
 
 #
 # this somewhat impenetrable and fragile code is used to build each of the images

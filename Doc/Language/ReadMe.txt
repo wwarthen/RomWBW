@@ -23,10 +23,14 @@ Borland TurboPascal User Manual ("Turbo_Pascal_Version_3.0_Reference_Manual_1986
 Official user manual Borland TurboPascal included in the pascal disk image.
 
 
-Cowgol Lanaguage ("Cowgol Language.pdf")
+The Cowgol Lanaguage ("The Cowgol Language.pdf")
+Cowgol Compiler Manual ("Cowgol Compiler Manual.pdf")
+
 --------------------------------------
 
-Documentation for Cowgol Language included in the cowgol disk image
+Documentation for Cowgol Language included in the cowgol disk image.
+The Cowgol Language describes the Cowgol Language itself while the
+Cowgol Compiler Manual describes the compiler operation.
 
 
 HI-TECH C Compiler User Manual ("HI-TECH Z80 C Compiler Manual.txt")

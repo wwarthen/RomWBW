@@ -1,6 +1,7 @@
 ;======================================================================
 ;
-;	BIT MODE SOUND DRIVER FOR SBC V2 USING BIT 0 OF RTC DRIVER
+;	BIT MODE SOUND DRIVER FOR USING 1 BIT OF AN IO PORT
+;	TAKING CARE NOT TO CHANGE OTHER BITS
 ;
 ;======================================================================
 ;
@@ -32,9 +33,7 @@ SP_IDAT	.EQU	0			; NO INSTANCE DATA ASSOCIATED WITH THIS DEVICE
 ;
 SP_TONECNT	.EQU	1		; COUNT NUMBER OF TONE CHANNELS
 SP_NOISECNT	.EQU	0		; COUNT NUMBER OF NOISE CHANNELS
-;
-SP_RTCIOMSK	.EQU	00000100B
-;
+
 ; FOR OTHER DRIVERS, THE PERIOD VALUE FOR THE TONE IS STORED AT PENDING_PERIOD
 ; FOR THE SPK DRIVER THE ADDRESS IN THE TONE TABLE IS STORED IN PENDING_PERIOD
 ;
@@ -43,9 +42,12 @@ SP_PENDING_VOLUME	.DB	0		; PENDING VOL (8 BITS)
 SP_PENDING_DURATION	.DW	0		; PENDING DURATION (16 BITS)
 SP_TBLRDY		.DB	0		; IF != 0, NOTE TABLE IS READY
 ;
-	DEVECHO	"SPK: IO="
-	DEVECHO	RTCIO
-	DEVECHO	"\n"
+	DEVECHO "SPK: IO="
+	DEVECHO SPKPORT
+	DEVECHO " MASK="
+	DEVECHO SPKMASK
+	DEVECHO "\n"
+
 ;
 ;======================================================================
 ;	DRIVER INITIALIZATION
@@ -59,9 +61,12 @@ SP_INIT:
 ;
 	CALL	NEWLINE			; ANNOUNCE DEVICE
 	PRTS("SPK: IO=0x$")
-	LD	A,RTCIO
+	LD	A,SPKPORT
 	CALL	PRTHEXBYTE
-;
+	PRTS(" MASK=0x$")
+	LD	A,SPKMASK
+	CALL	PRTHEXBYTE
+				;
 	CALL	SP_SETTBL		; SETUP TONE TABLE
 	CALL	SP_RESET		; RESET PARAMETERS
 ;
@@ -165,7 +170,7 @@ SP_QUERY_VOLUME:
 ;
 SP_QUERY_DEV:
 	LD	B, SNDDEV_BITMODE		; RETURN DEVICE IDENTIFIER
-	LD	DE, (RTCIO*256)+SP_RTCIOMSK	; AND ADDRESS AND DATA PORT
+	LD	DE, (SPKPORT*256)+SPKMASK	; AND ADDRESS AND DATA PORT
 	XOR	A
 	RET
 ;
@@ -283,7 +288,7 @@ SP_BEEPER:
 	LD	B,$00
 	LD	IX,SPK_DLYADJ 		; The base address of the timing loop.
 	ADD	IX,BC			; Alter the length of the timing loop. Use an earlier starting point for each '1' lost by taking INT (L/4).
-	LD	A,(HB_RTCVAL)		; Fetch the present border colour from BORDCR and move it to bits 2, 1 and 0 of the A register.
+	LD	A,(SPKSHADOW)		; Fetch the present border colour from BORDCR and move it to bits 2, 1 and 0 of the A register.
 ;
 ;	The HL register holds the 'length of the timing loop' with 16 T states being used for each '1' in the L register and 1024 T states for each '1' in the H register.
 ;
@@ -302,8 +307,9 @@ BE_H_L_LP:
 ;
 ;	The loudspeaker is now alternately activated and deactivated.
 ;
-	XOR	SP_RTCIOMSK		; Flip bit 2.
-	OUT	(RTCIO),A		; Perform the 'OUT' operation, leaving other bits unchanged.
+	XOR	SPKMASK			; Flip bit.
+	OUT	(SPKPORT),A		; Perform the 'OUT' operation, leaving other bits unchanged.
+
 	LD	B,H			; Reset the B register.
 	LD	C,A			; Save the A register.
 	BIT	4,A 			; Jump if at the half-cycle point.
@@ -333,8 +339,8 @@ BE_END:
 ;	leaves the bit set to the opposite value it started at.  This
 ;	ensures that the bit is properly reset to its original value.
 ;
-	LD	A,(HB_RTCVAL)		; Get the current RTC latch value
-	OUT	(RTCIO),A		; Set it
+	LD	A,(SPKSHADOW)		; Get the current port value (typically RTC latch)
+	OUT	(SPKPORT),A		; Set it
 ;
 	RET				; ALWAYS EXITS WITH SUCCESS STATUS (A=0)
 ;
@@ -356,7 +362,7 @@ SP_DEVICE:
 	LD	E,0			; E := PHYSICAL UNIT
 	LD	C,$00			; C := DEVICE TYPE
 	LD	H,0			; H := 0, DRIVER HAS NO MODES
-	LD	L,RTCIO			; L := BASE I/O ADDRESS
+	LD	L,SPKPORT		; L := BASE I/O ADDRESS
 	XOR	A
 	RET
 ;
