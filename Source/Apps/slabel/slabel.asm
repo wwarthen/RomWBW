@@ -35,6 +35,7 @@
 ;     table once (per device), and work out all the LBA's from this single read.
 ;     Note this doesnt omit the fact that the 3 rd sector of each slice wold need to be read regarless.
 ;     To slightly reduce some IO only slices < 64 are considered.
+;   - Output formatting misaligned with storage units enumerated as greater than 9 (ie 2 digits)
 ;
 ; This code will only execute on a Z80 CPU (or derivitive)
 ; This code requirs the use of HBIOS
@@ -45,6 +46,7 @@
 ;   2024-12-11 [MAP] Started - Reboot v1.0 used as the basis for this code
 ;   2024-12-14 [MAP] Initial 0.9 alpha with basic working functionality
 ;   2025-04-21 [MAP] Initial v1.0 release for distribution, fixing all issues
+;   2025-07-12 [MR]  Minor tweak to partially tidy up output formatting
 ;______________________________________________________________________________
 ;
 ; Include Files
@@ -94,7 +96,7 @@ exit:
 	jp	restart			; return to CP/M via restart
 ;
 ;===============================================================================
-; Initialization
+; Initialisation
 ;
 init:
 	; check for UNA (UBIOS)
@@ -211,10 +213,10 @@ prtslc2a:
 	ld	a,c			; slice number
 	ld	(currslice),a		; save slice number
 	;
-	push	bc			; save loop
+	push	bc			; save loop counter
 	call	prtslc3			; print detals of the slice
-	pop	bc			; restore loop
-	ret	nz			; if error dont continie
+	pop	bc			; restore loop counter
+	ret	nz			; if error don't continue
 	;
 	inc	c			; next slice number
 	djnz	prtslc2a		; loop if more slices
@@ -248,15 +250,25 @@ prtslc3:
 	cp	c			; compare
 	jr	nz,prtslc5		; ignore missing signature and loop
 	;
-        ; Print volume label string at HL, '$' terminated, 16 chars max
+        ; Print slice label string at HL, '$' terminated, 16 chars max
 	ld	a,(currunit)
 	call	prtdecb			; print unit number as decimal
 	call 	pdot			; print a DOT
-	ld	a,(currslice)
+	ld	a, (currslice)		; fetch the current slice numeric
 	call	prtdecb
+;
+;-------------------------------------------------------------------------------
+; Added by MartinR, July 2025, to help neaten the output formatting.
+; Note - this is not a complete fix and will still result in misaligned output
+; where the unit number exceeds 9 (ie - uses 2 digits).
+	cp	10			; is it less than 10?
 	ld	a,' '
+	jr	nc,jr01			; If not, then we don't need an extra space printed
+	call	cout			; print the extra space	necessary
+jr01:	call	cout			; print a space
 	call	cout			; print a space
-	call	cout			; print a space
+;-------------------------------------------------------------------------------
+;
 	ld	hl,bb_label		; point to label
 	call	pvol			; print it
 	call	crlf
@@ -438,6 +450,7 @@ pdot:
 ;
 ;-------------------------------------------------------------------------------
 ; Print character in A without destroying any registers
+; Use CP/M BDOS function $02 - Console Output
 ;
 prtchr:
 cout:
@@ -687,7 +700,7 @@ diskwrite:
 ;===============================================================================
 ;
 str_banner	.db	"\r\n"
-		.db	"Slice Label, v1.0, April 2025 - M.Pruden",0
+		.db	"Slice Label, v1.1, July 2025 - M.Pruden",0
 ;
 str_err_una	.db	"  ERROR: UNA not supported by application",0
 str_err_inv	.db	"  ERROR: Invalid BIOS (signature missing)",0
@@ -706,7 +719,7 @@ str_usage	.db	"\r\n\r\n"
 		.db	"         Options are case insensitive.\r\n",0
 ;
 PRTSLC_HDR	.TEXT	"\r\n\r\n"
-		.TEXT	"Un.Sl Drive           \r\n"
+		.TEXT	"Un.Sl Label           \r\n"
 		.TEXT	"----- ----------------\r\n"
 		.DB	0
 ;
