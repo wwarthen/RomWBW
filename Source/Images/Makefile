@@ -121,7 +121,7 @@ blankhd1k:
 		$(BINDIR)/mkfs.cpm -f $$fmt -b $$SysImage $@ ; \
 	fi ; \
 	if [ "$$Label" ] ; then \
-		Label=`expr substr "$$Label" 1 16` ; \
+		Label=`echo "$$Label" | awk '{ print substr($$0, 1, 16) }'` ; \
 		echo "Label: \"$$Label\"" ; \
 		echo -n "\$$\$$\$$\$$\$$\$$\$$\$$\$$\$$\$$\$$\$$\$$\$$\$$\$$" | dd conv=notrunc status=none bs=1 seek=1511 of=$@ ; \
 		echo -n "$$Label" | dd conv=notrunc status=none bs=1 seek=1511 of=$@; \
