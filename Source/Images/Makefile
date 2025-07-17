@@ -123,8 +123,8 @@ blankhd1k:
 	if [ "$$Label" ] ; then \
 		Label=`echo "$$Label" | awk '{ print substr($$0, 1, 16) }'` ; \
 		echo "Label: \"$$Label\"" ; \
-		echo -n "\$$\$$\$$\$$\$$\$$\$$\$$\$$\$$\$$\$$\$$\$$\$$\$$\$$" | dd conv=notrunc status=none bs=1 seek=1511 of=$@ ; \
-		echo -n "$$Label" | dd conv=notrunc status=none bs=1 seek=1511 of=$@; \
+		echo "\$$\$$\$$\$$\$$\$$\$$\$$\$$\$$\$$\$$\$$\$$\$$\$$\$$" | tr -d '\n' | dd conv=notrunc status=none bs=1 seek=1511 of=$@ ; \
+		echo "$$Label" | tr -d '\n' | dd conv=notrunc status=none bs=1 seek=1511 of=$@; \
 	fi ; \
 	for u in $$(seq 0 15) ; do \
 		dir=d_$$d/u$$u ; \
