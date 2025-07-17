@@ -992,10 +992,10 @@ whether you boot your OS from ROM or from the disk media itself.
 
 ## Drive Letter Assignment
 
-In legacy CP/M operating systems only 16 drive letters (A:-P:) available
- to be assigned to disks Drive letters were generally mapped to disk 
+In CP/M operating systems only 16 drive letters (A:-P:) available
+to be assigned to disks Drive letters were generally mapped to disk 
 drives in a completely fixed way. For example, drive A: would **always**
- refer to the first floppy disk drive.
+refer to the first floppy disk drive.
 
 RomWBW implements a much more flexible drive letter assignment mechanism 
 so that any drive letter can dynamically be assigned to any disk device, 
@@ -1188,8 +1188,8 @@ media, you can use the CP/M 2.2 `STAT` command to display information
 including the number of "32  Byte Directory Entries"
 for a drive letter on the corresponding hard disk.  
 
-- If it indicates 512, your disk layout is legacy (hd512).  
-- If it indicates 1024, your disk layout is modern (hd1k).
+- If it indicates 512, your disk layout is Classic (hd512).  
+- If it indicates 1024, your disk layout is Modern (hd1k).
 
 Here is an example of checking the disk layout.  
 
@@ -1335,14 +1335,14 @@ system.
 Two hard disk layout schemes exist:
 
 * Modern (hd1k)
-* Legacy (hd512)
+* Classic (hd512)
 
 You **cannot** mix disk layouts on a single disk device, 
 however It is perfectly fine for one system to have
 multiple hard disks with different layouts -- each physical disk
 device is handled separately.
 
-If you are setting up a new disk, the modern (hd1k) layout is
+If you are setting up a new disk, the Modern (hd1k) layout is
 recommended for the following reasons:
 
 * Larger number of directory entries per filesystem
@@ -1350,8 +1350,8 @@ recommended for the following reasons:
 * Reduces chances of data corruption
 * Each slice occupies exactly 8MB (an exact power of 2) in size
 
-Both the legacy and modern disk layouts continue to be fully supported
-by RomWBW.  There are no plans to deprecate the legacy layout.  
+Both the classic and modern disk layouts continue to be fully supported
+by RomWBW.  There are no plans to deprecate the classic layout.  
 
 #### Modern Layout
 
@@ -1368,14 +1368,14 @@ RomWBW does not support extended partitions -- only a single
 primary partition can be used.
 
 The existence of a partition table entry for RomWBW on
-a hard disk makes it behave in the modern mode. Removing the RomWBW 
-partition entry from a modern hard disk layout 
+a hard disk makes it behaves in the modern disk layout mode. 
+Removing the RomWBW partition entry from a modern hard disk layout 
 will cause the existing data to be unavailable and/or corrupted
 
 The CP/M filesystem in the slices of the modern disk layout 
 contain 1024 directory entries.
 
-#### Legacy Layout
+#### Classic Layout
 
 Originally, RomWBW always used the very start of the hard disk media
 for the location of the slices.  In this layout, slice 0 referred to
@@ -1384,15 +1384,16 @@ chunk of ~8MB on the disk, and so on. The number of slices is limited
 to the size of the disk media -- if you attempted to read/write to a
 slice that would exceed the disk size, you would see I/O errors. 
 
-The legacy format takes steps to allow a partition table to still be
+The classic disk layout takes steps to allow a partition table to still be
 used for other types of filesystems such as DOS/FAT.  It just does not
 use a partition table entry to determine the start of the RomWBW slices.
 
-The lack of a RomWBW partition table entry will cause legacy behaviour.
-Adding a partition table entry on an existing legacy RomWBW hard disk 
+The lack of a RomWBW partition table entry will cause the classic disk 
+layout to be used.
+Adding a partition table entry on an existing classic RomWBW hard disk 
 will cause the existing data to be unavailable and/or corrupted.
 
-The CP/M filesystem in the slices of the legacy disk layout 
+The CP/M filesystem in the slices of the classic disk layout 
 contain 512 directory entries.
 
 ### Hard Disk Slices
@@ -1466,9 +1467,9 @@ system.
 The exact number of CP/M filesystem slices that will fit on your
 specific physical hard disk can be determined as follows:
 
-- For modern (hd1k) disk layouts, it is 1024KB + (slices * 8192KB). 
+- For Modern (hd1k) disk layouts, it is 1024KB + (slices * 8192KB). 
   Or equivalent to say 1MB + (slices * 8MB).
-- For legacy (hd512) disk layouts, it is slices * 8,320KB.
+- For Classic (hd512) disk layouts, it is slices * 8,320KB.
 
 **WARNING**: In this document KB means 1024 bytes and MB means 1048576
 bytes (frequently expressed as KiB and MiB in modern terminology).
@@ -1611,7 +1612,7 @@ This does not mean to imply it is the only possible way.
 
 First you need to understand
 
-*  The disk layout approach (either hd1k or the legacy hd512). 
+*  The disk layout approach (either the Modern hd1k or the Classic hd512). 
    See [Hard Disk Layouts] section if you are not sure. 
    hd1k should be the preferred layout.
 *  The number of 8MB slices that you want to allocate, preferred is 64 slices.
@@ -1640,7 +1641,7 @@ The disk unit number was assigned at boot See [Device Unit Assignments]
 
 Refer to $doc_apps$ for more information on use of the `FDISK80` utility. 
 
-If you want to use the legacy hd512 layout skip down to the [Legacy (hd512)] section
+If you want to use the Classic (hd512) layout skip down to the [Classic (hd512)] section
 
 #### Modern (hd1k)
 
@@ -1702,14 +1703,14 @@ At this point, it is best to restart your system to make sure that
 the operating system is aware of the partition table updates.  Start
 CP/M 2.2 or Z-System from ROM again.
 
-#### Legacy (hd512)
+#### Classic (hd512)
 
 At this point, use the `I` command to initialize (reset) 
 the partition table to an empty state.
 
 To use the hd512 layout, use `W` to write the empty table to the disk 
 and exit.  Remember that the lack of a partition for RomWBW implies the 
-legacy (hd512) layout.
+Classic (hd512) layout.
 
 At this point, it is best to restart your system to make sure that
 the operating system is aware of the partition table updates.  Start
@@ -1821,8 +1822,8 @@ You will find 3 sets of these .img files in the distribution.  The
 "xxx" portion of the filename will be:
 
 *  "fd_" for a floppy image.
-*  "hd1k_" for a modern layout hard disk image.
-*  "hd512_" for a legacy layout hard disk image.
+*  "hd1k_" for a Modern layout hard disk image.
+*  "hd512_" for a Classic layout hard disk image.
 
 In the case of xxx_dos65.img, only an hd512 variant is provided.  This
 is a constraint of the DOS65 distribution.
@@ -1896,7 +1897,7 @@ These partition sizes and locations were chosen to:
 The standard partition table table entries are:
 
 +---------------------------------+-------------------------------+-------------------------------+
-|                                 | **--- Modern (hd1k) ---**     | **--- Legacy (hd512) ---**    |
+|                                 | **--- Modern (hd1k) ---**     | **--- Classic (hd512) ---**    |
 |                                 +---------------+---------------+---------------+---------------+
 |                                 | Byte(s)       | Sector(s)     | Byte(s)       | Sector(s)     |
 +=================================+==============:+==============:+==============:+==============:+
