@@ -1,3 +1,4 @@
+@Label="Blank"
 #
 # Blank disk template
 #

@@ -1,3 +1,5 @@
+@Label="CP/M 3"
+@SysImage="../CPM3/cpmldr.sys"
 #
 # Add the ReadMe document
 #

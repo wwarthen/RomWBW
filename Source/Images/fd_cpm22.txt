@@ -1,3 +1,5 @@
+@Label="CP/M 2.2"
+@SysImage="../CPM22/cpm_wbw.sys"
 #
 # Add the ReadMe document
 #

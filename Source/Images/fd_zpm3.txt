@@ -1,3 +1,5 @@
+@Label="ZPM3"
+@SysImage="../ZPM3/zpmldr.sys"
 #
 # Add the ReadMe document
 #

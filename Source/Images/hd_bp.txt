@@ -1,3 +1,5 @@
+@Label="BPBIOS"
+@SysImage="../ZSDOS/zsys_wbw.sys"
 #
 # Add ZSystem images
 #

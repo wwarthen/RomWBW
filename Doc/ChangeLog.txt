@@ -17,6 +17,8 @@ Version 3.6
 - MAP: Device Inventory moved from HBIOS to Rom App, saving >1k space in HBIOS
 - MAP: Added disk image for all Infocom text adventure Games
 - M?R: Fixed formatting issue with SLABEL where Slice # < 10
+- WBW: Improved image creation process to allow user defined aggregates
+- WBW: Implemented config driven slice name and system image specification
 
 Version 3.5.1
 -------------

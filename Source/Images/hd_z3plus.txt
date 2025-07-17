@@ -1,3 +1,5 @@
+@Label="Z3PLUS"
+@SysImage="../CPM3/cpmldr.sys"
 #
 # Add the ReadMe document
 #

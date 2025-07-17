@@ -1,3 +1,5 @@
+@Label="ZSDOS 1.1"
+@SysImage="../ZSDOS/zsys_wbw.sys"
 #
 # Add the ReadMe document
 #

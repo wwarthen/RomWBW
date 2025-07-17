@@ -1,3 +1,4 @@
+@Label="Cowgol"
 #
 # Add the ReadMe document
 #

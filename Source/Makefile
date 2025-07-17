@@ -26,6 +26,7 @@ shared:
 	$(MAKE) --directory ZSDOS2 $(ACTION)
 	$(MAKE) --directory CPM3 $(ACTION)
 	$(MAKE) --directory ZPM3 $(ACTION)
+	$(MAKE) --directory BPBIOS $(ACTION)
 	$(MAKE) --directory CPNET $(ACTION)
 	$(MAKE) --directory pSys $(ACTION)
 	$(MAKE) --directory Apps $(ACTION)
@@ -33,9 +34,6 @@ shared:
 	$(MAKE) --directory TastyBasic $(ACTION)
 	$(MAKE) --directory Fonts $(ACTION)
 	$(MAKE) --directory RomDsk $(ACTION)
-
-bp:
-	$(MAKE) --directory BPBIOS $(ACTION)
 
 images:
 	$(MAKE) --directory Images $(ACTION)

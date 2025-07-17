@@ -1,14 +1,14 @@
 RomWBW Introduction
 Wayne Warthen (wwarthen@gmail.com)
-06 Jul 2025
+17 Jul 2025
 
 
 
 
 
 
+OVERVIEW
 
-Overview
 
 RomWBW software provides a complete, commercial quality implementation
 of CP/M (and work-alike) operating systems and applications for modern
@@ -17,16 +17,19 @@ Z80/180/280 retro-computing hardware systems.
 A wide variety of platforms are supported including those produced by
 these developer communities:
 
--   RetroBrew Computers (https://www.retrobrewcomputers.org)
--   RC2014 (https://rc2014.co.uk),
-    RC2014-Z80 (https://groups.google.com/g/rc2014-z80)
--   Retro Computing (https://groups.google.com/g/retro-comp)
--   Small Computer Central (https://smallcomputercentral.com/)
+- RetroBrew Computers (https://www.retrobrewcomputers.org)
+- RC2014 (https://rc2014.co.uk),
+  RC2014-Z80 (https://groups.google.com/g/rc2014-z80)
+- Retro Computing (https://groups.google.com/g/retro-comp)
+- Small Computer Central (https://smallcomputercentral.com/)
 
 A complete list of the currently supported platforms is found in RomWBW
 Hardware .
 
-Description
+
+
+DESCRIPTION
+
 
 Primary Features
 
@@ -38,16 +41,16 @@ Card) and move it between systems transparently.
 
 Supported hardware features of RomWBW include:
 
--   Z80 Family CPUs including Z80, Z180, and Z280
--   Banked memory services for several banking designs
--   Disk drivers for RAM, ROM, Floppy, IDE ATA/ATAPI, CF, SD, USB, Zip,
-    Iomega
--   Serial drivers including UART (16550-like), ASCI, ACIA, SIO
--   Video drivers including TMS9918, SY6545, MOS8563, HD6445, Xosera
--   Keyboard (PS/2) drivers via VT8242 or PPI interfaces
--   Real time clock drivers including DS1302, BQ4845
--   Support for CP/NET networking using Wiznet, MT011 or Serial
--   Built-in VT-100 terminal emulation support
+- Z80 Family CPUs including Z80, Z180, and Z280
+- Banked memory services for several banking designs
+- Disk drivers for RAM, ROM, Floppy, IDE ATA/ATAPI, CF, SD, USB, Zip,
+  Iomega
+- Serial drivers including UART (16550-like), ASCI, ACIA, SIO
+- Video drivers including TMS9918, SY6545, MOS8563, HD6445, Xosera
+- Keyboard (PS/2) drivers via VT8242 or PPI interfaces
+- Real time clock drivers including DS1302, BQ4845
+- Support for CP/NET networking using Wiznet, MT011 or Serial
+- Built-in VT-100 terminal emulation support
 
 A dynamic disk drive letter assignment mechanism allows mapping
 operating system drive letters to any available disk media.
@@ -57,6 +60,7 @@ contains a complete CP/M filesystem and can be mapped independently to
 any drive letter. This overcomes the inherent size limitations in legacy
 OSes and allows up to 2GB of addressable storage on a single device,
 with up to 128MB accessible at any one time.
+
 
 Included Software
 
@@ -69,27 +73,28 @@ changing media.
 
 Some of the included software:
 
--   Operating Systems (CP/M 2.2, ZSDOS, NZ-COM, CP/M 3, ZPM3, Z3PLUS,
-    QPM )
--   Support for other operating systems, p-System, FreeRTOS, and FUZIX.
--   Programming Tools (Z80ASM, Turbo Pascal, Forth, Cowgol)
--   C Compiler’s including Aztec-C, and HI-TECH C
--   Microsoft Basic Compiler, and Microsoft Fortran
--   Some games such as Colossal Cave, Zork, etc
--   Wordstar Word processing software
+- Operating Systems (CP/M 2.2, ZSDOS, NZ-COM, CP/M 3, ZPM3, Z3PLUS, QPM
+  )
+- Support for other operating systems, p-System, FreeRTOS, and FUZIX.
+- Programming Tools (Z80ASM, Turbo Pascal, Forth, Cowgol)
+- C Compiler’s including Aztec-C, and HI-TECH C
+- Microsoft Basic Compiler, and Microsoft Fortran
+- Some games such as Colossal Cave, Zork, etc
+- Wordstar Word processing software
 
 Some of the provided software can be launched directly from the ROM
 firmware itself:
 
--   System Monitor
--   Operating Systems (CP/M 2.2, ZSDOS)
--   ROM BASIC (Nascom BASIC and Tasty BASIC)
--   ROM Forth
+- System Monitor
+- Operating Systems (CP/M 2.2, ZSDOS)
+- ROM BASIC (Nascom BASIC and Tasty BASIC)
+- ROM Forth
 
 A tool is provided that allows you to access a FAT-12/16/32 filesystem.
 The FAT filesystem may be coresident on the same disk media as RomWBW
 slices or on stand-alone media. This makes exchanging files with modern
 OSes such as Windows, MacOS, and Linux very easy.
+
 
 ROM Distribution
 
@@ -125,20 +130,20 @@ file describing the contents in detail. In summary, these directories
 are:
 
   -------------------------------------------------------------------------
-  Directory   Description
+  DIRECTORY   DESCRIPTION
   ----------- -------------------------------------------------------------
-  Binary      The final output files of the build process are placed here.
+  BINARY      The final output files of the build process are placed here.
               Most importantly, the ROM images with the file names ending
               in “.rom” and disk images ending in .img.
 
-  Doc         Contains various detailed documentation, both RomWBW
+  DOC         Contains various detailed documentation, both RomWBW
               specifically as well as the operating systems and
               applications.
 
-  Source      Contains the source code files used to build the software and
+  SOURCE      Contains the source code files used to build the software and
               ROM images.
 
-  Tools       Contains the programs that are used by the build process or
+  TOOLS       Contains the programs that are used by the build process or
               that may be useful in setting up your system.
   -------------------------------------------------------------------------
 
@@ -149,6 +154,7 @@ tailor the firmware to your specific preferences. All tools required to
 build custom ROM firmware under Windows are included – no need to
 install assemblers, etc. The firmware can also be built using Linux or
 MacOS after confirming a few standard tools have been installed.
+
 
 Installation & Operation
 
@@ -162,30 +168,30 @@ Complete instructions for installation and operation of RomWBW are found
 in the RomWBW User Guide. It is also a good idea to review the Release
 Notes for helpful release-specific information.
 
+
 Documentation
 
 There are several documents that form the core of the RomWBW
 documentation:
 
--   RomWBW User Guide is the main user guide for RomWBW, it covers the
-    major topics of how to install, manage and use RomWBW, and includes
-    additional guidance to the use of some of the operating systems
-    supported by RomWBW
+- RomWBW User Guide is the main user guide for RomWBW, it covers the
+  major topics of how to install, manage and use RomWBW, and includes
+  additional guidance to the use of some of the operating systems
+  supported by RomWBW
 
--   RomWBW Hardware contains a description of all the hardware
-    platforms, and devices supported by RomWBW.
+- RomWBW Hardware contains a description of all the hardware platforms,
+  and devices supported by RomWBW.
 
--   RomWBW Applications is a reference for the ROM-hosted and OS-hosted
-    applications created or customized to enhance the operation of
-    RomWBW.
+- RomWBW Applications is a reference for the ROM-hosted and OS-hosted
+  applications created or customized to enhance the operation of RomWBW.
 
--   RomWBW Disk Catalog is a reference for the contents of the disk
-    images provided with RomWBW, with a description of many of the files
-    on each image
+- RomWBW Disk Catalog is a reference for the contents of the disk images
+  provided with RomWBW, with a description of many of the files on each
+  image
 
--   RomWBW System Guide discusses much of the internal design and
-    construction of RomWBW. It includes a reference for the RomWBW HBIOS
-    API functions.
+- RomWBW System Guide discusses much of the internal design and
+  construction of RomWBW. It includes a reference for the RomWBW HBIOS
+  API functions.
 
 An online HTML version of this documentation is hosted at
 https://wwarthen.github.io/RomWBW.
@@ -199,20 +205,23 @@ in which it enhances the operation of the included applications and
 operating systems.
 
 Since RomWBW is purely a software product for many different platforms,
-the documentation does not cover hardware construction, configuration,
+the documentation does NOT cover hardware construction, configuration,
 or troubleshooting – please see your hardware provider for this
 information.
 
-Support
+
+
+SUPPORT
+
 
 Getting Assistance
 
 The best way to get assistance with RomWBW or any aspect of the
 RetroBrew Computers projects is via one of the community forums:
 
--   RetroBrew Computers Forum
--   RC2014 Google Group
--   retro-comp Google Group
+- RetroBrew Computers Forum
+- RC2014 Google Group
+- retro-comp Google Group
 
 Submission of issues and bugs are welcome at the RomWBW GitHub
 Repository.
@@ -220,10 +229,14 @@ Repository.
 Also feel free to email Wayne Warthen at wwarthen@gmail.com. I am happy
 to provide support adapting RomWBW to new or modified systems
 
-Contributions
+
+
+CONTRIBUTIONS
+
 
 All source code and distributions are maintained on GitHub.
 Contributions of all kinds to RomWBW are very welcome.
+
 
 Acknowledgments
 
@@ -233,119 +246,118 @@ RetroBrew Computers Community. I sincerely appreciate all of their
 contributions. The list below is probably missing many names – please
 let me know if I missed you!
 
--   Andrew Lynch started it all when he created the N8VEM Z80 SBC which
-    became the first platform RomWBW supported. Some of his original
-    code can still be found in RomWBW.
+- Andrew Lynch started it all when he created the N8VEM Z80 SBC which
+  became the first platform RomWBW supported. Some of his original code
+  can still be found in RomWBW.
 
--   Dan Werner wrote much of the code from which RomWBW was originally
-    derived and he has always been a great source of knowledge and
-    advice.
+- Dan Werner wrote much of the code from which RomWBW was originally
+  derived and he has always been a great source of knowledge and advice.
 
--   Douglas Goodall contributed code, time, testing, and advice in “the
-    early days”. He created an entire suite of application programs to
-    enhance the use of RomWBW. Unfortunately, they have become unusable
-    due to internal changes within RomWBW. As of RomWBW 2.6, these
-    applications are no longer provided.
+- Douglas Goodall contributed code, time, testing, and advice in “the
+  early days”. He created an entire suite of application programs to
+  enhance the use of RomWBW. Unfortunately, they have become unusable
+  due to internal changes within RomWBW. As of RomWBW 2.6, these
+  applications are no longer provided.
 
--   Sergey Kiselev created several hardware platforms for RomWBW
-    including the very popular Zeta.
+- Sergey Kiselev created several hardware platforms for RomWBW including
+  the very popular Zeta.
 
--   David Giles created support for the Z180 CSIO which is now included
-    SD Card driver.
+- David Giles created support for the Z180 CSIO which is now included SD
+  Card driver.
 
--   Phil Summers contributed the Forth and BASIC adaptations in ROM, the
-    AY-3-8910 sound driver, DMA support, and a long list of general code
-    and documentation enhancements.
+- Phil Summers contributed the Forth and BASIC adaptations in ROM, the
+  AY-3-8910 sound driver, DMA support, and a long list of general code
+  and documentation enhancements.
 
--   Ed Brindley contributed some of the code that supports the RCBus
-    platform.
+- Ed Brindley contributed some of the code that supports the RCBus
+  platform.
 
--   Spencer Owen created the RC2014 series of hobbyist kit computers
-    which has exponentially increased RomWBW usage. Some of his kits
-    include RomWBW.
+- Spencer Owen created the RC2014 series of hobbyist kit computers which
+  has exponentially increased RomWBW usage. Some of his kits include
+  RomWBW.
 
--   Stephen Cousins has likewise created a series of hobbyist kit
-    computers at Small Computer Central and is distributing RomWBW with
-    many of them.
+- Stephen Cousins has likewise created a series of hobbyist kit
+  computers at Small Computer Central and is distributing RomWBW with
+  many of them.
 
--   Alan Cox has contributed some driver code and has provided a great
-    deal of advice.
+- Alan Cox has contributed some driver code and has provided a great
+  deal of advice.
 
--   The CP/NET client files were developed by Douglas Miller.
+- The CP/NET client files were developed by Douglas Miller.
 
--   Phillip Stevens contributed support for FreeRTOS.
+- Phillip Stevens contributed support for FreeRTOS.
 
--   Curt Mayer contributed the original Linux / MacOS build process.
+- Curt Mayer contributed the original Linux / MacOS build process.
 
--   UNA BIOS and FDISK80 are the products of John Coffman.
+- UNA BIOS and FDISK80 are the products of John Coffman.
 
--   FLASH4 is a product of Will Sowerbutts.
+- FLASH4 is a product of Will Sowerbutts.
 
--   CLRDIR is a product of Max Scane.
+- CLRDIR is a product of Max Scane.
 
--   Tasty Basic is a product of Dimitri Theulings.
+- Tasty Basic is a product of Dimitri Theulings.
 
--   Dean Netherton contributed eZ80 CPU support, the sound driver
-    interface, and the SN76489 sound driver.
+- Dean Netherton contributed eZ80 CPU support, the sound driver
+  interface, and the SN76489 sound driver.
 
--   The RomWBW Disk Catalog document was produced by Mykl Orders.
+- The RomWBW Disk Catalog document was produced by Mykl Orders.
 
--   Rob Prouse has created many of the supplemental disk images
-    including Aztec C, HiTech C, SLR Z80ASM, Turbo Pascal, Microsoft
-    BASIC Compiler, Microsoft Fortran Compiler, and a Games compendium.
+- Rob Prouse has created many of the supplemental disk images including
+  Aztec C, HiTech C, SLR Z80ASM, Turbo Pascal, Microsoft BASIC Compiler,
+  Microsoft Fortran Compiler, and a Games compendium.
 
--   Martin R has provided substantial help reviewing and improving the
-    User Guide and Applications documents.
+- Martin R has provided substantial help reviewing and improving the
+  User Guide and Applications documents.
 
--   Mark Pruden has made a wide variety of contributions including:
+- Mark Pruden has made a wide variety of contributions including:
 
-    -   significant content in the Disk Catalog and User Guide
-    -   creation of the Introduction and Hardware documents
-    -   Z3PLUS operating system disk image
-    -   Infocom text adventure game disk image
-    -   COPYSL, and SLABEL utilities
-    -   Display of bootable slices via “S” command during startup
-    -   Optimisations of HBIOS and CBIOS to reduce overall code size
-    -   a feature for RomWBW configuration by NVRAM
-    -   the /B bulk mode of disk assignment to the ASSIGN utility
+  - significant content in the Disk Catalog and User Guide
+  - creation of the Introduction and Hardware documents
+  - Z3PLUS operating system disk image
+  - Infocom text adventure game disk image
+  - COPYSL, and SLABEL utilities
+  - Display of bootable slices via “S” command during startup
+  - Optimisations of HBIOS and CBIOS to reduce overall code size
+  - a feature for RomWBW configuration by NVRAM
+  - the /B bulk mode of disk assignment to the ASSIGN utility
 
--   Jacques Pelletier has contributed the DS1501 RTC driver code.
+- Jacques Pelletier has contributed the DS1501 RTC driver code.
 
--   Jose Collado has contributed enhancements to the TMS driver
-    including compatibility with standard TMS register configuration.
+- Jose Collado has contributed enhancements to the TMS driver including
+  compatibility with standard TMS register configuration.
 
--   Kevin Boone has contributed a generic HBIOS date/time utility
-    (WDATE).
+- Kevin Boone has contributed a generic HBIOS date/time utility (WDATE).
 
--   Matt Carroll has contributed a fix to XM.COM that corrects the port
-    specification when doing a send.
+- Matt Carroll has contributed a fix to XM.COM that corrects the port
+  specification when doing a send.
 
--   Dean Jenkins enhanced the build process to accommodate the Raspberry
-    Pi 4.
+- Dean Jenkins enhanced the build process to accommodate the Raspberry
+  Pi 4.
 
--   Tom Plano has contributed a new utility (HTALK) to allow talking
-    directly to HBIOS COM ports.
+- Tom Plano has contributed a new utility (HTALK) to allow talking
+  directly to HBIOS COM ports.
 
--   Lars Nelson has contributed several generic utilities such as a
-    universal (OS agnostic) UNARC application.
+- Lars Nelson has contributed several generic utilities such as a
+  universal (OS agnostic) UNARC application.
 
--   Dylan Hall added support for specifying a secondary console.
+- Dylan Hall added support for specifying a secondary console.
 
--   Bill Shen has contributed boot loaders for several of his systems.
+- Bill Shen has contributed boot loaders for several of his systems.
 
--   Laszlo Szolnoki has contributed an EF9345 video display controller
-    driver.
+- Laszlo Szolnoki has contributed an EF9345 video display controller
+  driver.
 
--   Ladislau Szilagyi has contributed an enhanced version of CP/M Cowgol
-    that leverages RomWBW memory banking.
+- Ladislau Szilagyi has contributed an enhanced version of CP/M Cowgol
+  that leverages RomWBW memory banking.
 
--   Les Bird has contributed support for the NABU w/ Option Board
+- Les Bird has contributed support for the NABU w/ Option Board
 
--   Rob Gowin created an online documentation site via MkDocs, and
-    contributed a driver for the Xosera FPGA-based video controller.
+- Rob Gowin created an online documentation site via MkDocs, and
+  contributed a driver for the Xosera FPGA-based video controller.
 
--   Jörg Linder has contributed disassembled and nicely commented source
-    for ZSDOS2 and the BPBIOS utilities.
+- Jörg Linder has contributed disassembled and nicely commented source
+  for ZSDOS2 and the BPBIOS utilities.
+
 
 Related Projects
 
@@ -383,7 +395,10 @@ describes not only generic CP/M application development, but also RomWBW
 HBIOS programming and bare metal programming. The latest copy of this
 document is hosted at http://w8bh.net/Assembly for RC2014Z.pdf.
 
-Licensing
+
+
+LICENSING
+
 
 License Terms
 

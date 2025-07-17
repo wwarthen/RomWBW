@@ -1,3 +1,5 @@
+@Label="NZ-COM"
+@SysImage="../ZSDOS/zsys_wbw.sys"
 #
 # Add the ReadMe document
 #

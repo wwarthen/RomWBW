@@ -1,3 +1,4 @@
+@Label="Infocom Games"
 #
 # Add the ReadMe document
 #

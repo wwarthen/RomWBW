@@ -1,3 +1,4 @@
+@Label="Microsoft COBOL"
 #
 # Add the ReadMe document
 #
