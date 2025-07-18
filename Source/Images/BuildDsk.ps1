@@ -1,3 +1,9 @@
+# This PowerShell script will build an aggregate hard disk
+# image based on the parameter passed in.  The single
+# input parameter is the name of the desired image.  E.g.,
+# hd1k_combo.img will build a combo disk image (defined in combo.def)
+# using the hd1k format.
+
 param([string]$Disk)
 
 # If a PowerShell exception occurs, just stop the script immediately.

@@ -1,3 +1,9 @@
+# This PowerShell script will build a floppy disk or hard disk
+# slice image based on the parameter passed in.  The single
+# input parameter is the name of the desired image.  E.g.,
+# hd1k_zsdos.img will build a zsdos slice image as defined in
+# hd_zsdos.txt using the hd1k format.
+
 param([string]$Image)
 
 # If a PowerShell exception occurs, just stop the script immediately.
