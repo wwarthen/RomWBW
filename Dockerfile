@@ -1,4 +1,4 @@
-FROM ubuntu:jammy-20240111 as basebuilder
+FROM ubuntu:jammy-20240111 AS basebuilder
 
 # This docker file can be used to build a tool chain docker image for building RomWBW images.
 
@@ -10,7 +10,7 @@ FROM ubuntu:jammy-20240111 as basebuilder
 # After you have built the above image (called romwbw-chain), you can use it to compile and build the RomWBW images
 # as per the standard make scripts within RomWBW.
 # Start a new terminal, cd to where you have clone RomWBW, and then run this command: 
-# docker run --rm -v ${PWD}:/src/ --privileged=true -u $(id -u ${USER}):$(id -g ${USER}) -it romwbw-chain:latest
+# docker run --rm -v ${PWD}:/src/ --privileged=true -u $(id -u ${USER}):$(id -g ${USER}) -it romwbw-chain
 
 # you can now compile and build the required images:
 
@@ -21,13 +21,11 @@ FROM ubuntu:jammy-20240111 as basebuilder
 # when finish, type 'exit' to return to back to your standard terminal session
 
 LABEL Maintainer="Dean Netherton" \
-      Description="spike to use clang for ez80 target"
+      Description="RomWBW builder platform"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-
 RUN dpkg --add-architecture i386
-RUN sed -i 's/http:\/\/archive\.ubuntu\.com\/ubuntu/http:\/\/au.archive.ubuntu.com\/ubuntu/g' /etc/apt/sources.list
 RUN apt update -y
 RUN apt dist-upgrade -y
 RUN apt install -y --no-install-recommends cmake lzip ca-certificates mtools build-essential dos2unix libboost-all-dev texinfo texi2html libxml2-dev subversion bison flex zlib1g-dev m4 git wget dosfstools curl
@@ -35,10 +33,10 @@ RUN apt install -y --no-install-recommends cmake lzip ca-certificates mtools bui
 RUN mkdir work
 WORKDIR /work
 
-FROM basebuilder as main
+FROM basebuilder AS main
 
 LABEL Maintainer="Dean Netherton" \
-      Description="spike to build RomWBW"
+      Description="RomWBW builder platform"
 
 RUN mkdir /src
 WORKDIR /src/

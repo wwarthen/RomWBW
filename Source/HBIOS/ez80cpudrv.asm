@@ -40,12 +40,19 @@ EZ80_PREINIT:
 	LD	A, 5
 	LD	(HB_CPUTYPE),A
 
-	; DETECT IF USING ALT-FIRMWARE
-	LD	A, C
-	AND	$80
-	LD	(EZ80_ALT_FIRM), A
 	LD	(EZ80_PLT_VERSION), HL
 	LD	(EZ80_PLT_VERSION+2), DE
+
+	; need version 0.4.x.x at miniumum
+	LD 	HL, 4-1
+	XOR	A
+	SBC	HL, DE
+	
+	JR 	c, EZ80_VEROK
+	CPL
+
+EZ80_VEROK:
+	LD	(EZ80_VER_WARNING), A
 
 	EXX
 	LD	A, C
@@ -243,11 +250,12 @@ EZ80_RPT_FIRMWARE:
 	CALL	PC_LEADING_ZERO
 	CALL	PRTDECB
 
-	LD	A, (EZ80_ALT_FIRM)
-	OR	A
-	RET	Z
-	CALL	PRTSTRD
-	.TEXT	" (ALT)$"
+	LD	A, (EZ80_VER_WARNING)
+	OR      A
+	RET     Z
+	CALL    PRTSTRD
+	.TEXT   " (WARN-VER-OOD)$"
+
 	RET
 
 PC_LEADING_ZERO:
@@ -273,7 +281,7 @@ EZ80_PLT_FLSHWS:
 EZ80_PLT_VERSION:
 	.DB	0, 0, 0, 0
 
-EZ80_ALT_FIRM:
+EZ80_VER_WARNING:
 	.DB	0
 
 EZ80_BUILD_DATE:
@@ -301,4 +309,24 @@ _EZ80_CPY_UHL_TO_EHL:
 	.DB	$5B, $DD, $5E, $FF			; LD.LIL	E, (IX-1)
 	.DB	$49, $E1				; POP.L		HL
 	POP	IX
+	RET
+
+; set the upper byte (u of DE) to MB.
+_EZ80_EXTN_DE_TO_MB_DE:
+	.DB	$49, $D5				; PUSH.L 	DE
+	.DB	$5B, $FD, $21, $00, $00, $00		; LD.LIL 	IY, 0
+	.DB	$49, $FD, $39				; ADD.L		IY, SP
+	.DB	$ED, $6E              			; LD 		A, MB
+	.DB	$5B, $FD, $77, $02			; LD.LIL 	(IY+2), A
+	.DB	$49, $D1				; POP.L		DE
+	RET
+
+; set the upper byte (u of IY) to MB.
+_EZ80_EXTN_IY_TO_MB_IY:
+	.DB	$49, $FD, $E5				; PUSH.L	IY
+	.DB	$5B, $FD, $21, $00, $00, $00		; LD.LIL	IY, 0
+	.DB	$49, $FD, $39				; ADD.L		IY, SP
+	.DB	$ED, $6E				; LD		A, MB
+	.DB	$5B, $FD, $77, $02			; LD.LIL	(IY+2), A
+	.DB	$49, $FD, $E1				; POP.L		IY
 	RET
