@@ -1560,7 +1560,7 @@ drvmap:
 	jr	nz,drvmapu	; do UNA mode drvmap
 ;
 		; determine device code by scanning for string
-	ld	b,16		; device table always has 16 entries
+	ld	b,devcnt	; number of entries in devtbl
 	ld	c,0		; c is used to track table entry num
 	ld	de,tmpstr	; de points to specified device name
 	ld	hl,devtbl	; hl points to first entry of devtbl
@@ -2427,6 +2427,7 @@ devtbl:				; device table
 	.dw	dev04, dev05, dev06, dev07
 	.dw	dev08, dev09, dev10, dev11
 	.dw	dev12, dev13, dev14, dev15
+	.dw	dev16
 ;
 devunk	.db	"?",0
 dev00	.db	"MD",0
@@ -2444,9 +2445,10 @@ dev11	.db	"IMM",0
 dev12	.db	"SYQ",0
 dev13	.db	"CHUSB",0
 dev14	.db	"CHSD",0
-dev15	.equ	devunk
+dev15	.db	"USB",0
+dev16	.equ	devunk
 ;
-devcnt	.equ	10		; 10 devices defined
+devcnt	.equ	17		; 17 device types defined
 ;
 udevram		.db	"RAM",0
 udevrom		.db	"ROM",0
