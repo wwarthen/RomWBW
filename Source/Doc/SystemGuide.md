@@ -2277,15 +2277,15 @@ using values that correspond to musical notes.  The frequency will be
 applied when the next SNDPLAY function is invoked.  The returned Status 
 (A) is a standard HBIOS result code.
 
-The Note (HL) values correspond to quarter notes.  Increasing/decreasing
-the value by 4 results in a full note increment/decrement.  
+The Note (HL) values correspond to eighth notes.  Increasing/decreasing
+the value by 8 results in a full note increment/decrement.  
 Increasing/decreasing the value by 48 results in a full octave 
 increment/decrement.  The value 0 corresponds to Bb/A# in octave 0.
 
 The sound chip resolution and its oscillator limit the range and 
 accuracy of the notes played. The typical range of the AY-3-8910 is six 
 octaves: Bb2/A#2 to A7, where each value is a unique tone.  Values above
-and below can still be played but each quarter tone step may not result
+and below can still be played but each eighth tone step may not result
 in a note change.
 
 The following table shows the mapping of the Note (HL) value to the 
