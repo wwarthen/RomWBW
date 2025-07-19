@@ -38,6 +38,7 @@
 ;   2024-12-17 [MAP] Added new /B=opt feaure to assign drives
 ;   2024-12-21 [MAP] Added CBIOS heap estimation to /B to prevent
 ;                    overflow when the drives are finally added
+;   2025-07-19 [D?N] Support for native USB drivers
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -1826,7 +1827,7 @@ prtdev:
 	rst	08		; call hbios, D := device, E := unit
 	push	de		; save results
 	ld	a,d		; device to A
-	and	$0F		; mask out undesired bits
+	and	$1F		; mask out undesired bits
 	push	hl		; save HL
 	add	a,a		; multiple A by two for word table
 	ld	hl,devtbl	; point to start of device name table
@@ -2466,13 +2467,13 @@ stack	.equ	$		; stack top
 ; Messages
 ;
 indent	.db	"   ",0
-msgban1	.db	"ASSIGN v2.0 for RomWBW CP/M ",0
+msgban1	.db	"ASSIGN v2.1 for RomWBW CP/M ",0
 msg22	.db	"2.2",0
 msg3	.db	"3",0
-msbban2	.db	", 21-Dec-2024",0
+msbban2	.db	", 19-Jul-2025",0
 msghb	.db	" (HBIOS Mode)",0
 msgub	.db	" (UBIOS Mode)",0
-msgban3	.db	"Copyright 2024, Wayne Warthen, GNU GPL v3",0
+msgban3	.db	"Copyright 2025, Wayne Warthen, GNU GPL v3",0
 msguse	.db	"Usage: ASSIGN D:[=[{D:|<device>[<unitnum>]:[<slicenum>]}]][,...]",13,10
 	.db	"  ex. ASSIGN           (display all active assignments)",13,10
 	.db	"      ASSIGN /?        (display version and usage)",13,10

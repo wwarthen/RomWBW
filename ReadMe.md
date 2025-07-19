@@ -7,7 +7,7 @@
 **RomWBW Introduction** \
 Version 3.6 \
 Wayne Warthen  ([wwarthen@gmail.com](mailto:wwarthen@gmail.com)) \
-18 Jul 2025
+19 Jul 2025
 
 # Overview
 
@@ -290,8 +290,12 @@ let me know if I missed you!
 
 - Tasty Basic is a product of Dimitri Theulings.
 
-- Dean Netherton contributed eZ80 CPU support, the sound driver
-  interface, and the SN76489 sound driver.
+- Dean Netherton contributed multiple components:
+
+  - eZ80 CPU support
+  - Sound driver infrastructure
+  - SN76489 sound driver
+  - Native USB driver (keyboard, floppy, mass storage)
 
 - The RomWBW Disk Catalog document was produced by Mykl Orders.
 
