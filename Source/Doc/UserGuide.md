@@ -2000,7 +2000,52 @@ that there are more disk (slice) images than the 6 that are included in
 the Combo Disk Images.  These supplemental disk images are identified by
 looking for the files that start with hd1k_ or hd512_.
 
-#### Adding Slices to Combo Image
+There are two approaches you can use to create custom hard disk
+images with multiple slices.
+
+- You can add/modify a configuration file and run the RomWBW
+  build process.  This requires running the RomWBW build process, but
+  will cause your custom hard disk images to be created with every
+  build.
+
+- You can manually combine the individual images using `COPY` (Windows)
+  or `cat` (Linux/MacOS).  This does not require running the RomWBW
+  build process, but will require manually recreating your custom
+  hard disk images when you upgrade to new releases of RomWBW.
+
+The following sections provide more detail on each approach.
+
+#### Building Custom Hard Disk Images
+
+The RomWBW build process builds the disk images defined in the
+`Source/Images` directory.  The resultant images are placed in the `Binary`
+directory and are ready to copy to your media.
+
+These aggregate disk images are defined using .def files.  You will see there
+is a combo.def file in the Images directory that defines the slices for the
+Combo disk image.  You can create your own .def files as desired to
+automatically create custom aggregate disk images.  When the RomWBW
+build process is run, it will automatically look for all .def files
+in the `Source/Images` directory and create aggregate disk images for
+each using the same base name as the .def file.
+
+There is an example of this in the `Images` directory called 
+`all.def.example`.  You can remove the ".example" suffix so that the 
+file is called `all.def`.  Now, if you run the RomWBW build process, it 
+will automatically generate `hd512_all.img` and `hd1k_all.img` files in 
+the `/Binary` directory. This example creates an aggregate disk image 
+with all of the possible slices.
+
+You could also modify the contents of the Combo disk image by simply
+modifying the `combo.def` configuration file.  However, it is recommended
+that you leave the Combo image alone and simply define your own.
+
+NOTE: All of the `hd1k_xxx.img` aggregate disk image files created in
+this way (including the Combo disk image) will already be prefixed with 
+`hd1k_prefix.dat`, so you do not need to add the prefix file.  They are 
+ready to write to your media.
+
+#### Combining Hard Disk Images
 
 You can add slices to the Combo Disk Images simply by tacking
 slices onto the end.  For example, if you want to add a slice
