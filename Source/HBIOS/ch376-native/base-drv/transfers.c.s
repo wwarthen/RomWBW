@@ -62,26 +62,26 @@ _usb_control_transfer:
 	ld	hl,0
 	add	hl, sp
 	ld	a, (hl)
-	and	0xf1
+	and	$f1
 	ld	(hl), a
 	ld	c,(ix+9)
-	ld	b,0x00
+	ld	b,$00
 	ld	hl,1
 	add	hl, sp
 	ld	(hl), c
 	inc	hl
 	ld	a, b
-	and	0x03
+	and	$03
 	ld	e, a
 	ld	a, (hl)
-	and	0xfc
+	and	$fc
 	or	e
 	ld	(hl), a
 ;source-doc/base-drv/transfers.c:30: */
 	ld	c,(ix+4)
 	ld	b,(ix+5)
 	ld	a, (bc)
-	and	0x80
+	and	$80
 ;source-doc/base-drv/transfers.c:32: void *const               buffer,
 	ld	(ix-1),a
 	or	a
@@ -90,7 +90,7 @@ _usb_control_transfer:
 	or	(ix+6)
 	jr	NZ,l_usb_control_transfer_00102
 ;source-doc/base-drv/transfers.c:33: const uint8_t             device_address,
-	ld	l,0x0f
+	ld	l,$0f
 	jp	l_usb_control_transfer_00114
 l_usb_control_transfer_00102:
 ;source-doc/base-drv/transfers.c:35: usb_error      result;
@@ -104,7 +104,7 @@ l_usb_control_transfer_00102:
 	ld	e,(ix+4)
 	ld	d,(ix+5)
 	push	bc
-	ld	a,0x08
+	ld	a,$08
 	push	af
 	inc	sp
 	push	de
@@ -114,7 +114,7 @@ l_usb_control_transfer_00102:
 ;source-doc/base-drv/transfers.c:40: if (transferIn && buffer == 0)
 	call	_ch_issue_token_setup
 ;source-doc/base-drv/transfers.c:41: return USB_ERR_OTHER;
-	call	_ch_short_wait_int_and_get_stat
+	call	_ch_short_get_status
 	pop	bc
 ;source-doc/base-drv/transfers.c:42:
 	ld	a, l
@@ -157,7 +157,7 @@ l_usb_control_transfer_00119:
 	jr	l_usb_control_transfer_00117
 l_usb_control_transfer_00116:
 ;source-doc/base-drv/transfers.c:48: ch_issue_token_setup();
-	ld	l,0x00
+	ld	l,$00
 l_usb_control_transfer_00117:
 ;source-doc/base-drv/transfers.c:50: CHECK(result);
 	ld	a, l
@@ -168,25 +168,25 @@ l_usb_control_transfer_00117:
 	or	a
 	jr	Z,l_usb_control_transfer_00112
 ;source-doc/base-drv/transfers.c:53:
-	ld	l,0x2c
+	ld	l,$2c
 	call	_ch_command
 ;source-doc/base-drv/transfers.c:54: result = length != 0
-	ld	a,0x00
+	ld	a,$00
 	ld	bc,_CH376_DATA_PORT
 	out	(c), a
 ;source-doc/base-drv/transfers.c:55: ? (transferIn ? ch_data_in_transfer(buffer, length, &endpoint) : ch_data_out_transfer(buffer, length, &endpoint))
 	call	_ch_issue_token_out_ep0
 ;source-doc/base-drv/transfers.c:56: : USB_ERR_OK;
-	call	_ch_long_wait_int_and_get_statu
+	call	_ch_long_get_status
 ;source-doc/base-drv/transfers.c:58: CHECK(result)
 	ld	a,l
 	or	a
 	jr	Z,l_usb_control_transfer_00108
-	sub	0x02
+	sub	$02
 	jr	NZ,l_usb_control_transfer_00113
 l_usb_control_transfer_00108:
 ;source-doc/base-drv/transfers.c:59:
-	ld	l,0x00
+	ld	l,$00
 ;source-doc/base-drv/transfers.c:60: if (transferIn) {
 	jr	l_usb_control_transfer_00113
 ;source-doc/base-drv/transfers.c:63: ch_issue_token_out_ep0();
@@ -194,7 +194,7 @@ l_usb_control_transfer_00112:
 ;source-doc/base-drv/transfers.c:66: if (result == USB_ERR_OK || result == USB_ERR_STALL) {
 	call	_ch_issue_token_in_ep0
 ;source-doc/base-drv/transfers.c:67: result = USB_ERR_OK;
-	call	_ch_long_wait_int_and_get_statu
+	call	_ch_long_get_status
 ;source-doc/base-drv/transfers.c:71: RETURN_CHECK(result);
 l_usb_control_transfer_00113:
 ;source-doc/base-drv/transfers.c:72: }

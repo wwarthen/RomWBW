@@ -54,7 +54,7 @@ _parse_endpoints:
 	ld	ix,0
 	add	ix,sp
 	push	af
-;source-doc/base-drv/enumerate_storage.c:7: if (!(pEndpoint->bmAttributes & 0x02))
+;source-doc/base-drv/enumerate_storage.c:7: if (!(pEndpoint->bmAttributes & $02))
 	ld	l,(ix+6)
 	ld	h,(ix+7)
 	ld	c,l
@@ -78,27 +78,27 @@ _parse_endpoints:
 	inc	de
 	inc	de
 	inc	de
-;source-doc/base-drv/enumerate_storage.c:15: if (!(pEndpoint->bEndpointAddress & 0x80))
+;source-doc/base-drv/enumerate_storage.c:15: if (!(pEndpoint->bEndpointAddress & $80))
 	inc	bc
 	inc	bc
 	ld	a, (bc)
 	ld	c,a
-	and	0x80
-	ld	b,0x00
-;source-doc/base-drv/enumerate_storage.c:14: if (pEndpoint->bmAttributes & 0x01) { // 3 -> Interrupt
+	and	$80
+	ld	b,$00
+;source-doc/base-drv/enumerate_storage.c:14: if (pEndpoint->bmAttributes & $01) { // 3 -> Interrupt
 	bit	0,(ix-2)
 	jr	Z,l_parse_endpoints_00106
-;source-doc/base-drv/enumerate_storage.c:15: if (!(pEndpoint->bEndpointAddress & 0x80))
+;source-doc/base-drv/enumerate_storage.c:15: if (!(pEndpoint->bEndpointAddress & $80))
 	or	b
 ;source-doc/base-drv/enumerate_storage.c:16: return;
 	jr	Z,l_parse_endpoints_00108
 ;source-doc/base-drv/enumerate_storage.c:18: ep = &eps[ENDPOINT_INTERRUPT_IN];
-	ld	hl,0x0006
+	ld	hl,$0006
 	add	hl, de
 	ex	de, hl
 	jr	l_parse_endpoints_00107
 l_parse_endpoints_00106:
-;source-doc/base-drv/enumerate_storage.c:21: ep = (pEndpoint->bEndpointAddress & 0x80) ? &eps[ENDPOINT_BULK_IN] : &eps[ENDPOINT_BULK_OUT];
+;source-doc/base-drv/enumerate_storage.c:21: ep = (pEndpoint->bEndpointAddress & $80) ? &eps[ENDPOINT_BULK_IN] : &eps[ENDPOINT_BULK_OUT];
 	or	b
 	jr	Z,l_parse_endpoints_00110
 	inc	de
@@ -106,16 +106,16 @@ l_parse_endpoints_00106:
 	inc	de
 l_parse_endpoints_00110:
 l_parse_endpoints_00107:
-;source-doc/base-drv/enumerate_storage.c:24: ep->number           = pEndpoint->bEndpointAddress & 0x07;
+;source-doc/base-drv/enumerate_storage.c:24: ep->number           = pEndpoint->bEndpointAddress & $07;
 	ld	l, e
 	ld	h, d
 	ld	a, c
-	and	0x07
+	and	$07
 	rlca
-	and	0x0e
+	and	$0e
 	ld	c, a
 	ld	a, (hl)
-	and	0xf1
+	and	$f1
 	or	c
 	ld	(hl), a
 ;source-doc/base-drv/enumerate_storage.c:25: ep->toggle           = 0;
@@ -125,14 +125,14 @@ l_parse_endpoints_00107:
 ;source-doc/base-drv/enumerate_storage.c:26: ep->max_packet_sizex = x;
 	inc	de
 	ld	a,(ix-1)
-	ld	b,0x00
+	ld	b,$00
 	ld	(de), a
 	inc	de
 	ld	a, b
-	and	0x03
+	and	$03
 	ld	l, a
 	ld	a, (de)
-	and	0xfc
+	and	$fc
 	or	l
 	ld	(de), a
 l_parse_endpoints_00108:

@@ -55,7 +55,7 @@ _count_of_devices:
 	ld	hl,_x
 	call	_first_device_config
 ;source-doc/base-drv/usb_state.c:23: while (p_config) {
-	ld	c,0x00
+	ld	c,$00
 l_count_of_devices_00104:
 	ld	a, d
 	or	e
@@ -64,9 +64,9 @@ l_count_of_devices_00104:
 	ld	l, e
 	ld	h, d
 	ld	a, (hl)
-	and	0x0f
+	and	$0f
 ;source-doc/base-drv/usb_state.c:26: if (type != USB_IS_HUB && type)
-	cp	0x0f
+	cp	$0f
 	jr	Z,l_count_of_devices_00102
 	or	a
 	jr	Z,l_count_of_devices_00102
@@ -85,13 +85,13 @@ l_count_of_devices_00106:
 ;source-doc/base-drv/usb_state.c:34: }
 	ret
 _device_config_sizes:
-	DEFB +0x00
-	DEFB +0x10
-	DEFB +0x10
-	DEFB +0x0c
-	DEFB +0x06
-	DEFB 0x00
-	DEFB 0x00
+	DEFB +$00
+	DEFB +$10
+	DEFB +$10
+	DEFB +$0c
+	DEFB +$06
+	DEFB $00
+	DEFB $00
 ;source-doc/base-drv/usb_state.c:37: device_config *find_first_free(void) {
 ; ---------------------------------
 ; Function find_first_free
@@ -110,7 +110,7 @@ l_find_first_free_00103:
 	ld	l, e
 	ld	h, d
 	ld	a, (hl)
-	and	0x0f
+	and	$0f
 	jr	NZ,l_find_first_free_00102
 ;source-doc/base-drv/usb_state.c:44: return p;
 	ex	de, hl
@@ -122,7 +122,7 @@ l_find_first_free_00102:
 	jr	l_find_first_free_00103
 l_find_first_free_00105:
 ;source-doc/base-drv/usb_state.c:49: return NULL;
-	ld	hl,0x0000
+	ld	hl,$0000
 l_find_first_free_00106:
 ;source-doc/base-drv/usb_state.c:50: }
 	ret
@@ -146,20 +146,20 @@ _next_device_config:
 	ld	l, e
 	ld	h, d
 	ld	a, (hl)
-	and	0x0f
+	and	$0f
 	jr	NZ,l_next_device_config_00102
 ;source-doc/base-drv/usb_state.c:56: return NULL;
-	ld	de,0x0000
+	ld	de,$0000
 	jr	l_next_device_config_00105
 l_next_device_config_00102:
 ;source-doc/base-drv/usb_state.c:58: const uint8_t size = device_config_sizes[p->type];
 	ld	l, e
 	ld	h, d
 	ld	a, (hl)
-	and	0x0f
-	add	a, +((_device_config_sizes) & 0xFF)
+	and	$0f
+	add	a, +((_device_config_sizes) & $FF)
 	ld	l, a
-	ld	a,0x00
+	ld	a,$00
 	adc	a, +((_device_config_sizes) / 256)
 	ld	h, a
 	ld	a, (hl)
@@ -167,11 +167,11 @@ l_next_device_config_00102:
 ;source-doc/base-drv/usb_state.c:66: device_config *const result = (device_config *)(_p + size);
 	add	a, e
 	ld	e, a
-	ld	a,0x00
+	ld	a,$00
 	adc	a, d
 	ld	d, a
 ;source-doc/base-drv/usb_state.c:68: if (result >= (device_config *)&usb_state->device_configs_end)
-	ld	hl,0x0062
+	ld	hl,$0062
 	add	hl, bc
 	ld	a, e
 	sub	l
@@ -179,7 +179,7 @@ l_next_device_config_00102:
 	sbc	a, h
 	ret	C
 ;source-doc/base-drv/usb_state.c:69: return NULL;
-	ld	de,0x0000
+	ld	de,$0000
 ;source-doc/base-drv/usb_state.c:71: return result;
 l_next_device_config_00105:
 ;source-doc/base-drv/usb_state.c:72: }
@@ -196,7 +196,7 @@ _get_usb_device_config:
 	ld	hl,_x
 	call	_first_device_config
 	pop	bc
-	ld	b,0x01
+	ld	b,$01
 l_get_usb_device_config_00107:
 	ld	a, d
 	or	e
@@ -205,7 +205,7 @@ l_get_usb_device_config_00107:
 	ld	l, e
 	ld	h, d
 	ld	a, (hl)
-	and	0x0f
+	and	$0f
 	jr	Z,l_get_usb_device_config_00108
 ;source-doc/base-drv/usb_state.c:81: if (counter == device_index)
 	ld	a, c
@@ -223,7 +223,7 @@ l_get_usb_device_config_00108:
 	jr	l_get_usb_device_config_00107
 l_get_usb_device_config_00105:
 ;source-doc/base-drv/usb_state.c:87: return NULL; // is not a usb device
-	ld	de,0x0000
+	ld	de,$0000
 l_get_usb_device_config_00109:
 ;source-doc/base-drv/usb_state.c:88: }
 	ret
@@ -245,12 +245,12 @@ _usb_get_device_type:
 	or	e
 	jr	NZ,l_usb_get_device_type_00102
 ;source-doc/base-drv/usb_state.c:94: return -1;
-	ld	l,0xff
+	ld	l,$ff
 	jr	l_usb_get_device_type_00103
 l_usb_get_device_type_00102:
 ;source-doc/base-drv/usb_state.c:96: return dev->type;
 	ld	a, (hl)
-	and	0x0f
+	and	$0f
 	ld	l, a
 l_usb_get_device_type_00103:
 ;source-doc/base-drv/usb_state.c:97: }

@@ -116,10 +116,10 @@ configure_device(const _working *const working, const interface_descriptor *cons
   dev_cfg->address          = working->current_device_address;
   dev_cfg->type             = working->usb_device;
 
-  return usbtrn_set_configuration(dev_cfg->address, dev_cfg->max_packet_size, working->config.desc.bConfigurationvalue);
+  return usbtrn_set_config(dev_cfg->address, dev_cfg->max_packet_size, working->config.desc.bConfigurationvalue);
 }
 
-usb_error op_capture_hub_driver_interface(_working *const working) __sdcccall(1) {
+usb_error op_cap_hub_drv_intf(_working *const working) __sdcccall(1) {
   const interface_descriptor *const interface = (interface_descriptor *)working->ptr;
 
   usb_error         result;
@@ -145,7 +145,7 @@ usb_error op_cap_drv_intf(_working *const working) __z88dk_fastcall {
 
   switch (working->usb_device) {
   case USB_IS_HUB: {
-    CHECK(op_capture_hub_driver_interface(working))
+    CHECK(op_cap_hub_drv_intf(working))
     break;
   }
 

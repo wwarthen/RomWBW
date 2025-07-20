@@ -182,7 +182,7 @@ typedef struct {
   _scsi_packet_read_write     scsi_cmd;
 } cbw_scsi_read_write;
 
-extern _scsi_command_block_wrapper scsi_command_block_wrapper;
+extern _scsi_command_block_wrapper scsi_cmd_blk_wrap;
 
 extern usb_error do_scsi_cmd(device_config_storage *const       dev,
                              _scsi_command_block_wrapper *const cbw,

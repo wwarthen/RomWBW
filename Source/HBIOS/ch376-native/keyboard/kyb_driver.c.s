@@ -68,7 +68,7 @@ _report_diff:
 	ld	de,_report+0
 ;source-doc/keyboard/kyb_driver.c:25: static uint8_t report_diff() __sdcccall(1) {
 ;source-doc/keyboard/kyb_driver.c:28:
-	ld	b,0x08
+	ld	b,$08
 	ld	hl,_previous
 l_report_diff_00103:
 ;source-doc/keyboard/kyb_driver.c:29: uint8_t i = sizeof(report);
@@ -79,7 +79,7 @@ l_report_diff_00103:
 	sub	c
 	jr	Z,l_report_diff_00104
 ;source-doc/keyboard/kyb_driver.c:30: do {
-	ld	a,0x01
+	ld	a,$01
 	jr	l_report_diff_00106
 l_report_diff_00104:
 ;source-doc/keyboard/kyb_driver.c:31: if (*a++ != *b++)
@@ -96,20 +96,20 @@ l_report_diff_00106:
 _keyboard_buf_put:
 	ld	c, a
 ;source-doc/keyboard/kyb_driver.c:37:
-	ld	b,0x00
+	ld	b,$00
 	ld	hl,+(_report + 2)
 	add	hl, bc
 ;source-doc/keyboard/kyb_driver.c:38: static void keyboard_buf_put(const uint8_t indx) __sdcccall(1) {
 	ld	a,(hl)
 	ld	e,a
-	sub	0x80
+	sub	$80
 	jr	NC,l_keyboard_buf_put_00112
 	ld	a, e
 	or	a
 ;source-doc/keyboard/kyb_driver.c:39: const uint8_t key_code = report.keyCode[indx];
 	jr	Z,l_keyboard_buf_put_00112
 ;source-doc/keyboard/kyb_driver.c:42:
-	ld	b,0x00
+	ld	b,$00
 	ld	hl,+(_previous + 2)
 	add	hl, bc
 	ld	a, (hl)
@@ -118,12 +118,12 @@ _keyboard_buf_put:
 	jr	Z,l_keyboard_buf_put_00112
 ;source-doc/keyboard/kyb_driver.c:45: return;
 	ld	a, e
-	sub	0x39
+	sub	$39
 	jr	NZ,l_keyboard_buf_put_00107
 ;source-doc/keyboard/kyb_driver.c:46:
 	ld	hl,_caps_lock_engaged
 	ld	a, (hl)
-	xor	0x01
+	xor	$01
 	ld	(hl), a
 ;source-doc/keyboard/kyb_driver.c:47: if (key_code == KEY_CODE_CAPS_LOCK) {
 	jr	l_keyboard_buf_put_00112
@@ -144,7 +144,7 @@ l_keyboard_buf_put_00107:
 ;source-doc/keyboard/kyb_driver.c:55: return;
 	ld	a, (_write_index)
 	inc	a
-	and	0x07
+	and	$07
 	ld	c, a
 ;source-doc/keyboard/kyb_driver.c:56:
 	ld	hl,_read_index
@@ -153,7 +153,7 @@ l_keyboard_buf_put_00107:
 	ret	Z
 ;source-doc/keyboard/kyb_driver.c:57: uint8_t next_write_index = (write_index + 1) & KEYBOARD_BUFFER_SIZE_MASK;
 	ld	hl,(_write_index)
-	ld	h,0x00
+	ld	h,$00
 	ld	de,_buffer
 	add	hl,de
 	ld	a,b
@@ -184,7 +184,7 @@ _usb_kyb_status:
 l_usb_kyb_status_00102:
 ;source-doc/keyboard/kyb_driver.c:70: size = write_index - read_index;
 	ld	hl, (_read_index)
-	ld	a,0x08
+	ld	a,$08
 	sub	l
 	ld	hl, (_write_index)
 	add	a, l
@@ -205,14 +205,14 @@ _usb_kyb_read:
 	sub	(hl)
 	jr	NZ,l_usb_kyb_read_00102
 ;source-doc/keyboard/kyb_driver.c:78: uint16_t usb_kyb_read() {
-	ld	hl,0xff00
+	ld	hl,$ff00
 	jr	l_usb_kyb_read_00103
 l_usb_kyb_read_00102:
-;source-doc/keyboard/kyb_driver.c:80: return 0xFF00;               // H = -1, L = 0
+;source-doc/keyboard/kyb_driver.c:80: return $FF00;               // H = -1, L = 0
 	DI
 ;source-doc/keyboard/kyb_driver.c:81:
 	ld	hl,(_read_index)
-	ld	h,0x00
+	ld	h,$00
 	ld	bc,_buffer
 	add	hl,bc
 	ld	a,(hl)
@@ -223,12 +223,12 @@ l_usb_kyb_read_00102:
 ;source-doc/keyboard/kyb_driver.c:82: DI;
 	ld	a, (_read_index)
 	inc	a
-	and	0x07
+	and	$07
 	ld	(_read_index), a
 ;source-doc/keyboard/kyb_driver.c:83: const uint8_t c = buffer[read_index];
 	EI
 ;source-doc/keyboard/kyb_driver.c:86:
-	ld	h,0x00
+	ld	h,$00
 l_usb_kyb_read_00103:
 ;source-doc/keyboard/kyb_driver.c:87: /* H = 0, L = ascii char */
 	ret
@@ -247,7 +247,7 @@ _usb_kyb_flush:
 	ld	de,_previous+0
 ;source-doc/keyboard/kyb_driver.c:95: uint8_t  i = sizeof(previous);
 ;source-doc/keyboard/kyb_driver.c:96: uint8_t *a = (uint8_t *)previous;
-	ld	b,0x08
+	ld	b,$08
 	ld	hl,_report
 l_usb_kyb_flush_00101:
 ;source-doc/keyboard/kyb_driver.c:97: uint8_t *b = (uint8_t *)report;
@@ -255,7 +255,7 @@ l_usb_kyb_flush_00101:
 	ld	(de), a
 	inc	de
 ;source-doc/keyboard/kyb_driver.c:98: do {
-	ld	(hl),0x00
+	ld	(hl),$00
 	inc	hl
 ;source-doc/keyboard/kyb_driver.c:99: *a++ = 0;
 	djnz	l_usb_kyb_flush_00101
@@ -277,20 +277,20 @@ _usb_kyb_tick:
 ;source-doc/keyboard/kyb_driver.c:110:
 	jr	NZ,l_usb_kyb_tick_00112
 ;././source-doc/base-drv//ch376.h:108: #define TRACE_USB_ERROR(result)
-	ld	l,0x0b
+	ld	l,$0b
 	call	_ch_command
 ;././source-doc/base-drv//ch376.h:109:
-	ld	a,0x25
+	ld	a,$25
 	ld	bc,_CH376_DATA_PORT
 	out	(c), a
 ;././source-doc/base-drv//ch376.h:110: #endif
-	ld	a,0x1f
+	ld	a,$1f
 	ld	bc,_CH376_DATA_PORT
 	out	(c), a
 ;source-doc/keyboard/kyb_driver.c:113:
 	ld	bc,_report+0
 	ld	hl, (_keyboard_config)
-	ld	a,0x08
+	ld	a,$08
 	push	af
 	inc	sp
 	push	bc
@@ -301,15 +301,15 @@ _usb_kyb_tick:
 	inc	sp
 ;././source-doc/base-drv//ch376.h:108: #define TRACE_USB_ERROR(result)
 	push	hl
-	ld	l,0x0b
+	ld	l,$0b
 	call	_ch_command
 	pop	hl
 ;././source-doc/base-drv//ch376.h:109:
-	ld	a,0x25
+	ld	a,$25
 	ld	bc,_CH376_DATA_PORT
 	out	(c), a
 ;././source-doc/base-drv//ch376.h:110: #endif
-	ld	a,0xdf
+	ld	a,$df
 	ld	bc,_CH376_DATA_PORT
 	out	(c), a
 ;source-doc/keyboard/kyb_driver.c:115: result = usbdev_dat_in_trnsfer_0((device_config *)keyboard_config, (uint8_t *)&report, 8);
@@ -321,7 +321,7 @@ _usb_kyb_tick:
 	or	a
 	jr	Z,l_usb_kyb_tick_00112
 ;source-doc/keyboard/kyb_driver.c:118: if (report_diff()) {
-	ld	b,0x06
+	ld	b,$06
 l_usb_kyb_tick_00103:
 ;source-doc/keyboard/kyb_driver.c:119: uint8_t i = 6;
 	ld	a, b
@@ -333,7 +333,7 @@ l_usb_kyb_tick_00103:
 	djnz	l_usb_kyb_tick_00103
 ;source-doc/keyboard/kyb_driver.c:121: keyboard_buf_put(i - 1);
 	ld	de,_previous
-	ld	bc,0x0008
+	ld	bc,$0008
 	ld	hl,_report
 	ldir
 l_usb_kyb_tick_00112:
@@ -356,13 +356,13 @@ _usb_kyb_init:
 ;source-doc/keyboard/kyb_driver.c:130:
 	ret	Z
 ;source-doc/keyboard/kyb_driver.c:132: return;
-	ld	a,0x01
+	ld	a,$01
 	push	af
 	inc	sp
 	ld	hl, (_keyboard_config)
 	call	_hid_set_protocol
 ;source-doc/keyboard/kyb_driver.c:133:
-	ld	a,0x80
+	ld	a,$80
 	push	af
 	inc	sp
 	ld	hl, (_keyboard_config)
@@ -370,37 +370,37 @@ _usb_kyb_init:
 ;source-doc/keyboard/kyb_driver.c:134: hid_set_protocol(keyboard_config, 1);
 	ret
 _caps_lock_engaged:
-	DEFB +0x01
+	DEFB +$01
 _keyboard_config:
-	DEFW +0x0000
+	DEFW +$0000
 _buffer:
-	DEFB +0x00
-	DEFB 0x00
-	DEFB 0x00
-	DEFB 0x00
-	DEFB 0x00
-	DEFB 0x00
-	DEFB 0x00
-	DEFB 0x00
+	DEFB +$00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
 _write_index:
-	DEFB +0x00
+	DEFB +$00
 _read_index:
-	DEFB +0x00
+	DEFB +$00
 _report:
-	DEFB +0x00
-	DEFB +0x00
-	DEFB 0x00
-	DEFB 0x00
-	DEFB 0x00
-	DEFB 0x00
-	DEFB 0x00
-	DEFB 0x00
+	DEFB +$00
+	DEFB +$00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
 _previous:
-	DEFB +0x00
-	DEFB +0x00
-	DEFB 0x00
-	DEFB 0x00
-	DEFB 0x00
-	DEFB 0x00
-	DEFB 0x00
-	DEFB 0x00
+	DEFB +$00
+	DEFB +$00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00

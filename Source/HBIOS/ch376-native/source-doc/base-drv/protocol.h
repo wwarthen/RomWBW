@@ -74,11 +74,11 @@ typedef struct _endpoint_descriptor {
 extern usb_error usbtrn_get_descriptor(device_descriptor *const buffer);
 extern usb_error usbtrn_get_descriptor2(device_descriptor *const buffer, const uint8_t device_address);
 
-extern usb_error usbtrn_get_config_descriptor(config_descriptor *const buffer,
-                                              const uint8_t            config_index,
-                                              const uint8_t            buffer_size,
-                                              const uint8_t            device_address,
-                                              const uint8_t            max_packet_size);
+extern usb_error usbtrn_get_config_desc(config_descriptor *const buffer,
+                                        const uint8_t            config_index,
+                                        const uint8_t            buffer_size,
+                                        const uint8_t            device_address,
+                                        const uint8_t            max_packet_size);
 
 extern usb_error usbtrn_gfull_cfg_desc(const uint8_t  config_index,
                                        const uint8_t  device_address,
@@ -86,13 +86,10 @@ extern usb_error usbtrn_gfull_cfg_desc(const uint8_t  config_index,
                                        const uint8_t  max_buffer_size,
                                        uint8_t *const buffer);
 
-extern usb_error usbtrn_set_configuration(const uint8_t device_address, const uint8_t max_packet_size, const uint8_t configuration);
+extern usb_error usbtrn_set_config(const uint8_t device_address, const uint8_t max_packet_size, const uint8_t configuration);
 
 extern usb_error usbtrn_set_address(const uint8_t device_address) __z88dk_fastcall;
 
-extern usb_error
-usbtrn_clear_endpoint_halt(const uint8_t endpoint_number, const uint8_t device_address, const uint8_t max_packet_size);
-
-// extern usb_error usb_clear_endpoint_halt(device_config *const storage_device, const usb_endpoint_type endpoint_type);
+extern usb_error usbtrn_clr_ep_halt(const uint8_t endpoint_number, const uint8_t device_address, const uint8_t max_packet_size);
 
 #endif

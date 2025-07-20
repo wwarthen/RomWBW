@@ -62,7 +62,7 @@ _hub_get_descriptor:
 	rlca
 	rlca
 	rlca
-	and	0x0f
+	and	$0f
 	ld	c, a
 	push	bc
 	push	de
@@ -76,10 +76,10 @@ _hub_get_descriptor:
 ;source-doc/base-drv/class_hub.c:9: }
 	ret
 _cmd_get_hub_descriptor:
-	DEFB +0xa0
-	DEFB +0x06
-	DEFB +0x00
-	DEFB +0x29
-	DEFB +0x00
-	DEFB +0x00
-	DEFW +0x0008
+	DEFB +$a0
+	DEFB +$06
+	DEFB +$00
+	DEFB +$29
+	DEFB +$00
+	DEFB +$00
+	DEFW +$0008

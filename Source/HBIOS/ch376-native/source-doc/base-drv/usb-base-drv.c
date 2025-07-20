@@ -48,7 +48,7 @@ uint16_t usb_init(uint8_t state) __z88dk_fastcall {
   if (state == 2) {
     usb_host_bus_reset();
 
-    r = ch_very_short_wait_int_and_get_status();
+    r = ch_very_short_status();
 
     if (r != USB_INT_CONNECT) {
       USB_MODULE_LEDS = 0x00;

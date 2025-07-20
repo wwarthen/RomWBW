@@ -14,8 +14,8 @@ void chscsi_init(void) {
     if (t == USB_IS_MASS_STORAGE) {
       const uint8_t dev_index = find_storage_dev(); // index == -1 (no more left) should never happen
 
-      hbios_usb_storage_devices[dev_index].drive_index = dev_index + 1;
-      hbios_usb_storage_devices[dev_index].usb_device  = index;
+      hbios_usbstore_devs[dev_index].drive_index = dev_index + 1;
+      hbios_usbstore_devs[dev_index].usb_device  = index;
 
       print_string("\r\nUSB: MASS STORAGE @ $");
       print_uint16(index);
@@ -23,7 +23,7 @@ void chscsi_init(void) {
       print_uint16(dev_index);
       print_string(" $");
       usb_scsi_init(index);
-      dio_add_entry(ch_scsi_fntbl, &hbios_usb_storage_devices[dev_index]);
+      dio_add_entry(ch_scsi_fntbl, &hbios_usbstore_devs[dev_index]);
     }
 
   } while (++index != MAX_NUMBER_OF_DEVICES + 1);

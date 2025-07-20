@@ -62,7 +62,7 @@ _hub_set_feature:
 	ld	e,l
 	ld	d,h
 	push	hl
-	ld	bc,0x0008
+	ld	bc,$0008
 	ld	hl,_cmd_set_feature
 	ldir
 	pop	bc
@@ -86,10 +86,10 @@ _hub_set_feature:
 	rlca
 	rlca
 	rlca
-	and	0x0f
+	and	$0f
 	ld	e,a
 	push	de
-	ld	hl,0x0000
+	ld	hl,$0000
 	push	hl
 	push	bc
 	call	_usb_control_transfer
@@ -98,29 +98,29 @@ _hub_set_feature:
 	pop	ix
 	ret
 _cmd_set_feature:
-	DEFB +0x23
-	DEFB +0x03
-	DEFB +0x08
-	DEFB +0x00
-	DEFB +0x01
-	DEFB +0x00
-	DEFW +0x0000
+	DEFB +$23
+	DEFB +$03
+	DEFB +$08
+	DEFB +$00
+	DEFB +$01
+	DEFB +$00
+	DEFW +$0000
 _cmd_clear_feature:
-	DEFB +0x23
-	DEFB +0x01
-	DEFB +0x08
-	DEFB +0x00
-	DEFB +0x01
-	DEFB +0x00
-	DEFW +0x0000
+	DEFB +$23
+	DEFB +$01
+	DEFB +$08
+	DEFB +$00
+	DEFB +$01
+	DEFB +$00
+	DEFW +$0000
 _cmd_get_status_port:
-	DEFB +0xa3
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x01
-	DEFB +0x00
-	DEFW +0x0004
+	DEFB +$a3
+	DEFB +$00
+	DEFB +$00
+	DEFB +$00
+	DEFB +$01
+	DEFB +$00
+	DEFW +$0004
 ;source-doc/base-drv/enumerate_hub.c:22: usb_error hub_clear_feature(const device_config_hub *const hub_config, const uint8_t feature, const uint8_t index) {
 ; ---------------------------------
 ; Function hub_clear_feature
@@ -138,7 +138,7 @@ _hub_clear_feature:
 	ld	e,l
 	ld	d,h
 	push	hl
-	ld	bc,0x0008
+	ld	bc,$0008
 	ld	hl,_cmd_clear_feature
 	ldir
 	pop	bc
@@ -162,10 +162,10 @@ _hub_clear_feature:
 	rlca
 	rlca
 	rlca
-	and	0x0f
+	and	$0f
 	ld	e,a
 	push	de
-	ld	hl,0x0000
+	ld	hl,$0000
 	push	hl
 	push	bc
 	call	_usb_control_transfer
@@ -190,7 +190,7 @@ _hub_get_status_port:
 	ld	e,l
 	ld	d,h
 	push	hl
-	ld	bc,0x0008
+	ld	bc,$0008
 	ld	hl,_cmd_get_status_port
 	ldir
 	pop	bc
@@ -211,7 +211,7 @@ _hub_get_status_port:
 	rlca
 	rlca
 	rlca
-	and	0x0f
+	and	$0f
 	ld	l,(ix+7)
 	ld	h,(ix+8)
 	ld	e,a
@@ -262,7 +262,7 @@ l_configure_usb_hub_00126:
 ;source-doc/base-drv/enumerate_hub.c:51: CHECK(hub_clear_feature(hub_config, FEAT_PORT_POWER, i));
 	push	bc
 	push	de
-	ld	e,0x08
+	ld	e,$08
 	push	de
 	push	bc
 	call	_hub_clear_feature
@@ -276,7 +276,7 @@ l_configure_usb_hub_00126:
 ;source-doc/base-drv/enumerate_hub.c:53: CHECK(hub_set_feature(hub_config, FEAT_PORT_POWER, i));
 	push	bc
 	push	de
-	ld	e,0x08
+	ld	e,$08
 	push	de
 	push	bc
 	call	_hub_set_feature
@@ -290,7 +290,7 @@ l_configure_usb_hub_00126:
 ;source-doc/base-drv/enumerate_hub.c:55: hub_clear_feature(hub_config, FEAT_PORT_RESET, i);
 	push	bc
 	push	de
-	ld	e,0x04
+	ld	e,$04
 	push	de
 	push	bc
 	call	_hub_clear_feature
@@ -301,7 +301,7 @@ l_configure_usb_hub_00126:
 ;source-doc/base-drv/enumerate_hub.c:57: CHECK(hub_set_feature(hub_config, FEAT_PORT_RESET, i));
 	push	bc
 	push	de
-	ld	e,0x04
+	ld	e,$04
 	push	de
 	push	bc
 	call	_hub_set_feature
@@ -337,7 +337,7 @@ l_configure_usb_hub_00126:
 ;source-doc/base-drv/enumerate_hub.c:62: CHECK(hub_clear_feature(hub_config, HUB_FEATURE_PORT_CONNECTION_CHA, i));
 	push	bc
 	push	de
-	ld	e,0x10
+	ld	e,$10
 	push	de
 	push	bc
 	call	_hub_clear_feature
@@ -351,7 +351,7 @@ l_configure_usb_hub_00126:
 ;source-doc/base-drv/enumerate_hub.c:64: CHECK(hub_clear_feature(hub_config, FEAT_PORT_ENABLE_CHANGE, i));
 	push	bc
 	push	de
-	ld	e,0x11
+	ld	e,$11
 	push	de
 	push	bc
 	call	_hub_clear_feature
@@ -365,7 +365,7 @@ l_configure_usb_hub_00126:
 ;source-doc/base-drv/enumerate_hub.c:66: CHECK(hub_clear_feature(hub_config, FEAT_PORT_RESET_CHANGE, i));
 	push	bc
 	push	de
-	ld	e,0x14
+	ld	e,$14
 	push	de
 	push	bc
 	call	_hub_clear_feature
@@ -428,7 +428,7 @@ l_configure_usb_hub_00124:
 ;source-doc/base-drv/enumerate_hub.c:75: CHECK(hub_clear_feature(hub_config, FEAT_PORT_POWER, i));
 	push	bc
 	push	de
-	ld	e,0x08
+	ld	e,$08
 	push	de
 	push	bc
 	call	_hub_clear_feature
@@ -444,7 +444,7 @@ l_configure_usb_hub_00127:
 	dec	d
 	jp	NZ, l_configure_usb_hub_00126
 ;source-doc/base-drv/enumerate_hub.c:79: return USB_ERR_OK;
-	ld	l,0x00
+	ld	l,$00
 	jr	l_configure_usb_hub_00130
 ;source-doc/base-drv/enumerate_hub.c:80: done:
 l_configure_usb_hub_00129:

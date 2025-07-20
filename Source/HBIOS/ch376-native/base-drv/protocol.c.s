@@ -60,11 +60,11 @@ _usbtrn_get_descriptor:
 	ld	hl,0
 	add	hl, sp
 	ex	de, hl
-	ld	bc,0x0008
-	ld	hl,_cmd_get_device_descriptor
+	ld	bc,$0008
+	ld	hl,_cmd_get_dev_descriptr
 	ldir
 ;source-doc/base-drv/protocol.c:29: usb_error usbtrn_get_descriptor(device_descriptor *const buffer) {
-	ld	(ix-2),0x08
+	ld	(ix-2),$08
 	xor	a
 	ld	(ix-1),a
 ;source-doc/base-drv/protocol.c:31: setup_packet cmd;
@@ -74,7 +74,7 @@ _usbtrn_get_descriptor:
 	push	bc
 	ld	e,c
 	ld	d,b
-	ld	a,0x08
+	ld	a,$08
 	push	af
 	inc	sp
 	xor	a
@@ -101,13 +101,13 @@ _usbtrn_get_descriptor:
 	ld	hl,4
 	add	hl, sp
 	ex	de, hl
-	ld	bc,0x0008
-	ld	hl,_cmd_get_device_descriptor
+	ld	bc,$0008
+	ld	hl,_cmd_get_dev_descriptr
 	ldir
 	pop	bc
 	pop	de
 ;source-doc/base-drv/protocol.c:36:
-	ld	(ix-2),0x12
+	ld	(ix-2),$12
 	xor	a
 	ld	(ix-1),a
 ;source-doc/base-drv/protocol.c:37: CHECK(result);
@@ -134,14 +134,14 @@ l_usbtrn_get_descriptor_00103:
 	ld	sp, ix
 	pop	ix
 	ret
-_cmd_get_device_descriptor:
-	DEFB +0x80
-	DEFB +0x06
-	DEFB +0x00
-	DEFB +0x01
-	DEFB +0x00
-	DEFB +0x00
-	DEFW +0x0008
+_cmd_get_dev_descriptr:
+	DEFB +$80
+	DEFB +$06
+	DEFB +$00
+	DEFB +$01
+	DEFB +$00
+	DEFB +$00
+	DEFW +$0008
 ;source-doc/base-drv/protocol.c:47: }
 ; ---------------------------------
 ; Function usbtrn_get_descriptor2
@@ -157,11 +157,11 @@ _usbtrn_get_descriptor2:
 	ld	hl,0
 	add	hl, sp
 	ex	de, hl
-	ld	bc,0x0008
-	ld	hl,_cmd_get_device_descriptor
+	ld	bc,$0008
+	ld	hl,_cmd_get_dev_descriptr
 	ldir
 ;source-doc/base-drv/protocol.c:52: * @param buffer the buffer to store the device descriptor in
-	ld	(ix-2),0x08
+	ld	(ix-2),$08
 	xor	a
 	ld	(ix-1),a
 ;source-doc/base-drv/protocol.c:54: */
@@ -171,7 +171,7 @@ _usbtrn_get_descriptor2:
 	push	bc
 	ld	e,c
 	ld	d,b
-	ld	h,0x08
+	ld	h,$08
 	ld	l,(ix+6)
 	push	hl
 	push	de
@@ -195,13 +195,13 @@ _usbtrn_get_descriptor2:
 	ld	hl,4
 	add	hl, sp
 	ex	de, hl
-	ld	bc,0x0008
-	ld	hl,_cmd_get_device_descriptor
+	ld	bc,$0008
+	ld	hl,_cmd_get_dev_descriptr
 	ldir
 	pop	bc
 	pop	de
-;source-doc/base-drv/protocol.c:59: cmd         = cmd_get_device_descriptor;
-	ld	(ix-2),0x12
+;source-doc/base-drv/protocol.c:59: cmd         = cmd_get_dev_descriptr;
+	ld	(ix-2),$12
 	xor	a
 	ld	(ix-1),a
 ;source-doc/base-drv/protocol.c:60: cmd.wLength = 8;
@@ -243,7 +243,7 @@ _usbtrn_set_address:
 	ld	hl,2
 	add	hl, sp
 	ex	de, hl
-	ld	bc,0x0008
+	ld	bc,$0008
 	ld	hl,_cmd_set_device_address
 	ldir
 	pop	bc
@@ -256,7 +256,7 @@ _usbtrn_set_address:
 	xor	a
 	push	af
 	inc	sp
-	ld	hl,0x0000
+	ld	hl,$0000
 	push	hl
 	ld	hl,4
 	add	hl, sp
@@ -267,18 +267,18 @@ _usbtrn_set_address:
 	pop	ix
 	ret
 _cmd_set_device_address:
-	DEFB +0x00
-	DEFB +0x05
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x00
-	DEFW +0x0000
+	DEFB +$00
+	DEFB +$05
+	DEFB +$00
+	DEFB +$00
+	DEFB +$00
+	DEFB +$00
+	DEFW +$0000
 ;source-doc/base-drv/protocol.c:81: usb_error usbtrn_set_address(const uint8_t device_address) __z88dk_fastcall {
 ; ---------------------------------
-; Function usbtrn_set_configuration
+; Function usbtrn_set_config
 ; ---------------------------------
-_usbtrn_set_configuration:
+_usbtrn_set_config:
 	push	ix
 	ld	ix,0
 	add	ix,sp
@@ -291,7 +291,7 @@ _usbtrn_set_configuration:
 	ld	e,l
 	ld	d,h
 	push	hl
-	ld	bc,0x0008
+	ld	bc,$0008
 	ld	hl,_cmd_set_configuration
 	ldir
 	pop	bc
@@ -302,7 +302,7 @@ _usbtrn_set_configuration:
 	ld	h,(ix+5)
 	ld	l,(ix+4)
 	push	hl
-	ld	hl,0x0000
+	ld	hl,$0000
 	push	hl
 	push	bc
 	call	_usb_control_transfer
@@ -311,18 +311,18 @@ _usbtrn_set_configuration:
 	pop	ix
 	ret
 _cmd_set_configuration:
-	DEFB +0x00
-	DEFB +0x09
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x00
-	DEFW +0x0000
+	DEFB +$00
+	DEFB +$09
+	DEFB +$00
+	DEFB +$00
+	DEFB +$00
+	DEFB +$00
+	DEFW +$0000
 ;source-doc/base-drv/protocol.c:93: *
 ; ---------------------------------
-; Function usbtrn_get_config_descriptor
+; Function usbtrn_get_config_desc
 ; ---------------------------------
-_usbtrn_get_config_descriptor:
+_usbtrn_get_config_desc:
 	push	ix
 	ld	ix,0
 	add	ix,sp
@@ -335,15 +335,15 @@ _usbtrn_get_config_descriptor:
 	ld	e,l
 	ld	d,h
 	push	hl
-	ld	bc,0x0008
-	ld	hl,_cmd_get_config_descriptor
+	ld	bc,$0008
+	ld	hl,_cmd_get_config_desc
 	ldir
 	pop	bc
 ;source-doc/base-drv/protocol.c:100: cmd.bValue[0] = configuration;
 	ld	a,(ix+6)
 	ld	(ix-6),a
 ;source-doc/base-drv/protocol.c:101:
-	ld	hl,0x0006
+	ld	hl,$0006
 	add	hl, bc
 	ld	e,(ix+7)
 	xor	a
@@ -363,14 +363,14 @@ _usbtrn_get_config_descriptor:
 	ld	sp,ix
 	pop	ix
 	ret
-_cmd_get_config_descriptor:
-	DEFB +0x80
-	DEFB +0x06
-	DEFB +0x00
-	DEFB +0x02
-	DEFB +0x00
-	DEFB +0x00
-	DEFW +0x0000
+_cmd_get_config_desc:
+	DEFB +$80
+	DEFB +$06
+	DEFB +$00
+	DEFB +$02
+	DEFB +$00
+	DEFB +$00
+	DEFW +$0000
 ;source-doc/base-drv/protocol.c:106:
 ; ---------------------------------
 ; Function usbtrn_gfull_cfg_desc
@@ -387,13 +387,13 @@ _usbtrn_gfull_cfg_desc:
 	push	af
 	inc	sp
 	ld	d,(ix+5)
-	ld	e,0x09
+	ld	e,$09
 	push	de
 	ld	a,(ix+4)
 	push	af
 	inc	sp
 	push	bc
-	call	_usbtrn_get_config_descriptor
+	call	_usbtrn_get_config_desc
 	pop	af
 	pop	af
 	pop	af
@@ -407,7 +407,7 @@ _usbtrn_gfull_cfg_desc:
 	inc	hl
 	inc	hl
 	ld	d, (hl)
-;source-doc/base-drv/protocol.c:117: usb_error usbtrn_get_config_descriptor(config_descriptor *const buffer,
+;source-doc/base-drv/protocol.c:117: usb_error usbtrn_get_config_desc(config_descriptor *const buffer,
 	ld	a,(ix+7)
 	sub	d
 	jr	NC,l_usbtrn_gfull_cfg_desc_00104
@@ -421,7 +421,7 @@ l_usbtrn_gfull_cfg_desc_00104:
 	ld	e,(ix+4)
 	push	de
 	push	bc
-	call	_usbtrn_get_config_descriptor
+	call	_usbtrn_get_config_desc
 	pop	af
 	pop	af
 	pop	af
@@ -430,7 +430,7 @@ l_usbtrn_gfull_cfg_desc_00104:
 	or	a
 	jr	NZ,l_usbtrn_gfull_cfg_desc_00107
 	ld	l,a
-;source-doc/base-drv/protocol.c:123: cmd           = cmd_get_config_descriptor;
+;source-doc/base-drv/protocol.c:123: cmd           = cmd_get_config_desc;
 ;source-doc/base-drv/protocol.c:124: cmd.bValue[0] = config_index;
 l_usbtrn_gfull_cfg_desc_00107:
 ;source-doc/base-drv/protocol.c:125: cmd.wLength   = (uint16_t)buffer_size;
@@ -438,9 +438,9 @@ l_usbtrn_gfull_cfg_desc_00107:
 	ret
 ;source-doc/base-drv/protocol.c:129:
 ; ---------------------------------
-; Function usbtrn_clear_endpoint_halt
+; Function usbtrn_clr_ep_halt
 ; ---------------------------------
-_usbtrn_clear_endpoint_halt:
+_usbtrn_clr_ep_halt:
 	push	ix
 	ld	ix,0
 	add	ix,sp
@@ -453,8 +453,8 @@ _usbtrn_clear_endpoint_halt:
 	ld	e,l
 	ld	d,h
 	push	hl
-	ld	bc,0x0008
-	ld	hl,_usb_cmd_clear_endpoint_halt
+	ld	bc,$0008
+	ld	hl,_usb_cmd_clr_ep_halt
 	ldir
 	pop	bc
 ;source-doc/base-drv/protocol.c:132: const uint8_t  max_packet_size,
@@ -464,7 +464,7 @@ _usbtrn_clear_endpoint_halt:
 	ld	h,(ix+6)
 	ld	l,(ix+5)
 	push	hl
-	ld	hl,0x0000
+	ld	hl,$0000
 	push	hl
 	push	bc
 	call	_usb_control_transfer
@@ -472,11 +472,11 @@ _usbtrn_clear_endpoint_halt:
 	ld	sp,ix
 	pop	ix
 	ret
-_usb_cmd_clear_endpoint_halt:
-	DEFB +0x02
-	DEFB +0x01
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0xff
-	DEFB +0x00
-	DEFW +0x0000
+_usb_cmd_clr_ep_halt:
+	DEFB +$02
+	DEFB +$01
+	DEFB +$00
+	DEFB +$00
+	DEFB +$ff
+	DEFB +$00
+	DEFW +$0000

@@ -130,9 +130,9 @@ typedef struct {
 typedef enum _ch376_pid { CH_PID_SETUP = DEF_USB_PID_SETUP, CH_PID_IN = DEF_USB_PID_IN, CH_PID_OUT = DEF_USB_PID_OUT } ch376_pid;
 
 extern __sfr __banked CH376_DATA_PORT;
-extern __sfr __banked  CH376_COMMAND_PORT;
+extern __sfr __banked CH376_COMMAND_PORT;
 
-extern __sfr __banked  USB_MODULE_LEDS;
+extern __sfr __banked USB_MODULE_LEDS;
 
 extern void delay_20ms(void);
 extern void delay_short(void);
@@ -140,9 +140,9 @@ extern void delay_medium(void);
 
 extern void           ch_command(const uint8_t command) __z88dk_fastcall;
 extern usb_error      ch_get_status(void);
-extern usb_error      ch_long_wait_int_and_get_status(void);
-extern usb_error      ch_short_wait_int_and_get_status(void);
-extern usb_error      ch_very_short_wait_int_and_get_status(void);
+extern usb_error      ch_long_get_status(void);
+extern usb_error      ch_short_get_status(void);
+extern usb_error      ch_very_short_status(void);
 extern uint8_t        ch_read_data(uint8_t *buffer) __sdcccall(1);
 extern void           ch_cmd_reset_all(void);
 extern uint8_t        ch_probe(void);
