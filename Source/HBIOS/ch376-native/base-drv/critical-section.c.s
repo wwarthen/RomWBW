@@ -64,4 +64,4 @@ _critical_end:
 	dec	(hl)
 	ret
 _in_critical_usb_section:
-	DEFB +0x00
+	DEFB +$00

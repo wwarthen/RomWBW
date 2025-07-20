@@ -56,12 +56,12 @@ _chscsi_init:
 	push	af
 	dec	sp
 ;source-doc/scsi-drv/scsi-init.c:11: do {
-	ld	(ix-1),0x01
+	ld	(ix-1),$01
 l_chscsi_init_00103:
 ;source-doc/scsi-drv/scsi-init.c:12: usb_device_type t = usb_get_device_type(index);
 	ld	a,(ix-1)
 	ld	(ix-3),a
-	ld	(ix-2),0x00
+	ld	(ix-2),$00
 	pop	hl
 	push	hl
 	push	hl
@@ -69,26 +69,26 @@ l_chscsi_init_00103:
 	pop	af
 	ld	a, l
 ;source-doc/scsi-drv/scsi-init.c:14: if (t == USB_IS_MASS_STORAGE) {
-	sub	0x02
+	sub	$02
 	jr	NZ,l_chscsi_init_00104
 ;source-doc/scsi-drv/scsi-init.c:15: const uint8_t dev_index = find_storage_dev(); // index == -1 (no more left) should never happen
 	call	_find_storage_dev
-;source-doc/scsi-drv/scsi-init.c:17: hbios_usb_storage_devices[dev_index].drive_index = dev_index + 1;
+;source-doc/scsi-drv/scsi-init.c:17: hbios_usbstore_devs[dev_index].drive_index = dev_index + 1;
 	ld	a, l
-	ld	c,0x00
+	ld	c,$00
 	add	a, a
 	rl	c
-	add	a, +((_hbios_usb_storage_devices) & 0xFF)
+	add	a, +((_hbios_usbstore_devs) & $FF)
 	ld	e, a
 	ld	a, c
-	adc	a, +((_hbios_usb_storage_devices) / 256)
+	adc	a, +((_hbios_usbstore_devs) / 256)
 	ld	d, a
 	ld	c, e
 	ld	b, d
 	ld	a, l
 	inc	a
 	ld	(bc), a
-;source-doc/scsi-drv/scsi-init.c:18: hbios_usb_storage_devices[dev_index].usb_device  = index;
+;source-doc/scsi-drv/scsi-init.c:18: hbios_usbstore_devs[dev_index].usb_device  = index;
 	ld	c, e
 	ld	b, d
 	inc	bc
@@ -101,7 +101,7 @@ l_chscsi_init_00103:
 	call	_print_string
 ;source-doc/scsi-drv/scsi-init.c:21: print_uint16(index);
 	ld	l,(ix-3)
-	ld	h,0x00
+	ld	h,$00
 	call	_print_uint16
 ;source-doc/scsi-drv/scsi-init.c:22: print_string(":$");
 	ld	hl,scsi_init_str_1
@@ -109,7 +109,7 @@ l_chscsi_init_00103:
 	pop	de
 	pop	hl
 ;source-doc/scsi-drv/scsi-init.c:23: print_uint16(dev_index);
-	ld	h,0x00
+	ld	h,$00
 	push	de
 	call	_print_uint16
 ;source-doc/scsi-drv/scsi-init.c:24: print_string(" $");
@@ -117,32 +117,32 @@ l_chscsi_init_00103:
 	call	_print_string
 ;source-doc/scsi-drv/scsi-init.c:25: usb_scsi_init(index);
 	ld	l,(ix-3)
-	ld	h,0x00
+	ld	h,$00
 	push	hl
 	call	_usb_scsi_init
 	pop	af
 	pop	de
-;source-doc/scsi-drv/scsi-init.c:26: dio_add_entry(ch_scsi_fntbl, &hbios_usb_storage_devices[dev_index]);
+;source-doc/scsi-drv/scsi-init.c:26: dio_add_entry(ch_scsi_fntbl, &hbios_usbstore_devs[dev_index]);
 	ld	hl,_ch_scsi_fntbl
 	call	_dio_add_entry
 l_chscsi_init_00104:
 ;source-doc/scsi-drv/scsi-init.c:29: } while (++index != MAX_NUMBER_OF_DEVICES + 1);
 	inc	(ix-1)
 	ld	a,(ix-1)
-	sub	0x07
+	sub	$07
 	jr	NZ,l_chscsi_init_00103
 ;source-doc/scsi-drv/scsi-init.c:30: }
 	ld	sp, ix
 	pop	ix
 	ret
 scsi_init_str_0:
-	DEFB 0x0d
-	DEFB 0x0a
+	DEFB $0d
+	DEFB $0a
 	DEFM "USB: MASS STORAGE @ $"
-	DEFB 0x00
+	DEFB $00
 scsi_init_str_1:
 	DEFM ":$"
-	DEFB 0x00
+	DEFB $00
 scsi_init_str_2:
 	DEFM " $"
-	DEFB 0x00
+	DEFB $00

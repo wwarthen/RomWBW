@@ -59,7 +59,7 @@ _wait_for_state:
 	ld	c,l
 	ld	e,l
 ;source-doc/base-drv/ch376_init.c:7: for (uint8_t i = 0; i < loop_counter; i++) {
-	ld	d,0x00
+	ld	d,$00
 	ld	b,d
 l_wait_for_state_00108:
 	ld	a, b
@@ -105,13 +105,13 @@ l_wait_for_state_00106:
 	inc	sp
 	jp	(hl)
 ch376_init_str_0:
-	DEFB 0x08
+	DEFB $08
 	DEFM " $"
-	DEFB 0x00
+	DEFB $00
 ch376_init_str_1:
-	DEFB 0x08
+	DEFB $08
 	DEFM "*$"
-	DEFB 0x00
+	DEFB $00
 ;source-doc/base-drv/ch376_init.c:25: static void _chnative_init(bool forced) {
 ; ---------------------------------
 ; Function _chnative_init
@@ -124,20 +124,20 @@ __chnative_init:
 ;source-doc/base-drv/ch376_init.c:28: const uint8_t loop_counter = forced ? 40 : 5;
 	bit	0,(ix+4)
 	jr	Z,l__chnative_init_00113
-	ld	a,0x28
+	ld	a,$28
 	jr	l__chnative_init_00114
 l__chnative_init_00113:
-	ld	a,0x05
+	ld	a,$05
 l__chnative_init_00114:
 	ld	(ix-1),a
 ;source-doc/base-drv/ch376_init.c:30: print_string("\r\nCH376: *$");
 	ld	hl,ch376_init_str_2
 	call	_print_string
 ;source-doc/base-drv/ch376_init.c:32: r     = wait_for_state(loop_counter, state, 1);
-	ld	a,0x01
+	ld	a,$01
 	push	af
 	inc	sp
-	ld	l,0x00
+	ld	l,$00
 	ld	a,(ix-1)
 	call	_wait_for_state
 ;source-doc/base-drv/ch376_init.c:33: state = r & 255;
@@ -154,7 +154,7 @@ l__chnative_init_00114:
 	ld	c, e
 ;source-doc/base-drv/ch376_init.c:39: if (state != 2) {
 	ld	a, c
-	sub	0x02
+	sub	$02
 	jr	Z,l__chnative_init_00102
 ;source-doc/base-drv/ch376_init.c:40: print_string("\rCH376: $");
 	ld	hl,ch376_init_str_4
@@ -177,7 +177,7 @@ l__chnative_init_00102:
 	call	_print_string
 	pop	bc
 ;source-doc/base-drv/ch376_init.c:50: r     = wait_for_state(loop_counter, state, 3);
-	ld	a,0x03
+	ld	a,$03
 	push	af
 	inc	sp
 	ld	l, c
@@ -186,7 +186,7 @@ l__chnative_init_00102:
 ;source-doc/base-drv/ch376_init.c:51: state = r & 255;
 ;source-doc/base-drv/ch376_init.c:53: if (state == 2) {
 	ld	a, e
-	sub	0x02
+	sub	$02
 	jr	NZ,l__chnative_init_00104
 ;source-doc/base-drv/ch376_init.c:54: print_string("\bDISCONNECTED$");
 	ld	hl,ch376_init_str_7
@@ -206,13 +206,13 @@ l__chnative_init_00104:
 ;source-doc/base-drv/ch376_init.c:62: state = r & 255;
 	ld	c, e
 ;source-doc/base-drv/ch376_init.c:64: for (uint8_t i = 0; i < loop_counter; i++) {
-	ld	b,0x00
+	ld	b,$00
 l__chnative_init_00109:
 	ld	a, b
 	sub	(ix-1)
 	jr	NC,l__chnative_init_00111
 ;source-doc/base-drv/ch376_init.c:65: if (r >> 8 != 0)
-	ld	a,0x00
+	ld	a,$00
 	or	d
 	jr	NZ,l__chnative_init_00111
 ;source-doc/base-drv/ch376_init.c:68: print_string(".$");
@@ -237,44 +237,44 @@ l__chnative_init_00111:
 	pop	ix
 	ret
 ch376_init_str_2:
-	DEFB 0x0d
-	DEFB 0x0a
+	DEFB $0d
+	DEFB $0a
 	DEFM "CH376: *$"
-	DEFB 0x00
+	DEFB $00
 ch376_init_str_3:
-	DEFB 0x08
+	DEFB $08
 	DEFM "PRESENT (VER $"
-	DEFB 0x00
+	DEFB $00
 ch376_init_str_4:
-	DEFB 0x0d
+	DEFB $0d
 	DEFM "CH376: $"
-	DEFB 0x00
+	DEFB $00
 ch376_init_str_5:
 	DEFM "VERSION FAILURE"
-	DEFB 0x0d
-	DEFB 0x0a
+	DEFB $0d
+	DEFB $0a
 	DEFM "$"
-	DEFB 0x00
+	DEFB $00
 ch376_init_str_6:
 	DEFM "USB: *$"
-	DEFB 0x00
+	DEFB $00
 ch376_init_str_7:
-	DEFB 0x08
+	DEFB $08
 	DEFM "DISCONNECTED$"
-	DEFB 0x00
+	DEFB $00
 ch376_init_str_8:
-	DEFB 0x08
+	DEFB $08
 	DEFM "CONNECTED$"
-	DEFB 0x00
+	DEFB $00
 ch376_init_str_9:
 	DEFM ".$"
-	DEFB 0x00
+	DEFB $00
 ;source-doc/base-drv/ch376_init.c:74: void chnative_init_force(void) { _chnative_init(true); }
 ; ---------------------------------
 ; Function chnative_init_force
 ; ---------------------------------
 _chnative_init_force:
-	ld	a,0x01
+	ld	a,$01
 	push	af
 	inc	sp
 	call	__chnative_init

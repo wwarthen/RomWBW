@@ -17,12 +17,12 @@ CH_CMD_WR_HOST_DATA	.EQU	CMD10_WR_HOST_DATA
 ; ---------------------------------
 ; Function ch_wait_int_and_get_status
 ; ---------------------------------
-_ch_wait_int_and_get_status:
+_ch_wait_and_get_status
 	ld	bc, DELAY_FACTOR
 
 keep_waiting:
 	ld	a, $FF
-	in	a, (_CH376_COMMAND_PORT & 0xFF)
+	in	a, (_CH376_COMMAND_PORT & $FF)
 	rlca
 	jp	nc, _ch_get_status
 
@@ -34,7 +34,7 @@ keep_waiting:
 	dec	hl
 	ld	a, h
 	or	l
-	jr	nz, _ch_wait_int_and_get_status
+	jr	nz, _ch_wait_and_get_status
 
 	call	_delay
 	ld	a, $FF

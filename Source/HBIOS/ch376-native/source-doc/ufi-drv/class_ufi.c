@@ -5,11 +5,11 @@
 #include <string.h>
 #include <z80.h>
 
-const ufi_request_sense_command          _ufi_cmd_request_sense          = {0x03, 0, 0, 0, 18, {0, 0, 0, 0, 0, 0, 0}};
-const ufi_read_format_capacities_command _ufi_cmd_read_format_capacities = {0x23, 0, {0, 0, 0, 0, 0}, {0, 12}, {0, 0, 0}};
-const ufi_inquiry_command                _ufi_cmd_inquiry                = {0x12, 0, 0, 0, 0x24, {0, 0, 0, 0, 0, 0, 0}};
-const ufi_format_command                 _ufi_cmd_format                 = {0x04, 7 | 1 << 4, 0, {0, 0}, {0, 0}, {0, 0}, {0, 0, 0}};
-const ufi_send_diagnostic_command        _ufi_cmd_send_diagnostic        = {0x1D, 1 << 2, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
+const ufi_request_sense_command          _ufi_cmd_request_sense = {0x03, 0, 0, 0, 18, {0, 0, 0, 0, 0, 0, 0}};
+const ufi_read_format_capacities_command _ufi_cmd_rd_fmt_caps   = {0x23, 0, {0, 0, 0, 0, 0}, {0, 12}, {0, 0, 0}};
+const ufi_inquiry_command                _ufi_cmd_inquiry       = {0x12, 0, 0, 0, 0x24, {0, 0, 0, 0, 0, 0, 0}};
+const ufi_format_command                 _ufi_cmd_format        = {0x04, 7 | 1 << 4, 0, {0, 0}, {0, 0}, {0, 0}, {0, 0, 0}};
+const ufi_send_diagnostic_command        _ufi_cmd_send_diag     = {0x1D, 1 << 2, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 
 uint8_t wait_for_device_ready(device_config *const storage_device, uint8_t timeout_counter) {
   usb_error                  result;
@@ -62,7 +62,7 @@ usb_error ufi_read_frmt_caps(device_config *const storage_device, ufi_format_cap
   usb_error                          result;
   ufi_read_format_capacities_command ufi_cmd_read_format_capacities;
 
-  ufi_cmd_read_format_capacities = _ufi_cmd_read_format_capacities;
+  ufi_cmd_read_format_capacities = _ufi_cmd_rd_fmt_caps;
   result = usb_execute_cbi(storage_device, (uint8_t *)&ufi_cmd_read_format_capacities, false, 12, (uint8_t *)response, NULL);
 
   TRACE_USB_ERROR(result);
@@ -160,7 +160,7 @@ done:
 usb_error ufi_send_diagnostics(device_config *const storage_device) {
   ufi_send_diagnostic_command ufi_cmd_send_diagnostic;
 
-  ufi_cmd_send_diagnostic = _ufi_cmd_send_diagnostic;
+  ufi_cmd_send_diagnostic = _ufi_cmd_send_diag;
 
   return usb_execute_cbi(storage_device, (uint8_t *)&ufi_cmd_send_diagnostic, true, 0, NULL, NULL);
 }

@@ -72,7 +72,7 @@ _usb_execute_cbi:
 	ld	hl,4
 	add	hl, sp
 	ex	de, hl
-	ld	bc,0x0008
+	ld	bc,$0008
 	ld	hl,_cbi2_adsc
 	ldir
 	pop	bc
@@ -97,17 +97,17 @@ _usb_execute_cbi:
 	pop	af
 ;source-doc/ufi-drv/usb_cbi.c:27: if (result == USB_ERR_STALL) {
 	ld	a, l
-	sub	0x02
+	sub	$02
 	jr	NZ,l_usb_execute_cbi_00104
 ;source-doc/ufi-drv/usb_cbi.c:28: if (sense_codes != NULL)
 	ld	a,(ix+14)
 	or	(ix+13)
 	jr	Z,l_usb_execute_cbi_00102
 ;source-doc/ufi-drv/usb_cbi.c:29: usbdev_dat_in_trnsfer(storage_device, sense_codes, 2, ENDPOINT_INTERRUPT_IN);
-	ld	a,0x02
+	ld	a,$02
 	push	af
 	inc	sp
-	ld	hl,0x0002
+	ld	hl,$0002
 	push	hl
 	ld	l,(ix+13)
 	ld	h,(ix+14)
@@ -121,7 +121,7 @@ _usb_execute_cbi:
 	ld	sp, hl
 l_usb_execute_cbi_00102:
 ;source-doc/ufi-drv/usb_cbi.c:31: result = USB_ERR_STALL;
-	ld	l,0x02
+	ld	l,$02
 ;source-doc/ufi-drv/usb_cbi.c:32: goto done;
 	jr	l_usb_execute_cbi_00116
 l_usb_execute_cbi_00104:
@@ -154,7 +154,7 @@ l_usb_execute_cbi_00104:
 	jr	l_usb_execute_cbi_00116
 l_usb_execute_cbi_00112:
 ;source-doc/ufi-drv/usb_cbi.c:48: result = usbdev_dat_in_trnsfer(storage_device, buffer, buffer_size, ENDPOINT_BULK_IN);
-	ld	a,0x01
+	ld	a,$01
 	push	af
 	inc	sp
 	ld	l,(ix+9)
@@ -182,10 +182,10 @@ l_usb_execute_cbi_00113:
 	or	(ix+13)
 	jr	Z,l_usb_execute_cbi_00116
 ;source-doc/ufi-drv/usb_cbi.c:57: result = usbdev_dat_in_trnsfer(storage_device, sense_codes, 2, ENDPOINT_INTERRUPT_IN);
-	ld	a,0x02
+	ld	a,$02
 	push	af
 	inc	sp
-	ld	hl,0x0002
+	ld	hl,$0002
 	push	hl
 	ld	l,(ix+13)
 	ld	h,(ix+14)
@@ -210,10 +210,10 @@ l_usb_execute_cbi_00116:
 	pop	ix
 	ret
 _cbi2_adsc:
-	DEFB +0x21
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0xff
-	DEFB +0x00
-	DEFW +0x000c
+	DEFB +$21
+	DEFB +$00
+	DEFB +$00
+	DEFB +$00
+	DEFB +$ff
+	DEFB +$00
+	DEFW +$000c

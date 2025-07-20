@@ -19,13 +19,13 @@ void ch_command(const uint8_t command) __z88dk_fastcall {
   CH376_COMMAND_PORT = command;
 }
 
-extern usb_error ch_wait_int_and_get_status(const int16_t timeout) __z88dk_fastcall;
+extern usb_error ch_wait_and_get_status(const int16_t timeout) __z88dk_fastcall;
 
-usb_error ch_long_wait_int_and_get_status(void) { return ch_wait_int_and_get_status(5000); }
+usb_error ch_long_get_status(void) { return ch_wait_and_get_status(5000); }
 
-usb_error ch_short_wait_int_and_get_status(void) { return ch_wait_int_and_get_status(100); }
+usb_error ch_short_get_status(void) { return ch_wait_and_get_status(100); }
 
-usb_error ch_very_short_wait_int_and_get_status(void) { return ch_wait_int_and_get_status(10); }
+usb_error ch_very_short_status(void) { return ch_wait_and_get_status(10); }
 
 usb_error ch_get_status(void) {
   ch_command(CH_CMD_GET_STATUS);
@@ -161,7 +161,7 @@ usb_error ch_data_in_transfer(uint8_t *buffer, int16_t buffer_size, endpoint_par
   do {
     ch_issue_token_in(endpoint);
 
-    result = ch_long_wait_int_and_get_status();
+    result = ch_long_get_status();
     CHECK(result);
 
     endpoint->toggle = !endpoint->toggle;
@@ -194,7 +194,7 @@ usb_error ch_data_in_transfer_n(uint8_t *const buffer, uint8_t *const buffer_siz
 
   ch_issue_token_in(endpoint);
 
-  CHECK(ch_long_wait_int_and_get_status());
+  CHECK(ch_long_get_status());
 
   endpoint->toggle = !endpoint->toggle;
 
@@ -223,7 +223,7 @@ usb_error ch_data_out_transfer(const uint8_t *buffer, int16_t buffer_length, end
     buffer_length -= size;
     ch_issue_token_out(endpoint);
 
-    CHECK(ch_long_wait_int_and_get_status());
+    CHECK(ch_long_get_status());
 
     endpoint->toggle = !endpoint->toggle;
   }

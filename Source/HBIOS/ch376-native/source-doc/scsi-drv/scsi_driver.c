@@ -21,14 +21,14 @@ usb_error usb_scsi_init(const uint16_t dev_index) {
   return result;
 }
 
-_scsi_read_capacity scsi_packet_read_capacity = {0x25, 0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0}};
+_scsi_read_capacity scsi_pkt_read_cap = {0x25, 0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0}};
 
 usb_error usb_scsi_read_capacity(const uint16_t dev_index, scsi_read_capacity_result *cap_result) {
   device_config_storage *const dev = (device_config_storage *)get_usb_device_config(dev_index);
 
   cbw_scsi_read_capacity cbw_scsi;
-  cbw_scsi.cbw           = scsi_command_block_wrapper;
-  cbw_scsi.read_capacity = scsi_packet_read_capacity;
+  cbw_scsi.cbw           = scsi_cmd_blk_wrap;
+  cbw_scsi.read_capacity = scsi_pkt_read_cap;
 
   cbw_scsi.cbw.bCBWLUN                = 0;
   cbw_scsi.cbw.bCBWCBLength           = sizeof(_scsi_read_capacity);
@@ -43,7 +43,7 @@ usb_error usb_scsi_read_capacity(const uint16_t dev_index, scsi_read_capacity_re
 //   device_config_storage *const dev = (device_config_storage *)get_usb_device_config(dev_index);
 
 //   cbw_scsi_inquiry cbw_scsi;
-//   cbw_scsi.cbw     = scsi_command_block_wrapper;
+//   cbw_scsi.cbw     = scsi_cmd_blk_wrap;
 //   cbw_scsi.inquiry = scsi_packet_inquiry;
 
 //   cbw_scsi.cbw.bCBWLUN                = 0;
@@ -61,7 +61,7 @@ usb_error usb_scsi_read(const uint16_t dev_index, uint8_t *const buffer) {
   device_config_storage *const dev = (device_config_storage *)get_usb_device_config(dev_index);
 
   memset(&cbw, 0, sizeof(cbw_scsi_read_write));
-  cbw.cbw = scsi_command_block_wrapper;
+  cbw.cbw = scsi_cmd_blk_wrap;
 
   cbw.cbw.bCBWLUN                = 0;
   cbw.cbw.bCBWCBLength           = sizeof(_scsi_packet_read_write);
@@ -86,7 +86,7 @@ usb_error usb_scsi_write(const uint16_t dev_index, uint8_t *const buffer) {
   device_config_storage *const dev = (device_config_storage *)get_usb_device_config(dev_index);
 
   memset(&cbw, 0, sizeof(cbw_scsi_read_write));
-  cbw.cbw = scsi_command_block_wrapper;
+  cbw.cbw = scsi_cmd_blk_wrap;
 
   cbw.cbw.bCBWLUN                = 0;
   cbw.cbw.bCBWCBLength           = sizeof(_scsi_packet_read_write);
@@ -108,7 +108,7 @@ usb_error usb_scsi_write(const uint16_t dev_index, uint8_t *const buffer) {
 
 // usb_error scsi_eject(device_config_storage *const dev) {
 //   cbw_scsi_eject cbw_scsi;
-//   cbw_scsi.cbw = scsi_command_block_wrapper;
+//   cbw_scsi.cbw = scsi_cmd_blk_wrap;
 
 //   memset(&cbw_scsi.eject, 0, sizeof(_scsi_packet_eject));
 

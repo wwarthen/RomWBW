@@ -47,6 +47,7 @@ sed -E \
   -e 's/;\t+/; /g' \
   -e 's/defc\s+([a-zA-Z0-9_]+)\s*=\s*(0x[0-9A-Fa-f]+)/\1\t.EQU\t\2/' \
   -e "s/___str_([0-9]+)/${prefix}_str_\1/g" \
+  -e 's/\b0x([0-9A-Fa-f]+)\b/\$\1/g' \
   "$source_file" > "$destination_file"
 
 

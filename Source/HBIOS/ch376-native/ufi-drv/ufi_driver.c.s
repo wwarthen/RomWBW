@@ -62,7 +62,7 @@ _usb_ufi_get_cap:
 ;source-doc/ufi-drv/ufi_driver.c:10: memset(&response, 0, sizeof(ufi_format_capacities_response));
 	ld	hl,0
 	add	hl, sp
-	ld	b,0x12
+	ld	b,$12
 l_usb_ufi_get_cap_00112:
 	xor	a
 	ld	(hl), a
@@ -72,7 +72,7 @@ l_usb_ufi_get_cap_00112:
 	djnz	l_usb_ufi_get_cap_00112
 ;source-doc/ufi-drv/ufi_driver.c:12: wait_for_device_ready(dev, 25);
 	push	de
-	ld	a,0x19
+	ld	a,$19
 	push	af
 	inc	sp
 	push	de
@@ -92,7 +92,7 @@ l_usb_ufi_get_cap_00112:
 	pop	de
 ;source-doc/ufi-drv/ufi_driver.c:18: wait_for_device_ready(dev, 15);
 	push	de
-	ld	a,0x0f
+	ld	a,$0f
 	push	af
 	inc	sp
 	push	de
@@ -113,7 +113,7 @@ l_usb_ufi_get_cap_00112:
 	or	a
 	jr	Z,l_usb_ufi_get_cap_00102
 ;source-doc/ufi-drv/ufi_driver.c:22: return 0;
-	ld	hl,0x0000
+	ld	hl,$0000
 	ld	e, l
 	ld	d, l
 	jr	l_usb_ufi_get_cap_00103
@@ -148,7 +148,7 @@ _usb_ufi_read:
 	ld	c,e
 	ld	b,d
 	push	de
-	ld	a,0x14
+	ld	a,$14
 	push	af
 	inc	sp
 	push	bc
@@ -161,7 +161,7 @@ _usb_ufi_read:
 	or	a
 	jr	Z,l_usb_ufi_read_00102
 ;source-doc/ufi-drv/ufi_driver.c:31: return -1; // Not READY!
-	ld	l,0xff
+	ld	l,$ff
 	jr	l_usb_ufi_read_00109
 l_usb_ufi_read_00102:
 ;source-doc/ufi-drv/ufi_driver.c:36: memset(&sense_codes, 0, sizeof(sense_codes));
@@ -184,7 +184,7 @@ l_usb_ufi_read_00102:
 	ld	l,(ix+6)
 	ld	h,(ix+7)
 	push	hl
-	ld	a,0x01
+	ld	a,$01
 	push	af
 	inc	sp
 	push	de
@@ -203,14 +203,14 @@ l_usb_ufi_read_00102:
 	or	a
 	jr	Z,l_usb_ufi_read_00104
 ;source-doc/ufi-drv/ufi_driver.c:39: return -1; // general error
-	ld	l,0xff
+	ld	l,$ff
 	jr	l_usb_ufi_read_00109
 l_usb_ufi_read_00104:
 ;source-doc/ufi-drv/ufi_driver.c:42: memset(&response, 0, sizeof(response));
 	push	bc
 	ld	hl,4
 	add	hl, sp
-	ld	b,0x09
+	ld	b,$09
 l_usb_ufi_read_00139:
 	xor	a
 	ld	(hl), a
@@ -231,20 +231,20 @@ l_usb_ufi_read_00139:
 	or	a
 	jr	Z,l_usb_ufi_read_00106
 ;source-doc/ufi-drv/ufi_driver.c:45: return -1; // error
-	ld	l,0xff
+	ld	l,$ff
 	jr	l_usb_ufi_read_00109
 l_usb_ufi_read_00106:
 ;source-doc/ufi-drv/ufi_driver.c:49: const uint8_t sense_key = response.sense_key & 15;
 	ld	a,(ix-16)
-	and	0x0f
+	and	$0f
 	jr	Z,l_usb_ufi_read_00108
 ;source-doc/ufi-drv/ufi_driver.c:51: if (sense_key != 0)
 ;source-doc/ufi-drv/ufi_driver.c:52: return -1;
-	ld	l,0xff
+	ld	l,$ff
 	jr	l_usb_ufi_read_00109
 l_usb_ufi_read_00108:
 ;source-doc/ufi-drv/ufi_driver.c:54: return USB_ERR_OK;
-	ld	l,0x00
+	ld	l,$00
 l_usb_ufi_read_00109:
 ;source-doc/ufi-drv/ufi_driver.c:55: }
 	ld	sp, ix
@@ -269,7 +269,7 @@ _usb_ufi_write:
 	ld	c,e
 	ld	b,d
 	push	de
-	ld	a,0x14
+	ld	a,$14
 	push	af
 	inc	sp
 	push	bc
@@ -282,7 +282,7 @@ _usb_ufi_write:
 	or	a
 	jr	Z,l_usb_ufi_write_00102
 ;source-doc/ufi-drv/ufi_driver.c:61: return -1; // Not READY!
-	ld	l,0xff
+	ld	l,$ff
 	jr	l_usb_ufi_write_00109
 l_usb_ufi_write_00102:
 ;source-doc/ufi-drv/ufi_driver.c:65: memset(&sense_codes, 0, sizeof(sense_codes));
@@ -305,11 +305,11 @@ l_usb_ufi_write_00102:
 	ld	l,(ix+6)
 	ld	h,(ix+7)
 	push	hl
-	ld	a,0x01
+	ld	a,$01
 	push	af
 	inc	sp
 	push	de
-	ld	a,0x01
+	ld	a,$01
 	push	af
 	inc	sp
 	push	bc
@@ -324,14 +324,14 @@ l_usb_ufi_write_00102:
 	or	a
 	jr	Z,l_usb_ufi_write_00104
 ;source-doc/ufi-drv/ufi_driver.c:67: return -1;
-	ld	l,0xff
+	ld	l,$ff
 	jr	l_usb_ufi_write_00109
 l_usb_ufi_write_00104:
 ;source-doc/ufi-drv/ufi_driver.c:71: memset(&response, 0, sizeof(response));
 	push	bc
 	ld	hl,4
 	add	hl, sp
-	ld	b,0x09
+	ld	b,$09
 l_usb_ufi_write_00139:
 	xor	a
 	ld	(hl), a
@@ -352,20 +352,20 @@ l_usb_ufi_write_00139:
 	or	a
 	jr	Z,l_usb_ufi_write_00106
 ;source-doc/ufi-drv/ufi_driver.c:74: return -1;
-	ld	l,0xff
+	ld	l,$ff
 	jr	l_usb_ufi_write_00109
 l_usb_ufi_write_00106:
 ;source-doc/ufi-drv/ufi_driver.c:79: const uint8_t sense_key = response.sense_key & 15;
 	ld	a,(ix-16)
-	and	0x0f
+	and	$0f
 	jr	Z,l_usb_ufi_write_00108
 ;source-doc/ufi-drv/ufi_driver.c:81: if (sense_key != 0)
 ;source-doc/ufi-drv/ufi_driver.c:82: return -1;
-	ld	l,0xff
+	ld	l,$ff
 	jr	l_usb_ufi_write_00109
 l_usb_ufi_write_00108:
 ;source-doc/ufi-drv/ufi_driver.c:84: return USB_ERR_OK;
-	ld	l,0x00
+	ld	l,$00
 l_usb_ufi_write_00109:
 ;source-doc/ufi-drv/ufi_driver.c:85: }
 	ld	sp, ix

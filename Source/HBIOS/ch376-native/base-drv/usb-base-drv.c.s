@@ -51,33 +51,33 @@
 ; ---------------------------------
 _usb_host_bus_reset:
 ;source-doc/base-drv/usb-base-drv.c:8: ch_cmd_set_usb_mode(CH_MODE_HOST);
-	ld	l,0x06
+	ld	l,$06
 	call	_ch_cmd_set_usb_mode
 ;source-doc/base-drv/usb-base-drv.c:9: delay_20ms();
 	call	_delay_20ms
 ;source-doc/base-drv/usb-base-drv.c:11: ch_cmd_set_usb_mode(CH_MODE_HOST_RESET);
-	ld	l,0x07
+	ld	l,$07
 	call	_ch_cmd_set_usb_mode
 ;source-doc/base-drv/usb-base-drv.c:12: delay_20ms();
 	call	_delay_20ms
 ;source-doc/base-drv/usb-base-drv.c:14: ch_cmd_set_usb_mode(CH_MODE_HOST);
-	ld	l,0x06
+	ld	l,$06
 	call	_ch_cmd_set_usb_mode
 ;source-doc/base-drv/usb-base-drv.c:15: delay_20ms();
 	call	_delay_20ms
 ;source-doc/base-drv/ch376.h:108: #define TRACE_USB_ERROR(result)
-	ld	l,0x0b
+	ld	l,$0b
 	call	_ch_command
 ;source-doc/base-drv/ch376.h:109:
-	ld	a,0x25
+	ld	a,$25
 	ld	bc,_CH376_DATA_PORT
 	out	(c), a
 ;source-doc/base-drv/ch376.h:110: #endif
-	ld	a,0xdf
+	ld	a,$df
 	ld	bc,_CH376_DATA_PORT
 	out	(c), a
 ;source-doc/base-drv/usb-base-drv.c:19: return USB_ERR_OK;
-	ld	l,0x00
+	ld	l,$00
 ;source-doc/base-drv/usb-base-drv.c:20: }
 	ret
 ;source-doc/base-drv/usb-base-drv.c:24: uint16_t usb_init(uint8_t state) __z88dk_fastcall {
@@ -85,8 +85,8 @@ _usb_host_bus_reset:
 ; Function usb_init
 ; ---------------------------------
 _usb_init:
-;source-doc/base-drv/usb-base-drv.c:27: USB_MODULE_LEDS = 0x03;
-	ld	a,0x03
+;source-doc/base-drv/usb-base-drv.c:27: USB_MODULE_LEDS = $03;
+	ld	a,$03
 	ld	bc,_USB_MODULE_LEDS
 	out	(c), a
 ;source-doc/base-drv/usb-base-drv.c:29: if (state == 0) {
@@ -100,21 +100,21 @@ _usb_init:
 ;source-doc/base-drv/usb-base-drv.c:33: if (!ch_probe()) {
 	call	_ch_probe
 	ld	a, l
-;source-doc/base-drv/usb-base-drv.c:34: USB_MODULE_LEDS = 0x00;
+;source-doc/base-drv/usb-base-drv.c:34: USB_MODULE_LEDS = $00;
 	or	a
 	jr	NZ,l_usb_init_00102
 	ld	bc,_USB_MODULE_LEDS
 	out	(c), a
-;source-doc/base-drv/usb-base-drv.c:35: return 0xFF00;
-	ld	hl,0xff00
+;source-doc/base-drv/usb-base-drv.c:35: return $FF00;
+	ld	hl,$ff00
 	jp	l_usb_init_00113
 l_usb_init_00102:
-;source-doc/base-drv/usb-base-drv.c:37: USB_MODULE_LEDS = 0x00;
-	ld	a,0x00
+;source-doc/base-drv/usb-base-drv.c:37: USB_MODULE_LEDS = $00;
+	ld	a,$00
 	ld	bc,_USB_MODULE_LEDS
 	out	(c), a
 ;source-doc/base-drv/usb-base-drv.c:38: return 1;
-	ld	hl,0x0001
+	ld	hl,$0001
 	jr	l_usb_init_00113
 l_usb_init_00104:
 ;source-doc/base-drv/usb-base-drv.c:41: if (state == 1) {
@@ -123,21 +123,21 @@ l_usb_init_00104:
 	jr	NZ,l_usb_init_00106
 ;source-doc/base-drv/usb-base-drv.c:42: r = ch_cmd_get_ic_version();
 	call	_ch_cmd_get_ic_version
-;source-doc/base-drv/usb-base-drv.c:44: USB_MODULE_LEDS = 0x00;
-	ld	a,0x00
+;source-doc/base-drv/usb-base-drv.c:44: USB_MODULE_LEDS = $00;
+	ld	a,$00
 	ld	bc,_USB_MODULE_LEDS
 	out	(c), a
 ;source-doc/base-drv/usb-base-drv.c:45: return (uint16_t)r << 8 | 2;
 	xor	a
 	ld	h, l
-	ld	l,0x02
+	ld	l,$02
 	jr	l_usb_init_00113
 l_usb_init_00106:
 ;source-doc/base-drv/usb-base-drv.c:48: if (state == 2) {
 	ld	a, l
-	sub	0x02
+	sub	$02
 	jr	NZ,l_usb_init_00159
-	ld	a,0x01
+	ld	a,$01
 	jr	l_usb_init_00160
 l_usb_init_00159:
 	xor	a
@@ -147,33 +147,33 @@ l_usb_init_00160:
 	jr	Z,l_usb_init_00110
 ;source-doc/base-drv/usb-base-drv.c:49: usb_host_bus_reset();
 	call	_usb_host_bus_reset
-;source-doc/base-drv/usb-base-drv.c:51: r = ch_very_short_wait_int_and_get_();
-	call	_ch_very_short_wait_int_and_get
+;source-doc/base-drv/usb-base-drv.c:51: r = ch_very_short_status();
+	call	_ch_very_short_status
 	ld	a, l
 ;source-doc/base-drv/usb-base-drv.c:53: if (r != USB_INT_CONNECT) {
-	sub	0x81
+	sub	$81
 	jr	Z,l_usb_init_00108
-;source-doc/base-drv/usb-base-drv.c:54: USB_MODULE_LEDS = 0x00;
-	ld	a,0x00
+;source-doc/base-drv/usb-base-drv.c:54: USB_MODULE_LEDS = $00;
+	ld	a,$00
 	ld	bc,_USB_MODULE_LEDS
 	out	(c), a
 ;source-doc/base-drv/usb-base-drv.c:55: return 2;
-	ld	hl,0x0002
+	ld	hl,$0002
 	jr	l_usb_init_00113
 l_usb_init_00108:
 ;source-doc/base-drv/usb-base-drv.c:58: return 3;
-	ld	hl,0x0003
+	ld	hl,$0003
 	jr	l_usb_init_00113
 l_usb_init_00110:
 ;source-doc/base-drv/usb-base-drv.c:61: memset(get_usb_work_area(), 0, sizeof(_usb_state));
-	ld	b,0x32
+	ld	b,$32
 	ld	hl,_x
 	jr	l_usb_init_00163
 l_usb_init_00162:
-	ld	(hl),0x00
+	ld	(hl),$00
 	inc	hl
 l_usb_init_00163:
-	ld	(hl),0x00
+	ld	(hl),$00
 	inc	hl
 	djnz	l_usb_init_00162
 ;source-doc/base-drv/usb-base-drv.c:62: if (state != 2) {
@@ -186,15 +186,15 @@ l_usb_init_00163:
 l_usb_init_00112:
 ;source-doc/base-drv/usb-base-drv.c:66: enumerate_all_devices();
 	call	_enumerate_all_devices
-;source-doc/base-drv/usb-base-drv.c:67: USB_MODULE_LEDS = 0x00;
-	ld	a,0x00
+;source-doc/base-drv/usb-base-drv.c:67: USB_MODULE_LEDS = $00;
+	ld	a,$00
 	ld	bc,_USB_MODULE_LEDS
 	out	(c), a
 ;source-doc/base-drv/usb-base-drv.c:68: return (uint16_t)count_of_devices() << 8 | 4;
 	call	_count_of_devices
 	ld	h, a
 	xor	a
-	ld	l,0x04
+	ld	l,$04
 l_usb_init_00113:
 ;source-doc/base-drv/usb-base-drv.c:69: }
 	ret
@@ -210,15 +210,15 @@ _usb_scsi_seek:
 	ld	a,(ix+4)
 	call	_get_usb_device_config
 ;source-doc/base-drv/usb-base-drv.c:74: dev->current_lba = lba;
-	ld	hl,0x000c
+	ld	hl,$000c
 	add	hl, de
 	ex	de, hl
 	ld	hl,6
 	add	hl, sp
-	ld	bc,0x0004
+	ld	bc,$0004
 	ldir
 ;source-doc/base-drv/usb-base-drv.c:75: return USB_ERR_OK;
-	ld	l,0x00
+	ld	l,$00
 ;source-doc/base-drv/usb-base-drv.c:76: }
 	pop	ix
 	ret

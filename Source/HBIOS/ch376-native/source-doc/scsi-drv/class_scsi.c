@@ -4,7 +4,7 @@
 #include <usb_state.h>
 #include <z80.h>
 
-_scsi_command_block_wrapper scsi_command_block_wrapper = {{0x55, 0x53, 0x42, 0x43}, {0, 0}, 0, 0, 0, 0};
+_scsi_command_block_wrapper scsi_cmd_blk_wrap = {{0x55, 0x53, 0x42, 0x43}, {0, 0}, 0, 0, 0, 0};
 
 uint16_t next_tag = 0;
 
@@ -13,7 +13,7 @@ usb_error do_scsi_cmd(device_config_storage *const       dev,
                       void *const                        send_receive_buffer,
                       const bool                         send) {
 
-  usb_error result;
+  usb_error                    result;
   _scsi_command_status_wrapper csw = {{{0}}};
 
   cbw->dCBWTag[0] = next_tag++;
@@ -52,7 +52,7 @@ done:
 
 usb_error scsi_test(device_config_storage *const dev) {
   cbw_scsi_test cbw_scsi;
-  cbw_scsi.cbw = scsi_command_block_wrapper;
+  cbw_scsi.cbw = scsi_cmd_blk_wrap;
   memset(&cbw_scsi.test, 0, sizeof(_scsi_packet_test));
 
   cbw_scsi.cbw.bCBWLUN                = 0;
@@ -62,12 +62,12 @@ usb_error scsi_test(device_config_storage *const dev) {
   return do_scsi_cmd(dev, &cbw_scsi.cbw, 0, false);
 }
 
-const _scsi_packet_request_sense scsi_packet_request_sense = {0x03, 0, 0, 0, 18, 0, {0, 0, 0, 0, 0, 0}};
+const _scsi_packet_request_sense scsi_pckt_req_sense = {0x03, 0, 0, 0, 18, 0, {0, 0, 0, 0, 0, 0}};
 
 usb_error scsi_request_sense(device_config_storage *const dev, scsi_sense_result *const sens_result) {
   cbw_scsi_request_sense cbw_scsi;
-  cbw_scsi.cbw           = scsi_command_block_wrapper;
-  cbw_scsi.request_sense = scsi_packet_request_sense;
+  cbw_scsi.cbw           = scsi_cmd_blk_wrap;
+  cbw_scsi.request_sense = scsi_pckt_req_sense;
 
   cbw_scsi.cbw.bCBWLUN                = 0;
   cbw_scsi.cbw.bCBWCBLength           = sizeof(_scsi_packet_request_sense);

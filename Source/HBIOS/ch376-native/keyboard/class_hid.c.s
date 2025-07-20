@@ -63,12 +63,12 @@ _hid_set_protocol:
 	ld	hl,2
 	add	hl, sp
 	ex	de, hl
-	ld	bc,0x0008
+	ld	bc,$0008
 	ld	hl,_cmd_hid_set
 	ldir
 	pop	de
 ;source-doc/keyboard/class_hid.c:10: cmd.bRequest  = HID_SET_PROTOCOL;
-	ld	(ix-7),0x0b
+	ld	(ix-7),$0b
 ;source-doc/keyboard/class_hid.c:11: cmd.bValue[0] = protocol;
 	ld	a,(ix+4)
 	ld	(ix-6),a
@@ -83,10 +83,10 @@ _hid_set_protocol:
 	rlca
 	rlca
 	rlca
-	and	0x0f
+	and	$0f
 	ld	c,a
 	push	bc
-	ld	hl,0x0000
+	ld	hl,$0000
 	push	hl
 	ld	hl,4
 	add	hl, sp
@@ -103,13 +103,13 @@ _hid_set_protocol:
 	inc	sp
 	jp	(hl)
 _cmd_hid_set:
-	DEFB +0x21
-	DEFB +0x0b
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x00
-	DEFW +0x0000
+	DEFB +$21
+	DEFB +$0b
+	DEFB +$00
+	DEFB +$00
+	DEFB +$00
+	DEFB +$00
+	DEFW +$0000
 ;source-doc/keyboard/class_hid.c:16: usb_error hid_set_idle(const device_config_keyboard *const dev, const uint8_t duration) __sdcccall(1) {
 ; ---------------------------------
 ; Function hid_set_idle
@@ -128,12 +128,12 @@ _hid_set_idle:
 	ld	hl,2
 	add	hl, sp
 	ex	de, hl
-	ld	bc,0x0008
+	ld	bc,$0008
 	ld	hl,_cmd_hid_set
 	ldir
 	pop	de
 ;source-doc/keyboard/class_hid.c:20: cmd.bRequest  = HID_SET_IDLE;
-	ld	(ix-7),0x0a
+	ld	(ix-7),$0a
 ;source-doc/keyboard/class_hid.c:21: cmd.bValue[0] = duration;
 	ld	a,(ix+4)
 	ld	(ix-6),a
@@ -148,10 +148,10 @@ _hid_set_idle:
 	rlca
 	rlca
 	rlca
-	and	0x0f
+	and	$0f
 	ld	c,a
 	push	bc
-	ld	hl,0x0000
+	ld	hl,$0000
 	push	hl
 	ld	hl,4
 	add	hl, sp

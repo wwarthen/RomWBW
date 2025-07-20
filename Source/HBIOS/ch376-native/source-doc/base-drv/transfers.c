@@ -46,7 +46,7 @@ usb_error usb_control_transfer(const setup_packet *const cmd_packet,
 
   ch_write_data((const uint8_t *)cmd_packet, sizeof(setup_packet));
   ch_issue_token_setup();
-  result = ch_short_wait_int_and_get_status();
+  result = ch_short_get_status();
   CHECK(result);
 
   const uint16_t length = cmd_packet->wLength;
@@ -61,7 +61,7 @@ usb_error usb_control_transfer(const setup_packet *const cmd_packet,
     ch_command(CH_CMD_WR_HOST_DATA);
     CH376_DATA_PORT = 0;
     ch_issue_token_out_ep0();
-    result = ch_long_wait_int_and_get_status(); /* sometimes we get STALL here - seems to be ok to ignore */
+    result = ch_long_get_status(); /* sometimes we get STALL here - seems to be ok to ignore */
 
     if (result == USB_ERR_OK || result == USB_ERR_STALL) {
       result = USB_ERR_OK;
@@ -72,7 +72,7 @@ usb_error usb_control_transfer(const setup_packet *const cmd_packet,
   }
 
   ch_issue_token_in_ep0();
-  result = ch_long_wait_int_and_get_status();
+  result = ch_long_get_status();
 
   RETURN_CHECK(result);
 

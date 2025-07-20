@@ -30,7 +30,7 @@
 	
 ; .area _INITIALIZED removed by z88dk
 	
-_scsi_command_block_wrapper:
+_scsi_cmd_blk_wrap:
 	DEFS 15
 _next_tag:
 	DEFS 2
@@ -61,7 +61,7 @@ _do_scsi_cmd:
 	add	hl, sp
 	ld	sp, hl
 ;source-doc/scsi-drv/class_scsi.c:17: _scsi_command_status_wrapper csw = {{{0}}};
-	ld	a,0x00
+	ld	a,$00
 	ld	(ix-21),a
 	ld	(ix-20),a
 	ld	(ix-19),a
@@ -72,16 +72,16 @@ _do_scsi_cmd:
 	xor	a
 	ld	(ix-15),a
 	ld	(ix-14),a
-	ld	a,0x00
+	ld	a,$00
 	ld	(ix-13),a
 	ld	(ix-12),a
 	ld	(ix-11),a
 	ld	(ix-10),a
-	ld	(ix-9),0x00
+	ld	(ix-9),$00
 ;source-doc/scsi-drv/class_scsi.c:19: cbw->dCBWTag[0] = next_tag++;
 	ld	c,(ix+6)
 	ld	b,(ix+7)
-	ld	hl,0x0004
+	ld	hl,$0004
 	add	hl, bc
 	ld	(ix-8),l
 	ld	(ix-7),h
@@ -100,10 +100,10 @@ _do_scsi_cmd:
 ;source-doc/scsi-drv/class_scsi.c:21: if (!send)
 	bit	0,(ix+10)
 	jr	NZ,l_do_scsi_cmd_00102
-;source-doc/scsi-drv/class_scsi.c:22: cbw->bmCBWFlags = 0x80;
-	ld	hl,0x000c
+;source-doc/scsi-drv/class_scsi.c:22: cbw->bmCBWFlags = $80;
+	ld	hl,$000c
 	add	hl, bc
-	ld	(hl),0x80
+	ld	(hl),$80
 l_do_scsi_cmd_00102:
 ;source-doc/scsi-drv/class_scsi.c:24: critical_begin();
 	push	bc
@@ -130,7 +130,7 @@ l_do_scsi_cmd_00102:
 	rlca
 	rlca
 	rlca
-	and	0x0f
+	and	$0f
 	ld	l,(ix+6)
 	ld	h,(ix+7)
 	push	bc
@@ -139,7 +139,7 @@ l_do_scsi_cmd_00102:
 	push	af
 	inc	sp
 	push	hl
-	ld	hl,0x001f
+	ld	hl,$001f
 	ex	(sp), hl
 	push	hl
 	call	_usb_data_out_transfer
@@ -177,10 +177,10 @@ l_do_scsi_cmd_00102:
 	jr	NZ,l_do_scsi_cmd_00110
 ;source-doc/scsi-drv/class_scsi.c:32: &dev->endpoints[ENDPOINT_BULK_IN]));
 	ld	a,(ix-6)
-	add	a,0x06
+	add	a,$06
 	ld	e, a
 	ld	a,(ix-5)
-	adc	a,0x00
+	adc	a,$00
 	ld	d, a
 	ld	l,(ix-4)
 	ld	h,(ix-3)
@@ -189,7 +189,7 @@ l_do_scsi_cmd_00102:
 	rlca
 	rlca
 	rlca
-	and	0x0f
+	and	$0f
 	push	de
 	push	af
 	inc	sp
@@ -215,7 +215,7 @@ l_do_scsi_cmd_00110:
 	rlca
 	rlca
 	rlca
-	and	0x0f
+	and	$0f
 	push	de
 	push	af
 	inc	sp
@@ -234,10 +234,10 @@ l_do_scsi_cmd_00110:
 l_do_scsi_cmd_00113:
 ;source-doc/scsi-drv/class_scsi.c:41: usb_data_in_transfer((uint8_t *)&csw, sizeof(_scsi_command_status_wrapper), dev->address, &dev->endpoints[ENDPOINT_BULK_IN]));
 	ld	a,(ix-6)
-	add	a,0x06
+	add	a,$06
 	ld	c, a
 	ld	a,(ix-5)
-	adc	a,0x00
+	adc	a,$00
 	ld	b, a
 	ld	l,(ix-4)
 	ld	h,(ix-3)
@@ -246,12 +246,12 @@ l_do_scsi_cmd_00113:
 	rlca
 	rlca
 	rlca
-	and	0x0f
+	and	$0f
 	ld	d, a
 	push	bc
 	push	de
 	inc	sp
-	ld	hl,0x000d
+	ld	hl,$000d
 	push	hl
 	ld	hl,5
 	add	hl, sp
@@ -281,11 +281,11 @@ l_do_scsi_cmd_00113:
 	jr	Z,l_do_scsi_cmd_00117
 l_do_scsi_cmd_00116:
 ;source-doc/scsi-drv/class_scsi.c:44: result = USB_ERR_FAIL;
-	ld	l,0x0e
+	ld	l,$0e
 	jr	l_do_scsi_cmd_00120
 l_do_scsi_cmd_00117:
 ;source-doc/scsi-drv/class_scsi.c:46: result = USB_ERR_OK;
-	ld	l,0x00
+	ld	l,$00
 ;source-doc/scsi-drv/class_scsi.c:48: done:
 l_do_scsi_cmd_00120:
 ;source-doc/scsi-drv/class_scsi.c:49: critical_end();
@@ -308,19 +308,19 @@ _scsi_test:
 	ld	hl, -27
 	add	hl, sp
 	ld	sp, hl
-;source-doc/scsi-drv/class_scsi.c:55: cbw_scsi.cbw = scsi_command_block_wrapper;
+;source-doc/scsi-drv/class_scsi.c:55: cbw_scsi.cbw = scsi_cmd_blk_wrap;
 	ld	hl,0
 	add	hl, sp
 	ld	e,l
 	ld	d,h
 	push	hl
-	ld	bc,0x000f
-	ld	hl,_scsi_command_block_wrapper
+	ld	bc,$000f
+	ld	hl,_scsi_cmd_blk_wrap
 	ldir
 ;source-doc/scsi-drv/class_scsi.c:56: memset(&cbw_scsi.test, 0, sizeof(_scsi_packet_test));
 	ld	hl,17
 	add	hl, sp
-	ld	b,0x06
+	ld	b,$06
 l_scsi_test_00103:
 	xor	a
 	ld	(hl), a
@@ -330,11 +330,11 @@ l_scsi_test_00103:
 	djnz	l_scsi_test_00103
 	pop	bc
 ;source-doc/scsi-drv/class_scsi.c:58: cbw_scsi.cbw.bCBWLUN                = 0;
-	ld	(ix-14),0x00
+	ld	(ix-14),$00
 ;source-doc/scsi-drv/class_scsi.c:59: cbw_scsi.cbw.bCBWCBLength           = sizeof(_scsi_packet_test);
-	ld	(ix-13),0x0c
+	ld	(ix-13),$0c
 ;source-doc/scsi-drv/class_scsi.c:60: cbw_scsi.cbw.dCBWDataTransferLength = 0;
-	ld	hl,0x0008
+	ld	hl,$0008
 	add	hl, bc
 	xor	a
 	ld	(hl), a
@@ -348,7 +348,7 @@ l_scsi_test_00103:
 	xor	a
 	push	af
 	inc	sp
-	ld	hl,0x0000
+	ld	hl,$0000
 	push	hl
 	push	bc
 	ld	l,(ix+4)
@@ -370,31 +370,31 @@ _scsi_request_sense:
 	ld	hl, -27
 	add	hl, sp
 	ld	sp, hl
-;source-doc/scsi-drv/class_scsi.c:69: cbw_scsi.cbw           = scsi_command_block_wrapper;
+;source-doc/scsi-drv/class_scsi.c:69: cbw_scsi.cbw           = scsi_cmd_blk_wrap;
 	ld	hl,0
 	add	hl, sp
 	ld	e,l
 	ld	d,h
 	push	hl
-	ld	bc,0x000f
-	ld	hl,_scsi_command_block_wrapper
+	ld	bc,$000f
+	ld	hl,_scsi_cmd_blk_wrap
 	ldir
-;source-doc/scsi-drv/class_scsi.c:70: cbw_scsi.request_sense = scsi_packet_request_sense;
+;source-doc/scsi-drv/class_scsi.c:70: cbw_scsi.request_sense = scsi_pckt_req_sense;
 	ld	hl,17
 	add	hl, sp
 	ex	de, hl
-	ld	bc,0x000c
-	ld	hl,_scsi_packet_request_sense
+	ld	bc,$000c
+	ld	hl,_scsi_pckt_req_sense
 	ldir
 	pop	bc
 ;source-doc/scsi-drv/class_scsi.c:72: cbw_scsi.cbw.bCBWLUN                = 0;
-	ld	(ix-14),0x00
+	ld	(ix-14),$00
 ;source-doc/scsi-drv/class_scsi.c:73: cbw_scsi.cbw.bCBWCBLength           = sizeof(_scsi_packet_request_sense);
-	ld	(ix-13),0x0c
+	ld	(ix-13),$0c
 ;source-doc/scsi-drv/class_scsi.c:74: cbw_scsi.cbw.dCBWDataTransferLength = sizeof(scsi_sense_result);
-	ld	hl,0x0008
+	ld	hl,$0008
 	add	hl, bc
-	ld	(hl),0x12
+	ld	(hl),$12
 	inc	hl
 	xor	a
 	ld	(hl), a
@@ -418,29 +418,29 @@ _scsi_request_sense:
 	ld	sp,ix
 	pop	ix
 	ret
-_scsi_packet_request_sense:
-	DEFB +0x03
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x12
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x00
-_scsi_command_block_wrapper:
-	DEFB +0x55
-	DEFB +0x53
-	DEFB +0x42
-	DEFB +0x43
-	DEFW +0x0000
-	DEFW +0x0000
-	DEFB +0x00,0x00, +0x00, +0x00
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x00
+_scsi_pckt_req_sense:
+	DEFB +$03
+	DEFB +$00
+	DEFB +$00
+	DEFB +$00
+	DEFB +$12
+	DEFB +$00
+	DEFB +$00
+	DEFB +$00
+	DEFB +$00
+	DEFB +$00
+	DEFB +$00
+	DEFB +$00
+_scsi_cmd_blk_wrap:
+	DEFB +$55
+	DEFB +$53
+	DEFB +$42
+	DEFB +$43
+	DEFW +$0000
+	DEFW +$0000
+	DEFB +$00,$00, +$00, +$00
+	DEFB +$00
+	DEFB +$00
+	DEFB +$00
 _next_tag:
-	DEFW +0x0000
+	DEFW +$0000

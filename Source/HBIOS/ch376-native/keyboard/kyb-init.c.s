@@ -56,12 +56,12 @@ _keyboard_init:
 	dec	sp
 ;source-doc/keyboard/kyb-init.c:7: uint8_t index = 1;
 ;source-doc/keyboard/kyb-init.c:9: do {
-	ld	c,0x01
+	ld	c,$01
 	ld	(ix-1),c
 l_keyboard_init_00103:
 ;source-doc/keyboard/kyb-init.c:10: usb_device_type t = usb_get_device_type(index);
 	ld	e, c
-	ld	d,0x00
+	ld	d,$00
 	push	bc
 	push	de
 	push	de
@@ -71,7 +71,7 @@ l_keyboard_init_00103:
 	pop	de
 	pop	bc
 ;source-doc/keyboard/kyb-init.c:12: if (t == USB_IS_KEYBOARD) {
-	sub	0x04
+	sub	$04
 	jr	NZ,l_keyboard_init_00104
 ;source-doc/keyboard/kyb-init.c:13: print_string("\r\nUSB: KEYBOARD @ $");
 	push	de
@@ -88,14 +88,14 @@ l_keyboard_init_00103:
 	ld	a,(ix-1)
 	call	_usb_kyb_init
 ;source-doc/keyboard/kyb-init.c:18: return 1;
-	ld	a,0x01
+	ld	a,$01
 	jr	l_keyboard_init_00106
 l_keyboard_init_00104:
 ;source-doc/keyboard/kyb-init.c:20: } while (++index != MAX_NUMBER_OF_DEVICES + 1);
 	inc	c
 	ld	(ix-1),c
 	ld	a, c
-	sub	0x07
+	sub	$07
 	jr	NZ,l_keyboard_init_00103
 ;source-doc/keyboard/kyb-init.c:22: print_string("\r\nUSB: KEYBOARD: NOT FOUND$");
 	ld	hl,kyb_init_str_2
@@ -108,15 +108,15 @@ l_keyboard_init_00106:
 	pop	ix
 	ret
 kyb_init_str_0:
-	DEFB 0x0d
-	DEFB 0x0a
+	DEFB $0d
+	DEFB $0a
 	DEFM "USB: KEYBOARD @ $"
-	DEFB 0x00
+	DEFB $00
 kyb_init_str_1:
 	DEFM " $"
-	DEFB 0x00
+	DEFB $00
 kyb_init_str_2:
-	DEFB 0x0d
-	DEFB 0x0a
+	DEFB $0d
+	DEFB $0a
 	DEFM "USB: KEYBOARD: NOT FOUND$"
-	DEFB 0x00
+	DEFB $00

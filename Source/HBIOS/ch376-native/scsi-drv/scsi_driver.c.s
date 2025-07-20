@@ -30,7 +30,7 @@
 	
 ; .area _INITIALIZED removed by z88dk
 	
-_scsi_packet_read_capacity:
+_scsi_pkt_read_cap:
 	DEFS 12
 _cbw:
 	DEFS 27
@@ -68,7 +68,7 @@ _usb_scsi_init:
 	call	_critical_begin
 	pop	de
 ;source-doc/scsi-drv/scsi_driver.c:17: while ((result = scsi_test(dev)) && --counter > 0)
-	ld	c,0x03
+	ld	c,$03
 l_usb_scsi_init_00102:
 	push	bc
 	push	de
@@ -120,30 +120,30 @@ _usb_scsi_read_capacity:
 ;source-doc/scsi-drv/scsi_driver.c:27: device_config_storage *const dev = (device_config_storage *)get_usb_device_config(dev_index);
 	ld	a,(ix+4)
 	call	_get_usb_device_config
-;source-doc/scsi-drv/scsi_driver.c:30: cbw_scsi.cbw           = scsi_command_block_wrapper;
+;source-doc/scsi-drv/scsi_driver.c:30: cbw_scsi.cbw           = scsi_cmd_blk_wrap;
 	push	de
 	ld	hl,2
 	add	hl, sp
 	ex	de, hl
-	ld	bc,0x000f
-	ld	hl,_scsi_command_block_wrapper
+	ld	bc,$000f
+	ld	hl,_scsi_cmd_blk_wrap
 	ldir
 	pop	de
-;source-doc/scsi-drv/scsi_driver.c:31: cbw_scsi.read_capacity = scsi_packet_read_capacity;
+;source-doc/scsi-drv/scsi_driver.c:31: cbw_scsi.read_capacity = scsi_pkt_read_cap;
 	push	de
 	ld	hl,17
 	add	hl, sp
 	ex	de, hl
-	ld	bc,0x000c
-	ld	hl,_scsi_packet_read_capacity
+	ld	bc,$000c
+	ld	hl,_scsi_pkt_read_cap
 	ldir
 	pop	de
 ;source-doc/scsi-drv/scsi_driver.c:33: cbw_scsi.cbw.bCBWLUN                = 0;
-	ld	(ix-14),0x00
+	ld	(ix-14),$00
 ;source-doc/scsi-drv/scsi_driver.c:34: cbw_scsi.cbw.bCBWCBLength           = sizeof(_scsi_read_capacity);
-	ld	(ix-13),0x0c
+	ld	(ix-13),$0c
 ;source-doc/scsi-drv/scsi_driver.c:35: cbw_scsi.cbw.dCBWDataTransferLength = sizeof(scsi_read_capacity_result);
-	ld	(ix-19),0x08
+	ld	(ix-19),$08
 	xor	a
 	ld	(ix-18),a
 	ld	(ix-17),a
@@ -186,40 +186,40 @@ _usb_scsi_read:
 	ld	de,_cbw
 	ld	l, e
 	ld	h, d
-	ld	b,0x0e
+	ld	b,$0e
 	jr	l_usb_scsi_read_00113
 l_usb_scsi_read_00112:
-	ld	(hl),0x00
+	ld	(hl),$00
 	inc	hl
 l_usb_scsi_read_00113:
-	ld	(hl),0x00
+	ld	(hl),$00
 	inc	hl
 	djnz	l_usb_scsi_read_00112
-;source-doc/scsi-drv/scsi_driver.c:64: cbw.cbw = scsi_command_block_wrapper;
-	ld	bc,0x000f
-	ld	hl,_scsi_command_block_wrapper
+;source-doc/scsi-drv/scsi_driver.c:64: cbw.cbw = scsi_cmd_blk_wrap;
+	ld	bc,$000f
+	ld	hl,_scsi_cmd_blk_wrap
 	ldir
 ;source-doc/scsi-drv/scsi_driver.c:66: cbw.cbw.bCBWLUN                = 0;
 	ld	hl,_cbw + 13
-	ld	(hl),0x00
+	ld	(hl),$00
 ;source-doc/scsi-drv/scsi_driver.c:67: cbw.cbw.bCBWCBLength           = sizeof(_scsi_packet_read_write);
 	ld	hl,_cbw + 14
-	ld	(hl),0x0c
+	ld	(hl),$0c
 ;source-doc/scsi-drv/scsi_driver.c:68: cbw.cbw.dCBWDataTransferLength = 512;
-	ld	hl,0x0200
+	ld	hl,$0200
 	ld	(_cbw + 8),hl
 	ld	h, l
 	ld	(_cbw + 8 + 2),hl
-;source-doc/scsi-drv/scsi_driver.c:70: cbw.scsi_cmd.operation_code  = 0x28; // read operation
+;source-doc/scsi-drv/scsi_driver.c:70: cbw.scsi_cmd.operation_code  = $28; // read operation
 	ld	hl,_cbw + 15
-	ld	(hl),0x28
+	ld	(hl),$28
 ;source-doc/scsi-drv/scsi_driver.c:71: cbw.scsi_cmd.transfer_len[1] = 1;
 	ld	hl,_cbw + 23
-	ld	(hl),0x01
+	ld	(hl),$01
 ;source-doc/scsi-drv/scsi_driver.c:72: cbw.scsi_cmd.lba[0]          = dev->current_lba >> 24;
 	pop	hl
 	push	hl
-	ld	de,0x000c
+	ld	de,$000c
 	add	hl, de
 	push	hl
 	inc	hl
@@ -317,40 +317,40 @@ _usb_scsi_write:
 	ld	de,_cbw
 	ld	l, e
 	ld	h, d
-	ld	b,0x0e
+	ld	b,$0e
 	jr	l_usb_scsi_write_00113
 l_usb_scsi_write_00112:
-	ld	(hl),0x00
+	ld	(hl),$00
 	inc	hl
 l_usb_scsi_write_00113:
-	ld	(hl),0x00
+	ld	(hl),$00
 	inc	hl
 	djnz	l_usb_scsi_write_00112
-;source-doc/scsi-drv/scsi_driver.c:89: cbw.cbw = scsi_command_block_wrapper;
-	ld	bc,0x000f
-	ld	hl,_scsi_command_block_wrapper
+;source-doc/scsi-drv/scsi_driver.c:89: cbw.cbw = scsi_cmd_blk_wrap;
+	ld	bc,$000f
+	ld	hl,_scsi_cmd_blk_wrap
 	ldir
 ;source-doc/scsi-drv/scsi_driver.c:91: cbw.cbw.bCBWLUN                = 0;
 	ld	hl,_cbw + 13
-	ld	(hl),0x00
+	ld	(hl),$00
 ;source-doc/scsi-drv/scsi_driver.c:92: cbw.cbw.bCBWCBLength           = sizeof(_scsi_packet_read_write);
 	ld	hl,_cbw + 14
-	ld	(hl),0x0c
+	ld	(hl),$0c
 ;source-doc/scsi-drv/scsi_driver.c:93: cbw.cbw.dCBWDataTransferLength = 512;
-	ld	hl,0x0200
+	ld	hl,$0200
 	ld	(_cbw + 8),hl
 	ld	h, l
 	ld	(_cbw + 8 + 2),hl
-;source-doc/scsi-drv/scsi_driver.c:95: cbw.scsi_cmd.operation_code  = 0x2A; // write operation
+;source-doc/scsi-drv/scsi_driver.c:95: cbw.scsi_cmd.operation_code  = $2A; // write operation
 	ld	hl,_cbw + 15
-	ld	(hl),0x2a
+	ld	(hl),$2a
 ;source-doc/scsi-drv/scsi_driver.c:96: cbw.scsi_cmd.transfer_len[1] = 1;
 	ld	hl,_cbw + 23
-	ld	(hl),0x01
+	ld	(hl),$01
 ;source-doc/scsi-drv/scsi_driver.c:97: cbw.scsi_cmd.lba[0]          = dev->current_lba >> 24;
 	pop	hl
 	push	hl
-	ld	de,0x000c
+	ld	de,$000c
 	add	hl, de
 	push	hl
 	inc	hl
@@ -380,7 +380,7 @@ l_usb_scsi_write_00113:
 	ld	c,(ix+6)
 	ld	b,(ix+7)
 	push	hl
-	ld	a,0x01
+	ld	a,$01
 	push	af
 	inc	sp
 	push	bc
@@ -430,41 +430,41 @@ l_usb_scsi_write_00102:
 	ld	sp, ix
 	pop	ix
 	ret
-_scsi_packet_read_capacity:
-	DEFB +0x25
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x00
+_scsi_pkt_read_cap:
+	DEFB +$25
+	DEFB +$00
+	DEFB +$00
+	DEFB +$00
+	DEFB +$00
+	DEFB +$00
+	DEFB +$00
+	DEFB +$00
+	DEFB +$00
+	DEFB +$00
+	DEFB +$00
+	DEFB +$00
 _cbw:
-	DEFB +0x00
-	DEFB 0x00
-	DEFB 0x00
-	DEFB 0x00
-	DEFB 0x00
-	DEFB 0x00
-	DEFB 0x00
-	DEFB 0x00
-	DEFB +0x00,0x00, +0x00, +0x00
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x00
-	DEFB +0x00
-	DEFB 0x00
-	DEFB 0x00
-	DEFB 0x00
-	DEFB 0x00
-	DEFB +0x00
-	DEFB 0x00
-	DEFB 0x00
-	DEFB +0x00
-	DEFB 0x00
-	DEFB 0x00
+	DEFB +$00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB +$00,$00, +$00, +$00
+	DEFB +$00
+	DEFB +$00
+	DEFB +$00
+	DEFB +$00
+	DEFB +$00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB +$00
+	DEFB $00
+	DEFB $00
+	DEFB +$00
+	DEFB $00
+	DEFB $00

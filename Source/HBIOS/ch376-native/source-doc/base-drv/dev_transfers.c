@@ -39,7 +39,7 @@ usb_error usbdev_blk_out_trnsfer(device_config *const dev, const uint8_t *const 
   result = usb_data_out_transfer(buffer, buffer_size, dev->address, endpoint);
 
   if (result == USB_ERR_STALL) {
-    usbtrn_clear_endpoint_halt(endpoint->number, dev->address, dev->max_packet_size);
+    usbtrn_clr_ep_halt(endpoint->number, dev->address, dev->max_packet_size);
     endpoint->toggle = 0;
     return USB_ERR_STALL;
   }
@@ -58,7 +58,7 @@ usb_error usbdev_bulk_in_transfer(device_config *const dev, uint8_t *const buffe
   result = usb_data_in_transfer_n(buffer, buffer_size, dev->address, endpoint);
 
   if (result == USB_ERR_STALL) {
-    usbtrn_clear_endpoint_halt(endpoint->number, dev->address, dev->max_packet_size);
+    usbtrn_clr_ep_halt(endpoint->number, dev->address, dev->max_packet_size);
     endpoint->toggle = 0;
     return USB_ERR_STALL;
   }
@@ -79,7 +79,7 @@ usb_error usbdev_dat_in_trnsfer(device_config *const    device,
   result = usb_data_in_transfer(buffer, buffer_size, device->address, endpoint);
 
   if (result == USB_ERR_STALL) {
-    usbtrn_clear_endpoint_halt(endpoint->number, device->address, device->max_packet_size);
+    usbtrn_clr_ep_halt(endpoint->number, device->address, device->max_packet_size);
     endpoint->toggle = 0;
     return USB_ERR_STALL;
   }
@@ -97,7 +97,7 @@ usb_error usbdev_dat_in_trnsfer_0(device_config *const device, uint8_t *const bu
   result = usb_data_in_transfer(buffer, buffer_size, device->address, endpoint);
 
   if (result == USB_ERR_STALL) {
-    usbtrn_clear_endpoint_halt(endpoint->number, device->address, device->max_packet_size);
+    usbtrn_clr_ep_halt(endpoint->number, device->address, device->max_packet_size);
     endpoint->toggle = 0;
     return USB_ERR_STALL;
   }
