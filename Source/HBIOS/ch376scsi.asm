@@ -119,6 +119,7 @@ CH_SCSI_READ:
 	POP	HL
 	LD	BC, 512
 	ADD	HL, BC
+	OR	A
 	RET
 ;
 ; ### Function 0x14 -- Disk Write (DIOWRITE)
@@ -157,7 +158,8 @@ CH_SCSI_WRITE:
 	POP	HL
 	LD	BC, 512
 	ADD	HL, BC
-	ret
+	OR	A
+	RET
 
 CH_SCSI_VERIFY:
 CH_SCSI_FORMAT:
