@@ -1180,8 +1180,9 @@ makdphwbw:	; determine appropriate dpb (WBW mode, unit number in A)
 	jr	makdph0		; jump ahead
 makdph00:
 	ld	e,MID_FD144	; assume floppy
-	cp	DIODEV_FD	; floppy?
-	jr	z,makdph0	; yes, jump ahead
+	;cp	DIODEV_FD	; floppy?
+	bit	7,c		; floppy?
+	jr	nz,makdph0	; yes, jump ahead
 	ld	e,MID_RF	; assume ram floppy
 	cp	DIODEV_RF	; ram floppy?
 	jr	z,makdph0	; yes, jump ahead
