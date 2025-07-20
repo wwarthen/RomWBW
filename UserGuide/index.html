@@ -535,7 +535,7 @@
 <p><strong>RomWBW User Guide</strong> \
 Version 3.6 \
 Wayne Warthen  (<a href="mailto:wwarthen@gmail.com">wwarthen@gmail.com</a>) \
-18 Jul 2025</p>
+20 Jul 2025</p>
 <h4 id="preface">Preface</h4>
 <p>This document is a general usage guide for the RomWBW software and is
 generally the best place to start with RomWBW.</p>
@@ -2583,7 +2583,47 @@ disk image.</p>
 that there are more disk (slice) images than the 6 that are included in
 the Combo Disk Images. These supplemental disk images are identified by
 looking for the files that start with hd1k_ or hd512_.</p>
-<h4 id="adding-slices-to-combo-image">Adding Slices to Combo Image</h4>
+<p>There are two approaches you can use to create custom hard disk images
+with multiple slices.</p>
+<ul>
+<li>
+<p>You can add/modify a configuration file and run the RomWBW build
+  process. This requires running the RomWBW build process, but will
+  cause your custom hard disk images to be created with every build.</p>
+</li>
+<li>
+<p>You can manually combine the individual images using <code>COPY</code> (Windows)
+  or <code>cat</code> (Linux/MacOS). This does not require running the RomWBW build
+  process, but will require manually recreating your custom hard disk
+  images when you upgrade to new releases of RomWBW.</p>
+</li>
+</ul>
+<p>The following sections provide more detail on each approach.</p>
+<h4 id="building-custom-hard-disk-images">Building Custom Hard Disk Images</h4>
+<p>The RomWBW build process builds the disk images defined in the
+<code>Source/Images</code> directory. The resultant images are placed in the
+<code>Binary</code> directory and are ready to copy to your media.</p>
+<p>These aggregate disk images are defined using .def files. You will see
+there is a combo.def file in the Images directory that defines the
+slices for the Combo disk image. You can create your own .def files as
+desired to automatically create custom aggregate disk images. When the
+RomWBW build process is run, it will automatically look for all .def
+files in the <code>Source/Images</code> directory and create aggregate disk images
+for each using the same base name as the .def file.</p>
+<p>There is an example of this in the <code>Images</code> directory called
+<code>all.def.example</code>. You can remove the “.example” suffix so that the file
+is called <code>all.def</code>. Now, if you run the RomWBW build process, it will
+automatically generate <code>hd512_all.img</code> and <code>hd1k_all.img</code> files in the
+<code>/Binary</code> directory. This example creates an aggregate disk image with
+all of the possible slices.</p>
+<p>You could also modify the contents of the Combo disk image by simply
+modifying the <code>combo.def</code> configuration file. However, it is recommended
+that you leave the Combo image alone and simply define your own.</p>
+<p>NOTE: All of the <code>hd1k_xxx.img</code> aggregate disk image files created in
+this way (including the Combo disk image) will already be prefixed with
+<code>hd1k_prefix.dat</code>, so you do not need to add the prefix file. They are
+ready to write to your media.</p>
+<h4 id="combining-hard-disk-images">Combining Hard Disk Images</h4>
 <p>You can add slices to the Combo Disk Images simply by tacking slices
 onto the end. For example, if you want to add a slice containing the MSX
 ROMs to the end of the combo image, you could use one of the following
