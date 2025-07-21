@@ -69,7 +69,7 @@ CH_UFI_SEEK:
 	EXX
 
 	BIT	7,D			; CHECK FOR LBA FLAG
-	CALL	Z,HB_CHS2LBA		; CLEAR MEANS CHS, CONVERT TO LBA
+	CALL	Z,CH_UFI_CHS2LBA	; CLEAR MEANS CHS, CONVERT TO LBA
 	RES	7,D			; CLEAR FLAG REGARDLESS (DOES NO HARM IF ALREADY LBA)
 
 	PUSH	DE
@@ -81,6 +81,44 @@ CH_UFI_SEEK:
 	POP	DE
 
 	XOR	A
+	RET
+;
+; Helper function to convert CHS address in DE:HL to LBA.
+; Currently assumes 1.44MB floppy media
+; LBA = (TRACK * #HDS * #SPT) + (HEAD * #SPT)  + SECTOR
+; For 1.44MB FLOPPY, #HDS = 2, #SPT = 18
+; LBA = (TRACK * 36) + (HEAD * 18) + SECTOR
+; Algorithm uses B=#HDS*SPT, C=#SPT.  For now, hard coded B=36, C=18
+; for 1.44MB media.  In future, BC could be passed in to accommodate
+; different media geometry.
+;
+CH_UFI_CHS2LBA:
+	LD	B,2 * 18		; #HDS * #SPT (SECTORS PER CYLINDER)
+	LD	C,18			; #SPT
+
+	; TRACK * #HDS * #SPT
+	PUSH	DE			; SAVE DE
+	LD	E,B			; SECTORS PER CYLINDER
+	LD	H,L			; LSB OF TRACK TO H, H IS NEVER USED BY FLOPPY CHS
+	CALL	MULT8			; HL = H * E; TRACK LBA
+	POP	DE			; RECOVER DE
+	PUSH	HL			; SAVE TRACK LBA
+	
+	; HEAD * #SPT
+	PUSH	DE			; SAVE DE
+	LD	E,C			; SECTORS PER TRACK
+	LD	H,D			; HEADS
+	CALL	MULT8			; HL = H * E; HEAD LBA
+	POP	DE			; RECOVER DE
+
+	; COMPUTE LBA (HL) = SECTOR (E) + HEAD LBA (HL) + TRACK LBA (TOS)
+	LD	A,E			; SECTOR
+	CALL	ADDHLA			; SECTOR * HEAD LBA
+	POP	DE			; RECOVER TRACK LBA
+	ADD	HL,DE			; ADD IN TRACK LBA
+
+	; FINISH UP
+	LD	DE,0			; DE IS ALWAYS ZERO
 	RET
 ;
 ; ### Function 0x13 -- Disk Read (DIOREAD)
@@ -233,7 +271,7 @@ CH_UFI_DEVICE:
 ; function will return an error status.
 ;
 CH_UFI_MEDIA:
-	LD	E, MID_MDRAM	;todo verify device still active?
+	LD	E, MID_FD144	;todo verify device still active?
 	XOR	A
 	RET
 
