@@ -2045,7 +2045,7 @@ this way (including the Combo disk image) will already be prefixed with
 `hd1k_prefix.dat`, so you do not need to add the prefix file.  They are 
 ready to write to your media.
 
-#### Combining Hard Disk Images
+#### Combining Hard Disk Images Manually
 
 You can add slices to the Combo Disk Images simply by tacking
 slices onto the end.  For example, if you want to add a slice
@@ -2064,7 +2064,7 @@ Linus/MaxOS:
 Note that you **must** be sure to use either the hd1k_ or hd512_
 prefixed files together.  You cannot mix them.
 
-#### Creating a new Custom Image
+#### Creating a new Custom Image Manually
 
 If you want to create a completely custom hard disk image that is not
 based on the existing combo image, you can generate a disk image entirely
