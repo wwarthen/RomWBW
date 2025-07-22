@@ -2277,8 +2277,8 @@ using values that correspond to musical notes.  The frequency will be
 applied when the next SNDPLAY function is invoked.  The returned Status 
 (A) is a standard HBIOS result code.
 
-The Note (HL) values correspond to eighth notes.  Increasing/decreasing
-the value by 8 results in a full note increment/decrement.  
+The Note (HL) values correspond to eighth tones.  Increasing/decreasing
+the value by 8 results in a full tone increment/decrement.  
 Increasing/decreasing the value by 48 results in a full octave 
 increment/decrement.  The value 0 corresponds to Bb/A# in octave 0.
 
@@ -2286,7 +2286,7 @@ The sound chip resolution and its oscillator limit the range and
 accuracy of the notes played. The typical range of the AY-3-8910 is six 
 octaves: Bb2/A#2 to A7, where each value is a unique tone.  Values above
 and below can still be played but each eighth tone step may not result
-in a note change.
+in a tone change.
 
 The following table shows the mapping of the Note (HL) value to the 
 corresponding octave and note.
@@ -2505,9 +2505,8 @@ If the Unit specified is not a hard disk the Media ID will be returned and
 the slice parameter ignored. If there is no media in device, or the slice
 number is invaid (Parameter Out Of Range) the function will return an error status.
 
-**NOTE:
-This function was placed in HBIOS to be shared between the diffeent CP/M
-varients supported by RomWBW. It is not strictly a BIOS function,
+**NOTE:** This function was placed in HBIOS to be shared between the different CP/M
+variants supported by RomWBW. It is not strictly a BIOS function,
 and may be moved in future.
 
 `\clearpage`{=latex}
