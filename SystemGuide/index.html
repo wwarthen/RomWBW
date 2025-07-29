@@ -659,7 +659,7 @@
 <p><strong>RomWBW System Guide</strong> \
 Version 3.6 \
 Wayne Warthen  (<a href="mailto:wwarthen@gmail.com">wwarthen@gmail.com</a>) \
-21 Jul 2025</p>
+29 Jul 2025</p>
 <h1 id="overview">Overview</h1>
 <p>The objective of RomWBW is to provide firmware, operating systems, and
 applications targeting the Z80 family of CPUs. The firmware, in the form
@@ -4777,15 +4777,15 @@ Sound Unit (C). The frequency is standardized and is specified by using
 values that correspond to musical notes. The frequency will be applied
 when the next SNDPLAY function is invoked. The returned Status (A) is a
 standard HBIOS result code.</p>
-<p>The Note (HL) values correspond to eighth notes. Increasing/decreasing
-the value by 8 results in a full note increment/decrement.<br />
+<p>The Note (HL) values correspond to eighth tones. Increasing/decreasing
+the value by 8 results in a full tone increment/decrement.<br />
 Increasing/decreasing the value by 48 results in a full octave
 increment/decrement. The value 0 corresponds to Bb/A# in octave 0.</p>
 <p>The sound chip resolution and its oscillator limit the range and
 accuracy of the notes played. The typical range of the AY-3-8910 is six
 octaves: Bb2/A#2 to A7, where each value is a unique tone. Values above
 and below can still be played but each eighth tone step may not result
-in a note change.</p>
+in a tone change.</p>
 <p>The following table shows the mapping of the Note (HL) value to the
 corresponding octave and note.</p>
 <table>
@@ -5304,8 +5304,8 @@ Disk Device (DIODEVICE)</a></p>
 and the slice parameter ignored. If there is no media in device, or the
 slice number is invaid (Parameter Out Of Range) the function will return
 an error status.</p>
-<p>**NOTE: This function was placed in HBIOS to be shared between the
-diffeent CP/M varients supported by RomWBW. It is not strictly a BIOS
+<p><strong>NOTE:</strong> This function was placed in HBIOS to be shared between the
+different CP/M variants supported by RomWBW. It is not strictly a BIOS
 function, and may be moved in future.</p>
 <h2 id="system-sys">System (SYS)</h2>
 <h3 id="function-0xf0-system-reset-sysreset">Function 0xF0 – System Reset (SYSRESET)</h3>
