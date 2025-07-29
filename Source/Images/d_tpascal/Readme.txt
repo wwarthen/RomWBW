@@ -13,3 +13,10 @@ Turbo_Pascal_Version_3.0_Reference_Manual_1986.pdf
 
 A good overview of using Turbo Pascal in CP/M is available at
 https://techtinkering.com/2013/03/05/turbo-pascal-a-great-choice-for-programming-under-cpm/
+
+== Sample Application ==
+
+This disk image includes a very small sample application called
+HELLO.PAS that can be used to demonstrate the build process.  Building
+a Turbo Pacal application is an interactive process that is documented
+in the Reference Manual.

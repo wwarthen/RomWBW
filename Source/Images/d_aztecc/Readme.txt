@@ -25,6 +25,12 @@ as-is.
 Bill Buckels
 bbuckels@mts.net
 
+== Sample Application ==
+
+This disk image includes a very small sample application called
+HELLO.C that can be used to demonstrate the build process.  The
+following commands will build this sample application.
+
 cz hello
 as hello
 ln hello.o -lc

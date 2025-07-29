@@ -59,8 +59,3 @@ Data    4000    4197    <  407>
 A>hello
 
 Hello World
-
-
-A> 
-BASCOM =HELLO /E
-L80 HELLO,HELLO/N/E

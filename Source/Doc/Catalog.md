@@ -769,7 +769,7 @@ distribution.  Some provide command line help themselves.  Some are fairly obvio
 
 ## OS General Files
 
-The following files are spcific files share across several OS's.  
+The following files are specific files shared across several OS's.  
 In general, there is no documentation for these applications included with 
 the RomWBW distribution.  Some provide command line help themselves.  
 Some are fairly obvious.
@@ -788,6 +788,7 @@ The following files are found in
 | `COPY.COM`     | Z                 | File copier with ZSDOS date stamping awareness        |
 | `COPY.CFG`     | Z                 | ZCNFG configuration file for COPY application         |
 | `EDITNDR.COM`  | Z3                | Edit named directory register in memory.              |
+| `HELLO.ASM`    | CPM22             | Sample assembly language source file                  |
 | `HP-RPN.HLP`   | Z3                | Help File for ZP.COM - HP RPN Calculators             |
 | `HP-ZP.HLP`    | Z3                | Help File for ZP.COM - HP ZP Calculators              |
 | `KERCPM22.COM` | CPM22             | Kermit communication application                      |

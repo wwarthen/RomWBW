@@ -1,3 +1,9 @@
+# This image definition generates a disk image containing
+# all of the available language disk slices.
+# Remove the ".example" suffix from this
+# file and to cause the RomWBW build process to
+# create the "demo_dev" disk image.
+
 # This is the programming language demo development Combo image for RomWBW
 
 cpm22

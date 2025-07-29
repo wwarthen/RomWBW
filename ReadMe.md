@@ -7,7 +7,7 @@
 **RomWBW Introduction** \
 Version 3.6 \
 Wayne Warthen  ([wwarthen@gmail.com](mailto:wwarthen@gmail.com)) \
-22 Jul 2025
+29 Jul 2025
 
 # Overview
 
@@ -354,6 +354,9 @@ let me know if I missed you!
 
 - Jörg Linder has contributed disassembled and nicely commented source
   for ZSDOS2 and the BPBIOS utilities.
+
+- Marshall Gates has contriubed sample program source files for all of
+  the language disk images.
 
 ## Related Projects
 

@@ -71,7 +71,7 @@ Some of the included software:
 * Support for other operating systems, p-System, FreeRTOS, and FUZIX.
 * Programming Tools (Z80ASM, Turbo Pascal, Forth, Cowgol)
 * C Compiler's including Aztec-C, and HI-TECH C
-* Microsoft Basic Compiler, and Microsoft Fortran
+* Microsoft Basic Compiler, Microsoft Fortran, and Microsoft COBOL
 * Some games such as Colossal Cave, Zork, etc
 * Wordstar Word processing software
 
@@ -338,6 +338,9 @@ please let me know if I missed you!
 
 * Jörg Linder has contributed disassembled and nicely commented
   source for ZSDOS2 and the BPBIOS utilities.
+
+* Marshall Gates has contriubed sample program source files for all
+  of the language disk images.
 
 `\clearpage`{=latex}
 

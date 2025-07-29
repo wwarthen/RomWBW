@@ -20,6 +20,7 @@ Version 3.6
 - WBW: Improved image creation process to allow user defined aggregates
 - WBW: Implemented config driven slice name and system image specification
 - D?N: Added native USB driver support (keyboard, floppy, mass storage)
+- MGG: Added sample program source files for all language disk iamges
 
 Version 3.5.1
 -------------
