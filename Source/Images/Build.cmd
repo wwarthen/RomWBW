@@ -33,3 +33,4 @@ for %%f in (*.def) do (
   PowerShell -ExecutionPolicy Unrestricted .\BuildDsk.ps1 hd512_%%~nf || exit /b
   PowerShell -ExecutionPolicy Unrestricted .\BuildDsk.ps1 hd1k_%%~nf || exit /b
 )
+
