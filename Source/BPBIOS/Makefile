@@ -13,7 +13,7 @@ OTHERS = zcpr33.rel bp*.prn bp*.rel \
 
 TOOLS = ../../Tools
 
-SUBDIRS = ZCPR33
+SUBDIRS = ZCPR33 UTIL
 include $(TOOLS)/Makefile.inc
 
 zcpr33.rel:

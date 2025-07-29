@@ -1,3 +1,5 @@
+@Label="QP/M 2.7"
+@SysImage="../QPM/qpm_wbw.sys"
 #
 # Add the ReadMe document
 #

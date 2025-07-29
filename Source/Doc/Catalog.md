@@ -70,11 +70,12 @@ disks should now be fully described.
   CP/M 3.  Applications have been patched according to the DRI
   patch list.
 
-- **ZPM3**: Digital Research CP/M-80 2.2 Distribution Files
+- **ZPM3**: ZPM3 Distribution Files
 
-  Documentation: *CPM Manual.pdf*
+  Documentation: *ZPM3.txt*
 
-  These files are from Simeon Cran's ZPM3 operating system distribution.
+  These files are from Simeon Cran's official distribution of ZPM3. 
+  All known patches have been applied.
 
 `\clearpage`{=latex}
 
@@ -573,7 +574,7 @@ This is a generic ZPM3 adaptation for RomWBW.
 
 The following files came from from Microcode Consulting. The official
 distribution files can be found on the Microcode Consulting website at
-[https://www.microcodeconsulting.com/z80/qpm.htm].
+<https://www.microcodeconsulting.com/z80/qpm.htm>.
 Also included in this image are debugz, and linkz frm the same company.
 
 This disk includes the standard DRI CP/M 2.2 files in addition to the
@@ -651,7 +652,7 @@ look a little strange depending on the terminal emulation you are using.
 
 User area 4 contains a full implementation of the CP/NET 1.2 client 
 provided by Doug Miller. Please refer to
-[https://github.com/durgadas311/cpnet-z80] for more information, 
+<https://github.com/durgadas311/cpnet-z80> for more information, 
 complete documentation and the latest source code.
 
 Please refer to the RomWBW User Guide for instructions on installing
@@ -666,12 +667,12 @@ The following are found in
 
 | **File**        | **CP/NET Version**  | **OS**          | **Hardware**            |
 |-----------------|---------------------|-----------------|-------------------------|
-| CPN12MT.LBR     | CP/NET 1.2          | CP/M 2.2        | RCBus w/ MT011          |
-| CPN3MT.LBR      | CP/NET 3            | CP/M 3          | RCBus w/ MT011          |
-| CPN12DUO.LBR    | CP/NET 1.2          | CP/M 2.2        | Duodyne w/ Disk I/O     |
-| CPN3DUO.LBR     | CP/NET 3            | CP/M 3          | Duodyne w/ Disk I/O     |
-| CPN12SER.LBR    | CP/NET 1.2          | CP/M 2.2        | RomWBW Serial Port      |
-| CPN3SER.LBR     | CP/NET 3            | CP/M 3          | RomWBW Serial Port      |
+| `CPN12MT.LBR`   | CP/NET 1.2          | CP/M 2.2        | RCBus w/ MT011          |
+| `CPN3MT.LBR`    | CP/NET 3            | CP/M 3          | RCBus w/ MT011          |
+| `CPN12DUO.LBR`  | CP/NET 1.2          | CP/M 2.2        | Duodyne w/ Disk I/O     |
+| `CPN3DUO.LBR`   | CP/NET 3            | CP/M 3          | Duodyne w/ Disk I/O     |
+| `CPN12SER.LBR`  | CP/NET 1.2          | CP/M 2.2        | RomWBW Serial Port      |
+| `CPN3SER.LBR`   | CP/NET 3            | CP/M 3          | RomWBW Serial Port      |
 
 ## General Purpose Applications
 
@@ -927,12 +928,12 @@ The following files are found in
 
 | **File**       | **Description**                                           |
 |----------------|-----------------------------------------------------------|
-| HDIR.COM       |                                                           |
-| R.COM          | transfer files between the simulator and host file system |
-| RSETSIMH.COM   | --                                                        |
-| TIMER.COM      | --                                                        |
-| URL.COM        | --                                                        |
-| W.COM          | transfer files between the simulator and host file system |
+| `HDIR.COM`     |                                                           |
+| `R.COM`        | transfer files between the simulator and host file system |
+| `RSETSIMH.COM` | --                                                        |
+| `TIMER.COM`    | --                                                        |
+| `URL.COM`      | --                                                        |
+| `W.COM`        | transfer files between the simulator and host file system |
 
 ## Testing Applications
 
@@ -979,7 +980,7 @@ The following files are found in
 | `ZEXDOC.COM`        | Z80 Instruction Set Exerciser                           |
 
 And The following CPU Tests - Which are probably originally from this source. 
-[https://github.com/raxoft/z80test]
+<https://github.com/raxoft/z80test>
 
 | **File**       | **Description**                                               |
 |----------------|---------------------------------------------------------------|
@@ -1002,7 +1003,7 @@ including MS-DOS, Apple II DOS 3.3 and PRoDOS, Commodore 64, Macintosh and
 Amiga. This disk contains the CP/M version of that compiler. A cross-compiler
 for MS-DOS or Windows XP is also available.
 
-For full documentation, see [https://www.aztecmuseum.ca] 
+For full documentation, see <https://www.aztecmuseum.ca> 
 The user manual is available in the Doc/Language directory
 Aztec_C_1.06_User_Manual_Mar84.pdf
 
@@ -1048,38 +1049,79 @@ NOTE : The above is incomplete
 
 The Cowgol 2.0 compiler and related tools.
 These files were provided by Ladislau Szilagyi and were sourced
-from his GitHub repository at [https://github.com/Laci1953/Cowgol_on_CP_M].
+from his GitHub repository at <https://github.com/Laci1953/Cowgol_on_CP_M>.
 
 The primary distribution site for Cowgol 2.0 is at
-[https://github.com/davidgiven/cowgol].
+<https://github.com/davidgiven/cowgol>.
 The user manual is available in the Doc/Language directory
-Cowgol Language.pdf
+Cowgol Language.pdf.
 
 The following files are found in
 
 *  /Source/Images/d_cowgol
 
-| **File**     | **Description**                            |
-|--------------|--------------------------------------------|
-| ADVENT.COW   | Adventure game program source              |
-| ADVENT.SUB   | Submit file to build ADVENT                |
-| ADVENT?.TXT  | Adventure game program resource            |
-| ADVMAIN.COW  | Adventure game program source              |
-| RAND.AS      | Assembler Library File                     |
-| COWBE.COM    |                                            |
-| COWFE.COM    | RomWBW specific (Memory Manage) version    |
-| COWLINK.COM  |                                            |
-| DYNMSORT.COW | demonstrates a sort algorithm              |
-| DYNMSORT.SUB | Submit file to build DYNMSORT              |
-| HEXDUMP.COW  | a simple hex dump utility, purely a Cowgol |
-| HEXDUMP.SUB  | Submit file to build HEXDUMP               |
-| HMERGES.C    | C Library File                             |
-| XRND.AS      | Assembler Library File                     |
-| -            | -                                          |
+| **File**       | **Description**                            |
+|----------------|--------------------------------------------|
+| `$EXEC.COM`    | HiTech C batch processor which launches the Cowgol toolchain executables |
+| `ADVENT.COW`   | Adventure game program source |
+| `ADVENT.SUB`   | SUBMIT file to build Adventure game |
+| `ADVENT?.TXT`  | Adventure game program resources |
+| `ADVMAIN.COW`  | Adventure game program source |
+| `ADVTRAV.COW`  | Adventure game component source |
+| `ARGV.COH`     | Cowgol include file providing command line argument processing |
+| `C.LIB`        | HI-TECH C runtime library |
+| `CGEN.COM`     | HiTech C compiler pass 2 |
+| `COMMFILE.COH` | Include file providing file I/O |
+| `COMMON.COH`   | Include file providing common functions |
+| `COWBE.COM`    | Cowgol back end which builds the cowgol object files (optimized) |
+| `COWFE.COM`    | Cowgol front end which parses the source file (optimized) |
+| `COWFIX.COM`   | Interface to Z80AS -- performs code optimizations |
+| `COWGOL.COH`   | Include file providing standard Cowgol functions |
+| `COWGOL.COM`   | Interprets the command line and generates $EXEC run requests (a variant of HiTech C.COM) |
+| `COWGOL.COO`   | Cowgol object file with ??? |
+| `COWGOL.LIB`   | ??? |
+| `COWGOLC.COH`  | Cowgol include file providing ??? |
+| `COWLINK.COM`  | Cowgol linker which binds all the cowgol object files and outputs a Z80 assembler file (optimized) |
+| `CPP.COM`      | HiTech C pre-processor, modified to accept // style comments |
+| `DYNMSORT.COW` | Sort algorithm sample program source |
+| `DYNMSORT.SUB` | SUBMIT file to build DYNMSORT sample application |
+| `FACT.COW`     | Factorial computation sample program source |
+| `FILE.COH`     | Include file providing CP/M file processing support |
+| `FILEIO.COH`   | Include file providing CP/M file processing support |
+| `HEXDUMP.COW`  | Hex file dump sample  source |
+| `HEXDUMP.SUB`  | SUBMIT file to build HEXDUMP sample program |
+| `LIBBASIC.COH` | Include file providing ??? |
+| `LIBBIOS.COH`  | Include file providing ??? |
+| `LIBCONIO.COH` | Include file providing console I/O |
+| `LIBFP.COH`    | Include file providing floating point support |
+| `LIBR.COM`     | HiTech object file librarian |
+| `LIBSTR.COH`   | Include file providing string functions |
+| `LINK.COM`     | HiTech linker which builds the final executable from object and library files |
+| `MALLOC.COH`   | Include file providing dynamic memory management functions |
+| `MERGES.C`     | Merge sort sample function C language source |
+| `MISC.COH`     | Include file providing miscellaneous functions |
+| `MISC.COO`     | Miscellaneous functions object file |
+| `MISC.COW`     | Miscellaneous functions source file |
+| `OPTIM.COM`    | HiTech C compiler optimizer |
+| `P1.COM`       | HiTech C compiler first pass |
+| `RAND.AS`      | Pseudo-random number generator source in assembly language |
+| `RANFILE.COH`  | Include file providing random file access functions |
+| `RANFILE.COO`  | Random file access functions object file |
+| `RANFILE.COW`  | Random file access functions source file |
+| `README.TXT`   | Cowgol disk image release notes |
+| `SEQFILE.COH`  | Include file providing sequential file access functions |
+| `SEQFILE.COO`  | Sequential file access functions object file |
+| `SEQFILE.COW`  | Sequential file access functions source file |
+| `STDCOW.COH`   | Include file providing standard library functions |
+| `STRING.COH`   | Include file providing string functions |
+| `STRING.COO`   | String functions object file |
+| `STRING.COW`   | String functions source file |
+| `STRINGS.COH`  | Include file implementing string functions |
+| `TESTAS.COW`   | Assembly language interface sample program source |
+| `TESTAS.SUB`   | SUBMIT file to build TESTAS sample program |
+| `Z80AS.COM`    | Z80 assembler which assembles the output of COWFIX and other Z80 source files (see <https://github.com/Laci1953/Z80AS>) |
 
-NOTE : The above is incomplete
-
-## Microsoft Fortran 80 (Fortran)
+## Microsoft Fortran 80
 
 | Floppy Disk Image: **fd_fortran.img**
 | Hard Disk Image: **hd_fortran.img**
@@ -1114,12 +1156,12 @@ Zork 1 through 3, Planetfall and Hitchhiker's Guide to the Galaxy.
 Nemesis and Dungeon Master is a Rogue-like game released in 1981. It is playable
 on a text terminal using ASCII graphics to represent the dungeon. Only a few
 thousand copies of the game were ever made, making it very rare. See
-[http://crpgaddict.blogspot.com/2019/03/game-322-nemesis-1981.html]
+<http://crpgaddict.blogspot.com/2019/03/game-322-nemesis-1981.html>
 
 Colossal Cave Adventure is a CP/M port of the 1976 classic game originally
 written by Will Crowther for the PDP-10 mainframe. See
-[https://en.wikipedia.org/wiki/Colossal_Cave_Adventure] and
-[https://if50.substack.com/p/1976-adventure]
+<https://en.wikipedia.org/wiki/Colossal_Cave_Adventure> and
+<https://if50.substack.com/p/1976-adventure>
 
 The following files are found in
 
@@ -1136,31 +1178,195 @@ NOTE : The above is incomplete
 | Floppy Disk Image: **fd_hitechc.img**
 | Hard Disk Image: **hd_hitechc.img**
 
-The HI-TECH C Compiler  is  a  set  of  software  which
+The HI-TECH C Compiler is a set of software which
 translates  programs written in the C language to executable
 machine code programs. Versions are available which  compile
 programs  for  operation under the host operating system, or
 which produce programs for  execution  in  embedded  systems
 without an operating system.
 
-This is the Mar 21, 2023 update 17 released by Tony Nicholson who currently
-maintains HI-TECH C at [https://github.com/agn453/HI-TECH-Z80-C]
+This is the Jun 2, 2025 update 19 released by Tony Nicholson who
+currently maintains HI-TECH C at
+<https://github.com/agn453/HI-TECH-Z80-C>.
 
 The manual is available in the Doc/Language directory,
-HI-TECH Z80 C Compiler Manual.txt
+HI-TECH Z80 C Compiler Manual.txt.  A textual description of all error
+and warning messages is found in the same directory, HI-TECH Z80 C
+Compiler Messages.txt. 
 
 A good blog post about the HI-TECH C Compiler is available at
-[https://techtinkering.com/2008/10/22/installing-the-hi-tech-z80-c-compiler-for-cpm]
+<https://techtinkering.com/2008/10/22/installing-the-hi-tech-z80-c-compiler-for-cpm>.
+
+User area 1 contains another complete copy of the HI-TECH C Compiler.
+It is identical to the copy in user area 0 except for the following files
+which were enhanced by Ladislau Szilagyi from his GitHub Repository at
+<https://github.com/Laci1953/HiTech-C-compiler-enhanced>.  The files
+take advantage of additional banked memory using the RomWBW HBIOS API.
+As such, they require RomWBW to operate.  They should be compatible with
+all CP/M and compatible operations systems provided in RomWBW.
+
+The enhanced files are:
+
+- `CGEN.COM`
+- `CPP.COM`
+- `OPTIM.COM`
+- `P1.COM`
+- `ZAS.COM`
+
+A thread discussing this enhanced version of HI-TECH C is found at
+<https://groups.google.com/g/rc2014-z80/c/sBCCIpOnnGg>.
 
 The following files are found in
 
 *  /Source/Images/d_hitechc
 
-| **File** | **Description** |
-|----------|-----------------|
-| --       |       --        |
+| **File**       | **Description**                            |
+|----------------|--------------------------------------------|
+| `$EXEC.COM`    | Compiler execution manager |
+| `ASSERT.H`     | Language include file |
+| `C.COM`        | Compiler invocation application (updated) |
+| `C309.COM`     | Compiler invocation application (original) |
+| `CGEN.COM`     | The code generator - produces assembler code |
+| `CONIO.H`      | Language include file (see manual) |
+| `CPM.H`        | Language include file (see manual) |
+| `CPP.COM`      | Pre-processor - handles macros and conditional compilation |
+| `CREF.COM`     | Produces cross-reference listings of C or assembler programs |
+| `CRTCPM.OBJ`   | Startup Object File (standard) |
+| `CTYPE.H`      | Language include file (see manual) |
+| `DEBUG.COM`    | C Debugger (Z80) |
+| `DRTCPM.OBJ`   | Startup Object File (???) |
+| `EXEC.H`       | Language include file (see manual) |
+| `FLOAT.H`      | Language include file (see manual) |
+| `HITECH.H`     | Language include file (see manual) |
+| `LIBC.LIB`     | Standard C Runtime Library |
+| `LIBF.LIB`     | Floating Point Library |
+| `LIBOVR.LIB`   | Overlay Library |
+| `LIBR.COM`     | Creates and maintains libraries of object modules |
+| `LIMITS.H`     | Language include file (see manual) |
+| `LINQ.COM`     | Link editor - links object files with libraries |
+| `MATH.H`       | Language include file (see manual) |
+| `NRTCPM.OBJ`   | Startup Object File (minimal getargs) |
+| `OBJTOHEX.COM` | Converts the output of LINK into the appropriate executable file format (e.g., .EXE or .PRG or .HEX) |
+| `OPTIM.COM`    | Code improver - may optionally be omitted, reducing compilation  time at a cost of larger, slower code produced |
+| `OPTIONS`      | Compiler usage help file |
+| `OVERLAY.H`    | Language include file |
+| `P1.COM`       | The syntax and  semantic analysis pass - writes intermediate code for the code generator to read |
+| `RRTCPM.OBJ`   | Startup Object File (self relocating) |
+| `SETJMP.H`     | Language include file (see manual) |
+| `SIGNAL.H`     | Language include file (see manual) |
+| `STAT.H`       | Language include file (see manual) |
+| `STDARG.H`     | Language include file (see manual) |
+| `STDDEF.H`     | Language include file (see manual) |
+| `STDINT.H`     | Language include file (see manual) |
+| `STDIO.H`      | Language include file (see manual) |
+| `STDLIB.H`     | Language include file (see manual) |
+| `STRING.H`     | Language include file (see manual) |
+| `SYMTOAS.COM`  | Convert symbol file to assembler |
+| `SYS.H`        | Language include file (see manual) |
+| `TIME.H`       | Language include file (see manual) |
+| `UNIXIO.H`     | Language include file (see manual) |
+| `ZAS.COM`      | The assembler - in fact a general purpose macro  assembler |
 
-NOTE : The above is incomplete
+## Infocom (Text Adventure Games)
+
+| Hard Disk Image: **hd_infocom.img**
+
+A collection of all Official releases of the interactive fiction games
+produced by Infocom in the 1980's
+
+The following files are found in
+
+*  /Source/Images/d_infocom
+
+| **File**     | **Description**                                    |
+|--------------|----------------------------------------------------|
+| amfv.z4      | A Mind Forever Voyaging (*)                        |
+| arthur.z6    | Arthur - The Quest for Excalibur (*)               |
+| ballyhoo.z3  | Ballyhoo                                           |
+| beyond.z5    | Beyond Zork (*)                                    |
+| border.z5    | Border Zone (*)                                    |
+| bureau.z4    | Bureaucracy (*)                                    |
+| cutthr.z3    | Cutthroats                                         |
+| deadline.z3  | Deadline                                           |
+| enchant.z3   | Enchanter                                          |
+| h2g2.z3      | The Hitchhiker's Guide to the Galaxy               |
+| hollyw.z3    | Hollywood Hijinx                                   |
+| infidel.z3   | Infidel                                            |
+| journey.z6   | Journey (*)                                        |
+| leather.z3   | Leather Goddesses of Phobos                        |
+| lurking.z3   | The Lurking Horror                                 |
+| moonmist.z3  | Moonmist                                           |
+| nordbert.z4  | Nord and Bert Couldn't Make Head or Tail of It (*) |
+| planet.z3    | Planetfall                                         |
+| plunder.z3   | Plundered Hearts                                   |
+| readme.txt   | Documentation about the Infocom games              |
+| seastalk.z3  | Seastalker                                         |
+| sherlock.z5  | Sherlock (*)                                       |
+| shogun.z6    | Shogun (*)                                         |
+| sorcerer.z3  | Sorcerer                                           |
+| spellb.z3    | Spellbreaker                                       |
+| starcros.z3  | Starcross                                          |
+| stationf.z3  | Stationfall                                        |
+| suspect.z3   | Suspect                                            |
+| suspend.z3   | Suspended                                          |
+| trinity.z4   | Trinity (*)                                        |
+| wishb.z3     | Wishbringer                                        |
+| witness.z3   | Witness                                            |
+| zork0.z6     | Zork Zero (*)                                      |
+| zork1.z3     | Zork I                                             |
+| zork2.z3     | Zork II                                            |
+| zork3.z3     | Zork III                                           |
+| zorknote.txt | Documentation about terminal config of COM files   |
+
+The above games have been curated from here <https://eblong.com/infocom/>.
+Full game documentation can be found here <https://infodoc.plover.net/>
+
+The game files are a virtual machine code commonly known as Z-Machine, they
+are portable and will run on any machine that has a Z-Machine interpreter.
+
+* All the Z3 games come with the official CP/M interpreter (the `COM` file) 
+  version C last updated by Inforcom on 5th Feb 1985. You can simply run the
+  game by running it from the `COM` program  
+* All latter games Z4, Z5,.. and above, (Marked as * in the listing above)
+  are more sophisticated and require a better interpreter. i.e. VEZZA. 
+
+#### VEZZA (User Area 15)
+
+Vezza is a modern Infocom/Inform/Z-machine text adventure interpreter for 8 bit
+z80 based computers.  What makes it modern is that it is written in hand-crafted
+z80 assembler for maximum speed, and can load not only the classics such as
+Zork 1,2 and 3 but also the later games.
+
+It can run Z1 up to Z8 inform format interactive fiction game files. To run 
+a game with Vezza just type Vezza followed by the game you want to run. e.g.
+
+`VEZZA ZORK0.Z6`
+
+**Note:** One of the bigger constraints is available RAM. An OS such as ZPM
+since it uses banked RAM does have a good amount of available RAM and was 
+used to test these games work.
+
+This tool is free but the developer accepts your support by letting
+you pay what you think is fair for the tool. If you find this useful
+consider donating at: 
+
+<https://sijnstra.itch.io/vezza>
+
+You should (test and) choose one that works on you configuration,
+and best to copy and rename it as vezza.com
+
+| **File**     | **Description**                                                   |
+|--------------|-------------------------------------------------------------------|
+| vezza-B.com  | 80x24, VT52 + Banked CP/M 3                                       |
+| vezza-FG.com | 80x25, VT100/ANSI (16 color) + CP/M 3                             |
+| vezza-C2.com | 80x24, VT100 - CP/M 2.2 large memory, no timed input              |
+| vezza-CC.com | 80x24, VT100 (256 colour) - CP/M 2.2 large memory, no timed input |
+| vezza-AV.com | 80x24, VT100 (16 colour) - CP/M 2.2 high RAM.                     |
+| vezza-AX.com | 80x25, VT100/ANSI (16 colour) - CP/M 2.2 high RAM.                |
+| vezza-RW.com | 80x24, VT100 - CP/M 2.2                                           |
+
+The above is a subset of available builds. The full repository including 
+documentation is available at <https://gitlab.com/sijnstra1/vezza/>
 
 ## MSX ROMS
 
@@ -1170,7 +1376,7 @@ NOTE : The above is incomplete
 The collection of MSX ROMs (2 disks) as provided by Les Bird.  
 These ROMs are "run" by using the
 appropriate variant of Les' MSX8 ROM loader.  You can download the
-loader binaries from [https://github.com/lesbird/MSX8].  You will need
+loader binaries from <https://github.com/lesbird/MSX8>.  You will need
 appropriate hardware to run the loader.
 
 Please review the file ROMLIST.TXT for information on the current
@@ -1206,25 +1412,25 @@ The manual can be found in the Docs/Language directory,
 Turbo_Pascal_Version_3.0_Reference_Manual_1986.pdf
 
 A good overview of using Turbo Pascal in CP/M is available at
-[https://techtinkering.com/2013/03/05/turbo-pascal-a-great-choice-for-programming-under-cpm]
+<https://techtinkering.com/2013/03/05/turbo-pascal-a-great-choice-for-programming-under-cpm>
 
 The following files are found in
 
 *  /Source/Images/d_tpascal
 
-| **File**     | **Description**                |
-|--------------|--------------------------------|
-| ART.TXT      | Part of the Example program    |
-| SA.PAS       | Example Program                |
-| TINST.COM    | Installation and Configuration |
-| TINST.DTA    | Part of TINST                  |
-| TINST.MSG    | Part of TINST                  |
-| TURBO.COM    | The main Turbo Pascal program  |
-| TURBO.MSG    | Part of TURBO tascal           |
-| TURBO.OVR    | Part of TURBO tascal           |
-| TURBOMSG.OVR | Part of TURBO tascal           |
+| **File**       | **Description**                |
+|----------------|--------------------------------|
+| `ART.TXT`      | Part of the Example program    |
+| `SA.PAS`       | Example Program                |
+| `TINST.COM`    | Installation and Configuration |
+| `TINST.DTA`    | Part of TINST                  |
+| `TINST.MSG`    | Part of TINST                  |
+| `TURBO.COM`    | The main Turbo Pascal program  |
+| `TURBO.MSG`    | Part of TURBO Pascal           |
+| `TURBO.OVR`    | Part of TURBO Pascal           |
+| `TURBOMSG.OVR` | Part of TURBO Pascal           |
 
-## WordStar 4
+## WordStar 4 (Word processor)
 
 | Floppy Disk Image: **fd_ws4.img**
 | Hard Disk Image: **hd_ws4.img**
@@ -1358,10 +1564,10 @@ The manual(s) are available in the Doc/Language directory,
 * Z80DIS User Manual (1985).pdf
 
 A run through of using the assembler is available at
-[https://8bitlabs.ca/Posts/2023/05/20/learning-z80-asm]
+<https://8bitlabs.ca/Posts/2023/05/20/learning-z80-asm>
 
 And another shorter, but shows linker usage guide
-[https://pollmyfinger.wordpress.com/2022/01/10/modular-retro-z80-assembly-language-programming-using-slr-systems-z80asm-and-srlnk/]
+<https://pollmyfinger.wordpress.com/2022/01/10/modular-retro-z80-assembly-language-programming-using-slr-systems-z80asm-and-srlnk/>
 
 The following files are found in
 
@@ -1369,53 +1575,53 @@ The following files are found in
 
 User Area 0 - Assembler
 
-| **File**    | **Description**                             |
-|-------------|---------------------------------------------|
-| 180FIG.COM  | Configuration utility for SLR180.COM        |
-| 8080.MAC    | ?                                           |
-| CONFIG.COM  | Configuration utility for Z80ASM.COM        |
-| CONFIGP.COM | Configuration utility for Z80ASMP.COM       |
-| DUMP.*      | Sample Program                              |
-| MAKESYM.COM | Symbol File .SYM file generation            |
-| MAKESYM.DOC | Documentation for MAKESYM.COM               |
-| SLR180.COM  | HD64180 (Z180) Relocating Macro Assembler   |
-| SLR180.DOC  | Release Notes for SLR180.COM                |
-| SLRMAC.COM  | 8080 Relocating Macro Assembler             |
-| SYNTAX.HLP  | Documentation basic usage for all SLR Tools |
-| SYNTAX.TXT  | Documentation basic usage for all SLR Tools |
-| TEST.*      | Sample Program                              |
-| Z80ASM.COM  | Z80 Relocating Macro Assembler              |
-| Z80ASMP.COM | Z80 Relocating Macro Assembler (PLUS)       |
-| Z80ASM.DOC  | Release Notes for Z80ASM.COM                |
+| **File**      | **Description**                             |
+|---------------|---------------------------------------------|
+| `180FIG.COM`  | Configuration utility for SLR180.COM        |
+| `8080.MAC`    | ?                                           |
+| `CONFIG.COM`  | Configuration utility for Z80ASM.COM        |
+| `CONFIGP.COM` | Configuration utility for Z80ASMP.COM       |
+| `DUMP.*`      | Sample Program                              |
+| `MAKESYM.COM` | Symbol File .SYM file generation            |
+| `MAKESYM.DOC` | Documentation for MAKESYM.COM               |
+| `SLR180.COM`  | HD64180 (Z180) Relocating Macro Assembler   |
+| `SLR180.DOC`  | Release Notes for SLR180.COM                |
+| `SLRMAC.COM`  | 8080 Relocating Macro Assembler             |
+| `SYNTAX.HLP`  | Documentation basic usage for all SLR Tools |
+| `SYNTAX.TXT`  | Documentation basic usage for all SLR Tools |
+| `TEST.\*`     | Sample Program                              |
+| `Z80ASM.COM`  | Z80 Relocating Macro Assembler              |
+| `Z80ASMP.COM` | Z80 Relocating Macro Assembler (PLUS)       |
+| `Z80ASM.DOC`  | Release Notes for Z80ASM.COM                |
 
 User Area 1 - Linker and Library Management
 
-| **File**     | **Description**                               |
-|--------------|-----------------------------------------------|
-| LNKFIG.COM   | Configuration utility for SLRNK.COM           |
-| NZLNKFIX.ZEX | ?                                             |
-| SLRIB.COM    | SuperLibrarian, library manager               |
-| SLRNK.COM    | SuperLinker, the main linker tool             |
-| SLRNKP.COM   | SuperLinker (PLUS)                            |
-| SLRNK.DOC    | Release Notes for SLRNK.COM                   |
-| SLRNKFIX.ZEX | ?                                             |
-| SYNTAX.HLP   | Documentation basic usage for all SLR Tools   |
-| SYNTAX.TXT   | Documentation basic usage for all SLR Tools   |
-| SYSSLR.REL   | SYSLIB (older) Library compatible with SLR    |
-| VSLR.REL     | VLIB (older) Library compatible with SLR      |
-| Z3SLR.REL    | Z3LIB (older) Library compatible with SLR     |
+| **File**       | **Description**                               |
+|----------------|-----------------------------------------------|
+| `LNKFIG.COM`   | Configuration utility for SLRNK.COM           |
+| `NZLNKFIX.ZEX` | ?                                             |
+| `SLRIB.COM`    | SuperLibrarian, library manager               |
+| `SLRNK.COM`    | SuperLinker, the main linker tool             |
+| `SLRNKP.COM`   | SuperLinker (PLUS)                            |
+| `SLRNK.DOC`    | Release Notes for SLRNK.COM                   |
+| `SLRNKFIX.ZEX` | ?                                             |
+| `SYNTAX.HLP`   | Documentation basic usage for all SLR Tools   |
+| `SYNTAX.TXT`   | Documentation basic usage for all SLR Tools   |
+| `SYSSLR.REL`   | SYSLIB (older) Library compatible with SLR    |
+| `VSLR.REL`     | VLIB (older) Library compatible with SLR      |
+| `Z3SLR.REL`    | Z3LIB (older) Library compatible with SLR     |
 
 User Area 2 - Disassembler
 
-| **File**     | **Description**                  |
-|--------------|----------------------------------|
-| README.22    | Documentation for Z80DIS         |
-| Z80DIS.000   | Overlay File for Z80DIS.COM      |
-| Z80DIS.001   | Overlay File for Z80DIS.COM      |
-| Z80DIS.002   | Overlay File for Z80DIS.COM      |
-| Z80DIS.COM   | Z80DIS Disassembler main program |
-| Z80DIS22.DOC | Main Documentation for Z80DIS    |
-| ZDINSTAL.COM | Instal and Config for Z80DIS.COM |
-| ZDINSTAL.DTA | Overlay file for ZDINSTAL.COM    |
-| ZDINSTAL.MSG | Overlay file for ZDINSTAL.COM    |
+| **File**       | **Description**                  |
+|----------------|----------------------------------|
+| `README.22`    | Documentation for Z80DIS         |
+| `Z80DIS.000`   | Overlay File for Z80DIS.COM      |
+| `Z80DIS.001`   | Overlay File for Z80DIS.COM      |
+| `Z80DIS.002`   | Overlay File for Z80DIS.COM      |
+| `Z80DIS.COM`   | Z80DIS Disassembler main program |
+| `Z80DIS22.DOC` | Main Documentation for Z80DIS    |
+| `ZDINSTAL.COM` | Instal and Config for Z80DIS.COM |
+| `ZDINSTAL.DTA` | Overlay file for ZDINSTAL.COM    |
+| `ZDINSTAL.MSG` | Overlay file for ZDINSTAL.COM    |
 

@@ -1,7 +1,25 @@
 Version 3.6
 -----------
+- RDG: Added VDA driver for Xosera FPGA-based VDC
 - MGG: Added COBOL language disk image
 - WDC: Added config options to PCF driver
+- WBW: Enabled dynamic CPU speed update on LCD screen
+- WBW: Improve LPT driver boot messaging when not detected (per Robb Bates)
+- WBW: Correct DS1307 boot date/time display (per Tadeusz Pycio)
+- WBW: Add -DELAY option to TUNE app (per Robb Bates)
+- RDG: Add online documentation site
+- WBW: Added enhanced Hi-Tech C Compiler files from Ladislau Szilagyi
+- WBW: Added boundary check to ram/rom disk driver
+- WBW: Per Peter Onion, switch KERMIT default file xfer mode to binary
+- J?L: Source for ZSDOS2 and BPBIOS Utilities (from disassembly)
+- WBW: Support ROM-based font storage
+- MAP: New Slice Inventory Rom App "S" display bootable slices, during boot
+- MAP: Device Inventory moved from HBIOS to Rom App, saving >1k space in HBIOS
+- MAP: Added disk image for all Infocom text adventure Games
+- M?R: Fixed formatting issue with SLABEL where Slice # < 10
+- WBW: Improved image creation process to allow user defined aggregates
+- WBW: Implemented config driven slice name and system image specification
+- D?N: Added native USB driver support (keyboard, floppy, mass storage)
 
 Version 3.5.1
 -------------

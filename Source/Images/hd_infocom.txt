@@ -1,0 +1,5 @@
+@Label="Infocom Games"
+#
+# Add the ReadMe document
+#
+d_infocom/Readme.txt 0:

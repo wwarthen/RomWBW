@@ -1,12 +1,5 @@
 Font files for ROMWBW.
 
-8x8: 8x8 cell, mostly IBM CGA, first 16 differ, thin font
-8x11: 8x11 cell, possibly VT-100?
-8x16: 8x16 cell, IBM MDA
-CGA: 8x16 cell, IBM CGA, normal (thick) CGA font, rows 8-15 are unused padding
-
-There are multiple fonts associated with ROMWBW supported hardware:
-
 	Board		Driver		Chip
 	--------	--------	--------
 	ECB-SCG		tms.asm		9918
@@ -15,23 +8,36 @@ There are multiple fonts associated with ROMWBW supported hardware:
 	ECB-VGA3	vga.asm		6445
 	MBC-VDC		cvdu.asm	8568
 	MBC-VDP		tms.asm		9938/9958
+	RCBUS-VRC	vrc.asm		PLD
+	RCBUS-TMS	tms.asm		99x8
 
-Name            Font    Storage	    Size    Board & Display Mode
---------------------------------------------------------------------------------------------
-font8x8u.bin    6x8     8x8         2048    ECB-SCG, ECB-VGA3 (80x60), MBC-VDP
-font8x11u.bin   8x11    8x11        2816    ECB-VGA3 (80x43)
-font8x16u.bin   8x14    8x16        4096    ECB-CVDU (80x25), ECB-VGA3 (80x24, 80x25, 80x30), MBC-VDC
-fontcgau.bin    8x8     8x16        4096    ECB-CVDU (80x25), MBC-VDC
+Name		Glyph	Cell	Size	Comp	Board & Display Mode
+------------------------------------------------------------------------------------------------
+font6x8		6x8	8x8	2048	1094	ECB-SCG, MBC-VDP
+font8x8		6x8	8x8	2048	1259	ECB-CVDU (CGA), MBC-VDC (CGA), ECB-VGA3 (80x60)
+font8x11	8x11	8x11	2816	1252	ECB-VGA3 (80x43)
+font8x16	8x14	8x16	4096	1466	ECB-CVDU (EGA), MBC-VDC (EGA), ECB-VGA3 (80x24, 80x25, 80x30)
+				-----	-----
+				11008	5071
 
 Notes:
 
-- The CGA font is roughly equivalent to the 8x8 font, but padded out to 8x16.  Scan lines
-  8-15 are unused.  The CVDU driver (8563 chip) always uses fonts defined in an 8x16 cell.
-  When the CVDU is configured for use with a CGA monitor, an 8x8 character cell is used,
-  but the font definition must still be 8x16.  The CGA font is used for this.
+- Compression of the 6x8 font is disabled because the TMS driver must
+  reload the font when CP/M is warm booted.  There is no memory area
+  where the decompression can safely be done at this point.
+
+- The 856x GDPs always use 16 bytes per font character.  The CVDU
+  driver inserts dummy bytes as needed to utilize the 8x8 font when
+  selected.
+
+- The 8x11 font is not typically used and only supported by one
+  board.  It is probably not worth the space of storing it and will
+  probably be eliminated in the future.
+
+- All fonts are in code page 437 except 8x11.
 
 For inclusion in HBIOS the .bin format files must be converted to assembler .asm format.
-This is acheived using the fonttool utility and is completed automatically as part of the build process.
+This is achieved using the fonttool utility and is completed automatically as part of the build process.
 i.e. fonts files are converted to .asm format and then copied to the HBIOS directory. 
 
 To replace a font, simply copy it to the Fonts directory using the same naming convention above, 
@@ -61,7 +67,3 @@ Implementation example (older version):
  https://cpcrulez.fr/applications_tools_cruncher_LZSA2_Z80.htm
 x86 lzsa compressor application:
  http://www.pouet.net/prod.php?which=81573
-
-
-
-

@@ -1,0 +1,25 @@
+# This image definition shows how to generate
+# an disk image containing all of the available
+# slices.
+
+aztecc
+bascomp
+blank
+cobol
+cowgol
+cpm22
+cpm3
+fortran
+games
+hitechc
+infocom
+msxroms1
+msxroms2
+nzcom
+qpm
+tpascal
+ws4
+z3plus
+z80asm
+zpm3
+zsdos

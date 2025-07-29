@@ -1,0 +1,483 @@
+	TITLE	"Swap drives under B/P Bios"
+;************************************************************************
+;*  B P S W A P								*
+;* Swap two drive letters in a running B/P Bios system			*
+;*  by Harold F. Bower and Cameron W. Cotrill				*
+;*----------------------------------------------------------------------*
+;* Disassembly:	jxl					Dec 2024	*
+;*		public release 1.0			Apr 2025	*
+;*		see remarks at the end					*
+;*----------------------------------------------------------------------*
+;* LINK with Version 4 libraries: VLIB, Z3LIB, SYSLIB			*
+;*									*
+;* A>Z80ASM BPSWAP/RS							*
+;* A>SLRNK BPSWAP/N,/A:100,/D:0854,BPSWAP,VLIBS/S,Z3LIBS/S,SYSLIBS/S,/E	*
+;************************************************************************
+
+VER	EQU	10
+REV	EQU	' '
+
+DATE	MACRO
+	DEFB	'31 Aug 92'
+	ENDM
+
+
+CTRLC	EQU	03H		; Control-C character
+BEL	EQU	07H		; Bell character
+TAB	EQU	09H		; Tab character
+LF	EQU	0AH		; Line Feed character
+CR	EQU	0DH		; Carriage Return character
+
+CPMBIOS	EQU	0		; CP/M BIOS warm boot (JP)
+CPMBDOS	EQU	5		; CP/M BDOS entry point (JP)
+CPMFCB	EQU	5CH		; CP/M standard FCB #1 (+1 filename, +9 filetype)
+CPMDMA	EQU	80H		; CP/M standard DMA buffer
+
+
+;  From VLIB Get..
+	EXTRN	VPRINT, Z3VINIT
+
+;  From Z3LIB Get..
+	EXTRN	GETNAME, PRTNAME, WHRENV
+
+;  From SYSLIB Get..
+	EXTRN	CRLF, CAPINE, COUT
+
+
+;::::: PROGRAM START
+
+	ORG	100H
+	CSEG
+
+
+BPSWAP: JP	START		; bypass header
+	DEFB	'Z3ENV'		; this is a ZCPR3 utility
+	DEFB	1		; show external environment
+
+ENVADR: DEFW	0		; addr of Z3 environment
+
+START:	LD	HL,(CPMBDOS)	; ##### BUG: should be CPMBDOS+1 ?
+	CALL	WHRENV		; find Z3 Environment Descriptor
+	LD	(ENVADR),HL	; store addr
+	CALL	Z3VINIT		; ..and init for Z3LIB routines
+	CALL	GETNAME		; get actual program name
+	CALL	GQFLAG
+	AND	A		; running in quiet mode ?
+	JR	NZ,START0	; ..if so, skip over
+	CALL	VPRINT
+	DEFB	1,'B/P Drive Swap',2,' V',VER/10+'0','.',VER MOD 10 + '0',', '
+	DATE
+	DEFB	CR,LF
+	DEFB	0
+
+START0:	LD	(STACK),SP
+	LD	SP,STACK
+
+	; get first token from command line (in FCB #1)
+	LD	A,(CPMFCB+1)	; get char
+	CP	'/'		; is this a help request ?
+	JP	Z,HELP		; ..if so, show help screen
+	LD	HL,(CPMBIOS+1)	; get warm boot addr (BIOS fn #1)
+	LD	L,30*3		; adjust ptr to fn #30
+	LD	A,(HL)		; check byte at ptr location
+	CP	0C3H		; is it opcode 0xC3 (JP) ?
+	JR	NZ,E$BPBIO	; ..if not, jump error and exit
+	CALL	JUMPHL		;   else, "call" B/P Bios fn #30 (RETBIO)
+	LD	(BPBASE),BC	; store B/P Bios base addr
+	LD	HL,-6		; move ptr 6 bytes backward
+	ADD	HL,DE		;   (signature string)
+	LD	A,(HL)		; get byte
+	CP	'B'		; is it 'B' ?
+	JR	NZ,E$BPBIO	; ..if not, error and exit
+	INC	HL		; ptr fwd
+	LD	A,(HL)		; get byte
+	CP	'/'		; is it '/' ?
+	JR	NZ,E$BPBIO	; ..if not, error and exit
+	INC	HL		; ptr fwd
+	LD	A,(HL)		; get byte
+	CP	'P'		; is it 'P' ?
+	JR	Z,EVALCMD	; ..if so, jump to continue
+				;   else, fall through (error and exit)
+
+E$BPBIO: CALL	VPRINT
+	DEFB	CR,LF,BEL,'+++ Not B/P Bios ... aborting +++',CR,LF
+	DEFB	0
+	JP	EXIT
+
+
+	; evaluate command line
+EVALCMD: LD	HL,CPMDMA	; ptr to standard DMA buffer (holds command line)
+	LD	A,(HL)		; get length of first token
+	INC	HL		; +1
+	CALL	ADDHLA		; move ptr fwd
+	LD	(HL),0		; set <NUL> terminator
+	LD	HL,CPMDMA+1	; set ptr to start of string
+	CALL	FINDDRV		; find letter of first drive
+	JR	C,RUNIMOD	; ..if invalid/not found, switch to interactive mode
+	LD	(DRV1ST),A	;   else, store # of first drive
+	LD	A,(HL)		; get following byte
+	CALL	EVALSEP		; is it a separator char ?
+	JP	C,M$ABORT	; ..if not, abort program
+	CALL	FINDDRV		; find letter of second drive
+	JR	C,RUNIM0	; ..if invalid/not found, switch to interactive mode
+	LD	(DRV2ND),A	;   else, store # of second drive
+	LD	A,(HL)		; get following byte
+	CALL	EVALSEP		; is it a separator char ?
+	JP	C,M$ABORT	; ..if not, abort program
+	JR	SWAPDRV		;   else, jump to continue
+
+
+	; run in interactive mode
+RUNIMOD: CALL	VPRINT
+	DEFB	'  First Drive to Swap [A..P] : '
+	DEFB	0
+	CALL	CAPINE		; get input
+	CALL	CRLF
+	CP	CTRLC		; is it <Ctrl-C> ?
+	JP	Z,M$ABORT	; ..if so, abort program
+	CALL	EVALDRV		; check if drive letter is valid (A..P)
+	JR	C,RUNIMOD	; ..if not, loop ask for new input
+	LD	(DRV1ST),A	;   else, store drive #
+RUNIM0:	CALL	VPRINT
+	DEFB	'  Second Drive to Swap [A..P] : '
+	DEFB	0
+	CALL	CAPINE		; get input
+	CALL	CRLF
+	CP	CTRLC		; is it <Ctrl-C> ?
+	JP	Z,M$ABORT	; ..if so, abort program
+	CALL	EVALDRV		; check if drive letter is valid (A..P)
+	JR	C,RUNIM0	; ..if not, loop ask for new input
+	LD	(DRV2ND),A	;   else, store drive #
+
+
+;::::: PROCESS
+
+SWAPDRV: LD	HL,(BPBASE)	; get B/P Bios base addr
+	LD	L,22*3		; adjust ptr to fn #22 (DRVTBL)
+	CALL	JUMPHL		; ..and "call" fn
+	PUSH	HL		; save ptr to DRVTBL
+	LD	A,(DRV1ST)	; get # of first drive
+	ADD	A,A		; *2 for 16-bit entries
+	CALL	ADDHLA		; ..and move ptr fwd
+	EX	DE,HL		; swap regs
+	POP	HL		; restore ptr to DRVTBL
+	LD	A,(DRV2ND)	; get # of second drive
+	ADD	A,A		; *2
+	CALL	ADDHLA		; ..and move ptr fwd
+
+	; DE= addr DPH first drive
+	; HL= addr DPH second drive
+	LD	C,(HL)		; swap addr's in DRVTBL using
+	LD	A,(DE)		;   regs DE, HL as pointers
+	LD	(HL),A		;   and regs A, C holding bytes to copy
+	LD	A,C
+	LD	(DE),A
+	INC	HL
+	INC	DE
+	LD	C,(HL)
+	LD	A,(DE)
+	LD	(HL),A
+	LD	A,C
+	LD	(DE),A
+	LD	HL,0
+	LD	(PDRVVCT),HL	; init new Drive Vector (pos) with 0x0000
+	DEC	HL
+	LD	(NDRVVCT),HL	; init new Drive Vector (neg) with 0xFFFF
+	LD	HL,(ENVADR)	; get ENV addr
+	LD	DE,52		; offset to Drive Vector
+	ADD	HL,DE		; move ptr
+	PUSH	HL		; ..and save it
+	LD	E,(HL)		; get Drive Vector in DE
+	INC	HL
+	LD	D,(HL)
+	LD	A,(DRV1ST)	; get # of first drive
+	CALL	MKDRMSK		; get bit mask for first drive
+	LD	C,L		; ..and move it to BC
+	LD	B,H
+	LD	A,(DRV2ND)	; get # of second drive
+	CALL	MKDRMSK		; get bit mask for second drive
+	EX	DE,HL		; ..and move it to DE
+	CALL	MKVCMSK		; update new Drive Vector for first drive
+	PUSH	BC		; swap BC and DE
+	PUSH	DE
+	POP	BC
+	POP	DE
+	CALL	MKVCMSK		; update new Drive Vector for second drive
+
+	; (Stack) = addr of Drive Vector in ENV - PUSH HL
+	; HL= current Drive Vector, DE= bit mask first drive, BC= bit mask second drive
+	EX	DE,HL		; swap regs (save current Drive Vector in DE)
+	ADD	HL,BC		; add/merge bit masks
+	EX	(SP),HL		; put merged mask on stack - used by SWAPDRX
+				; get addr of Drive Vector in ENV
+	PUSH	HL		; ..and save it
+	EX	DE,HL		; swap regs back (current Drive Vector in HL)
+	LD	BC,(PDRVVCT)	; get new Drive Vector (pos)
+	LD	DE,(NDRVVCT)	;   and (neg)
+	LD	A,L		; low byte of current Drive Vector
+	AND	E		;   reset bit (neg)
+	OR	C		;   set bit (pos)
+	LD	E,A		;   ..and store result in E
+	LD	A,H		; high byte of current Drive Vector
+	AND	D		;   reset bit (neg)
+	OR	B		;   set bit (pos)
+	LD	D,A		;   ..and store result in D
+	POP	HL		; get addr of Drive Vector in ENV
+	LD	(HL),E		; store new Drive Vector (low byte)
+	INC	HL
+	LD	(HL),D		; ..and high byte
+	CALL	GQFLAG
+	OR	A		; check quiet flag
+	JR	NZ,SWAPDRX	; ..if quiet mode, skip over
+	CALL	VPRINT
+	DEFB	'  ...Drives '
+	DEFB	0
+	LD	A,(DRV1ST)	; get # of first drive
+	ADD	A,'A'		; make ascii letter
+	CALL	COUT		; ..and display it
+	CALL	VPRINT
+	DEFB	': and '
+	DEFB	0
+	LD	A,(DRV2ND)	; get # of second drive
+	ADD	A,'A'		; make ascii letter
+	CALL	COUT		; ..and display it
+	CALL	VPRINT
+	DEFB	': exchanged',CR,LF
+	DEFB	0
+
+	; exit function
+SWAPDRX: POP	DE		; restore merged bit masked 1st+2nd drive
+	LD	C,37		; BDOS fn #37 Reset Drive(s)
+	CALL	CPMBDOS
+	JP	EXIT
+
+
+M$ABORT: CALL	VPRINT
+	DEFB	'   ...aborting...',CR,LF
+	DEFB	0
+	JP	EXIT
+
+
+;::::: HELP SCREEN
+
+HELP:	CALL	VPRINT
+	DEFB	CR,LF,1
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	VPRINT
+	DEFB	2,' exchanges the logical definition '
+	DEFB	'of two physical disk drives',CR,LF
+	DEFB	' or partitions.  Drive letters must be '
+	DEFB	'in the range of "A"-"P".',CR,LF
+	DEFB	' The program is re-executable under '
+	DEFB	'ZCPR with the "GO" command',CR,LF,LF
+	DEFB	' Syntax:    '
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	VPRINT
+	DEFB	' <Drv1>[:] <tab| |,> <Drv2>[:]',CR,LF,LF
+	DEFB	' Examples:',CR,LF,'        '
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	VPRINT
+	DEFB	' A: E:  - Exchange E drive with A',CR,LF
+	DEFB	'        '
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	VPRINT
+	DEFB	' D,H    - Exchange D drive with H',CR,LF
+	DEFB	'        '
+	DEFB	0
+	CALL	PPRGNAM
+	CALL	VPRINT
+	DEFB	' //     - display this message',CR,LF
+	DEFB	0
+
+
+;::::: EXIT PROGRAM
+
+EXIT:	LD	SP,(STACK)	; restore stack
+	RET			; ..and return to system
+
+
+;::::: SUPPORT FUNCTIONS
+
+	; "called" as a pseudo-routine that returns to caller
+	;  in: HL= target addr
+JUMPHL: JP	(HL)		; jump to addr in HL regs
+
+
+	; parse nul-terminated string skipping separator chars
+	;  then fall through and check/convert drive letter
+	;  in: HL= ptr to string
+	; out: A= drive number (or <NUL> if invalid letter)
+	;      HL= ptr to byte after end of string
+	;      C-Flag set if <NUL> (end of string) reached
+FINDDRV: LD	A,(HL)		; get byte
+	INC	HL		; move ptr fwd
+	OR	A		; check if <NUL> (zero) = end of string
+	SCF			; prepare status indicator (C-Flag set)
+	RET	Z		; ..if <NUL> byte, return
+	CALL	EVALSEP		; check if byte is a separator
+	JR	NC,FINDDRV	; ..if so, get next char
+				;   else, fall through and check if letter is valid
+
+
+	; evaluate if letter is a valid drive (A..P) and return as number
+	;  in: A= letter to check
+	; out: A= drive number
+	;      C-Flag set if error, NC= ok
+EVALDRV: CP	'A'		; is it lower than ascii 'A' ?
+	RET	C		; ..return with C-Flag already set
+	CP	'P'+1		; is it greater than ascii 'P' ?
+	CCF			; ..reverse C-Flag to set correct status
+	RET	C		;   and return
+	SUB	'A'		; else, convert to number
+	RET
+
+
+	; evaluate char in register A whether it is a separator
+	; (space, comma, colon, tab, zero)
+	;  in: A= char
+	; out: C-Flag set if not separator, NC= char is separator
+EVALSEP: CP	' '		; is it <SP> ?
+	RET	Z
+	CP	','		; Comma ?
+	RET	Z
+	CP	':'		; Colon ?
+	RET	Z
+	CP	TAB		; <TAB> ?
+	RET	Z
+	OR	A		; <NUL> (zero) ?
+	RET	Z
+	SCF			; set C-Flag
+	RET
+
+
+	; make bit mask for specified drive #
+	; position of 1-bit represents drive in 16-bit word (similar to Drive Vector)
+	;  in: A= drive number
+	; out: HL= bit mask
+MKDRMSK: LD	HL,1		; set bit 0
+	INC	A		; ahead of loop, increase A
+MKDRMS0: DEC	A		; decrease A
+	RET	Z		; ..if zero, finished
+	ADD	HL,HL		; *2 (shift 1-bit to next position)
+	JR	MKDRMS0		; loop
+
+
+	; make bit masks for new Drive Vector
+	; maintaining a positive (bits set) map, and a negate version (bits reset)
+	;  in: HL= current Drive Vector (from ENV)
+	;      BC= bit mask w/ old position
+	;      DE= bit mask w/ new position
+MKVCMSK: PUSH	BC		; save regs
+	LD	A,B
+	AND	H		; mask high byte
+	LD	B,A		; ..and store result back in B
+	LD	A,C
+	AND	L		; mask low byte
+	OR	B		; check if invalid (= zero), ie. not mapped in Vector
+	POP	BC		; restore regs
+	JR	Z,MKVCMS0	; if invalid drive, jump
+
+	; drive at new position exists in Drive Vector - set bit
+	PUSH	HL
+	LD	HL,(PDRVVCT)
+	LD	A,H		; high byte first
+	OR	D		; ..merge with new position
+	LD	H,A		;   and store result back in H
+	LD	A,L		; low byte
+	OR	E		; ..merge with new position
+	LD	L,A		;   and store result back in L
+	LD	(PDRVVCT),HL	; save final result
+	POP	HL
+	RET
+
+	; drive at new position does _not_ exist in Drive Vector - reset bit
+MKVCMS0: PUSH	HL
+	LD	HL,(NDRVVCT)
+	LD	A,D		; get high byte of new position
+	CPL			; invert it
+	AND	H		; reset corresponding bit
+	LD	H,A		; ..and store result in H
+	LD	A,E		; get low byte of new position
+	CPL			; invert it
+	AND	L		; reset corresponding bit
+	LD	L,A		; ..and store result in L
+	LD	(NDRVVCT),HL	; save final result
+	POP	HL
+	RET
+
+
+	; get Quiet Flag from Z3 Environment
+	;  in: -
+	; out: A= Quiet Flag, defaults to A= 0 (not quiet)
+GQFLAG:	LD	HL,(ENVADR)	; get ENV addr
+	LD	A,H		; check if invalid (= zero)
+	OR	L
+	RET	Z		; ..if so, return
+	LD	A,40		;   else, move ptr forward
+	CALL	ADDHLA		;   to Quiet Flag
+	LD	A,(HL)		; get value
+	RET			; ..and return
+
+
+	; add A to HL (result in HL)
+ADDHLA:	ADD	A,L		; add L
+	LD	L,A		; store result in L
+	RET	NC		; ..if no overflow, return
+	INC	H		;   else, increment H
+	RET
+
+
+	; print program name on CON: device
+	; (either the actual name, or fallback to default)
+	; only used by HELP
+PPRGNAM: LD	A,(ENVADR+1)	; get high byte of ENVPTR
+	OR	A		; check if valid (<> zero)
+	JP	NZ,PRTNAME	; ..if so, display actual name
+				;   and let return from there
+	CALL	VPRINT		; else, display default
+	DEFB	'BPSWAP'
+	DEFB	0
+	RET
+
+
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::
+; VLIB - 0x0536
+; Z3LIB - 0x0757
+; SYSLIB - 0x0805
+; end addr 0x0854 (begin DSEG)
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+;::::: RAM STORAGE
+
+	DSEG
+
+PDRVVCT:	DEFW	0	; new Drive Vector
+				; (positive notation, bit _set_ for existing drives)
+NDRVVCT:	DEFW	0	; new Drive Vector
+				; (negative notation, bits _reset_ for existing drives)
+BPBASE:		DEFW	0	; B/P Bios base addr
+DRV1ST:		DEFB	0	; # of first drive
+DRV2ND:		DEFB	0	; # of second drive
+
+		DEFS	40H	; room for stack
+STACK:		DEFW	0	; stack storage location
+
+	END
+
+
+;************************************************************************
+; Remarks jxl:
+;   BPSWAP.COM, included in available B/P Bios package(s), was dis-
+; assembled and extensively commented. Labels are up to seven chars long
+; to comply with M-REL standards. However, it is recommended to use SLR
+; tools that support labels up to sixteen chars.
+;   In its current state, the compiled/linked file matches exactly the
+; original BPSWAP.COM, i.e. no changes to the source were made. There
+; seems to be one bug (marked with "##### BUG") at the beginning of the
+; program.
+;************************************************************************

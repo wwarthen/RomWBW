@@ -1,6 +1,6 @@
 RomWBW Introduction
 Wayne Warthen (wwarthen@gmail.com)
-23 May 2025
+22 Jul 2025
 
 
 
@@ -11,7 +11,7 @@ OVERVIEW
 
 
 RomWBW software provides a complete, commercial quality implementation
-of CP/M (and workalike) operating systems and applications for modern
+of CP/M (and work-alike) operating systems and applications for modern
 Z80/180/280 retro-computing hardware systems.
 
 A wide variety of platforms are supported including those produced by
@@ -46,7 +46,7 @@ Supported hardware features of RomWBW include:
 - Disk drivers for RAM, ROM, Floppy, IDE ATA/ATAPI, CF, SD, USB, Zip,
   Iomega
 - Serial drivers including UART (16550-like), ASCI, ACIA, SIO
-- Video drivers including TMS9918, SY6545, MOS8563, HD6445
+- Video drivers including TMS9918, SY6545, MOS8563, HD6445, Xosera
 - Keyboard (PS/2) drivers via VT8242 or PPI interfaces
 - Real time clock drivers including DS1302, BQ4845
 - Support for CP/NET networking using Wiznet, MT011 or Serial
@@ -193,6 +193,9 @@ documentation:
   construction of RomWBW. It includes a reference for the RomWBW HBIOS
   API functions.
 
+An online HTML version of this documentation is hosted at
+https://wwarthen.github.io/RomWBW.
+
 Each of the operating systems and ROM applications included with RomWBW
 are sophisticated tools in their own right. It is not reasonable to
 fully document their usage. However, you will find complete manuals in
@@ -294,8 +297,12 @@ let me know if I missed you!
 
 - Tasty Basic is a product of Dimitri Theulings.
 
-- Dean Netherton contributed eZ80 CPU support, the sound driver
-  interface, and the SN76489 sound driver.
+- Dean Netherton contributed multiple components:
+
+  - eZ80 CPU support
+  - Sound driver infrastructure
+  - SN76489 sound driver
+  - Native USB driver (keyboard, floppy, mass storage)
 
 - The RomWBW Disk Catalog document was produced by Mykl Orders.
 
@@ -311,8 +318,10 @@ let me know if I missed you!
   - significant content in the Disk Catalog and User Guide
   - creation of the Introduction and Hardware documents
   - Z3PLUS operating system disk image
-  - COPYSL utility
-  - SLABEL utility
+  - Infocom text adventure game disk image
+  - COPYSL, and SLABEL utilities
+  - Display of bootable slices via “S” command during startup
+  - Optimisations of HBIOS and CBIOS to reduce overall code size
   - a feature for RomWBW configuration by NVRAM
   - the /B bulk mode of disk assignment to the ASSIGN utility
 
@@ -346,6 +355,12 @@ let me know if I missed you!
   that leverages RomWBW memory banking.
 
 - Les Bird has contributed support for the NABU w/ Option Board
+
+- Rob Gowin created an online documentation site via MkDocs, and
+  contributed a driver for the Xosera FPGA-based video controller.
+
+- Jörg Linder has contributed disassembled and nicely commented source
+  for ZSDOS2 and the BPBIOS utilities.
 
 
 Related Projects

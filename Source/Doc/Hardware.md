@@ -111,26 +111,26 @@ Others
 
 | **Description**                                             | **Bus**  | **ROM Image File**          | **Baud Rate** |
 |-------------------------------------------------------------|----------|-----------------------------|--------------:|
-| [Dyno Z180 SBC]^6^                                          | Dyno     | DYNO_std.rom                |         38400 |
-| [EP Mini-ITX Z180]^11^                                      | UEXT     | EPITX_std.rom               |        115200 |
-| [eZ80 for RCBus Module]^13^, 512K RAM/ROM                   | RCBus    | RCEZ80_std.rom              |        115200 |
-| [Genesis Z180 System]^12^                                   | STD      | GMZ180_std.rom              |        115200 |
-| [Heath H8 Z80 System]^10^                                   | H8       | HEATH_std.rom               |        115200 |
-| [NABU w/ RomWBW Option Board]^10^                           | NABU     | NABU_std.rom                |        115200 |
-| [S100 Computers Z180 SBC]^9^                                | S100     | S100_std.rom                |         57600 |
-| [S100 Computers FPGA Z80 SBC]^9^                            | S100     | FZ80_std.rom                |          9600 |
-| [UNA Hardware BIOS]^3^                                      | -        | UNA_std.rom                 |             - |
-| [Z80-Retro SBC]^8^                                          | -        | Z80RETRO_std.rom            |         38400 |
-| [Z180 Mark IV SBC]^3^                                       | ECB      | MK4_std.rom                 |         38400 |
+| [Dyno Z180 SBC]^2^                                          | Dyno     | DYNO_std.rom                |         38400 |
+| [EP Mini-ITX Z180]^6^                                       | UEXT     | EPITX_std.rom               |        115200 |
+| [eZ80 for RCBus Module]^8^, 512K RAM/ROM                    | RCBus    | RCEZ80_std.rom              |        115200 |
+| [Genesis Z180 System]^7^                                    | STD      | GMZ180_std.rom              |        115200 |
+| [Heath H8 Z80 System]^5^                                    | H8       | HEATH_std.rom               |        115200 |
+| [NABU w/ RomWBW Option Board]^5^                            | NABU     | NABU_std.rom                |        115200 |
+| [S100 Computers Z180 SBC]^4^                                | S100     | S100_std.rom                |         57600 |
+| [S100 Computers FPGA Z80 SBC]^4^                            | S100     | FZ80_std.rom                |          9600 |
+| [UNA Hardware BIOS]^1^                                      | -        | UNA_std.rom                 |             - |
+| [Z80-Retro SBC]^3^                                          | -        | Z80RETRO_std.rom            |         38400 |
+| [Z180 Mark IV SBC]^1^                                       | ECB      | MK4_std.rom                 |         38400 |
 
-| ^3^Designed by John Coffman
-| ^6^Designed by Steve Garcia
-| ^8^Designed by Peter Wilson
-| ^9^Designed by John Monahan
-| ^10^Designed by Les Bird
-| ^11^Designed by Alan Cox
-| ^12^Designed by Doug Jackson
-| ^13^Designed by Dean Netherton
+| ^1^Designed by John Coffman
+| ^2^Designed by Steve Garcia
+| ^3^Designed by Peter Wilson
+| ^4^Designed by John Monahan
+| ^5^Designed by Les Bird
+| ^6^Designed by Alan Cox
+| ^7^Designed by Doug Jackson
+| ^8^Designed by Dean Netherton
 
 `\clearpage`{=latex}
 
@@ -140,6 +140,11 @@ The standard ROM images will detect and install support for certain
 devices and peripherals that are on-board or frequently used with
 each platform.  If the device or peripheral is not detected at boot, 
 the ROM will simply bypass support appropriately.
+
+Each ROM will support a single memory manager.  This is determined
+by the build configuration and is not dynamically selected.  The use
+of the term Memory Manager is generally synonymous with Memory
+Management Unit (MMU).
 
 In some cases, support for multiple hardware components with potentially
 conflicting resource usage are handled by a single ROM image.  It is up
@@ -2274,6 +2279,7 @@ the active platform and configuration.
 | VDU       | MC6845 Family Video Display Controller (*)             |
 | VGA       | HD6445CP4-based Video Display Controller               |
 | VRC       | VGARC Video Display Controller                         |
+| XOSERA    | XOSERA FPGA-based Video Display Controller             |
 
 Note:
 
@@ -2312,6 +2318,7 @@ Note:
 | DSRTC     | Maxim DS1302 Real-Time Clock w/ NVRAM                  |
 | EZ80RTC   | eZ80 Real-Time Clock                                   |
 | INTRTC    | Interrupt-based Real Time Clock                        |
+| PCRTC     | MC146818/DS1285/DS12885 PC style                       |
 | PCF       | PCF8584-based I2C Real-Time Clock                      |
 | RP5C01    | Ricoh RPC01A Real-Time Clock w/ NVRAM                  |
 | SIMRTC    | SIMH Simulator Real-Time Clock                         |

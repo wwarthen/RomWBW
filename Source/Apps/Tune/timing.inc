@@ -41,8 +41,14 @@ DLY1	DEC	BC              	; [6]
 ; Test for timer running to determine if it can be used for delay
 ; Return string message in DE
 ; Assigned (WMOD) with 0 if no hardware time, 1 if hardware timer found
+; If -DELAY on command line, force delay mode
 ;
 PROBETIMER:
+	LD	A,(DELAYMD)		; GET COMMAND LINE DELAY FLAG
+	OR	A			; TEST IT
+	LD	A,0			; ASSUME NO TIMER
+	LD	DE,MSGDLY		; DELAY MODE MESSAGE
+	JR	NZ,SETDLY		; IF TRUE, DONE
 	LD	B,BF_SYSGET		; HBIOS: GET function
 	LD	C,$D0			; TIMER subfunction
 	RST	08			; DE:HL := current tick count

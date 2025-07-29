@@ -15,8 +15,7 @@ as needed.  The RomWBW ASSIGN command is not supported.  BPBIOS
 will boot from the first hard disk unit number you assign and
 always from the first slice.
 
-BPBIOS does not yet understand the 1024 directory entry
-hard disk format.  You must use the 512 directory entry
-format images.
+BPBIOS is hard-coded to use the 1024 directory entry hard disk
+format (hd1k).  The hd512 format is not supported at all.
 
---WBW 1:25 PM 10/7/2021
+--WBW 5:04 PM 6/16/2025

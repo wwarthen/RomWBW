@@ -1,0 +1,93 @@
+
+		Forward - MAP - July 2025
+
+     The following article describes how to configure the game Interpreters
+(COM files) included with this distribution. Specifically this allows
+the terminal control codes to be changed to your specific needs.
+
+Additional to the addresses below, the following address is relevant
+
+02D0h	File name extension of the data file
+	must be 3 bytes long, fill with ascii spaces (20H)
+
+The following link containing the interpreter source code is also useful:
+https://github.com/erkyrath/infocom-zcode-terps/blob/master/cpm80/zorkcpm.prn
+
+=========================================================================
+
+		Customizing INFOCOM(tm) Games
+		notes on CP/M addresses
+
+     I don't know wheather or not this is a duplicate effort, but since
+I haven't found a similar listing.......
+
+     When I first saw that Infocom was selling off all their CP/M compatible
+games for only $14.95 I was overjoyed. Now I could buy all the titles that
+I always wanted but could not really afford. Atlast, guilt free software.
+
+     I ended up buying Zork1 for the Osborne I, Zork2 and Zork3 for the DEC
+Rainbow, and Wishbringer for the Kaypro II. (My computer system is an Ampro
+Little Board with Teac 55b and 55f drives. The terminal emulates a DEC
+VT100. With my current hardware I can read or write to almost any 5.25"
+format.) I thought everything was going to be so simple, use MULTIDSK and
+MCOPY to transfer the programs to Ampro format and away I go! Wrong answer.
+Although all the programs would execute, the terminal was confused beyond
+belief.
+
+     Some rainy day time with all the .com files and a trusty debugger
+got me all the data I needed to unconfuse the terminal and allow me to
+customize the display to just the way I wanted it. Now I'd like to 'share
+the wealth' with anyone else bitten by the Infocom bug.
+
+     The program starts off with an initial jump to 0200h, the start of
+the actual program code. Next comes all the good stuff;
+
+0103h	Charactors per line
+	a 78 charactor line is 4Eh
+
+0104h	Lines per screen
+	a 23 line terminal (excluding status) is 17h
+
+0105h	File name of the data file without file extent
+	must be 8 bytes long, fill with ascii spaces (20H)
+	if you have ZORK1.dat then 'ZORK1',20h,20h,20h goes here
+
+010Dh	Screen LF after CR (1 = yes;0 = no)
+
+010Eh	Printer LF after CR (1 = yes;0 = no)
+
+010Fh	Inverse video offset
+	if you can add a 80h to the ascii charactor value to get
+	inverse video, this byte's for you
+
+           The following strings start with a one byte charactor count,
+           the charactor string, and then a null fill (00H)
+
+0110h	Terminal init. string
+	Clear screen, move cursor to lower left, set scroll region
+	VT100 = 12 1b 5b 32 4a 1b 5b 32 33 3b 31 48 1b 5b 32 3b 32 33 72 00
+
+0131h	Terminal reset string
+	Put everything back the way it was
+
+0152h	Begin status line display
+	Move cursor to upper left and set video attribute (inverse, bold, etc)
+
+0173h	End status line display
+	Move cursor to lower left and reset video attribute
+
+0194h	Printer init. string
+	room for anything special you need to set up your printer
+
+0200h	Start of the program code
+
+
+     I hope you have as much fun with the games as I have had, you can't
+beat them at their close-out price. It's unfortunate that they have dropped
+their CP/M support, I can't see buying a clone just to play with the
+Leather Goddess.
+
+					Gar Nelson
+					Olympia, Wa.
+
+GEnie address ==> G.NELSON

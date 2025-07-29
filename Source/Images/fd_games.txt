@@ -1,3 +1,4 @@
+@Label="Games"
 #
 # Add the ReadMe document
 #

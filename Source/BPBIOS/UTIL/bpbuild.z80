@@ -1,0 +1,2357 @@
+	TITLE	"B/P Bios Build System Image"
+;************************************************************************
+;*  B P B U I L D							*
+;* Create a system image file containing B/P Bios			*
+;*  by Harold F. Bower and Cameron W. Cotrill				*
+;*----------------------------------------------------------------------*
+;* Disassembly:	jxl					Jan 2025	*
+;*		public release 1.0			Apr 2025	*
+;*		see remarks at the end					*
+;*----------------------------------------------------------------------*
+;* LINK with Version 4 libraries: VLIB, Z3LIB, SYSLIB			*
+;* and SLINK0.REL module (as included in ZSDOS v1 GNU public release)	*
+;*									*
+;* A>Z80ASM BPBUILD/RS							*
+;* A>SLRNK BPBUILD/N,/A:100,/D:23E0,BPBUILD,SLINK0,VLIBS/S,Z3LIBS/S,SYSLIBS/S,/E	*
+;************************************************************************
+
+VER	EQU	10
+REV	EQU	' '
+
+DATE	MACRO
+	DEFB	'31 Aug 92'
+	ENDM
+
+
+CTRLC	EQU	03H		; Control-C character
+BEL	EQU	07H		; Bell character
+TAB	EQU	09H		; Tab character
+LF	EQU	0AH		; Line Feed character
+CR	EQU	0DH		; Carriage Return character
+ESC	EQU	1BH		; Escape character
+
+CPMBDOS	EQU	5		; CP/M BDOS entry point (JP)
+CPMFCB	EQU	5CH		; CP/M standard FCB #1 (+1 filename, +9 filetype)
+CPMDMA	EQU	80H		; CP/M standard DMA buffer
+
+
+; SLINK0 M-Rel linker module
+	EXTRN	LINK	; get
+	PUBLIC	@GBYTE	; make visible
+
+; From VLIB Get..
+	EXTRN	Z3VINIT, GXYMSG, VPRINT, EREOL, TINIT, DINIT, CLS, GOTOXY
+
+; From Z3LIB Get..
+	EXTRN	GETNAME, PRTNAME, ZFNAME, GZMTOP, WHRENV
+
+; From SYSLIB Get..
+	EXTRN	PUTUD, RETUD, SETDMA, INITFCB, BLINE, CRLF, CAPINE, CAPIN, PFN1, PFN3
+	EXTRN	F$EXIST, F$MOPEN, F$CLOSE, F$DELETE, F$OPEN, F$READ, F$RENAME, F$WRITE
+	EXTRN	PADC, PHLFDC, PHL4HC, COUT, EVAL10, EVAL16, ISALNUM, CODEND
+
+
+;::::: PROGRAM START
+
+	ORG	100H
+	CSEG
+
+
+BPBUILD: JP	START		; bypass header
+	DEFB	'Z3ENV'		; this is a ZCPR3 utility
+	DEFB	1		; show external environment
+
+ENVADR: DEFW	0		; addr of Z3 environment
+
+START:	LD	HL,(CPMBDOS)	; ##### BUG: should rather be CPMBDOS+1
+	CALL	WHRENV		; find Z3 Environment Descriptor
+	LD	(ENVADR),HL	; store ENV ptr locally
+	CALL	Z3VINIT		; ..and init for VLIB/Z3LIB routines
+	CALL	TINIT		; init terminal characteristics
+	CALL	GETNAME		; get actual program name
+	CALL	GETQFLG		; get quiet flag
+	AND	A		; check if verbose mode
+	JR	NZ,START0	; ..if not, skip over (= quiet)
+
+	CALL	VPRINT
+	DEFB	1,'B/P System Build',2,'  V',VER/10+'0','.',VER MOD 10 + '0',REV,'    '
+	DATE
+	DEFB	' ',CR,LF
+	DEFB	0
+
+START0:	CALL	GZMTOP		; get top of memory (first byte _not_ to be used)
+	DEC	HL		; -1
+	EX	DE,HL		; save temporarily
+	CALL	CODEND		; get available page after code end (WSPC area)
+	EX	DE,HL		; swap regs back
+	XOR	A		; reset C-Flag
+	SBC	HL,DE		; calc remaining TPA size
+	EX	DE,HL		; use DE as counter
+
+CLRTPA:	LD	(HL),0		; clear TPA memory
+	INC	HL		; ..from end of program to top of memory
+	DEC	DE
+	LD	A,E
+	OR	D		; counter = zero ?
+	JR	NZ,CLRTPA	; ..loop till done
+
+	LD	(STACK),SP	; set local stackpointer
+	LD	SP,STACK
+	CALL	RETUD		; get current drive (B) and user (C)
+	LD	(OLDDU),BC	; ..and store
+
+	; evaluate command line
+	LD	A,(CPMFCB+1)	; get first char of command line (in FCB #1)
+	CP	'/'		; is this a help request ?
+	JP	Z,HELP		; ..if so, jump display help and exit
+	CP	' '		; is file name blank ?
+	JR	Z,INITRAM	; ..if so, jump to ask for manual input
+
+	; a file name was specified (= image file), attempt to read header
+	LD	HL,CPMFCB+9	; check file type
+	LD	A,(HL)
+	CP	' '		; is first char <SP> ?
+	JR	NZ,RDFILE	; ..if not, skip over
+	EX	DE,HL		;   else, swap regs
+	LD	HL,FTYPES+3	; ptr to standard file type 'IMG'
+	LD	BC,3		; ..and copy 3 chars
+	LDIR
+RDFILE:	LD	HL,CPMFCB+1	; ptr to file name in standard FCB #1
+	LD	DE,IMGFN_I	; ptr to default file name for system image
+	LD	BC,11		; copy 11 chars from FCB to IMG Header area
+	LDIR
+	CALL	CODEND		; get addr WSPC
+	CALL	RDHDR		; read first page of IMG file
+	OR	A		; check if successful
+	JR	NZ,RDFILE0	; ..if not, jump to display msg
+	CALL	CODEND		; get addr WSPC
+	LD	DE,IMGHD_I	; point to area for IMG file header
+	JR	RDFILE1		; ..and jump to continue
+RDFILE0: CALL	VPRINT
+	DEFB	CR,LF,"+++ Can't Read...any key to continue w/defaults +++"
+	DEFB	0
+	CALL	CAPINE		; get input (any key)
+	CALL	CODEND		; get addr WSPC
+	EX	DE,HL		; swap regs
+	LD	HL,IMGHD_I	; point to area for IMG file hdr
+
+RDFILE1: LD	BC,0100H	; bytes to copy (1 page)
+	LDIR			; ..from hdr to WSPC (no file, or read error)
+				;   or from WSPC to hdr (file read successfully)
+
+	; initialize ram storage
+INITRAM: LD	HL,CCPFCB
+	XOR	A		; nullify A
+	LD	B,IMGFCB+36-CCPFCB	; B= 179
+INITRM0: LD	(HL),A		; clear variables
+	INC	HL		;   with <NUL> (180 bytes)
+	DJNZ	INITRM0
+	LD	BC,11		; bytes to copy
+	PUSH	BC
+	LD	HL,CFNAM_I	; copy ZCPR file name
+	LD	DE,CCPFCB+1
+	LDIR
+	POP	BC		; restore # bytes
+	PUSH	BC
+	LD	HL,DFNAM_I	; copy ZSDOS file name
+	LD	DE,DOSFCB+1
+	LDIR
+	POP	BC		; restore # bytes
+	PUSH	BC
+	LD	HL,BFNAM_I	; copy B/P Bios file name
+	LD	DE,BIOSFCB+1
+	LDIR
+	POP	BC		; restore # bytes
+	LD	HL,IMGFN_I	; copy IMG file name
+	LD	DE,IMGFCB+1
+	LDIR
+
+
+;:::::	MAIN MENU
+
+M0MAIN:	CALL	M0SHOW		; display menu
+	CALL	MSELECT		; get user for input
+	CP	' '		; is it <SP> ?
+	JP	Z,MKSYS		; ..build new system
+	CP	CR		; <CR> ?
+	JP	Z,MKSYS		; ..build new system
+	CP	ESC		; <ESC> ?
+	JP	Z,M$ABORT	; ..quit program
+	CP	CTRLC		; <Ctrl-C> ?
+	JP	Z,M$ABORT	; ..quit program
+	CP	'1'		; '1' ?
+	JR	Z,M0GOM1	; ..go to Files menu
+	CP	'2'		; '2' ?
+	JP	Z,M0GOM2	; ..go to Bios config menu
+	CP	'3'		; '3' ?
+	JP	Z,M0GOM3	; ..go to Environment menu
+	JR	M0MAIN
+
+M0GOM1: CALL	M1FILE
+	JR	M0MAIN
+
+M0GOM2: CALL	M2BIOS
+	JR	M0MAIN
+
+M0GOM3: CALL	M3ENV
+	JR	M0MAIN
+
+
+;::::: MAKE (build) NEW SYSTEM
+
+MKSYS:	CALL	CLS
+	CALL	VPRINT
+	DEFB	CR,LF,'..building system..',CR,LF,LF
+	DEFB	0
+
+
+	;----- Pre-run to determine addr/size of linked system segments
+
+	; determine CPR size/addr
+	LD	HL,0
+	LD	(COMTB6),HL	; clear org B2RAM Common
+	LD	(COMTB5),HL	; clear org BANK2 Common
+	LD	DE,CCPFCB
+	LD	HL,COMTBL
+	CALL	LNKDSZ		; determine CCP segment sizes
+	LD	(CCNBSZ),HL	; store CCP CSEG Non-banked size
+	ADD	HL,BC		; add DSEG size
+	CALL	ALIGN		; ..align to next sector boundary
+	LD	(CNBSZ_I),HL	;   ..and store CCP Non-banked total size
+	LD	HL,(COMTB6)	; get B2RAM Common
+	LD	(CDBKSZ),HL	; ..and store CCP DSEG Banked size
+	EX	DE,HL
+	LD	HL,(COMTB5)	; get BANK2 Common
+	LD	(CCBKSZ),HL	; ..and store CCP CSEG Banked size
+	ADD	HL,DE		; add values
+	CALL	ALIGN		; ..align to next sector boundary
+	LD	(CBKSZ_I),HL	;   ..and store as CCP Banked total size
+	CALL	PB2ADR		; display addr's
+
+	; determine DOS size/addr
+	LD	DE,DOSFCB
+	LD	HL,COMTBL
+	CALL	LNKDSZ		; determine DOS segment sizes
+	LD	(DCNBSZ),HL	; store DOS CSEG Non-banked size
+	ADD	HL,BC		; add DSEG size
+	CALL	ALIGN		; ..align to next sector boundary
+	LD	(DNBSZ_I),HL	;   ..and store DOS Non-banked total size
+	LD	HL,(COMTB6)	; get B2RAM Common
+	LD	(DDBKSZ),HL	; ..and store DOS DSEG Banked size
+	EX	DE,HL
+	LD	HL,(COMTB5)	; get BANK2 Common
+	LD	(DCBKSZ),HL	; ..and store DOS CSEG Banked size
+	ADD	HL,DE		; add values
+	CALL	ALIGN		; ..align to next sector boundary
+	LD	(DBKSZ_I),HL	;   ..and store as DOS Banked total size
+	CALL	PB2ADR		; display addr's
+
+	; determine B/P BIOS size/addr
+	LD	DE,BIOSFCB
+	LD	HL,COMTBL
+	CALL	LNKDSZ		; determine BIOS segment sizes
+	LD	(BCNBSZ),HL	; store BIOS CSEG Non-banked size
+	ADD	HL,BC		; add DSEG size
+	CALL	ALIGN		; ..align to next sector boundary
+	LD	(BNBSZ_I),HL	;   ..and store BIOS Non-banked total size
+	LD	HL,(COMTB6)	; get B2RAM Common
+	LD	(BDBKSZ),HL	; ..and store BIOS DSEG Banked size
+	EX	DE,HL
+	LD	HL,(COMTB5)	; get BANK2 Common
+	LD	(BCBKSZ),HL	; ..and store BIOS CSEG Banked size
+	ADD	HL,DE		; add values
+	LD	(BBKSZ_I),HL	; ..and store as BIOS Banked total size
+	CALL	PB2ADR		; display addr's
+	LD	HL,(COMTB7)	; get org RESVD Common
+	LD	(BRSVDO),HL	; ..and store it
+
+
+	;----- Auto-size system segments
+
+AUTOSZ: LD	HL,(Z3ENV_I+63)	; get start addr CCP from ENV
+	LD	(CNBADR),HL
+	LD	HL,(Z3ENV_I+66)	;   "   DOS from ENV
+	LD	(DNBADR),HL
+	LD	HL,(Z3ENV_I+69)	;   "   BIOS from ENV
+	LD	(BNBADR),HL
+
+	CALL	VPRINT
+	DEFB	CR,LF,'Auto-size system    ([Y]/N)? : '
+	DEFB	0
+	CALL	CAPIN		; get user input (capitalized)
+	CALL	EXITRQ		; quit program ?
+	CALL	YESNO		; get (Y)es/no input
+	CP	'N'		; entered 'N' ?
+	LD	A,0FFH		; prepare indicator byte for 'Yes'
+	JR	NZ,PRELINK	; ..if not 'N', skip over
+	XOR	A		;   else, clear A (indicator byte for 'No')
+
+
+	;----- Prelink BIOS
+
+PRELINK: LD	(AUTOSIZ),A	; ..and store indicator
+	CALL	VPRINT
+	DEFB	CR,LF,'-- Pre-linking Bios for Info --'
+	DEFB	0
+	LD	HL,(Z3ENV_I+27)	; get addr Env Descriptor
+	LD	(COMTB1),HL	; ..and store in org _ENV_ Common
+	LD	HL,0
+	LD	(COMTB0),HL	; set org _BIOS_ Common to zero
+	LD	HL,(COMTB5)	; get BIOS BANK2 Common (= Banked CSEG size)
+	LD	DE,(DBKSZ_I)	;     DOS Banked size
+	ADD	HL,DE		; add values
+	LD	(COMTB5),HL	; ..and store as org BANK2 Common
+				;    (BIOS Banked CSEG addr)
+	LD	DE,(BCBKSZ)	; BIOS Banked CSEG size
+	ADD	HL,DE		; add values
+	LD	(COMTB6),HL	; ..and store as org B2RAM Common
+				;    (BIOS Banked DSEG addr)
+
+	; prepare alt. registers for linking
+	; BC'= offset to add to CSEG, DE'= offset to add to DSEG
+	; ( HL'= dest. addr bitmap -- not used )
+	EXX
+	LD	BC,(BNBAD_I)	; BIOS Non-banked addr
+	LD	HL,(BCNBSZ)	; BIOS Non-banked CSEG size
+	ADD	HL,BC		; calc Non-banked DSEG start
+	EX	DE,HL		; ..keep in DE
+	EXX
+
+	CALL	CODEND		; get addr WSPC
+	LD	DE,0100H	; move beyond header (1 page)
+	ADD	HL,DE
+	LD	B,H
+	LD	C,L		; ..store addr in BC
+	LD	(LPHYADR),HL	;   ..and in local var for link module
+	LD	HL,(BNBSZ_I)	; get BIOS Non-banked size
+	ADD	HL,BC		; calc BIOS phys. load location CSEG
+	LD	(COMTB5+2),HL	;      (in BANK2 Common)
+	LD	DE,(BCBKSZ)	; get BIOS Banked CSEG addr
+	ADD	HL,DE		; calc BIOS phys. load location DSEG
+	LD	(COMTB6+2),HL	;      (in B2RAM Common)
+	LD	HL,(BCNBSZ)	; get BIOS Non-Banked CSEG size
+	ADD	HL,BC		;   add to dest. addr
+	LD	DE,BIOSFCB	; ptr to BIOS FCB
+
+	; link file with BC= phys. addr CSEG, HL= phys. addr DSEG, DE= addr FCB
+	CALL	LNKFILE
+
+	LD	HL,(LPHYADR)	; get dest. addr (start of linked file)
+	LD	DE,128		; offset to OPTF1 (option flag)
+	ADD	HL,DE		;   in B/P Bios config area
+	LD	A,(HL)		; get byte
+	LD	(OPTF1),A	;   store it
+	AND	00001000B	; mask bit 3 (ALV/CSV in TPA, or in bank)
+	LD	(BNKDSYS),A	;   store indicator
+	JR	NZ,PRELNK0	; ..if bit 3= 1 (in bank), skip over
+	CALL	VPRINT		;   else, display 'Non-Banked'
+	DEFB	'(Non-Banked)'
+	DEFB	0
+	JR	CALCSIZ
+
+PRELNK0: CALL	VPRINT
+	DEFB	'(Banked)'
+	DEFB	0
+
+
+	;----- Calculate addr/size of System Segments
+
+CALCSIZ: LD	HL,(BNBSZ_I)	; get BIOS Non-banked size
+	LD	DE,(BBKSZ_I)	; ..and Banked size
+	ADD	HL,DE		; calc total size
+	LD	C,L		; move in BC
+	LD	B,H
+	LD	HL,(LPHYADR)	; dest. addr
+	LD	E,L		;   in DE
+	LD	D,H
+	INC	DE		; move ptr fwd
+	LD	(HL),0		; ..and clear memory
+	LDIR
+	LD	A,(AUTOSIZ)	; get indicator for auto-sizing
+	OR	A		; check if zero (= no)
+	PUSH	AF
+	CALL	NZ,CALCASZ	; ..if auto-sizing, calc base addr's
+				;   of Non-banked system segments
+
+	POP	AF
+	JR	Z,STNDSZ	; ..if no auto-sizing, jump to continue
+	LD	HL,(CNBADR)	; CCP Non-banked start addr
+	LD	(Z3ENV_I+63),HL	;   write to ENV
+	EX	DE,HL
+	LD	HL,(DNBADR)	; start addr DOS
+	LD	(Z3ENV_I+66),HL	;   write to ENV
+	XOR	A
+	SBC	HL,DE		; calc CCP size (in bytes)
+	ADD	HL,HL		;   and convert to 128-byte records
+	LD	A,H
+	LD	(Z3ENV_I+65),A	; write # records to ENV
+	LD	HL,(BNBADR)	; BIOS Non-banked start addr
+	LD	(Z3ENV_I+69),HL	;   write to ENV
+	LD	DE,(Z3ENV_I+66)	; get start addr DOS
+	XOR	A
+	SBC	HL,DE		; calc DOS size (in bytes)
+	ADD	HL,HL		;   and convert to 128-byte records
+	LD	A,H
+	LD	(Z3ENV_I+68),A	; write # records to ENV
+	JR	SIZDONE		; then, jump to continue
+
+
+	; Use Standard Sizes ?
+STNDSZ:	CALL	VPRINT
+	DEFB	CR,LF,'Set to "Standard" if possible? (Y/[N]) : '
+	DEFB	0
+	CALL	CAPIN		; get user input
+	CALL	EXITRQ		; quit program ?
+	CALL	NOYES		; get yes/(N)o input
+	CP	'Y'		; is it 'Y' ?
+	CALL	Z,CALCSSZ	; ..if so, set standard sizes for segments
+
+
+	;----- Sizing done - addr/size of Non-banked System Segments determined
+
+SIZDONE: CALL	PSYSNB		; display base addr's of system (Non-banked)
+
+	; transfer base addr's from ENV to IMG hdr
+	LD	DE,(Z3ENV_I+69)	; base addr BIOS from ENV
+	LD	(BNBAD_I),DE	;   to IMG hdr
+	LD	DE,(Z3ENV_I+66)	; base addr DOS from ENV
+	LD	(DNBAD_I),DE
+	LD	DE,(Z3ENV_I+63)	; base addr CCP from ENV
+	LD	(CNBAD_I),DE
+	LD	A,(OPTF1)	; get OPTF1 flag from linked BIOS
+	AND	00000001B	; mask bit 0 (0= unbanked, 1= banked Bios)
+	JR	Z,ENV2COM
+	BIT	7,D		; check CCP base addr >32k
+	JP	NZ,ENV2COM	;   start addr of CCP in banked system must be above 32k
+	CALL	VPRINT
+	DEFB	CR,LF,BEL,'+++ CPR Starting Addr Too Low (<8000H) +++',CR,LF
+	DEFB	0
+	JP	AUTOSZ		; loop, ask for auto-sizing
+
+
+	; Transfer addr's from Z3ENV to COMMON table (logical 'ORG')
+ENV2COM: LD	HL,(Z3ENV_I+27)	; addr Z3ENV (env. descriptor)
+	LD	(COMTB1),HL	;   org _ENV_ Common
+	LD	HL,(Z3ENV_I+69)	; addr BIOS (start NZBIO)
+	LD	(COMTB0),HL	;   org _BIOS_ Common
+	LD	HL,(Z3ENV_I+34)	; addr Z3MSG (msg buffer)
+	LD	(COMTB2),HL	;   org _MSG_ Common
+	LD	HL,(Z3ENV_I+36)	; addr EXTFCB (external FCB)
+	LD	(COMTB3),HL	;   org _FCB_ Common
+	LD	HL,(Z3ENV_I+24)	; addr Z3CL (cmd line buffer)
+	LD	(COMTB4),HL	;   org _MCL_ Common
+	LD	HL,(Z3ENV_I+30)	; addr SHSTK (shell stack)
+	LD	(COMTB8),HL	;   org _SSTK_ Common
+	LD	HL,(Z3ENV_I+38)	; addr EXTSTK (external stack)
+	LD	(COMTB9),HL	;   org _XSTK_ Common
+
+	; ##### CHECK: top of mem not used (HL immediately overwritten)
+	CALL	GZMTOP
+
+	; init phys. load location addr's in COMMON table
+	LD	HL,0080H
+	LD	(COMTB0+2),HL
+	LD	(COMTB1+2),HL
+	LD	(COMTB2+2),HL
+	LD	(COMTB3+2),HL
+	LD	(COMTB4+2),HL
+	LD	(COMTB7+2),HL
+	LD	(COMTB8+2),HL
+	LD	(COMTB9+2),HL
+
+
+	;----- Link files
+
+	; link CCP
+	LD	HL,(CNBSZ_I)	; CCP Non-banked total size
+				; (make room for Non-banked CCP to..
+				; ..copy from SYS Bank to TPA Bank)
+	INC	H		; +100H
+	LD	(COMTB5),HL	; store as CCP Banked CSEG start (org BANK2 Common)
+	LD	(CBKAD_I),HL	; ..and as CCP Banked base addr
+	EX	DE,HL
+	LD	HL,(CCBKSZ)	; CCP Banked CSEG addr
+	ADD	HL,DE		;   add to Banked base addr
+	LD	(COMTB6),HL	;   ..store as CCP Banked DSEG start (org B2RAM Common)
+
+	; ##### CHECK: obsolete? contents of HL and DE overwritten after EXX/EXX anyway
+	LD	HL,(CBKSZ_I)	; CCP Banked total size
+	ADD	HL,DE
+
+	; prepare alt. registers for linking
+	; BC'= offset to add to CSEG, DE'= offset to add to DSEG
+	; ( HL'= dest. addr bitmap -- not used )
+	EXX
+	LD	BC,(CNBAD_I)	; CCP Non-banked base addr
+	LD	HL,(CCNBSZ)	; CCP Non-banked CSEG size
+	ADD	HL,BC		; add (= DSEG start)
+	EX	DE,HL		;   swap into DE
+	EXX
+
+	CALL	CODEND		; get addr WSPC
+	LD	DE,0100H	; move beyond header (1 page)
+	ADD	HL,DE		;   add (= destination)
+	LD	C,L
+	LD	B,H		; copy addr in BC
+	LD	(LPHYADR),HL	; ..and store in var for link module
+	LD	HL,(CNBSZ_I)	; CCP Non-banked total size
+	ADD	HL,BC		;   add to dest location
+	LD	(COMTB5+2),HL	;   ..set CCP Banked CSEG phys. load location
+				;      (in BANK2 Common)
+	LD	DE,(CCBKSZ)	; CCP Banked CSEG addr
+	ADD	HL,DE		;   add to dest
+	LD	(COMTB6+2),HL	;   ..set CCP Banked DSEG phys. load location
+				;      (in B2RAM Common)
+	LD	HL,COMTBL	; addr of COMMON's table
+	LD	(LTBLADR),HL	;   store in var for linker
+	LD	HL,(CCNBSZ)	; CSEG size CCP unbanked
+	ADD	HL,BC		;   add (= dest DSEG)
+	LD	DE,CCPFCB
+
+	; link file with BC= phys. addr CSEG, HL= phys. addr DSEG, DE= addr FCB
+	CALL	LNKFILE
+
+	; link DOS
+	LD	HL,(COMTB5)	; get org BANK2 Common (= CCP Banked base addr)
+	LD	DE,(CBKSZ_I)	; CCP Banked total size
+	ADD	HL,DE		;   add
+	LD	(COMTB5),HL	;   ..store as DOS Banked CSEG addr (org BANK2 Common)
+	LD	(DBKAD_I),HL	;   ..and as DOS Banked base addr
+	LD	DE,(DCBKSZ)	; DOS Banked CSEG size
+	ADD	HL,DE		;   add to base addr
+	LD	(COMTB6),HL	;   ..store as DOS Banked DSEG addr (org B2RAM Common)
+
+	; prepare alt. registers for linking
+	EXX
+	LD	BC,(DNBAD_I)	; DOS Non-banked base addr
+	LD	HL,(DCNBSZ)	; DOS Non-banked CSEG size
+	ADD	HL,BC		; add (= DSEG start)
+	EX	DE,HL		;   swap into DE
+	EXX
+
+	LD	BC,(LPHYADR)	; destination addr (WSPC + 0x100)
+	LD	HL,(CNBSZ_I)	; CCP Non-banked total size
+	ADD	HL,BC
+	LD	DE,(CBKSZ_I)	; CCP Banked total size
+	ADD	HL,DE
+	LD	C,L
+	LD	B,H		; new dest. addr in BC
+	LD	(LPHYADR),HL	; ..and update var for link module
+
+	; ##### CHECK: already done when linking CCP - obsolete ?
+	LD	HL,COMTBL	; addr of COMMON's table
+	LD	(LTBLADR),HL	;   store in var for linker
+	; ######
+
+	LD	HL,(DNBSZ_I)	; DOS Non-banked total size
+	ADD	HL,BC		;   add to dest location
+	LD	(COMTB5+2),HL	; ..set DOS Banked CSEG phys. load location
+				;    (in BANK2 Common)
+	LD	DE,(DCBKSZ)	; DOS Banked CSEG size
+	ADD	HL,DE		;   add to dest
+	LD	(COMTB6+2),HL	; ..set DOS Banked DSEG phys. load location
+				;    (in B2RAM Common)
+	LD	HL,(DCNBSZ)	; DOS Non-banked CSEG size
+	ADD	HL,BC		;   add (= dest DSEG)
+	LD	DE,DOSFCB
+
+	; link file with BC= phys. addr CSEG, HL= phys. addr DSEG, DE= addr FCB
+	CALL	LNKFILE
+
+	; link BIOS
+	LD	HL,(COMTB5)	; get org BANK2 Common (= DOS Banked base addr)
+	LD	DE,(DBKSZ_I)	; DOS Banked total size
+	ADD	HL,DE		;   add
+	LD	(COMTB5),HL	;   ..store as BIOS Banked CSEG addr (org BANK2 Common)
+	LD	(BBKAD_I),HL	;   ..and as BIOS Banked base addr
+	LD	DE,(BCBKSZ)	; BIOS Banked CSEG size
+	ADD	HL,DE		;   add to base addr
+	LD	(COMTB6),HL	;   ..store as BIOS Banked DSEG addr (org B2RAM Common)
+
+	; prepare alt. registers for linking
+	EXX
+	LD	BC,(BNBAD_I)	; BIOS Non-banked base addr
+	LD	HL,(BCNBSZ)	; BIOS Non-banked CSEG size
+	ADD	HL,BC		; add (= DSEG start)
+	EX	DE,HL		;   swap into DE
+	EXX
+
+	LD	BC,(LPHYADR)	; destination addr (begin DOS)
+	LD	HL,(DNBSZ_I)	; DOS Non-banked total size
+	ADD	HL,BC
+	LD	DE,(DBKSZ_I)	; DOS Banked total size
+	ADD	HL,DE
+	LD	C,L
+	LD	B,H		; new dest. addr in BC
+	LD	(LPHYADR),HL	; ..and update var for link module
+	LD	HL,(BNBSZ_I)	; BIOS Non-banked total size
+	ADD	HL,BC		;   add to dest location
+	LD	(COMTB5+2),HL	;   ..set BIOS Banked CSEG phys. load location
+				;     (in BANK2 Common)
+	LD	DE,(BCBKSZ)	; BIOS Banked CSEG size
+	ADD	HL,DE		;   add to dest
+	LD	(COMTB6+2),HL	;   ..set BIOS Banked DSEG phys. load location
+				;     (in B2RAM Common)
+	LD	DE,(BDBKSZ)	; BIOS Banked DSEG size
+	ADD	HL,DE		; add (= end addr in WSPC)
+	LD	(SYSEADR),HL	; ..and store in var
+	LD	HL,(BCNBSZ)	; BIOS Non-Banked CSEG size
+	ADD	HL,BC		;   add (= dest DSEG)
+	LD	DE,BIOSFCB
+
+	; link file with BC= phys. addr CSEG, HL= phys. addr DSEG, DE= addr FCB
+	CALL	LNKFILE
+
+	;----- Link finished
+
+	LD	DE,(SYSEADR)	; end addr of linked system in WSPC
+	CALL	CODEND		; addr start of WSPC
+	EX	DE,HL
+	XOR	A
+	SBC	HL,DE		; calc length in bytes
+	CALL	ALIGN		; ..and align to next sector boundary
+
+	; divide by 8 (dump lower bits 6..0)
+	LD	A,L		; move low byte to A
+	LD	L,H		; move high byte to L
+	LD	H,0		; and dump high byte
+	RLC	A		; rotate MSB to C-Flag
+	ADC	HL,HL		; double HL plus C-Flag
+	LD	(SYSBLKS),HL	; ..store system length (in blocks) in var
+	PUSH	HL
+	CALL	UPDINFO		; update 'k Bios' info
+	POP	HL
+
+	CALL	VPRINT
+	DEFB	CR,LF,'   Total '
+	DEFB	0
+	LD	DE,IMGFCB+1	; ptr to IMG file name
+	CALL	PFN3		; ..display it
+	CALL	VPRINT
+	DEFB	' size = '
+	DEFB	0
+	CALL	PHL4HC
+	CALL	VPRINT
+	DEFB	'H sectors',CR,LF
+	DEFB	0
+
+
+	;----- Update Z3ENV <---> B/P Bios (vice versa)
+
+	LD	DE,(LPHYADR)	; get last dest. addr (BIOS)
+	LD	HL,152		; offset to Env. Descriptor (CONFIG+26)
+	ADD	HL,DE		; move ptr fwd
+	LD	BC,(Z3ENV_I+27)	; addr Z3ENV (env. descriptor)
+	LD	(HL),C		; ..store actual addr Z3ENV
+	INC	HL
+	LD	(HL),B
+	LD	BC,4
+	ADD	HL,BC		; move ptr to CPU Clock Rate (CONFIG+31)
+	LD	A,(HL)		; get value
+	LD	(Z3ENV_I+43),A	; ..and store in ENV
+	LD	HL,67		; offset to BIOS fn #22 (get addr DRVTBL)
+	ADD	HL,DE		; move ptr forward
+	LD	A,(HL)
+	INC	HL
+	LD	H,(HL)		; get addr of fn call in HL
+	LD	L,A
+	LD	BC,(BNBAD_I)	; BIOS Non-banked base addr in BC
+	OR	A
+	SBC	HL,BC		; ..calc difference
+	ADD	HL,DE		;   ..set ptr to start of fn in WSPC memory
+	INC	HL		; move ptr beyond opcode 0x21 (LD HL,nnnn)
+	LD	A,(HL)
+	INC	HL
+	LD	H,(HL)		; addr of drive table in HL
+	LD	L,A
+	OR	A
+	SBC	HL,BC		; calc diff to BIOS base addr
+	ADD	HL,DE		; ..and set ptr to location in WSPC memory
+	LD	B,16		; counter (16 drives, A..P)
+	LD	DE,0
+	DEC	HL		; prior to loop, set ptr back
+
+	; create bit mask for drive vector
+MKDRVEC: INC	HL
+	LD	A,(HL)		; check if high byte
+	INC	HL
+	OR	(HL)		; .and low byte are zero
+	JR	Z,MKDRVE0	; ..if so, skip drive
+	SCF			;   else, set C-Flag for existing byte
+MKDRVE0: RR	D		; and rotate bit into position
+	RR	E
+	DJNZ	MKDRVEC		; loop till done
+	LD	(Z3ENV_I+52),DE	; set DRVEC (drive vector)
+	LD	HL,(UNBAD_I)
+	LD	(Z3ENV_I+60),HL	; set USRSP addr (resident user space)
+	LD	A,(UNBSZ_I)
+	LD	(Z3ENV_I+59),A	; set remaining user space
+	LD	(Z3ENV_I+62),A	; ..and size of user space
+
+
+	;----- Write IMG file to disk
+
+	; copy IMG header to workspace (0x100 bytes before linked new system)
+	CALL	CODEND		; get addr WSPC
+	EX	DE,HL		; dest in DE
+	LD	HL,IMGHD_I	; src addr (IMG hdr) in HL
+	LD	BC,0100H	; bytes to copy
+	LDIR
+
+	; save file
+	LD	BC,(SYSBLKS)	; # of sectors to write
+	CALL	CODEND		; addr WSPC
+	CALL	WRFILE		; write IMG file
+	JP	NC,EXIT		; ..if ok, jump and exit program
+	CALL	VPRINT
+	DEFB	CR,LF,'..Error Writing output file..',BEL,CR,LF
+	DEFB	0
+	JP	EXIT
+
+
+;::::: SUPPORT FUNCTIONS
+
+	; check if user requested to abort program (<ESC> or <Ctrl-C> entered)
+	;  in: A= char
+EXITRQ: CP	ESC		; is it <ESC> ?
+	JR	Z,EXITRQ0	; ..if so, jump forward and abort
+	CP	CTRLC		; <Ctrl-C> ?
+	RET	NZ		; ..if not, return
+				;   else, fall through and abort
+EXITRQ0: CALL	CRLF
+
+M$ABORT: CALL	VPRINT
+	DEFB	'   ...aborting...',CR,LF
+	DEFB	0
+	JP	EXIT
+
+
+;::::: HELP SCREEN
+
+HELP:	CALL	VPRINT
+	DEFB	CR,LF,1
+	DEFB	0
+	CALL	PRGNAME
+	CALL	VPRINT
+	DEFB	2,' builds banked and non-banked parts of a B/P Bios.',CR,LF
+	DEFB	' It operates with layered Menus and supports tailoring of defaults.',CR,LF
+	DEFB	' Starting locations of BIOS, DOS and CPR may be automatically computed',CR,LF
+	DEFB	' or Specified.  If ZSDOS2 is the selected Dos, Bit Allocation buffers',CR,LF
+	DEFB	' for Hard Drives are located in the System Bank.',CR,LF,LF
+	DEFB	'Syntax:',CR,LF,'   '
+	DEFB	0
+	CALL	PRGNAME
+	CALL	VPRINT
+	DEFB	'          - Generate system w/defaults',CR,LF,'   '
+	DEFB	0
+	CALL	PRGNAME
+	CALL	VPRINT
+	DEFB	' fn[.ft]  - Make/Modify a specific system',CR,LF
+	DEFB	'                       (Default type is .IMG)',CR,LF
+	DEFB	'   '
+	DEFB	0
+	CALL	PRGNAME
+	CALL	VPRINT
+	DEFB	' //       - Display this Message',CR,LF
+	DEFB	0
+
+
+;::::: EXIT PROGRAM
+
+EXIT:	LD	SP,(STACK)	; restore stackpointer
+	CALL	DINIT		; de-init terminal characteristics
+	LD	BC,(OLDDU)
+	CALL	PUTUD		; log initial Drive/User
+	RET
+
+
+	; display main menu
+M0SHOW:	CALL	CLS
+	CALL	VPRINT
+	DEFB	CR,LF,1,' Main ',2,CR,LF,CR,LF,LF
+	DEFB	TAB,1,' 1 ',2,' File Names',CR,LF,LF
+	DEFB	TAB,1,' 2 ',2,' BIOS Configuration',CR,LF,LF
+	DEFB	TAB,1,' 3 ',2,' Environment'
+	DEFB	0
+	RET
+
+
+;::::: MENU 1 - FILES
+
+M1FILE: CALL	CLS
+	CALL	VPRINT
+	DEFB	CR,LF,1,' Files (1.1) ',2,CR,LF,CR,LF,LF
+	DEFB	TAB,1,' 1 ',2,' Command Processor File : '
+	DEFB	0
+	LD	DE,CCPFCB+1	; ptr file name in CCP FCB
+	CALL	PFN1		; ..display file name + type
+	CALL	VPRINT
+	DEFB	CR,LF,LF,TAB,1,' 2 ',2,' Operating System File  : '
+	DEFB	0
+	LD	DE,DOSFCB+1	; ptr file name in DOS FCB
+	CALL	PFN1
+	CALL	VPRINT
+	DEFB	CR,LF,LF,TAB,1,' 3 ',2,' B/P Bios Source File   : '
+	DEFB	0
+	LD	DE,BIOSFCB+1	; ptr file name in BIOS FCB
+	CALL	PFN1
+	CALL	VPRINT
+	DEFB	CR,LF,LF,TAB,1,' 4 ',2,' B/P Executable Image   : '
+	DEFB	0
+	LD	DE,IMGFCB+1	; ptr file name in IMG FCB
+	CALL	PFN1
+
+	CALL	MSELECT		; get user input
+	CP	' '		; is it <SP> ?
+	RET	Z		; ..return
+	CP	CR		; <CR> ?
+	RET	Z		; ..return
+	CP	ESC		; <ESC> ?
+	JP	Z,M$ABORT	; ..quit program
+	CP	CTRLC		; <Ctrl-C> ?
+	JP	Z,M$ABORT	; ..quit program
+	CP	'4'+1		; is it above '4' ?
+	JP	NC,M1FILE	; ..if so, display Files menu again
+				;   else, fall through
+	LD	DE,CCPFCB
+	LD	HL,CFNAM_I	; ZCPR FCB+name ptr's
+	CP	'1'		; option '1' ?
+	JR	Z,M1FNAME	; ..if so, jump to continue
+	LD	DE,DOSFCB
+	LD	HL,DFNAM_I	; ZSDOS FCB+name ptr's
+	CP	'2'		; option '2' ?
+	JR	Z,M1FNAME	; ..if so, jump to continue
+	LD	DE,BIOSFCB
+	LD	HL,BFNAM_I	; B/P Bios FCB+name ptr's
+	CP	'3'		; option '3' ?
+	JR	Z,M1FNAME	; ..if so, jump to continue
+	LD	DE,IMGFCB	; else, set IMG FCB+name ptr's
+	LD	HL,IMGFN_I	; ..and fall through
+
+	; enter file name
+M1FNAME: LD	(MSELOPT),A	; store selected option
+	PUSH	HL		; save HL regs
+	CALL	VPRINT
+	DEFB	CR,LF,TAB,TAB,' FileName[.Typ] : '
+	DEFB	0
+	CALL	CINPUTL		; get user input (line editor)
+	PUSH	DE
+	LD	DE,CPMFCB	; ptr to standard FCB #1
+	CALL	INITFCB		; init FCB
+	CALL	ZFNAME		; ..and parse user input as fn/ft into FCB
+	POP	DE		; restore regs
+	POP	HL
+	OR	A		; check if file name is unambiguous
+	JR	Z,M1FCB		; ..if so, jump to continue
+
+	; error, file name invalid
+M1FNERR: LD	A,BEL		;   else, send <BEL> to CON:
+	CALL	COUT
+	JP	M1FILE		; ..and loop, ask for new input
+
+	; file name ok, init FCB
+M1FCB:	LD	A,(CPMFCB+1)	; check first char of file name
+	CP	' '		; is it <SP> ?
+	JR	Z,M1FNERR	; ..if so, file name is invalid
+				;   jump, alert and ask for new input
+	PUSH	HL		; save regs
+	LD	A,(CPMFCB+9)	; get first char of file type
+	CP	' '		; is it <SP> ?
+	JR	NZ,M1FCB1	; ..if not, jump to continue
+	LD	A,(MSELOPT)	; get selected menu option (to set file type)
+	PUSH	DE
+	LD	DE,CPMFCB+9
+	LD	BC,3		; bytes to copy
+	LD	HL,FTYPES+3	; prepare ptr for .IMG file type
+	CP	'4'		; was option '4' (image file) selected ?
+	JR	Z,M1FCB0	; ..if so, jump to continue
+	LD	HL,FTYPES+6	; prepare ptr for .REL file type
+	CP	'3'		; was option '3' (B/P Bios file) selected ?
+	JR	Z,M1FCB0	; ..if so, jump to continue
+	LD	HL,FTYPES+9	;   else, set ptr to .ZRL file type
+
+M1FCB0: LDIR			; ..and copy
+	POP	DE		; DE= ptr to respective FCB in temp area
+				; (Stack)= ptr to file name in IMG file header area
+M1FCB1: LD	HL,CPMFCB	; ptr to standard FCB #1
+	LD	BC,15		; copy 15 bytes to FCB in temp area
+	LDIR
+	POP	DE
+	LD	HL,CPMFCB+1	; ptr to file name in standard FCB #1
+	LD	BC,11		; copy 11 bytes (fn.ft) to IMG file hdr
+	LDIR
+	JP	M1FILE		; ..and loop
+
+
+;:::::	MENU 2 - BIOS CONFIG
+
+M2BIOS: CALL	CLS
+	CALL	VPRINT
+	DEFB	1,' Environment (2.1) ',2
+	DEFB	0
+	CALL	GXYMSG		; display w/ positioning
+	DEFB	3,3,'COMMON (Bank 0) MEMORY              BANK 2 MEMORY'
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	4,2,'----------------------         ------------------------'
+	DEFB	0
+	CALL	GXYMSG		; col 2 (on the left)
+	DEFB	5,2,1,' A ',2,'  Common BIOS  - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	6,2,'       Size       - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	7,2,1,' B ',2,'  Common BDOS  - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	8,2,'       Size       - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	9,2,1,' C ',2,'  Command Proc - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	10,2,'       Size       - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	11,2,1,' D ',2,'  User Space   - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	12,2,'       Size       - '
+	DEFB	0
+	CALL	GXYMSG		; col 34 (on the right)
+	DEFB	5,34,1,' E ',2,'  Banked BIOS  - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	6,34,'       Size       - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	7,34,1,' F ',2,'  Banked BDOS  - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	8,34,'       Size       - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	9,34,1,' G ',2,'  Command Proc - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	10,34,'       Size       - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	11,34,1,' H ',2,'  User Space   - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	12,34,'       Size       - '
+	DEFB	0
+
+	; display BIOS addr and size
+	LD	HL,0516H	; row 5 / col 22
+	CALL	GOTOXY		; position cursor
+	LD	HL,(Z3ENV_I+69)	; ptr to start addr BIOS in ENV
+	CALL	PHLXH		; display as hex + 'H'
+	EX	DE,HL		; keep value
+	LD	HL,0616H	; row 6 / col 22
+	CALL	GOTOXY
+	PUSH	DE
+	CALL	ENVLOW		; lowest addr of ENV component in HL
+	POP	DE
+	LD	BC,(UNBAD_I)	; get addr User Space in IMG hdr
+	LD	A,B		; check if invalid (= zero)
+	OR	C
+	CALL	NZ,MINHLBC	; ..if not, get the lower of both addr's in HL
+	OR	A
+	SBC	HL,DE		; calc size [lowest ENV] - [start addr BIOS]
+	ADD	HL,HL		; *2
+	LD	A,L		; check for page boundary
+	OR	A		;   (low byte = zero)
+	JR	Z,M2ADRSZ	; ..if so, skip over
+	INC	H		;   else, increase before displaying
+
+	; display addr and size of other system segments
+M2ADRSZ: LD	A,H
+	CALL	PSPCAD		; display <SP> + value as dec (size high byte)
+	LD	HL,0716H	; row 7 / col 22
+	LD	DE,Z3ENV_I+66	; ptr start addr DOS in Z3ENV
+	CALL	PSEGXY		;   print Segment addr/size at coordinates
+	LD	HL,0916H	; row 9 / col 22
+	LD	DE,Z3ENV_I+63	; ..start addr ZCPR in Z3ENV
+	CALL	PSEGXY
+	LD	HL,0B16H	; row 11 / col 22
+	LD	DE,UNBAD_I	; ..addr User Space in IMG hdr
+	CALL	PSEGXY
+	LD	HL,0536H	; row 5 / col 54
+	LD	DE,BBKAD_I	; ..base addr BIOS Banked in IMG hdr
+	CALL	PSEGXY
+	LD	HL,0736H	; row 7 / col 54
+	LD	DE,DBKAD_I	; ..base addr DOS Banked in IMG hdr
+	CALL	PSEGXY
+	LD	HL,0936H	; row 9 / col 54
+	LD	DE,CBKAD_I	; ..base addr ZCPR Banked in IMG hdr
+	CALL	PSEGXY
+	LD	HL,0B36H	; row 11 / col 54
+	LD	DE,UBKAD_I	; ..addr User Space Banked (RESVD ??) in IMG hdr
+	CALL	PSEGXY
+
+	;	select option from Menu 2 Bios Config
+M2SELCT: CALL	MSELECT		; get user input
+	CP	' '		; is it <SP> ?
+	RET	Z		; ..return
+	CP	CR		; <CR> ?
+	RET	Z		; ..return
+	CP	ESC		; <ESC> ?
+	JP	Z,M$ABORT	; ..quit program
+	CP	CTRLC		; <Ctrl-C> ?
+	JP	Z,M$ABORT	; ..quit program
+
+	LD	HL,Z3ENV_I+69
+	CP	'A'		; 'A' (Common Bios) ?
+	JR	Z,M2EXEC
+	LD	HL,Z3ENV_I+66
+	CP	'B'		; 'B' (Common BDOS) ?
+	JR	Z,M2EXEC
+	LD	HL,Z3ENV_I+63
+	CP	'C'		; 'C' (Common ZCPR) ?
+	JR	Z,M2EXEC
+	LD	HL,UNBAD_I
+	CP	'D'		; 'D' (Common User Space) ?
+	JR	Z,M2EXEC
+	LD	HL,BBKAD_I
+	CP	'E'		; 'E' (Banked Bios) ?
+	JR	Z,M2EXEC
+	LD	HL,DBKAD_I
+	CP	'F'		; 'F' (Banked BDOS) ?
+	JR	Z,M2EXEC
+	LD	HL,CBKAD_I
+	CP	'G'		; 'G' (Banked ZCPR) ?
+	JR	Z,M2EXEC
+	LD	HL,UBKAD_I
+	CP	'H'		; 'H' (Banked User Space) ?
+
+	JR	NZ,M2SELCT
+
+M2EXEC:	CALL	PHLXSIZ		; execute selected option (display addr and size,
+				; ask for new values, convert)
+	JP	M2BIOS		; ..then loop, display again
+
+
+;::::: SUPPORT FUNCTIONS (Menu 2 - Bios Config)
+
+	; return the lower of HL and BC ("min" function)
+	;  in: BC, HL = values to compare
+	; out: HL= the lower of both values
+MINHLBC: LD	A,H		; test high byte first
+	SUB	B
+	RET	C		; if borrowed from C-Flag, return (HL < BC)
+	JR	NZ,MINHLB0	; if delta <> zero, jump (HL > BC)
+	LD	A,L		; ..else, test low byte too
+	SUB	C
+	RET	C		; if borrowed from C-Flag, return (BC > HL)
+MINHLB0: LD	L,C		; ..else, copy contents of BC into HL
+	LD	H,B
+	RET
+
+
+;::::: MENU 3 - ENVIRONMENT
+
+M3ENV:	CALL	CLS
+	CALL	VPRINT
+	DEFB	1,' Environment (3.1) ',2
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	3,2,1,' A ',2,' - Environment   - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	4,2,'       Size (# recs)- '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	5,2,1,' B ',2,' - Flow Ctrl Pkg - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	6,2,'       Size (# recs)- '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	7,2,1,' C ',2,' - I/O Package   - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	8,2,'       Size (# recs)- '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	9,2,1,' D ',2,' - Res Cmd Proc  - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	10,2,'       Size (# recs)- '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	11,2,1,' E ',2,' - Command Line  - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	12,2,'       Size (bytes) - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	3,34,1,' F ',2,' - Named Dirs    - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	4,34,'       # of Entries - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	5,34,1,' G ',2,' - External Path - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	6,34,'       # of Entries - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	7,34,1,' H ',2,' - Shell Stack   - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	8,34,'       # of Entries - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	9,34,'       Entry Size   - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	10,34,1,' I ',2,' - Msg Buffer    - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	11,34,1,' J ',2,' - Ext. FCB      - '
+	DEFB	0
+	CALL	GXYMSG
+	DEFB	12,34,1,' K ',2,' - Ext. Stack    - '
+	DEFB	0
+
+	; display addr and size of ENV components
+	; stored as <addr> (16-bit) <size/count> (8-bit)
+	LD	HL,0318H	; row 3 / col 24
+	LD	DE,Z3ENV_I+27	; ptr addr Z3ENV (ZCPR3 Environment Descriptor)
+	CALL	PSEGXY		;   print Segement addr/size at coordinates 
+	LD	HL,0518H	; row 5 / col 24
+	LD	DE,Z3ENV_I+18	; ptr addr FCP (Flow Cmd Pkg)
+	CALL	PSEGXY
+	LD	HL,0718H	; row 7 / col 24
+	LD	DE,Z3ENV_I+15	; ptr addr IOP (I/O Pkg)
+	CALL	PSEGXY
+	LD	HL,0918H	; row 9 / col 24
+	LD	DE,Z3ENV_I+12	; ptr addr RCP (Resident Cmd Pkg)
+	CALL	PSEGXY
+	LD	HL,0B18H	; row 11 / col 24
+	LD	DE,Z3ENV_I+24	; ptr addr Z3CL (ZCPR3 cmd line buffer)
+	CALL	PSEGXY
+	LD	HL,0339H	; row 3 / col 57
+	LD	DE,Z3ENV_I+21	; ptr addr Z3NDIR (named dir buffer)
+	CALL	PSEGXY
+	LD	HL,0539H	; row 5 / col 57
+	LD	DE,Z3ENV_I+9	; ptr addr EXPATH (external path)
+	CALL	PSEGXY
+	LD	HL,0739H	; row 7 / col 57
+	LD	DE,Z3ENV_I+30	; ptr addr SHSTK (shell stack)
+	CALL	PSEGXY
+
+	; single value entries (8-bit or 16-bit)
+	LD	HL,0939H	; row 9 / col 57
+	CALL	GOTOXY
+	LD	A,(Z3ENV_I+33)	; SHSIZE (size of a shell stack entry)
+	CALL	PSPCAD		;   display <SP> + value as dec
+	LD	HL,0A39H	; row 10 / col 57
+	CALL	GOTOXY
+	LD	HL,(Z3ENV_I+34)	; addr Z3MSG (ZCPR3 message buffer)
+	CALL	PHLXH		;   display as hex + 'H'
+	LD	HL,0B39H	; row 11 / col 57
+	CALL	GOTOXY
+	LD	HL,(Z3ENV_I+36)	; addr EXTFCB (external File Control Block)
+	CALL	PHLXH
+	LD	HL,0C39H	; row 12 / col 57
+	CALL	GOTOXY
+	LD	HL,(Z3ENV_I+38)	; addr EXTSTK (external stack)
+	CALL	PHLXH
+
+M3SELCT: CALL	MSELECT
+	CP	' '		; is it <SP> ?
+	RET	Z		; ..return
+	CP	CR		; <CR> ?
+	RET	Z		; ..return
+	CP	ESC		; <ESC> ?
+	JP	Z,M$ABORT	; ..quit program
+	CP	CTRLC		; <Ctrl-C> ?
+	JP	Z,M$ABORT	; ..quit program
+	CP	'A'		; 'A' (ENV) ?
+	JR	C,M3SELCT	; ..if below ascii 'A', loop ask for new input
+
+	LD	HL,Z3ENV_I+27	; ptr to addr of ZCPR3 Env Descriptor
+	JR	Z,M3EXEC1
+	LD	HL,Z3ENV_I+18	; ..of FCP
+	CP	'B'
+	JR	Z,M3EXEC1
+	LD	HL,Z3ENV_I+15	; ..of IOP
+	CP	'C'
+	JR	Z,M3EXEC1
+	LD	HL,Z3ENV_I+12	; ..of RCP
+	CP	'D'
+	JR	Z,M3EXEC1
+	LD	HL,Z3ENV_I+24	; ..of Z3CL (cmd line buffer)
+	CP	'E'
+	JR	Z,M3EXEC1
+	LD	HL,Z3ENV_I+21	; ..of Z3NDIR (named dir buffer)
+	CP	'F'
+	JR	Z,M3EXEC2
+	LD	HL,Z3ENV_I+9	; ..of EXPATH (external path)
+	CP	'G'
+	JR	Z,M3EXEC2
+	LD	HL,Z3ENV_I+30	; ..of SHSTK
+	CP	'H'
+	JR	Z,M3EXEC4
+	LD	HL,Z3ENV_I+34	; ..of Z3MSG (msg buffer)
+	CP	'I'
+	JR	Z,M3EXEC3
+	LD	HL,Z3ENV_I+36	; ..of EXTFCB
+	CP	'J'
+	JR	Z,M3EXEC3
+	LD	HL,Z3ENV_I+38	; ..of EXTSTK
+	CP	'K'
+	JR	Z,M3EXEC3
+
+	JP	M3ENV
+
+
+	; ##### CHECK: redundant JR C loop in case of error,
+	;              because called routines handle errors
+M3EXEC1: CALL	PHLXSIZ		; print addr and size + get input (converted)
+	JR	C,M3EXEC1
+M3EXEC:	JP	M3ENV		; ..and loop
+
+M3EXEC2: CALL	PHLXENT		; print addr and # entries + get input (converted)
+	JR	C,M3EXEC2
+	JR	M3EXEC
+
+M3EXEC3: CALL	PHLXCIN		; print (only) addr + get input (converted)
+	JR	C,M3EXEC3
+	JR	M3EXEC
+
+M3EXEC4: CALL	PADENSZ		; print addr, # entries, and size + get input (converted)
+	JR	C,M3EXEC4
+	JR	M3EXEC
+
+
+;:::::	SUPPORT FUNCTIONS (all Menus)
+
+	; select an option from menu (validate user input)
+MSELECT: CALL	VPRINT
+	DEFB	CR,LF,LF
+	DEFB	0
+MSELCT0: CALL	VPRINT
+	DEFB	CR,TAB,TAB,'Selection : '
+	DEFB	0
+	CALL	EREOL		; clear end of line
+	CALL	CAPIN		; get input and capitalize it
+	CP	' '		; is it <SP> ?
+	RET	Z		; ..return
+	CP	CR		; <CR> ?
+	RET	Z		; ..return
+	CP	ESC		; <ESC> ?
+	RET	Z		; ..return
+	CP	CTRLC		; <Ctrl-C> ?
+	RET	Z		; ..return
+	CP	'0'		; is it a control char (below ascii '0') ?
+	JR	C,MSELCT0	; ..then loop and ask for new input
+	CP	'9'+1		; is it an ascii number ?
+	JR	C,MSELCT1	; ..if so, jump to display
+	CP	'A'		; is it below ascii 'A' ?
+	JR	C,MSELCT0	; ..then loop and ask for new input
+	CP	'Z'+1		; is it above ascii 'Z' ?
+	JR	NC,MSELCT0	; ..then loop and ask for new input
+MSELCT1: JP	COUT		; display on CON: and let return from there
+
+
+	; validate input for (Y)/N query, and echo
+	; Yes is default
+	;  in: A= char (capitalized)
+YESNO:	CP	'N'		; is it 'N' ?
+	JR	Z,YESNO0	; ..if so, skip over
+	LD	A,'Y'		;   else, set 'Y' for any other char
+YESNO0:	JP	COUT		; print on CON: and let return from there
+
+	; validate input for Y/(N) query, and echo
+	; No is default
+	;  in: A= char (capitalized)
+NOYES: CP	'Y'		; is it 'Y' ?
+	JR	Z,YESNO0	; ..if so, jump to display
+	LD	A,'N'		;   else, set 'N' for any other char
+	JR	YESNO0		; and jump to display
+
+
+	; determine CSEG and DSEG sizes of linked file
+	; (SLINK0 linker module provides a dedicated sizing function)
+	;  in: DE= ptr FCB
+	;      HL= addr COMTBL
+	; out: BC= DSEG size
+	;      HL= CSEG size
+LNKDSZ:	LD	(LFCBADR),DE	; store addr of FCB
+	LD	(LTBLADR),HL	; store addr of COMMON table
+	PUSH	DE
+	INC	DE
+	CALL	PFN1		; display file name
+	POP	DE
+	CALL	INITFCB		; init FCB
+	CALL	F$EXIST		; check if file exists
+	OR	A
+	JP	Z,E$NFND	; ..if not, jump and let return from there
+	CALL	INITFCB		; init FCB
+	CALL	F$OPEN		; open file
+	OR	A
+	JP	NZ,E$OPEN	; ..if error, jump and let return from there
+	LD	A,128
+	LD	(LBYTPOS),A	; set byte pos for @GBYTE function (= initiate load)
+	XOR	A		; clear A (= just sizing info)
+	LD	HL,(LTBLADR)	; set ptr COMMON table
+
+	CALL	LINK
+
+	OR	A		; check error status
+	JP	NZ,E$LINK	; ..if not ok, jump
+	PUSH	BC		; save DSEG size
+	PUSH	DE		; save CSEG size
+	PUSH	BC
+	PUSH	DE
+	LD	DE,(LFCBADR)	; get FCB addr
+	CALL	F$CLOSE		; close file
+	CALL	VPRINT
+	DEFB	'  -  CSEG='
+	DEFB	0
+	POP	HL		; restore CSEG size
+	CALL	PHL4HC		; ..and display as hex
+	CALL	VPRINT
+	DEFB	'H, DSEG='
+	DEFB	0
+	POP	HL		; restore DSEG size
+	CALL	PHL4HC		; ..and display as hex
+	CALL	VPRINT
+	DEFB	'H',CR,LF
+	DEFB	0
+	POP	HL		; restore CSEG size in HL
+	POP	BC		; restore DSEG size in BC
+	RET
+
+
+	; print addr's of BANK2 and B2RAM Common
+PB2ADR:	LD	HL,(COMTB6)	; get org B2RAM Common
+	LD	A,H		; check if zero
+	OR	L
+	LD	HL,(COMTB5)	; prepare, and get org BANK2 Common
+	JR	NZ,PB2ADR0	; ..if addr <> zero, jump to continue
+	LD	A,H		;   else, check org BANK2 Common
+	OR	L		; if also zero
+	RET	Z		; ..if so, return
+				;   else, fall through and print
+PB2ADR0: CALL	VPRINT
+	DEFB	'        Bank2='
+	DEFB	0
+	LD	HL,(COMTB5)	; get org BANK2 Common
+	CALL	PHL4HC
+	CALL	VPRINT
+	DEFB	'H  B2Ram='
+	DEFB	0
+	LD	HL,(COMTB6)	; get org B2RAM Common
+	CALL	PHL4HC
+	CALL	VPRINT
+	DEFB	'H',CR,LF
+	DEFB	0
+	RET
+
+
+	; Standard sizes - calculate base addr's of system segments Non-banked
+	;  in: -
+	; out: - (addr's in ram storage locations)
+CALCSSZ: LD	DE,(CNBSZ_I)	; compare CCP Non-banked size
+	LD	HL,0800H	; with CP/M standard 2.0 kB
+	OR	A
+	SBC	HL,DE
+	JR	C,E$LARGE	; ..if too large, jump error
+	LD	DE,(DNBSZ_I)	; compare DOS Non-banked size
+	LD	HL,0E00H	; with CP/M standard 3.5 kB
+	SBC	HL,DE
+	JR	C,E$LARGE	; ..if too large, jump error
+	CALL	ENVLOW		; addr of lowest ENV component in HL
+	CALL	USPCSZ		; size of User Space in DE
+	JR	NZ,CALCSS0	; ..if User Space size <> zero, skip over
+	LD	HL,0		;   else, nullify HL before calc
+CALCSS0: OR	A		; reset C-Flag
+	SBC	HL,DE		; calc User Space base addr
+	LD	(UNBAD_I),HL	; ..and store it
+	LD	HL,(Z3ENV_I+69)	; start addr BIOS (from ENV)
+	LD	(BNBADR),HL	; ..and store in var (BIOS Non-banked addr)
+	LD	DE,0E00H	; DOS standard size
+	SBC	HL,DE		; calc base addr
+	LD	(Z3ENV_I+66),HL	; store in ENV
+	LD	(DNBADR),HL	; ..and in var (DOS Non-banked addr)
+	LD	A,1CH		; DOS standard size in 128-byte recs
+	LD	(Z3ENV_I+68),A	; ..store in ENV
+	LD	DE,0800H	; CCP standard size
+	SBC	HL,DE		; calc base addr
+	LD	(Z3ENV_I+63),HL	; store in ENV
+	LD	(CNBADR),HL	; ..and in var (CCP Non-banked addr)
+	LD	A,10H		; CCP standard size in 128-byte recs
+	LD	(Z3ENV_I+65),A	; store in ENV
+	RET
+
+	; too large
+E$LARGE: CALL	VPRINT
+	DEFB	CR,LF,BEL,TAB,TAB,'+++ CPR or DOS too Large +++',CR,LF
+	DEFB	0
+	JP	AUTOSZ		; loop, ask for auto-sizing
+
+
+	; link file (using SLINK0 LINK routine)
+	;  in: DE= ptr FCB, BC= phys. addr CSEG, HL= phys. addr DSEG
+	;      alt. registers set, addr of COMMON table in var
+	; out: BC= size DSEG, DE= size CSEG
+LNKFILE: PUSH	BC
+	PUSH	HL
+	LD	(LFCBADR),DE	; store addr of FCB
+	CALL	INITFCB		; init FCB
+	CALL	F$EXIST		; check if file exists
+	OR	A
+	JR	Z,E$NFND0	; ..if not, jump and let return from there
+	CALL	INITFCB		; init FCB
+	CALL	F$OPEN		; open file
+	OR	A
+	JR	NZ,E$OPEN0	; ..if error, jump and let return from there
+	LD	A,128
+	LD	(LBYTPOS),A	; set ptr for @GBYTE function (= initiate load)
+	LD	A,00000001B	; set flag to link (bit 0= 1), no bitmap (bit 1= 0)
+	LD	HL,(LTBLADR)	; set addr COMMON table
+	POP	DE		; restore DSEG addr
+	POP	BC		; restore CSEG addr
+	CALL	LINK		; ..and link
+	OR	A
+	JR	NZ,E$LINK	; ..if error, jump error and exit
+	RET
+
+
+	; error messages
+
+E$NFND0: POP	HL		; clear stack
+	POP	HL		; ..then fall through
+E$NFND:	CALL	VPRINT
+	DEFB	'..not found..'
+	DEFB	0
+	JP	CRLF
+
+E$OPEN0: POP	HL
+	POP	HL
+E$OPEN	CALL	VPRINT
+	DEFB	'..Open Error..'
+	DEFB	0
+	LD	DE,(LFCBADR)	; addr of FCB
+	CALL	F$CLOSE		; close file
+	JP	CRLF
+
+E$LINK:	PUSH	AF
+	CALL	VPRINT
+	DEFB	CR,LF,BEL,'..Link Error..'
+	DEFB	0
+	POP	AF
+	CP	'A'
+	JR	NC,E$INFIL
+	CALL	PADC
+	LD	A,' '
+
+E$INFIL: CALL	COUT
+	CALL	VPRINT
+	DEFB	' in '
+	DEFB	0
+	LD	DE,(LFCBADR)	; addr of FCB
+	INC	DE		; move ptr to file name
+	CALL	PFN3
+	DEC	DE
+	CALL	F$CLOSE	; close file
+	JP	EXIT
+
+
+;::::: SLINK0 MODULE SUPPORT FUNCTION AND COMMONs TABLE
+
+	; get one byte from input file
+	; used by SLINK0 linker module
+	; (saves all registers)
+@GBYTE:	PUSH	BC		; save regs
+	PUSH	DE
+	PUSH	HL
+	LD	A,(LBYTPOS)	; check pos for file read
+	CP	128
+	JR	C,GBYTE0	; while below 128, bypass reading a sector
+	LD	HL,CPMDMA	; input buffer starts here
+	CALL	SETDMA		; set file DMA buffer
+	LD	DE,(LFCBADR)	; addr of FCB
+	CALL	F$READ		; ..read one sector (sequential)
+	OR	A
+	SCF			; set C-Flag in case of error
+	JR	NZ,GBYTE1	; jump w/ error code C-Flag set
+
+	; valid data is in sector buffer, get a byte and move ptr fwd
+GBYTE0:	LD	E,A		; set ptr for offset
+	LD	D,0		; high byte is zero
+	LD	HL,CPMDMA	; start from base
+	ADD	HL,DE
+	INC	A		; move ptr fwd
+	LD	(LBYTPOS),A	; ..and save
+	LD	A,(HL)		; get a byte
+	OR	A		; set return status OK (NC)
+GBYTE1:	POP	HL		; restore regs
+	POP	DE
+	POP	BC
+	RET
+
+
+	; table of Named COMMONs
+	; for the various system segments
+	; used by SLINK0 linker module
+	; (12 bytes per entry)
+COMTBL:	DEFB	'_BIOS_',80H,0		; name (1-7 char, 80H terminated) - 8 byte field
+COMTB0:	DEFW	0			; logical load location ('ORG') of segment
+	DEFW	0			; phys. load location of segment
+	DEFB	'_ENV_',80H,0,0
+COMTB1:	DEFW	0FE00H
+	DEFW	0
+	DEFB	'_MSG_',80H,0,0
+COMTB2:	DEFW	0
+	DEFW	0
+	DEFB	'_FCB_',80H,0,0
+COMTB3: DEFW	0
+	DEFW	0
+	DEFB	'_MCL_',80H,0,0
+COMTB4:	DEFW	0
+	DEFW	0
+	DEFB	'BANK2',80H,0,0
+COMTB5:	DEFW	0
+	DEFW	0
+	DEFB	'B2RAM',80H,0,0
+COMTB6:	DEFW	0
+	DEFW	0
+	DEFB	'RESVD',80H,0,0
+COMTB7:	DEFW	0
+	DEFW	0
+	DEFB	'_SSTK_',80H,0
+COMTB8:	DEFW	0
+	DEFW	0
+	DEFB	'_XSTK_',80H,0
+COMTB9:	DEFW	0
+	DEFW	0
+	DEFB	80H		; end-of-table mark
+
+
+
+	; update info string w/ size information "k Bios"
+	; in linked BIOS
+UPDINFO: LD	DE,(LPHYADR)	; last destination addr (BIOS) in WSPC
+	LD	HL,(SYSEADR)	; end addr of linked system in WSPC
+	XOR	A
+	SBC	HL,DE		; calc length in bytes
+	LD	C,L		;   and move to BC
+	LD	B,H		;   (# of bytes to scan)
+	EX	DE,HL
+
+	; find string 'k Bios' in linked Bios
+	; (similar to Z3LIB's CHKENV routine)
+UPDFND:	LD	DE,S$KBIOS	; point to string to search for ('k Bios')
+	LD	A,(DE)		; do a quick scan for first char in string
+	CPIR
+	RET	PO		; ..if not found, return
+	PUSH	BC		; save count and addr
+	PUSH	HL
+	CALL	UPDFND0		; and check remaining chars in string
+	POP	HL
+	POP	BC
+	JR	NZ,UPDFND	; ..if no match, loop
+
+	; string is stored as "60.00k Bios"
+	LD	DE,-6		; move 6 bytes back to first digit char
+	ADD	HL,DE
+	EX	DE,HL		; swap regs (ptr in DE)
+	LD	A,(BNBAD_I+1)	; get high byte base addr BIOS Non-banked
+	ADD	A,6		; ??? # recs User Space ???
+	PUSH	AF
+	RRA			; divide by 4
+	RRA			;   (1.024 = 256 *4 = 0x100 *4)
+	AND	00111111B	; mask off upper bits
+
+	; divide by subtraction
+	LD	BC,10		; B= 0, C= 10
+UPDDIV:	SUB	C		; A= A-10
+	JR	C,UPDPAT	; ..if negative, exit loop and write to memory
+	INC	B		; B= B+1
+	JR	UPDDIV		; continue division
+
+	; patch new info string
+UPDPAT:	ADD	A,10		; compensate underflow
+	LD	C,A		; B contains 10's, C contains 1's
+	LD	HL,3030H	; HL= ascii '0' '0'
+	ADD	HL,BC		; convert digits to ascii (add '0')
+	EX	DE,HL		; swap digits/ptr
+	LD	(HL),D		; store 1st digit char
+	INC	HL
+	LD	(HL),E		; store 2nd digit char
+	INC	HL		; move ptr to decimal places
+	INC	HL
+	EX	DE,HL		; and swap regs again
+	POP	AF		; restore AF
+	AND	00000011B	; mask bits 1 and 0
+	LD	HL,S$KDECPL	; ptr to list of strings for decimal places
+	ADD	A,A		; strings of 2 bytes each (pos *2)
+	CALL	ADDHLA		; move ptr forward
+	LDI			; ..and copy 2 bytes
+	LDI
+	RET
+
+	; string 'k Bios'
+S$KBIOS: DEFB	'k Bios'
+
+	; check remaining chars in string
+UPDFND0: LD	BC,5		; chars remaining in string
+	LD	DE,S$KBIOS+1	; find this string
+UPDFND1: LD	A,(DE)
+	CPI
+	RET	NZ		; ..if no match, return
+	INC	DE		; move source ptr fwd
+	JP	PE,UPDFND1	; ..if not yet done, continue checking
+	RET
+
+	; strings for decimal places
+S$KDECPL: DEFB	'00','25','50','75'
+
+
+	; read IMG file header
+	;  in: file name in standard FCB #1
+RDHDR:	LD	DE,CPMFCB
+	CALL	F$OPEN		; attempt to open file
+	OR	A		; check if successful
+	JR	NZ,RDHDR0	; ..if not, jump
+	CALL	CODEND		; get addr WSPC
+	CALL	SETDMA		; ..and set as buffer addr
+	LD	DE,CPMFCB
+	CALL	F$READ		; read file sequentially
+	JR	NZ,RDHDR0	; ..if error, jump
+	LD	DE,128		;   else, move forward
+	ADD	HL,DE		;   by 1 sector
+	CALL	SETDMA		; set file buffer addr
+	LD	DE,CPMFCB
+	CALL	F$READ		; read another sector
+	RET	Z		; ..if successful, return
+				;     else, fall through
+RDHDR0:	OR	0FFH		; set Z-Flag
+	SCF			; and C-Flag (error status)
+	RET
+
+
+	; write IMG file to disk
+	;  in: HL= addr IMG in memory
+	;      BC= # sectors to write
+	; out: C-Flag reset (NC) if successful  (will not return from error, anyway)
+WRFILE:	PUSH	BC
+	PUSH	HL
+	LD	DE,IMGFCB
+	CALL	INITFCB		; init FCB
+	CALL	F$EXIST		; check if file exists
+	JR	Z,WRFIL0	; ..if not, jump to continue
+	LD	HL,IMGFCB	;   else, try to rename existing file
+	LD	DE,CPMFCB
+	LD	BC,9		; bytes to copy
+	LDIR
+	LD	HL,FTYPES	; ptr to standard file type 'BAK'
+	LD	BC,3		; bytes to copy
+	LDIR
+	LD	DE,CPMFCB
+	CALL	INITFCB		; init FCB
+	CALL	F$DELETE	; delete an existing .BAK file
+	EX	DE,HL		; HL= ptr to FCB (old file name)
+	LD	DE,IMGFCB	; ptr to FCB (new file name)
+	CALL	F$RENAME	; try to rename
+	JR	Z,E$IMGREN	; ..if error, jump error and exit
+
+WRFIL0:	LD	DE,IMGFCB
+	CALL	INITFCB		; init FCB
+	CALL	F$MOPEN		; open file (create if not exists)
+	POP	HL		; clear stack and fall through
+	POP	BC
+WRFIL1:	PUSH	BC		; save regs
+	PUSH	HL
+	CALL	SETDMA		; set file buffer addr
+	CALL	F$WRITE		; write one 128-byte sector
+	POP	HL		; restore regs
+	POP	BC
+	OR	A		; check error status
+	JR	NZ,E$IMGWRI	; ..if error, jump error and exit
+	PUSH	DE
+	LD	DE,128		; move forward by 1 sector
+	ADD	HL,DE
+	POP	DE
+	DEC	BC		; reduce counter
+	LD	A,B
+	OR	C		; counter = zero ?
+	JR	NZ,WRFIL1	; ..if not, loop
+	CALL	F$CLOSE		; close file
+	OR	A		; set C-Flag (status = ok)
+	RET
+
+
+	; error messages
+
+E$IMGREN: CALL	VPRINT
+	DEFB	CR,LF,BEL,' +++ ..Error Renaming: '
+	DEFB	0
+
+E$IMGFIL: LD	DE,IMGFCB+1	; ptr to file name in IMG FCB
+	CALL	PFN1		; display it
+	CALL	CRLF
+	JP	EXIT
+
+E$IMGWRI: CALL	VPRINT
+	DEFB	CR,LF,BEL,' +++ ..Error Writing to: '
+	DEFB	0
+	JR	E$IMGFIL
+
+
+	; ##### unreferenced code (not used)
+JUMPHL		JP	(HL)
+	; #####
+
+
+	; get Quiet Flag from Z3 Environment
+	;  in: -
+	; out: A= Quiet Flag, defaults to A= 0 (not quiet)
+GETQFLG: LD	HL,(ENVADR)	; get local ENVPTR
+	LD	A,H		; check if invalid (= zero)
+	OR	L
+	RET	Z		; ..if so, return
+	LD	A,40		;   else, move ptr forward to Quiet Flag
+	CALL	ADDHLA
+	LD	A,(HL)		; get value
+	RET
+
+
+	; print program name on CON: device
+	; (either the actual name, or fallback to default)
+	; only used by HELP
+PRGNAME: LD	A,(ENVADR+1)	; get high byte of local ENVPTR
+	OR	A		; check if valid (<> zero)
+	JP	NZ,PRTNAME	; ..if so, display actual name
+				;   ..and let return from there
+	CALL	VPRINT		;   else, display default
+	DEFB	'BPBUILD'
+	DEFB	0
+	RET
+
+
+	; ##### unreferenced code (not used)
+	LD	B,8
+UNUSED1
+	INC	HL
+	LD	A,(HL)
+	AND	01111111B
+	CP	' '
+	CALL	NZ,COUT
+	DJNZ	UNUSED1
+	RET
+	; #####
+
+
+	; add A to HL (result in HL)
+ADDHLA:	ADD	A,L		; add L
+	LD	L,A		; store result in L
+	RET	NC		; ..if no overflow, return
+	INC	H		;   else, increment H
+	RET
+
+
+	; align addr to next 128-byte boundary
+	;  in: HL= addr
+	; out: HL= aligned addr
+ALIGN: LD	DE,7FH		; add offset for partial 128-byte block
+	ADD	HL,DE
+	LD	A,L		; get low byte
+	AND	80H		; sector alignment
+	LD	L,A
+	RET
+
+
+	; Auto-sizing - calculate base addr's of system segments Non-banked
+	;  in: -
+	; out: - (addr's in ram storage locations)
+CALCASZ: CALL	ENVLOW		; addr of lowest ENV component in HL
+	CALL	VPRINT
+	DEFB	CR,LF,'Sizing from lowest ENV element = '
+	DEFB	0
+	CALL	PHL4HC
+	CALL	USPCSZ		; User Space size (USPCS) in bytes
+	OR	A
+	SBC	HL,DE		; calc User Space start addr
+	LD	(UNBAD_I),HL	; ..and store in IMG hdr
+	LD	A,(BNKDSYS)	; get banking indicator (0= Non-banked)
+	OR	A
+	JR	NZ,CALCAS0	; ..if Non-banked, skip over
+	LD	DE,(BRSVDO)	; get org RESVD Common
+	XOR	A		; reset flags
+	SBC	HL,DE		; ..and calc base addr
+CALCAS0: LD	DE,(BNBSZ_I)	; BIOS Non-banked total size
+	XOR	A		; reset flags
+	SBC	HL,DE		; ..and calc BIOS Non-banked base addr
+	LD	L,0		; align to page boundary
+	LD	(BNBADR),HL	; store it
+	LD	DE,(DNBSZ_I)	; DOS Non-banked total size
+	SBC	HL,DE		; ..calc base addr
+	LD	(DNBADR),HL
+	LD	DE,(CNBSZ_I)	; CCP Non-banked total size
+	SBC	HL,DE		; ..calc base addr
+	LD	(CNBADR),HL
+	RET
+
+
+	; print base addr's of System (Non-banked Segments) on CON:
+	;  in: -
+PSYSNB:	LD	HL,(UNBAD_I)	; base addr User Space (from IMG hdr)
+	LD	A,H
+	OR	L		; check if zero
+	JR	NZ,PSYSNB0	; ..and branch accordingly
+	CALL	VPRINT
+	DEFB	CR,LF,'     <No Resident User Space>'
+	DEFB	0
+	JR	PSYSNB1
+PSYSNB0: CALL	VPRINT
+	DEFB	CR,LF,'     Base of Usr Sp = '
+	DEFB	0
+	CALL	PHL4HC		; display HL as hex
+PSYSNB1: CALL	VPRINT
+	DEFB	CR,LF,'     Base of Bios   = '
+	DEFB	0
+	LD	HL,(BNBADR)	; BIOS Non-banked base addr (from var)
+	CALL	PHL4HC		; ..display as hex
+	CALL	VPRINT
+	DEFB	CR,LF,'     Base of Dos    = '
+	DEFB	0
+	LD	HL,(DNBADR)	; DOS Non-banked base addr (from var)
+	CALL	PHL4HC
+	CALL	VPRINT
+	DEFB	CR,LF,'     Base of Cpr    = '
+	DEFB	0
+	LD	HL,(CNBADR)	; CCP Non-banked base addr (from var)
+	JP	PHL4HC		; ..display and let return from there
+
+
+	; size of User Space in bytes
+	;  in: -
+	; out: DE= size, Z-Flag set if size = 0
+USPCSZ:	LD	DE,UNBSZ_I	; User Space # records in IMG hdr
+	LD	A,(DE)
+	LD	D,A		; convert to 16-bit word
+	LD	E,0		; ..and multiply by 256
+	SRL	D		; /2  (blocks * 128 = size in bytes)
+	RR	E
+	OR	A		; if User Space size = zero, set Z-Flag
+	RET
+
+
+	; get lowest addr in Z3ENV
+	; ( from offs.  +9 EXPAT  to  +30 SHSTK  =  8x  16-/8-bit value combo
+	;   from offs. +34 Z3MSG  to  +38 EXTSTK =  3x  16-bit value          )
+	;  in: -
+	; out: HL= lowest addr of Z3ENV components
+ENVLOW:	LD	HL,Z3ENV_I	; ptr to Z3ENV base
+	LD	DE,9		; start w/ offset to addr EXPATH (ext. path)
+	ADD	HL,DE
+	LD	C,(HL)		; get addr in BC
+	INC	HL
+	LD	B,(HL)
+	DEC	HL		; move ptr back prior to loop
+	LD	A,8		; 8 entries (from EXPATH to SHSTK)
+ENVLOW0: PUSH	AF
+	CALL	ADRLOWC		; find the lower of two addresses
+	INC	HL		; skip byte following the addr
+	POP	AF
+	DEC	A		; decrease counter
+	JR	NZ,ENVLOW0	; ..loop till done
+	LD	A,3		; 3 entries (from Z3MSG to EXTSTK)
+ENVLOW1: PUSH	AF
+	CALL	ADRLOWS		; find the lower of two addresses
+	POP	AF
+	DEC	A		; decrement counter
+	JR	NZ,ENVLOW1	; ..loop till done
+	INC	HL		; skip Quiet flag
+	CALL	ADRLOWS		; check also Z3WHL addr
+	LD	L,C		; finally, copy lowest addr to HL
+	LD	H,B
+	RET
+
+
+	; returns lowest addr of Z3ENV components w/ 16-/8-bit value combo (e.g. RCP, IOP)
+	;  in: HL= ptr to current addr
+	;      BC= lowest addr so far
+	; out: BC= lowest addr
+ADRLOWC: LD	E,(HL)		; get low byte
+	INC	HL
+	LD	D,(HL)		; ..and high byte
+	INC	HL
+	LD	A,D
+	OR	E		; check if high = low = zero
+	RET	Z		; ..if so, return
+	LD	A,(HL)		; get high byte again
+	OR	A		; check if zero
+	RET	Z		; ..if so, return
+	LD	A,E		; get low byte again
+	SUB	C
+	LD	A,D		; get high byte again
+	SBC	A,B		; ..and check against lowest addr so far
+	RET	NC		;   ..no C-Flag means, old addr is lower
+	LD	C,E		;     else, copy current addr
+	LD	B,D
+	RET
+
+
+	; returns lowest addr of Z3ENV components w/ 16-bit value (e.g. Z3MSG)
+	;  in: HL= ptr to byte ahead of current addr
+	;      BC= lowest addr so far
+	; out: BC= lowest addr
+ADRLOWS: INC	HL		; move ptr fwd to addr
+	LD	A,(HL)		; get low byte
+	INC	HL
+	OR	(HL)		; check if high = low = zero
+	RET	Z		; ..if so, return
+	DEC	HL		; move ptr back
+	LD	A,(HL)		; get low byte again
+	INC	HL
+	SUB	C
+	LD	A,(HL)		; get high byte again
+	SBC	A,B		; ..and check against lowest addr so far
+	RET	NC		;   ..no C-Flag means, old addr is lower
+	LD	B,(HL)		;     else, copy current addr
+	DEC	HL
+	LD	C,(HL)
+	INC	HL
+	RET
+
+
+	; print HL as four-digit hex + closing bracket
+	; then get user input and convert to number
+	;  in: HL= 16-bit value
+	;      A= 0 no conversion, <> 0 convert to number
+	; out: DE= converted number
+PHLXCNV: PUSH	HL		; save regs
+	CALL	PHL4HC		; display as hex
+	LD	A,'H'		; display additional 'H'
+	CALL	COUT
+	POP	DE		; prepare for no input (restore value in DE)
+	CALL	PRBRCIN		; display closing bracket and get user input
+	RET	Z		; ..if input empty, return
+	JP	EVAL16		;   else, convert as hexadecimal
+				;   ..and let return from there
+
+
+
+	; print HL as decimal + closing bracket
+	; then get user input and convert to number
+	;  in: HL= 16-bit value
+	;      A= 0 no conversion, <> 0 convert to number
+	; out: DE= converted number
+PHLDCNV: PUSH	HL		; save regs
+	CALL	PHLFDC		; display as dec
+	POP	DE		; prepare for no input (restore value in DE)
+	CALL	PRBRCIN		; display closing bracket and get user input
+	RET	Z		; ..if input empty, return
+	JP	EVAL10		;   else, convert as decimal number
+				;   ..and let return from there
+
+
+	; print right (closing) bracket, then fall through to get user input
+PRBRCIN: CALL	VPRINT
+	DEFB	']',TAB,': '
+	DEFB	0
+
+
+	; get console input (based based on line editor)
+	;  in: -
+	; out: HL= ptr to first char of nul-terminated input string
+	; ##### CHECK: buffer location could interfere with STACK
+CINPUTL: LD	HL,CINBUF	; set ptr to buffer
+	LD	(HL),30		; set buffer size
+	INC	HL
+	LD	(HL),0		; init char count (filled by BLINE)
+	INC	HL
+	LD	(HL),0		; init first char (filled by BLINE)
+	DEC	HL		; move ptr back to start of buffer
+	DEC	HL
+	OR	0FFH		; set flag to capitalize
+	JP	BLINE		; get line input, and let return from there
+
+
+	; ##### unreferenced code (not used)
+UNUSED2
+	CALL	BASEROW
+	LD	L,10
+	CALL	GOTOXY
+	CALL	VPRINT
+	DEFB	'Selection (ESC/Ctrl-C Aborts) : '
+	DEFB	0
+	CALL	CAPINE
+	CP	ESC
+	RET	Z
+	CP	CTRLC
+	RET	Z
+	CALL	ISALNUM
+	JR	NZ,UNUSED2
+	RET
+	; #####
+
+
+	; print segment information - addr, # entries, and size
+	; ask for new values and convert, replacing old values at orig. location
+	;  in: HL= ptr to 16-bit value (addr),
+	;          followed by 8-bit values (entries, size)
+PADENSZ: CALL	PHLXENT		; print addr and # entries, get input (converted)
+	PUSH	HL		; save ptr
+	CALL	BASEROW
+	INC	HL		; row 4 from bottom
+	JR	PHLXSZ1		; ..jump to continue displaying size
+
+
+	; print string "Address" and 16-bit value as hex on CON:
+	; ask for new value, convert it, and store at original addr
+	; then print "Size" and following byte, ask for new value,
+	; convert it, and store at original addr
+	;  in: HL= ptr to 16-bit value (addr), followed by 8-bit value (entries)
+PHLXSIZ: CALL	PHLXCIN	; print addr, get input and convert
+PHLXSZ0: PUSH	HL		; save ptr
+	CALL	BASEROW		; row 5 from bottom
+PHLXSZ1: INC	H		; 2* row down
+	INC	H
+	LD	L,16		; col 16
+	CALL	GOTOXY		; position cursor
+	CALL	VPRINT
+	DEFB	'Size',TAB,' ['
+	DEFB	0
+	POP	HL		; restore ptr
+	LD	A,(HL)		; get byte
+	PUSH	HL
+	LD	L,A		; copy byte to L
+	LD	H,0		; set high byte to zero
+	CALL	PHLDCNV		; ..display as dec and get user input (converted)
+	POP	HL		; restore ptr
+	JR	NC,PHLXSZ2	; ..if conversion successful, skip over
+	LD	A,BEL		;   else, send <BEL> to CON:
+	CALL	COUT
+	JR	PHLXSZ0		; ..and loop
+
+PHLXSZ2: LD	A,E		; copy converted number to A
+	LD	(HL),A		; ..and store at orig. location
+	RET
+
+
+	; print string "Address" and 16-bit value as hex on CON:
+	; ask for new value, convert it, and store at original addr
+	; then print "Entries" and following byte, ask for new value,
+	; convert it, and store at original addr
+	;  in: HL= ptr to 16-bit value (addr), followed by 8-bit value (entries)
+PHLXENT: CALL	PHLXCIN	; print addr, get input and convert
+PHLXEN0: PUSH	HL		; save ptr
+	CALL	BASEROW		; row 5 from bottom
+	INC	H		; 2* row down
+	INC	H
+	LD	L,16		; col 16
+	CALL	GOTOXY		; position cursor
+	CALL	VPRINT
+	DEFB	'# Entries  ['
+	DEFB	0
+	POP	HL		; restore ptr
+	LD	A,(HL)		; get byte
+	PUSH	HL
+	LD	L,A		; copy byte to L
+	LD	H,0		; set high byte to zero
+	CALL	PHLDCNV		; ..display as dec and get user input (converted)
+	POP	HL		; restore ptr
+	JR	NC,PHLXSZ2	; ..if conversion successful, jump to continue
+	LD	A,BEL		;   else, send <BEL> to CON:
+	CALL	COUT
+	JR	PHLXEN0		; ..and loop
+
+
+	; print string "Address" and 16-bit value as hex on CON:
+	; in row 4 from bottom, col 15
+	; then ask for new value, convert it, and store at original addr
+	;  in: HL= ptr to 16-bit value
+PHLXCIN: PUSH	HL
+	CALL	BASEROW		; row 5 from bottom
+	INC	H		; row down
+	LD	L,15		; col 15
+	CALL	GOTOXY		; position cursor
+	CALL	VPRINT		; ..and display
+	DEFB	'Address',TAB,'['
+	DEFB	0
+	POP	HL		; restore ptr in HL
+	LD	E,(HL)		; get 16-bit value in DE
+	INC	HL
+	LD	D,(HL)
+	DEC	HL
+	PUSH	HL		; save ptr again
+	EX	DE,HL		; swap regs
+	CALL	PHLXCNV		; display hex value and get user input (converted)
+	POP	HL		; restore ptr
+	JR	NC,PHLXCI0	; check for overflow in number conversion
+				; ..if not, jump
+				;   else, fall through
+	LD	A,BEL		; alert user (send <BEL> to CON:)
+	CALL	COUT
+	JR	PHLXCIN		; ..and loop
+
+PHLXCI0: LD	(HL),E		; store converted number in DE
+	INC	HL		; at orig. location
+	LD	(HL),D
+	INC	HL
+	RET
+
+
+	; print addr and value of segment to CON: at xy coordinates
+	;  in: HL= row/col
+	;      DE= ptr to addr (value byte follows)
+PSEGXY: CALL	GOTOXY		; position cursor
+	PUSH	HL		; save coordinates
+	LD	A,(DE)		; get low byte
+	INC	DE		; move ptr fwd
+	LD	L,A
+	LD	A,(DE)		; get high byte
+	INC	DE		; ptr fwd
+	LD	H,A
+	CALL	PHLXH		; display 16-bit value as hex and 'H'
+	POP	HL		; restore coordinates
+	INC	H		; row +1
+	CALL	GOTOXY		; position cursor
+	LD	A,(DE)		; get byte
+	JR	PSPCAD		; display <SP> + value as dec, return from there
+
+
+	; print addr in HL as four-digit hex and append 'H'
+	;  in: HL= addr
+PHLXH:	CALL	PHL4HC		; display as 4-digit hex
+	LD	A,'H'		;   append 'H'
+	JP	COUT		;   ..and let return from there
+
+
+	; ###### unreferenced code (not used)
+UNUSED3: CALL	ALIGN		; align to next sector boundary
+	ADD	HL,HL
+	LD	A,H
+	; #####
+
+	; print <SP> and A as decimal
+PSPCAD: PUSH	AF		; save regs
+	LD	A,' '		; send <SP> to CON:
+	CALL	COUT
+	POP	AF		; restore A
+	JP	PADC		; display as decimal, let return from there
+
+
+	; returns row # of 5 lines above bottom of screen
+	;  in: -
+	; out: H= row (max. row -5)
+BASEROW: PUSH	DE		; save regs
+	LD	HL,(ENVADR)	; get ptr to ENV
+	LD	DE,50		; offset to number of rows (CRT)
+	ADD	HL,DE		; move ptr
+	LD	H,(HL)		; get value
+	DEC	H		; -5
+	DEC	H
+	DEC	H
+	DEC	H
+	DEC	H
+	POP	DE		; restore regs
+	RET
+
+
+;::::: Standard file types
+
+FTYPES:	DEFB	'BAK','IMG','REL','ZRL'
+	DEFS	23
+
+
+;::::: HEADER OF IMAGE FILE (all labels end with "_I")
+
+	; area for building the IMG file header
+	;   if an image file was specified on the command line, the header is read
+	;   and copied here, else default values are used and updated accordingly
+IMGHD_I:	JP	0
+
+UNBAD_I: DEFW	0E900H		; addr User Space Non-banked
+UNBSZ_I: DEFB	6		; # recs
+UBKAD_I: DEFW	0		; addr User Space Banked
+	DEFS	8
+
+CFNAM_I: DEFB	'ZCPR33  REL'	; default name ZCPR file
+CNBAD_I: DEFW	0		; Non-banked base addr
+CNBSZ_I: DEFW	0		;    "       size 
+CBKAD_I: DEFW	0		; Banked base addr
+CBKSZ_I: DEFW	0		;    "   size
+	DEFS	13
+
+DFNAM_I: DEFB	'ZSDOS   ZRL'	; default name ZSDOS file
+DNBAD_I: DEFW	0
+DNBSZ_I: DEFW	0
+DBKAD_I: DEFW	0
+DBKSZ_I: DEFW	0
+	DEFS	13
+
+BFNAM_I: DEFB	'B/P-18  REL'	; default name B/P Bios file
+BNBAD_I: DEFW	0
+BNBSZ_I: DEFW	0
+BBKAD_I: DEFW	0
+BBKSZ_I: DEFW	0
+	DEFS	13
+
+IMGFN_I: DEFB	'BPSYS   IMG'	; default name system image file
+	DEFS	5
+
+
+;::::: Z3ENV DESCRIPTOR (in IMG header)
+
+Z3ENV_I: JP	0		; Leading jump (address is CBIOS when NZCOM)
+	DEFB	'Z3ENV'		; Environment ID
+	DEFB	81H		; Env type (=>80H means extended)
+				; ##### should rather be 90H for B/P Bios
+
+								;    offset
+								; (dec / hex)
+	DEFW	0FDF4H		; EXPATH			     9 / 09
+	DEFB	05H
+	DEFW	0F200H		; RCP				    12 / 0C
+	DEFB	10H
+	DEFW	0EC00H		; IOP				    15 / 0F
+	DEFB	0CH
+	DEFW	0FA00H		; FCP				    18 / 12
+	DEFB	04H
+	DEFW	0FC00H		; Z3NDIR			    21 / 15
+	DEFB	0EH
+	DEFW	0FF00H		; Z3CL				    24 / 18
+	DEFB	0CBH
+	DEFW	0FE00H		; Z3ENV				    27 / 1B
+	DEFB	02H
+	DEFW	0FD00H		; SHSTK				    30 / 1E
+	DEFB	04H
+	DEFB	20H
+	DEFW	0FD80H		; Z3MSG				    34 / 22
+	DEFW	0FDD0H		; EXTFCB			    36 / 24
+	DEFW	0FFD0H		; EXTSTK			    38 / 26
+	DEFB	00H		; Quiet Flag			    40 / 28
+	DEFW	0FDFFH		; Z3WHL				    41 / 29
+	DEFB	4		; Proc. Speed (MHz)		    43 / 2B
+
+	DEFB	'P'-'@'		; Max Disk Letter
+	DEFB	31		; Max User Number
+	DEFB	1		; DU flag
+	DEFB	0		; CRT Selection
+	DEFB	0		; Printer Selection
+	DEFB	80		; CRT 0: Width (# Columns)
+	DEFB	24		;        # of Lines
+	DEFB	22		;        # of Text Lines
+
+	DEFW  0001000011111111B	; DRVEC (valid drives)		    52 / 34
+	DEFB	0		; <Reserved>
+
+	DEFB	80		; PRT 0: Width (# Columns)
+	DEFB	66		;        # of Lines
+	DEFB	58		;        # of Text Lines
+	DEFB	1		; FF Flag
+
+	; storage for Resident User Space Vectors (replaces PRT1 definitions)
+	DEFB	06H		; remaining free recs		    59 / 3B
+	DEFW	0E900H		; base addr (xx00H/xx80H)	    60 / 3C
+	DEFB	06H		; size in 128-byte recs		    62 / 3E
+
+	DEFW	0BE00H		; CPR				    63 / 3F
+	DEFB	10H
+	DEFW	0C600H		; DOS				    66 / 42
+	DEFB	1CH
+	DEFW	0D400H		; BIOS				    69 / 45
+
+	DEFB	'SH      '	; Shell variable filename
+	DEFB	'VAR'		; Shell variable filetype
+	DEFB	'        '	; File 1
+	DEFB	'   '		;
+	DEFB	'        '	; File 2
+	DEFB	'   '		;
+	DEFB	'        '	; File 3
+	DEFB	'   '		;
+	DEFB	'        '	; File 4
+	DEFB	'   '		;
+	DEFB	0		; Public Drive Area (ZRDOS +)
+	DEFB	0		; Public User Area (ZRDOS +)
+
+	; *** end of Z3ENV descriptor and IMG header ***
+
+
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::
+; LINK - 0x1980
+; VLIB - 0x1bfb
+; Z3LIB - 0x1e3a
+; SYSLIB - 0x20f4
+; end addr 0x23e0 (begin DSEG)
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+;::::: RAM STORAGE
+
+	DSEG
+
+MSELOPT:	DEFB	0	; selected Menu option
+
+				; room for FCB's of system segments
+CCPFCB:		DEFS	36	; CCP (ZCPR)
+DOSFCB:		DEFS	36	; (ZS)DOS
+BIOSFCB:	DEFS	36	; (B/P) BIOS
+
+CCNBSZ:		DEFW	0	; CCP  CSEG Non-banked Size (in TPA bank)
+DCNBSZ:		DEFW	0	; DOS  CSEG Non-banked Size
+BCNBSZ:		DEFW	0	; BIOS CSEG Non-banked Size
+BCBKSZ:		DEFW	0	; BIOS CSEG Banked Size (org 'BANK2', in System bank)
+BDBKSZ:		DEFW	0	; BIOS DSEG Banked Size (org 'B2RAM')
+DCBKSZ:		DEFW	0	; DOS  CSEG Banked Size ('BANK2')
+DDBKSZ:		DEFW	0	; DOS  DSEG Banked Size ('B2RAM')
+CCBKSZ:		DEFW	0	; CCP  CSEG Banked Size ('BANK2')
+CDBKSZ:		DEFW	0	; CCP  DSEG Banked Size ('B2RAM')
+
+SYSBLKS:	DEFW	0	; Size of new system in 128-byte blocks (# sectors)
+AUTOSIZ:	DEFB	0	; Auto-sizing flag (0= no, 0xFF= yes)
+BNKDSYS:	DEFB	0	; Banked system flag (bit 3 of OPTF1 = indicator ALV/CSV in bank)
+OPTF1:		DEFB	0	; OPTF1 option flag of linked BIOS
+BRSVDO:		DEFW	0	; BIOS org RESVD common
+BNBADR:		DEFW	0	; BIOS Non-banked base addr
+DNBADR:		DEFW	0	; DOS  Non-banked base addr
+CNBADR:		DEFW	0	; CCP  Non-banked base addr
+
+LPHYADR:	DEFW	0	; phys. destination addr when linking system segment (from WSPC onwards)
+SYSEADR:	DEFW	0	; end addr of new system in WSPC (total of all segments)
+
+IMGFCB:		DEFS	36	; room for FCB of image file
+
+				; used by linker related fn's
+LBYTPOS:	DEFB	0	; byte ptr @GBYTE function
+LFCBADR:	DEFW	0	; addr current FCB
+LTBLADR:	DEFW	0	; addr COMTBL
+
+CINBUF:				; console input buffer
+		DEFS	60H	; room for stack
+STACK:		DEFW	0	; stack storage location
+OLDDU:		DEFW	0	; logged Drive/User at program start
+
+	END
+
+
+;************************************************************************
+; Remarks jxl:
+;   BPBUILD.COM, included in available B/P Bios package(s), was dis-
+; assembled and extensively commented. Labels are up to seven chars long
+; to comply with M-REL standards. However, it is recommended to use SLR
+; tools that support labels up to sixteen chars.
+;   In its current state, the compiled/linked file matches exactly the
+; original ZSCFG2.COM, i.e. no changes to the source were made. Possible
+; optimisations detected during disassembly are marked with "#####" in the
+; comment.
+;
+;   The program makes use of linker module which was included in the
+; distributed package of ZSDOS v1 sources (SLINK0.Z80/.REL), to generate
+; its output from M-REL files - an interesting piece of software!
+;   The embedded Image header and Z3 Environment descriptor could be
+; externalised in .LIB files. However, this was not done (yet) to provide
+; the complete source code "as is."
+;************************************************************************

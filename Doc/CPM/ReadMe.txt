@@ -68,3 +68,11 @@ ZSDOS is the DOS portion of Z-System.  This is the manual for ZSDOS
 1.x as included in RomWBW.  The installation instructions can be
 ignored since that work has already been completed as part of the
 RomWBW distribution.
+
+ZPM3 ("ZPM3.txt")
+-----------------
+
+A Z80 coded CP/M 3.0 compatible BDOS replacement with ZCPR support.
+This minimal documentation is all that is provided with ZPM3.
+
+-- WBW 8:38 AM 6/6/2025

@@ -340,14 +340,16 @@ enter the command followed by ***\<enter\>***.
 For example, typing `H<enter>` will display a short command summary:
 
 ```
-Boot [H=Help]: h
+Boot [H=Help]: H
 
   L           - List ROM Applications
   D           - Device Inventory
+  S           - Slice Inventory
   R           - Reboot System
   W           - RomWBW Configure
   I <u> [<c>] - Set Console Interface/Baud Rate
   V [<n>]     - View/Set HBIOS Diagnostic Verbosity
+  N           - Network Boot
   <u>[.<s>]   - Boot Disk Unit/Slice
 ```
 
@@ -366,7 +368,6 @@ ROM Applications:
   B: BASIC
   T: Tasty BASIC
   P: Play a Game
-  N: Network Boot
   X: XModem Flash Updater
   U: User App
 ```
@@ -410,7 +411,6 @@ prompt:
 | BASIC             | Microsoft ROM BASIC                                            |
 | Tasty&nbsp;BASIC  | Dimitri Theuling's Tiny BASIC implementation                   |
 | Play              | A simple video game (requires ANSI terminal emulation)         |
-| Network&nbsp;Boot | Boot system via Wiznet MT011 device                            |
 | Flash&nbsp;Update | Upload and flash a new ROMWBW image using xmodem               |
 | User App          | User written application placeholder                           |
 
@@ -992,10 +992,10 @@ whether you boot your OS from ROM or from the disk media itself.
 
 ## Drive Letter Assignment
 
-In legacy CP/M operating systems only 16 drive letters (A:-P:) available
- to be assigned to disks Drive letters were generally mapped to disk 
+In CP/M operating systems only 16 drive letters (A:-P:) available
+to be assigned to disks Drive letters were generally mapped to disk 
 drives in a completely fixed way. For example, drive A: would **always**
- refer to the first floppy disk drive.
+refer to the first floppy disk drive.
 
 RomWBW implements a much more flexible drive letter assignment mechanism 
 so that any drive letter can dynamically be assigned to any disk device, 
@@ -1188,8 +1188,8 @@ media, you can use the CP/M 2.2 `STAT` command to display information
 including the number of "32  Byte Directory Entries"
 for a drive letter on the corresponding hard disk.  
 
-- If it indicates 512, your disk layout is legacy (hd512).  
-- If it indicates 1024, your disk layout is modern (hd1k).
+- If it indicates 512, your disk layout is Classic (hd512).  
+- If it indicates 1024, your disk layout is Modern (hd1k).
 
 Here is an example of checking the disk layout.  
 
@@ -1335,14 +1335,14 @@ system.
 Two hard disk layout schemes exist:
 
 * Modern (hd1k)
-* Legacy (hd512)
+* Classic (hd512)
 
 You **cannot** mix disk layouts on a single disk device, 
 however It is perfectly fine for one system to have
 multiple hard disks with different layouts -- each physical disk
 device is handled separately.
 
-If you are setting up a new disk, the modern (hd1k) layout is
+If you are setting up a new disk, the Modern (hd1k) layout is
 recommended for the following reasons:
 
 * Larger number of directory entries per filesystem
@@ -1350,8 +1350,8 @@ recommended for the following reasons:
 * Reduces chances of data corruption
 * Each slice occupies exactly 8MB (an exact power of 2) in size
 
-Both the legacy and modern disk layouts continue to be fully supported
-by RomWBW.  There are no plans to deprecate the legacy layout.  
+Both the classic and modern disk layouts continue to be fully supported
+by RomWBW.  There are no plans to deprecate the classic layout.  
 
 #### Modern Layout
 
@@ -1368,14 +1368,14 @@ RomWBW does not support extended partitions -- only a single
 primary partition can be used.
 
 The existence of a partition table entry for RomWBW on
-a hard disk makes it behave in the modern mode. Removing the RomWBW 
-partition entry from a modern hard disk layout 
+a hard disk makes it behaves in the modern disk layout mode. 
+Removing the RomWBW partition entry from a modern hard disk layout 
 will cause the existing data to be unavailable and/or corrupted
 
 The CP/M filesystem in the slices of the modern disk layout 
 contain 1024 directory entries.
 
-#### Legacy Layout
+#### Classic Layout
 
 Originally, RomWBW always used the very start of the hard disk media
 for the location of the slices.  In this layout, slice 0 referred to
@@ -1384,15 +1384,16 @@ chunk of ~8MB on the disk, and so on. The number of slices is limited
 to the size of the disk media -- if you attempted to read/write to a
 slice that would exceed the disk size, you would see I/O errors. 
 
-The legacy format takes steps to allow a partition table to still be
+The classic disk layout takes steps to allow a partition table to still be
 used for other types of filesystems such as DOS/FAT.  It just does not
 use a partition table entry to determine the start of the RomWBW slices.
 
-The lack of a RomWBW partition table entry will cause legacy behaviour.
-Adding a partition table entry on an existing legacy RomWBW hard disk 
+The lack of a RomWBW partition table entry will cause the classic disk 
+layout to be used.
+Adding a partition table entry on an existing classic RomWBW hard disk 
 will cause the existing data to be unavailable and/or corrupted.
 
-The CP/M filesystem in the slices of the legacy disk layout 
+The CP/M filesystem in the slices of the classic disk layout 
 contain 512 directory entries.
 
 ### Hard Disk Slices
@@ -1466,9 +1467,9 @@ system.
 The exact number of CP/M filesystem slices that will fit on your
 specific physical hard disk can be determined as follows:
 
-- For modern (hd1k) disk layouts, it is 1024KB + (slices * 8192KB). 
+- For Modern (hd1k) disk layouts, it is 1024KB + (slices * 8192KB). 
   Or equivalent to say 1MB + (slices * 8MB).
-- For legacy (hd512) disk layouts, it is slices * 8,320KB.
+- For Classic (hd512) disk layouts, it is slices * 8,320KB.
 
 **WARNING**: In this document KB means 1024 bytes and MB means 1048576
 bytes (frequently expressed as KiB and MiB in modern terminology).
@@ -1611,7 +1612,7 @@ This does not mean to imply it is the only possible way.
 
 First you need to understand
 
-*  The disk layout approach (either hd1k or the legacy hd512). 
+*  The disk layout approach (either the Modern hd1k or the Classic hd512). 
    See [Hard Disk Layouts] section if you are not sure. 
    hd1k should be the preferred layout.
 *  The number of 8MB slices that you want to allocate, preferred is 64 slices.
@@ -1640,7 +1641,7 @@ The disk unit number was assigned at boot See [Device Unit Assignments]
 
 Refer to $doc_apps$ for more information on use of the `FDISK80` utility. 
 
-If you want to use the legacy hd512 layout skip down to the [Legacy (hd512)] section
+If you want to use the Classic (hd512) layout skip down to the [Classic (hd512)] section
 
 #### Modern (hd1k)
 
@@ -1702,14 +1703,14 @@ At this point, it is best to restart your system to make sure that
 the operating system is aware of the partition table updates.  Start
 CP/M 2.2 or Z-System from ROM again.
 
-#### Legacy (hd512)
+#### Classic (hd512)
 
 At this point, use the `I` command to initialize (reset) 
 the partition table to an empty state.
 
 To use the hd512 layout, use `W` to write the empty table to the disk 
 and exit.  Remember that the lack of a partition for RomWBW implies the 
-legacy (hd512) layout.
+Classic (hd512) layout.
 
 At this point, it is best to restart your system to make sure that
 the operating system is aware of the partition table updates.  Start
@@ -1806,6 +1807,7 @@ The following table shows the disk images available.
 | xxx_fortran.img   | Microsoft Fortran-80 Compiler        | No       |
 | xxx_games.img     | Games Disk for CP/M                  | No       |
 | xxx_hitechc.img   | HI-TECH Z80 CP/M C compiler          | No       |
+| xxx_infocom.img   | Infocom Games Disk                   | No       |
 | xxx_msxroms1.img  | MSX ROMs Disk 1                      | No       |
 | xxx_msxroms2.img  | MSX ROMs Disk 2                      | No       |
 | xxx_nzcom.img     | NZCOM ZCPR 3.4 Operating System      | Yes      |
@@ -1820,8 +1822,8 @@ You will find 3 sets of these .img files in the distribution.  The
 "xxx" portion of the filename will be:
 
 *  "fd_" for a floppy image.
-*  "hd1k_" for a modern layout hard disk image.
-*  "hd512_" for a legacy layout hard disk image.
+*  "hd1k_" for a Modern layout hard disk image.
+*  "hd512_" for a Classic layout hard disk image.
 
 In the case of xxx_dos65.img, only an hd512 variant is provided.  This
 is a constraint of the DOS65 distribution.
@@ -1895,7 +1897,7 @@ These partition sizes and locations were chosen to:
 The standard partition table table entries are:
 
 +---------------------------------+-------------------------------+-------------------------------+
-|                                 | **--- Modern (hd1k) ---**     | **--- Legacy (hd512) ---**    |
+|                                 | **--- Modern (hd1k) ---**     | **--- Classic (hd512) ---**    |
 |                                 +---------------+---------------+---------------+---------------+
 |                                 | Byte(s)       | Sector(s)     | Byte(s)       | Sector(s)     |
 +=================================+==============:+==============:+==============:+==============:+
@@ -1998,7 +2000,52 @@ that there are more disk (slice) images than the 6 that are included in
 the Combo Disk Images.  These supplemental disk images are identified by
 looking for the files that start with hd1k_ or hd512_.
 
-#### Adding Slices to Combo Image
+There are two approaches you can use to create custom hard disk
+images with multiple slices.
+
+- You can add/modify a configuration file and run the RomWBW
+  build process.  This requires running the RomWBW build process, but
+  will cause your custom hard disk images to be created with every
+  build.
+
+- You can manually combine the individual images using `COPY` (Windows)
+  or `cat` (Linux/MacOS).  This does not require running the RomWBW
+  build process, but will require manually recreating your custom
+  hard disk images when you upgrade to new releases of RomWBW.
+
+The following sections provide more detail on each approach.
+
+#### Building Custom Hard Disk Images
+
+The RomWBW build process builds the disk images defined in the
+`Source/Images` directory.  The resultant images are placed in the `Binary`
+directory and are ready to copy to your media.
+
+These aggregate disk images are defined using .def files.  You will see there
+is a combo.def file in the Images directory that defines the slices for the
+Combo disk image.  You can create your own .def files as desired to
+automatically create custom aggregate disk images.  When the RomWBW
+build process is run, it will automatically look for all .def files
+in the `Source/Images` directory and create aggregate disk images for
+each using the same base name as the .def file.
+
+There is an example of this in the `Images` directory called 
+`all.def.example`.  You can remove the ".example" suffix so that the 
+file is called `all.def`.  Now, if you run the RomWBW build process, it 
+will automatically generate `hd512_all.img` and `hd1k_all.img` files in 
+the `/Binary` directory. This example creates an aggregate disk image 
+with all of the possible slices.
+
+You could also modify the contents of the Combo disk image by simply
+modifying the `combo.def` configuration file.  However, it is recommended
+that you leave the Combo image alone and simply define your own.
+
+NOTE: All of the `hd1k_xxx.img` aggregate disk image files created in
+this way (including the Combo disk image) will already be prefixed with 
+`hd1k_prefix.dat`, so you do not need to add the prefix file.  They are 
+ready to write to your media.
+
+#### Combining Hard Disk Images Manually
 
 You can add slices to the Combo Disk Images simply by tacking
 slices onto the end.  For example, if you want to add a slice
@@ -2017,7 +2064,7 @@ Linus/MaxOS:
 Note that you **must** be sure to use either the hd1k_ or hd512_
 prefixed files together.  You cannot mix them.
 
-#### Creating a new Custom Image
+#### Creating a new Custom Image Manually
 
 If you want to create a completely custom hard disk image that is not
 based on the existing combo image, you can generate a disk image entirely
@@ -3163,7 +3210,7 @@ floppy disk and hard disk images.
 | TUNE            | Play .PT2, .PT3, .MYM audio files.                                 |
 | INTTEST         | Test interrupt vector hooking.                                     |
 
-# Real Time Clock
+# Real Time Clock & Date/Time Stamping
 
 RomWBW supports a variety of real time clock hardware.  If your
 system has this hardware, then it will be able to maintain the

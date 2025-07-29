@@ -1,0 +1,1323 @@
+	TITLE	"Change ZSDOS v2 Configuration Settings"
+;************************************************************************
+;*  Z S C F G 2								*
+;* Set the user-configurable parameters in a running ZSDOS v2 system	*
+;*  by Harold F. Bower and Cameron W. Cotrill				*
+;*----------------------------------------------------------------------*
+;* Disassembly:	jxl					Jan 2025	*
+;*		public release 1.0			Apr 2025	*
+;*		see remarks at the end					*
+;*----------------------------------------------------------------------*
+;* LINK with Version 4 libraries: VLIB, Z3LIB, SYSLIB			*
+;*									*
+;* A>Z80ASM ZSCFG2/RS							*
+;* A>SLRNK ZSCFG2/N,/A:100,/D:145E,ZSCFG2,VLIBS/S,Z3LIBS/S,SYSLIBS/S,/E	*
+;************************************************************************
+
+VER	EQU	20
+REV	EQU	'b'
+
+DATE	MACRO
+	DEFB	''
+	ENDM
+
+
+CTRLC	EQU	03H		; Control-C character
+BEL	EQU	07H		; Bell character
+TAB	EQU	09H		; Tab character
+LF	EQU	0AH		; Line Feed character
+CR	EQU	0DH		; Carriage Return character
+
+CPMBIOS	EQU	0		; CP/M BIOS warm boot (JP)
+CPMBDOS	EQU	5		; CP/M BDOS entry point (JP)
+CPMDMA	EQU	80H		; CP/M standard DMA buffer
+
+
+;  From VLIB Get..
+	EXTRN	GXYMSG, VPRINT, AT, EREOL, STNDOUT, STNDEND, CLS, GOTOXY, Z3VINIT
+
+;  From Z3LIB Get..
+	EXTRN	GETQUIET, WHRENV
+
+;  From SYSLIB Get..
+	EXTRN	BDOS, CRLF, CIN, PHL4HC, COUT, CAPS, @B2HH, @B2HL
+
+
+;::::: PROGRAM START
+
+	ORG	100H
+	CSEG
+
+
+ZSCFG2:	JP	START		; bypass header
+	DEFB	'Z3ENV'		; this is a ZCPR3 utility
+	DEFB	1		; show external environment
+
+ENVADR:	DEFW	8000H		; addr of Z3 environment
+
+START:	LD	(STACK),SP
+	LD	SP,STACK
+
+	; clear variables in ram
+	LD	HL,DOSBASE
+	LD	B,DOSTYVE-DOSBASE
+CLRVAR:	LD	(HL),0
+	INC	HL
+	DJNZ	CLRVAR
+
+	LD	A,0FFH		; set effective Bit Mask
+	LD	(OFLGMSK),A	;   to default state (all bits = 1)
+	LD	HL,(CPMBDOS+1)	; starting from BDOS warm boot addr
+	CALL	WHRENV		; find Z3 Environment Descriptor
+	LD	(ENVADR),HL	; store ptr
+	CALL	Z3VINIT		; ..and init for VLIB/Z3LIB routines
+	LD	C,12
+	CALL	BDOS		; get BDOS version #
+	CP	22H		; must be CP/M 2.2
+	JP	NZ,E$ZSDOS	; ..if not, jump error and exit
+	LD	C,48
+	CALL	BDOS		; check if ZSDOS
+	LD	(DOSTYVE),HL	; save DOS type and version #
+	LD	HL,CPMDMA	; set to cmdline buffer
+	LD	B,(HL)		; get char count
+	INC	HL		; move ptr fwd
+	CALL	CMDPDL		; get past delimiters (skip <SP>, <TAB>, and Comma)
+	JP	Z,START0	; ..if cmdline empty, jump to continue (interactive mode)
+	CP	'/'		; is this a help request ?
+	LD	(RUNMODE),A	; store run mode
+	JP	NZ,START0	; ..if not, jump to continue
+	INC	HL
+	LD	A,(HL)		; else, get next char
+	CP	'/'		; help requested ?
+	JP	NZ,START0	; ..if not, jump to continue
+
+
+;::::: HELP SCREEN
+
+	CALL	VPRINT
+	DEFB	CR,LF,LF,1,'ZSCFG2',2,' Ver ',VER/10+'0','.'
+	DEFB	VER MOD 10 + '0',REV,' - Examine/Set ZSDOS Vers 2 parameters'
+	DEFB	CR,LF,LF,'  Syntax:',CR,LF,LF
+	DEFB	'     ZSCFG                - Interactive',CR,LF
+	DEFB	'     ZSCFG o[p],[o[p]],.. - Expert Mode',CR,LF,LF
+	DEFB	'  Options [parameters]:',CR,LF,LF
+	DEFB	'     P [-] Public Files        R [-] Read/Only sustain',CR,LF
+	DEFB	'     ! [-] Disk Change Alert   F [-] Fast Relog',CR,LF
+	DEFB	'     W [-] Public/Path Write   S [-] Path w/o SYStem',CR,LF
+	DEFB	'     C [ -, B or Hex value ]     Clock address',CR,LF
+	DEFB	'     * [ -, Z, or Hex value ]    Wheel write protect',CR,LF
+	DEFB	'     > [ -, Z, I, or Hex value ] DOS Search Path',CR,LF,LF
+	DEFB	'     + [ A, C, M ][ - ] Access, Create, Modify Time Stamps',CR,LF,LF
+	DEFB	'[more]..'
+	DEFB	0
+	CALL	CIN
+	CP	CTRLC	; is it <Ctrl-C> ?
+	JP	Z,EXIT0	; ..then exit program
+	LD	A,CR	; print extra <CR>
+	CALL	COUT
+	CALL	EREOL
+	CALL	VPRINT
+	DEFB	'  Examples:',CR,LF,LF
+	DEFB	'       ZSCFG2 *Z,P,!-',CR,LF
+	DEFB	'    (ZCPR3 Wheel, Public ON, Warning OFF)',CR,LF,LF
+	DEFB	'       ZSCFG2 CE800 F R',CR,LF
+	DEFB	'    (Clock Routine=E800H, Fast Relog ON, R/O Sustain ON)',CR,LF,LF
+	DEFB	'       ZSCFG2 CB,>I',CR,LF
+	DEFB	'    (Clock=Bios+4EH, Int Path)',CR,LF,LF
+	DEFB	'  Note:',CR,LF
+	DEFB	'       Delimiters are : TAB, SPACE and Comma',CR,LF,LF
+	DEFB	0
+	JP	EXIT0		; ..and exit program
+
+
+START0:	CALL	VPRINT
+	DEFB	CR,LF,1,'ZSCFG2'2,' V',VER/10+'0','.'
+	DEFB	VER MOD 10 + '0',REV,'   Copyright (C) 1991/2'
+	DEFB	'   Harold F. Bower/Cameron W. Cotrill',CR,LF,LF
+	DEFB	0
+
+	LD	A,(RUNMODE)	; check mode
+	OR	A		; running interactively ?
+	CALL	Z,CLS		; ..if so, clear screen first
+	LD	A,(DOSTYVE+1)	; get DOS type
+	CP	'S'
+	JP	NZ,E$ZSDOS	; ..if not ZSDOS, jump error and exit
+	LD	A,(DOSTYVE)	; get DOS version # (BCD)
+	CP	20H		; minimum 2.0 required
+	JR	NC,PDOSVER	; ..if so, jump to continue
+	CALL	VPRINT		;   else, display error and exit
+	DEFB	CR,LF,BEL,'+++ Must have ZSDOS 2.0 or later +++',CR,LF
+	DEFB	0
+	JP	EXIT0		; ..and exit program
+
+	; print DOS version
+PDOSVER: PUSH	AF
+	CALL	VPRINT
+	DEFB	'  ...Configuring ZSDOS Ver '
+	DEFB	0
+	POP	AF		; restore version #
+	PUSH	AF
+	CALL	@B2HH		; convert upper nybble (major vers.)
+	CALL	COUT		;   and display it
+	LD	A,'.'
+	CALL	COUT
+	POP	AF
+	CALL	@B2HL		; convert lower nybble (minor vers.)
+	CALL	COUT		;   and display it
+	CALL	CRLF
+	LD	A,(RUNMODE)	; check run mode
+	OR	A		; is interactive ?
+	JR	NZ,PENVBA0	; ..if not, jump
+	LD	HL,(ENVADR)	; get ENV addr
+	LD	A,H		; check if valid (<> zero)
+	OR	L
+	JR	NZ,PENVBAS
+	CALL	VPRINT
+	DEFB	CR,LF,'No Z3 Environment Found',CR,LF
+	DEFB	0
+	JP	FNDDOS
+
+	; Z3ENV found, print basic information
+PENVBAS: CALL	GXYMSG
+	DEFB	1,40,'Z3 Environment at  : '
+	DEFB	0
+	LD	HL,(ENVADR)	; get ENV addr
+	CALL	PHLXH		; display addr (as hex)
+	CALL	CRLFGXY
+	DEFB	2,40,'ZCPR Path Address  : '
+	DEFB	0
+PENVBA0: LD	DE,9
+	LD	HL,(ENVADR)	; get ENV addr
+	ADD	HL,DE		; adjust ptr to EXPATH
+	LD	E,(HL)		; addr ZCPR Path in DE
+	INC	HL
+	LD	D,(HL)
+	EX	DE,HL		; swap regs
+	LD	(ZPTHADR),HL	; store addr
+	LD	A,(RUNMODE)	; check run mode
+	OR	A		; is interactive ?
+	JR	NZ,PENVBA1	; ..if not, skip over
+	CALL	PHLXH		; display addr (as hex)
+	CALL	CRLFGXY
+	DEFB	3,45,'Wheel Byte at : '
+	DEFB	0
+PENVBA1: LD	DE,41
+	LD	HL,(ENVADR)	; get ENV addr
+	ADD	HL,DE		; adjust ptr to Z3WHL
+	LD	E,(HL)		; addr ZCPR Wheel byte in DE
+	INC	HL
+	LD	D,(HL)
+	EX	DE,HL		; swap regs
+	LD	(ZWHLADR),HL	; store addr
+	LD	A,(RUNMODE)	; check run mode
+	OR	A		; is interactive ?
+	JR	NZ,FNDDOS	; ..if not, skip over
+	CALL	PHLXH		; display addr (as hex)
+	CALL	CRLF
+
+	; find DOS base
+FNDDOS:	LD	HL,(ENVADR)	; get ENV addr
+	LD	A,H		; check if reasonable
+	OR	L
+	JR	C,FNDDSIZ	; ..if not, continue with standard DOS size
+	LD	DE,8		; offset to Environment ID byte
+	EX	DE,HL
+	ADD	HL,DE		; adjust ptr
+	BIT	7,(HL)		; test bit 7 (set means Extended Environment Descr.)
+	JR	Z,FNDDSIZ	; ..if not set (= zero), continue with standard size
+	LD	HL,66		; offset to DOS start addr
+	ADD	HL,DE		; adjust ptr
+	LD	E,(HL)		;   and get addr in DE
+	INC	HL
+	LD	D,(HL)
+	EX	DE,HL		; swap regs
+	JR	FNDDO0		; jump to continue
+
+	; use DOS standard size (0xE00H, 3.5kB)
+FNDDSIZ: LD	A,(CPMBIOS+2)	; high byte of Bios WBOOT addr
+	SUB	0Eh		; DOS assumed 3.5kB below Bios
+	LD	H,A		; make it 16-bit
+	LD	L,0
+
+FNDDO0:	LD	(DOSBASE),HL	; store DOS base addr
+	PUSH	HL		; move to IX
+	POP	IX
+	LD	DE,21		; offset to FLAGS byte in ZSDOS header
+	ADD	IX,DE		;   (hdr is similar to v1.x)
+	LD	(OFLGADR),IX	; store addr
+	LD	A,(RUNMODE)	; check run mode
+	OR	A		; is interactive ?
+	JP	NZ,EXPMODE	; ..if not, jump
+
+
+;::::: INTERACTIVE MODE
+
+	; print current settings (based on Flag bytes) on CON:
+PSETTG:	CALL	CRLF
+	CALL	AT		; pos cursor
+	DEFB	22,1
+	CALL	EREOL		; clear line
+	LD	HL,0501H	; row 5, col 1
+	CALL	GOTOXY
+
+	CALL	VPRINT
+	DEFB	'       1 - Public Files           : '
+	DEFB	0
+	LD	IX,(OFLGADR)	; ptr to ZSDOS Flag byte
+	BIT	0,(IX+0)	; check bit 0 (Public Files, 1= enabled)
+	CALL	PYESNO		; display Yes/No
+
+	CALL	VPRINT
+	DEFB	CR,LF,'       2 - Pub/Path Write Enable  : '
+	DEFB	0
+	LD	IX,(OFLGADR)	; ptr to ZSDOS Flag byte
+	BIT	1,(IX+0)	; check bit 1 (Public/Path Write, 1= enabled)
+	CALL	PYESNO
+
+	CALL	VPRINT
+	DEFB	CR,LF,'       3 - Read-Only Vector       : '
+	DEFB	0
+	LD	IX,(OFLGADR)	; ptr to ZSDOS Flag byte
+	BIT	2,(IX+0)	; check bit 2 (Read-Only, 1= enabled)
+	CALL	PYESNO
+
+	CALL	VPRINT
+	DEFB	CR,LF,'       4 - Fast Fixed Disk Log    : '
+	DEFB	0
+	LD	IX,(OFLGADR)	; ptr to ZSDOS Flag byte
+	BIT	3,(IX+0)	; check bit 3 (Fast Relog, 1= enabled)
+	CALL	PYESNO
+
+	CALL	VPRINT
+	DEFB	CR,LF,'       5 - Disk Change Warning    : '
+	DEFB	0
+	LD	IX,(OFLGADR)	; ptr to ZSDOS Flag byte
+	BIT	4,(IX+0)	; check bit 4 (Disk Chg Warning, 1= enabled)
+	CALL	PYESNO
+
+	CALL	VPRINT
+	DEFB	CR,LF,'       6 - Path w/o System Attr   : '
+	DEFB	0
+	LD	IX,(OFLGADR)	; ptr to ZSDOS Flag byte
+	BIT	6,(IX+0)	; check bit 6 (Path w/o System, 1= enabled)
+	CALL	PYESNO
+
+	CALL	VPRINT
+	DEFB	CR,LF,'       7 - DOS Search Path        : '
+	DEFB	0
+	LD	IX,(OFLGADR)	; ptr to ZSDOS Flag byte
+	BIT	5,(IX+0)	; check bit 5 (ZCPR Path, 1= eanbled)
+	JR	Z,PSETTG1
+	CALL	VPRINT
+	DEFB	1,'Enabled',2
+	DEFB	0
+	LD	IX,(OFLGADR)	; ptr to ZSDOS Flag byte
+	LD	E,(IX-4)	; get addr DOS internal path
+	LD	D,(IX-3)
+	LD	L,(IX+8)	; get reference addr (new in v2)
+	LD	H,(IX+9)
+	OR	A
+	SBC	HL,DE		; compare the 2 addr's
+	JR	NZ,PSETTG0	; ..if not internal, skip over
+	CALL	VPRINT
+	DEFB	' - Internal'
+	DEFB	0
+	JR	PSETTG2
+
+PSETTG0: CALL	VPRINT
+	DEFB	'  Addr = '
+	DEFB	0
+	EX	DE,HL
+	CALL	PHLXHHI		; display addr (as hex w/ highlighting)
+	JR	PSETTG2
+
+PSETTG1: CALL	VPRINT
+	DEFB	1,'Disabled',2
+	DEFB	0
+
+PSETTG2: CALL	EREOL
+	CALL	VPRINT
+	DEFB	CR,LF,'       8 - Wheel Byte Protect     : '
+	DEFB	0
+	LD	IX,(OFLGADR)	; ptr to ZSDOS Flag byte
+	LD	L,(IX-2)	; get addr of WHEEL byte
+	LD	H,(IX-1)
+	LD	A,H		; check if valid (<> zero)
+	OR	L
+	JR	Z,PSETTG3	; ..if not, skip over
+	PUSH	HL
+	CALL	VPRINT
+	DEFB	1,'Enabled',2,'  Addr = '
+	DEFB	0
+	POP	HL
+	CALL	PHLXHHI		; display addr (as hex w/ highlighting)
+	CALL	EREOL
+	JR	PSETTG4
+PSETTG3: CALL	VPRINT
+	DEFB	1,'Disabled',2,'..Assumed ON'
+	DEFB	0
+	CALL	EREOL
+
+PSETTG4: CALL	VPRINT
+	DEFB	CR,LF,'       T - Time Routine (Clock)   : '
+	DEFB	0
+	LD	IX,(OFLGADR)	; ptr to ZSDOS Flag byte
+	LD	L,(IX+2)	; get addr of time/date routine
+	LD	H,(IX+3)
+	CALL	PTIMERS		; display Time Routine status (addr or 'disabled')
+
+	CALL	VPRINT
+	DEFB	CR,LF,'       A - Stamp Last Access Time : '
+	DEFB	0
+	LD	A,00000001b	; check bit 0
+	CALL	PSTAMPS		;   and display status
+
+	CALL	VPRINT
+	DEFB	CR,LF,'       C - Stamp Create Time      : '
+	DEFB	0
+	LD	A,00000010b	; check bit 1
+	CALL	PSTAMPS		;   and display status
+
+	CALL	VPRINT
+	DEFB	CR,LF,'       M - Stamp Modify Time      : '
+	DEFB	0
+	LD	A,00000100b	; check bit 2
+	CALL	PSTAMPS		;   and display status
+
+	CALL	CRLF
+	LD	HL,01501H	; row 21, col 1
+	CALL	GOTOXY		; pos cursor
+	CALL	EREOL		; clear line
+	CALL	GXYMSG
+	DEFB	20,1,'Entry to Change ("X" to EXIT) : '
+	DEFB	0
+	CALL	EREOL
+	; --- << end of print settings >> ---
+
+
+	; interactive mode - get console input and branch accordingly
+	; B indicates the bit to be changed
+IMCINPT: CALL	CIN
+	CALL	CAPS		; capitalize input
+	CP	' '		; is it a control char (below <SP>) ?
+	JR	C,IMCINPT	; ..if so, loop to get new input
+	CALL	COUT		;   else, echo char
+	CP	'X'		; is it 'X' ?
+	JP	Z,EXIT		;   exit program
+	LD	B,00000001b
+	CP	'1'		; Public Files ?
+	JP	Z,IMTGOP	;   toggle bit in Option Flag (interactive)
+	LD	B,00000010b
+	CP	'2'		; Public/Path Write ?
+	JP	Z,IMTGOP
+	LD	B,00000100b
+	CP	'3'		; Read-Only ?
+	JP	Z,IMTGOP
+	LD	B,00001000b
+	CP	'4'		; Fast Relog ?
+	JP	Z,IMTGOP
+	LD	B,00010000b
+	CP	'5'		; Disk Change Warning ?
+	JP	Z,IMTGOP
+	LD	B,01000000b
+	CP	'6'		; Search Path w/o System Attr ?
+	JP	Z,IMTGOP
+	CP	'7'		; DOS Search Path ?
+	JP	NZ,IMWHL	; ..if not, jump to continue checking input
+
+
+	; interactive mode - change Path
+	CALL	CRLFGXY		; else, fall through to change DOS Path
+	DEFB	21,16,'DOS Path [('
+	DEFB	1,'D',2,')isable, ('
+	DEFB	1,'S',2,')et, ('
+	DEFB	1,'I',2,')nternal'
+	DEFB	0
+	LD	HL,(ENVADR)	; get ENV addr
+	LD	A,H		; check if valid (<> zero)
+	OR	L
+	JR	Z,IMPATH
+	CALL	VPRINT
+	DEFB	', (',1,'Z',2,')CPR3'
+	DEFB	0
+IMPATH:	CALL	VPRINT
+	DEFB	'] : '
+	DEFB	0
+
+	; input
+IMPTHIN: CALL	CINCAPS		; get user input and capitalize
+	CP	'D'		; is it 'D'isable ?
+	JR	Z,IMPTHDS
+	CP	'Z'		; is it 'Z'CPR ?
+	JR	Z,IMPTHZ
+	CP	'I'		; is it 'I'nternal ?
+	JR	NZ,IMPTHST	; ..if not, jump to check other options
+				;   else, fall through
+	LD	IX,(OFLGADR)	; ptr to ZSDOS Flag byte
+	LD	L,(IX+8)	; get reference addr (new in v2)
+	LD	H,(IX+9)
+	JR	IMPTHEN
+
+	; set
+IMPTHST: CP	'S'		; is it 'S'et addr ?
+	JR	NZ,IMPTHIN	; ..loop if input not valid
+	CALL	CRLFGXY
+	DEFB	22,25,'Enter PATH Address : '
+	DEFB	0
+	LD	HL,0		; set initial value
+	CALL	CINADR		; get user input, converted addr in HL
+	JR	IMPTHEN		; jump to set addr and enable
+
+	; disable
+IMPTHDS: LD	IX,(OFLGADR)	; ptr to ZSDOS Flag byte
+	RES	5,(IX+0)	; bit 5 = 0 to disable Path
+	JP	PSETTG		; jump display (new) settings
+
+	; zcpr
+IMPTHZ:	LD	HL,(ENVADR)	; get ENV addr
+	LD	A,H		; check if valid (<> zero)
+	OR	L
+	JP	Z,PSETTG	; ..if not, jump display settings
+	LD	HL,(ZPTHADR)	;   else, get addr of Path in ENV
+
+	; enable
+IMPTHEN: LD	IX,(OFLGADR)	; ptr to ZSDOS Flag byte
+	SET	5,(IX+0)	; bit 5 = 1 to enable path
+	LD	(IX-3),H	; ..and set addr
+	LD	(IX-4),L
+	JP	PSETTG		; jump display (new) settings
+
+
+	; input >8 i.e. not Option Flag byte, change other options
+
+	; interactive mode - change Wheel
+IMWHL:	CP	'8'		; change Wheel ?
+	JP	NZ,IMTIME	; ..if not, jump to next
+	CALL	CRLFGXY
+	DEFB	21,20,'WHEEL Addr [('
+	DEFB	1,'D',2,')isable, ('
+	DEFB	1,'S',2,')et'
+	DEFB	0
+	LD	HL,(ENVADR)	; get ENV addr
+	LD	A,H		; check if valid (<> zero)
+	OR	L
+	JR	Z,IMWHL0	; ..if no ENV, skip over
+	CALL	VPRINT
+	DEFB	', (',1,'Z',2,')CPR3'
+	DEFB	0
+IMWHL0:	CALL	VPRINT
+	DEFB	'] : '
+	DEFB	0
+
+	; input
+IMWHLIN: CALL	CINCAPS		; get user input and capitalize
+	LD	HL,0		; prepare for disable
+	CP	'D'		; is it 'D'isable ?
+	JR	Z,IMWHLST
+	CP	'Z'		; is it 'Z'CPR Wheel ?
+	JR	Z,IMWHLZ
+	CP	'S'		; is it 'S'et addr ?
+	JR	NZ,IMWHLIN	; ..loop if no valid input
+	CALL	CRLFGXY
+	DEFB	22,25,'Enter WHEEL Address : '
+	DEFB	0
+	LD	HL,0		; set initial value
+	CALL	CINADR		; get user input, converted addr in HL
+	JR	IMWHLST		; jump set value
+
+	; zcpr
+IMWHLZ:	LD	HL,(ENVADR)	; get ENV addr
+	LD	A,H		; check if valid (<> zero)
+	OR	L
+	JP	Z,PSETTG	; ..if not, jump display settings
+	LD	HL,(ZWHLADR)	; get Wheel byte addr from ENV
+
+	; set
+IMWHLST: LD	IX,(OFLGADR)	; ptr to ZSDOS Flag byte
+	LD	(IX-1),H	;   and set addr
+	LD	(IX-2),L
+	JP	PSETTG		; jump display (new) settings
+
+	; interactive mode - change Time
+IMTIME:	CP	'T'		; change Time ?
+	JR	NZ,IMASTMP	; ..if not, jump to next
+	CALL	CRLFGXY
+	DEFB	21,15,'Time (Clock)'
+	DEFB	0
+	CALL	ASKSET		; ask disable/set
+	LD	IX,(OFLGADR)	; ptr to ZSDOS Flag byte
+	LD	(IX+2),L	; get addr of time/date routine (GSTIME)
+	LD	(IX+3),H
+	LD	A,0FFH		; prepare for unload value
+	ADC	A,0		;   C-Flag is dummy vector flag
+	LD	(IX+6),A	;   ...to set UNLOAD to 0
+	LD	(IX+7),A	;      (rather than 0xFFFF)
+	JP	PSETTG		; jump display (new) settings
+
+
+	; changes are reflected in Time flag byte (new in v2)
+IMASTMP: CP	'A'		; change Stamp Access Time ?
+	JR	NZ,IMCSTMP	; ..if not, jump to next
+	CALL	CRLFGXY
+	DEFB	21,15,'Stamp Last Access Time'
+	DEFB	0
+	CALL	ASKENBL		; ask disable/enable (C-Flag is indicator)
+	LD	B,00000001b	; mask bit 0
+	JP	IMTFLG		;   and toggle in Time Flag byte (interactive)
+	;
+IMCSTMP: CP	'C'		; change Stamp Create Time ?
+	JR	NZ,IMMSTMP	; ..if not, jump to next
+	CALL	CRLFGXY
+	DEFB	21,15,'Stamp Create Time'
+	DEFB	0
+	CALL	ASKENBL		; ask disable/enable (C-Flag is indicator)
+	LD	B,00000010b	; mask bit 1
+	JP	IMTFLG		;   and toggle
+	;
+IMMSTMP: CP	'M'		; change Stamp Modify Time ?
+	JR	NZ,INPINVL	; ..if not, jump invalid user input
+	CALL	CRLFGXY
+	DEFB	21,15,'Stamp Modify Time'
+	DEFB	0
+	CALL	ASKENBL		; ask disable/enable (C-Flag is indicator)
+	LD	B,00000100b	; mask bit 2
+	JP	IMTFLG		;   and toggle
+
+
+	; interactive mode - invalid (not a menu option)
+INPINVL: CALL	VPRINT		; alert and ask for new input
+	DEFB	8,' ',8,BEL
+	DEFB	0
+	JP	IMCINPT
+
+
+;::::: EXIT PROGRAM
+
+EXIT:	CALL	VPRINT
+	DEFB	CR,LF,LF,'Returning to system ...',CR,LF
+	DEFB	0
+EXIT0:	LD	SP,(STACK)	; restore stack
+	RET
+
+
+;::::: SUPPORT FUNCTIONS (interactive mode)
+
+	; toggle bit in Flag byte
+	;  in: B= bit mask (respective bit is set)
+IMOFLG
+IMTGOP:	LD	A,B
+	LD	IX,(OFLGADR)	; ptr to ZSDOS Flag byte
+	XOR	(IX+0)		; toggle bit
+	LD	(IX+0),A	;   and save value again
+	JP	PSETTG		; jump, display (new) settings
+
+
+	; set/reset bit in Time flag byte (new in v2)
+	;  in: B= bit maks (respective bit is set)
+	;      C-Flag set = disable, NC= enable
+IMTFLG:	LD	A,B		; get bit
+	LD	IX,(OFLGADR)	; ptr to ZSDOS Flag byte
+	JR	C,IMTFLGR	; ..if C-Flag set, jump
+	OR	(IX+1)		; merge with current value (= set bit)
+
+	; set
+IMTFLGS: LD	(IX+1),A	;   and save value again
+	JP	PSETTG		; jump display (new) settings
+
+	; reset
+IMTFLGR: CPL			; invert bit mask
+	AND	(IX+1)		; merge with current value (= reset bit)
+	JR	IMTFLGS
+
+
+;::::: EXPERT MODE
+
+EXPMODE: LD	HL,CPMDMA	; set ptr to command line buffer
+	LD	B,(HL)		; get char count
+	INC	HL		; move ptr forward to first char
+
+	; evaluate command line
+EMEVCMD: CALL	CMDPDL		; get past delimiters (skip <SP>, <TAB>, and Comma)
+	JP	Z,EMSETOF	; ..if end of cmdline, jump set Option Flags
+	CP	'*'		; change Wheel ?
+	JP	Z,EMWHL
+	CP	'+'		; change Time ?
+	JP	Z,EMSTAMP
+	CP	'C'		; change Clock (stamp) ?
+	JP	Z,EMTIME
+	CP	'R'		; change R/O ?
+	JR	NZ,EMRELOG	; ..if not, jump to next
+
+	; first, handle options which can be switched on/off
+	; more complex handling routines further down below
+
+	; change R/O Vector
+	CALL	PVBOSE
+	DEFB	'R/O Sustain    = '
+	DEFB	0
+	LD	C,00000100b	; mask bit 2
+	JP	EMOFLG		; toggle Option Flags (Read Only)
+
+EMRELOG: CP	'F'		; change Fast Relog ?
+	JR	NZ,EMDWARN	; ..if not, jump to next
+	CALL	PVBOSE
+	DEFB	'Fast Relog     = '
+	DEFB	0
+	LD	C,00001000b	; mask bit 3
+	JP	EMOFLG		; toggle Option Flags
+
+EMDWARN: CP	'!'		; change Disk Warning ?
+	JR	NZ,EMPUBFL	; ..if not, jump to next
+	CALL	PVBOSE
+	DEFB	'Change Warning = '
+	DEFB	0
+	LD	C,00010000b	; mask bit 4
+	JP	EMOFLG		; toggle Option Flags
+
+EMPUBFL: CP	'P'		; change Public Files Flag ?
+	JR	NZ,EMPUBWR	; ..if not, jump to next
+	CALL	PVBOSE
+	DEFB	'Public Files   = '
+	DEFB	0
+	LD	C,00000001b	; mask bit 0
+	JP	EMOFLG		; toggle Option Flags
+
+EMPUBWR: CP	'W'		; change Public/Path Write ?
+	JR	NZ,EMSYSAT	; ..if not, jump to next
+	CALL	PVBOSE
+	DEFB	'Pub/Path Write = '
+	DEFB	0
+	LD	C,00000010b	; mask bit 1
+	JP	EMOFLG		; toggle Option Flags
+
+EMSYSAT: CP	'S'		; change Path w/o Sys Attr ?
+	JR	NZ,EMSETPA	; ..if not, jump next
+	CALL	PVBOSE
+	DEFB	'Path w/o SYS   = '
+	DEFB	0
+	LD	C,01000000b	; mask bit 6
+	JP	EMOFLG		; toggle Option Flags
+
+EMSETPA: CP	'>'		; set Path ?
+	JP	Z,EMPATH	; ..if so, jump to continue
+				;   else, fall through (not a valid option)
+
+	; move forward in command line to next possible option
+EMCMDFW: CALL	CMDATDL		; move forward to next <SP>, <TAB>, or Comma
+	JP	NZ,EMEVCMD	;   and continue evaluating cmdline
+
+	; set Option flag when end of cmdline was reached
+EMSETOF: LD	A,(OFLGMSK)	; get effective Bit Mask
+	LD	HL,OFLGWIP	; ptr to Option Flag byte (wip)
+	LD	IX,(OFLGADR)	; ptr to ZSDOS Flag byte
+	AND	(IX+0)		; Bit Mask AND current Flag Byte
+	OR	(HL)		; set new flags (wip)
+	LD	(IX+0),A	; write back new Option Flag byte
+	JP	EXIT0		; ..and exit program
+
+	; change Wheel
+EMWHL:	CALL	PVBOSE
+	DEFB	'Wheel Protect  = '
+	DEFB	0
+	CALL	CMDNCHR		; get next char from cmdline
+	CALL	Z,PV$INVL	; ..if end-of-string (<NUL>), display msg
+	JR	Z,EMSETOF	;   ...and jump, set Option Flags
+	CP	'-'		; disable ?
+	JR	NZ,EMWHL0	; ..if not, jump
+	CALL	PV$DABL		;   else, display msg
+	LD	DE,0		; zero addr to disable
+	JR	EMWHL2		; ..and jump to continue
+
+EMWHL0:	CP	'Z'		; use Z3WHL ?
+	LD	DE,(ZWHLADR)	; get Wheel byte addr from ENV
+	JR	Z,EMWHL4	; ..if so, jump to continue
+	CALL	CMDADR		;   else,read addr from cmdline in DE
+	CALL	Z,PV$INVL	; ..if not valid, display msg
+	JR	Z,EMCMDFW	;   ..and jump
+
+EMWHL1:	CALL	PV$DEX		; display addr
+EMWHL2:	LD	IX,(OFLGADR)	; ptr to ZSDOS Flag byte
+	LD	(IX-1),D	; set new Wheel byte addr
+	LD	(IX-2),E
+EMWHL3:	CALL	CMDATDL		; move forward to next <SP>, <TAB>, or Comma
+	JP	EMEVCMD		;   then continue evaluating cmdline
+EMWHL4:	PUSH	HL		; save regs (ptr in cmdline)
+	LD	HL,(ENVADR)	; get ENV addr
+	LD	A,H		; check if valid (<> zero)
+	OR	L
+	POP	HL		; restore regs
+	JR	NZ,EMWHL5	; ..if valid, skip over
+	CALL	PV$INVL		;   else, display msg
+	JP	EMEVCMD		;   ..and continue evaluating cmdline
+
+EMWHL5:	CALL	PVBOSE
+	DEFB	'Z-System @ '
+	DEFB	0
+	JR	EMWHL1		; jump to set addr (in DE)
+
+	; change Path
+EMPATH:	CALL	PVBOSE
+	DEFB	'Search Path    = '
+	DEFB	0
+	CALL	CMDNCHR		; get next char from cmdline
+	CALL	Z,PV$INVL	; ..if end of string (<NUL>), display msg
+	JP	Z,EMSETOF	;   ...and loop, set Option Flags
+	CP	'-'		; disable ?
+	JR	NZ,EMPTH0	; ..if not, jump
+	CALL	PV$DABL		;   else, display msg
+	LD	IX,(OFLGADR)	; ptr to ZSDOS Flag byte
+	RES	5,(IX+0)	; bit 5 = 0 to disable Path
+	JP	EMEVCMD		;   and continue evaluating cmdline
+
+EMPTH0:	CP	'I'		; 'I'nternal Path ?
+	JR	NZ,EMPTH1	; ..if not, jump
+	LD	E,(IX+8)	; get reference addr (new in v2)
+	LD	D,(IX+9)
+	CALL	PVBOSE
+	DEFB	'Internal',CR,LF
+	DEFB	0
+	JR	EMPTH3		; jump to set addr (in DE)
+EMPTH1:	CP	'Z'		; 'Z'CPR Path ?
+	LD	DE,(ZPTHADR)	; get addr of Path in ENV
+	JR	Z,EMPTH4	; ..if option, jump
+	CALL	CMDADR		;   else,read addr from cmdline in DE
+	CALL	Z,PV$INVL	; ..if not valid, display msg
+	JP	Z,EMCMDFW	;   ..and jump
+EMPTH2:	CALL	PV$DEX		; display addr
+EMPTH3:	LD	IX,(OFLGADR)	; ptr to ZSDOS Flag byte
+	LD	(IX-3),D	; set new Path addr
+	LD	(IX-4),E
+	SET	5,(IX+0)	;   and set bit 5 = 1 to enable Path
+	JP	EMWHL3
+EMPTH4:	PUSH	HL		; save regs (ptr in cmdline)
+	LD	HL,(ENVADR)	; get ENV addr
+	LD	A,H		; check if valid (<> zero)
+	OR	L
+	POP	HL		; restore regs
+	JR	NZ,EMPTH5	; ..if valid, skip over
+	CALL	PV$INVL		;   else, display msg
+	JP	EMEVCMD		;   ..and continue evaluating cmdline
+
+EMPTH5:	CALL	PVBOSE
+	DEFB	'Z-System @ '
+	DEFB	0
+	JR	EMPTH2		; jump to set addr (in DE)
+
+
+	; change Clock Routine
+	; ##### CHECK: changed order, requires additional PUSH/POP AF
+EMTIME:	CALL	CMDNCHR		; get next char from cmdline
+	PUSH	AF
+	CALL	PVBOSE
+	DEFB	'Clock Routine  = '
+	DEFB	0
+	POP	AF
+	CALL	Z,PV$INVL	; ..if end of string (<NUL>), display msg
+	JP	Z,EMSETOF	;   ..and loop, set Option Flags
+	CALL	EMTROUT		; check Time routine options (addr in DE)
+	LD	IX,(OFLGADR)	; ptr to ZSDOS Flag byte
+	LD	(IX+2),E	; set addr of time/date routine (GSTIME)
+	LD	(IX+3),D
+	LD	A,0FFH		; prepare for unload value
+	ADC	A,0		;   C-Flag is dummy vector flag
+	LD	(IX+6),A	;   ...to set UNLOAD to 0
+	LD	(IX+7),A	;      (rather than 0xFFFFH)
+	JP	EMSTMX0		; jump to continue evaluating cmdline
+
+
+	; change Time Stamp(s)
+EMSTAMP: CALL	CMDNCHR		; get next char from cmdline
+	JP	Z,EMSETOF	; ..if end of string (<NUL>), loop set Option Flags
+	LD	(CHARCMD),A	; store char
+	CALL	CMDNCHR		;   and get next one from cmdline
+	JR	NZ,EMASTMP	; ..if not end of string, jump to continue
+	INC	B		; set counter back (= 1 char remaining)
+	DEC	HL		; set ptr back
+	LD	A,' '		; set <SP> as if it were read from cmdline
+
+EMASTMP: PUSH	AF		; save this char
+	LD	A,(CHARCMD)	; restore previous char
+	CP	'A'		; is it 'A'ccess ?
+	JR	NZ,EMCSTMP	; ..if not, jump next
+	CALL	PVBOSE
+	DEFB	'Stamp Access   = '
+	DEFB	0
+	LD	D,00000001b	; bit mask (bit 0= Access Stamp)
+	JR	EMSTMST		;   and jump to set/reset
+
+EMCSTMP: CP	'C'		; is it 'C'reate ?
+	JR	NZ,EMMSTMP	; ..if not, jump next
+	CALL	PVBOSE
+	DEFB	'Stamp Create   = '
+	DEFB	0
+	LD	D,00000010b	; bit mask (bit 1= Create Stamp)
+	JR	EMSTMST		;   and jump to set/reset
+
+EMMSTMP: CP	'M'		; is it 'M'odify ?
+	JR	NZ,EMSTMX	; ..if not, skip over and loop
+	CALL	PVBOSE
+	DEFB	'Stamp Modify   = '
+	DEFB	0
+	LD	D,00000100b	; bit mask (bit 2= Modify Stamp)
+
+	; set/reset
+EMSTMST: POP	AF		; restore following char
+	CALL	EMTFLG		; get new Time flag in E
+	LD	IX,(OFLGADR)	; ptr to ZSDOS Flag byte
+	LD	(IX+1),E	;   and write back Time flag byte
+	JR	EMSTMX0		; skip over, and loop
+
+EMSTMX:	POP	AF
+EMSTMX0: JP	EMEVCMD		; continue evaluating cmdline
+
+
+;::::: SUPPORT FUNCTIONS (expert mode)
+
+	; expert mode - toggle bit in wip Option Flag byte based on following char
+	;  in: HL= ptr cmdline
+	;      B= char count (remaining chars)
+	;      C= bit mask (respective bit is set)
+EMOFLG:	CALL	CMDNCHR		; get next char and capitalize it
+	CP	'-'		; disable ?
+	LD	A,C		; bit mask in A
+	JR	NZ,EMOFLG0	; ..if not '-', jump (default to enable)
+	PUSH	AF
+	CALL	PV$DABL		; display 'Disabled' if verbose
+	POP	AF
+	LD	C,0
+	JR	EMOFLG1
+
+EMOFLG0: PUSH	AF
+	CALL	PVBOSE
+	DEFB	'Active',CR,LF
+	DEFB	0
+	POP	AF
+EMOFLG1: CPL			; invert mask
+	PUSH	HL
+	LD	HL,OFLGMSK	; ptr to effective Bit Mask
+	AND	(HL)		; merge (= reset) current bit
+	LD	(HL),A		; ..and store new Bit Mask
+	LD	HL,OFLGWIP	; ptr to Flag byte (wip)
+	LD	A,C		; get current bit
+	OR	(HL)		; merge (set/reset) with Option Flag (wip)
+	LD	(HL),A		; ..and save back
+	POP	HL
+	JP	EMCMDFW		; ..and loop
+
+
+	; expert mode - return bit pattern to toggle Time Stamp (Access/Create/Modify)
+	; set/reset bit in Time flag byte (new in v2)
+	;  in: D= bit mask (respective bit is set)
+	;      A= char from cmdline
+	;      ( disable = '-' / enable = <SP>, <TAB>, Comma
+	;        everything else is invalid )
+	; out: E= new Time flag byte
+EMTFLG:	LD	IX,(OFLGADR)	; ptr to ZSDOS Flag byte
+	PUSH	AF		; save char
+	LD	A,(IX+1)	; get current Time flag byte
+	OR	D		; set respective bit (= 1)
+	XOR	D		;   and invert it (= 0)
+	LD	E,A		; new Time flag in E (prepared to disable)
+	POP	AF		; restore char
+	CP	'-'		; disable ?
+	JR	Z,PV$DABL	; ..if so, jump display msg
+				;   ...and return from there with C-Flag set
+	CALL	CHKDLM		;   else, must be <SP>, <TAB>, or Comma
+	JR	NZ,PV$INVL	; ..if not, jump display 'invalid' and return from there
+	LD	A,E		; get new Time flag byte
+	OR	D		; set respetive bit (= 1)
+	LD	E,A		;   and copy as new Time flag byte
+	CALL	PVBOSE
+	DEFB	'Enabled',CR,LF
+	DEFB	0
+	XOR	A
+	RET
+
+	; expert mode - change Time Routine
+	; either disable or get addr of routine
+EMTROUT: CP	'-'		; disable ?
+	LD	DE,(TIMEDIS)	; get disable vector
+	JR	NZ,EMTROU0	; ..if not '-', jump to continue
+				;   else, fall through
+
+PV$DABL: CALL	PVBOSE
+	DEFB	'Disabled',CR,LF
+	DEFB	0
+	SCF
+	RET
+
+EMTROU0: LD	DE,(CPMBIOS+1)	; get Bios WBOOT addr (fn #1)
+	LD	E,26*3		; adjust to fn #26 (TIME)
+	CP	'B'		; 'B'ios routine ?
+	JP	Z,PV$DEX	; ..if not, diplay msg and let return from there
+	CALL	CMDADR		;   else, read addr from cmdline (in DE)
+	JP	NZ,PV$DEX	; ..if valid, display addr and let return from there
+	CALL	PV$INVL		;   else, display msg
+	POP	DE		; restore regs
+	JP	EMCMDFW		; ..and jump
+
+PV$INVL: PUSH	AF
+	CALL	PVBOSE
+	DEFB	'-- Invalid --',CR,LF
+	DEFB	0
+	POP	AF
+	RET
+
+
+	; get hex addr from command line
+	;  in: HL= ptr in cmdline string
+	;      B= char counter (remaining chars)
+	; out: A= 0 and Z-Flag set if end of string, else NZ= valid
+	;      DE= addr
+	;      HL= moved fwd, B= decremented by digit count
+CMDADR:	LD	DE,0		; set initial value
+CMDADR0: CALL	CHKXDIG		; check if char is valid hex digit
+	JR	NC,CMDADR1	; ..if not, jump to additional check
+	EX	DE,HL		; swap regs
+	CALL	ADDDIGA		; new result in HL
+	EX	DE,HL		; swap back
+	CALL	CMDNCHR		; get next char from cmdline
+	JR	NZ,CMDADR0	; ..if not <NUL> (end of string), loop
+	DEC	HL		;   else, move ptr back
+	INC	B		;   ..and correct counter
+	JR	CMDADRX		;   ..then exit
+
+CMDADR1: LD	A,(HL)		; get char again
+	CALL	CHKDLM		; check if <SP>, <TAB>, or Comma
+	JR	Z,CMDADRX	; ..if so, jump to exit
+	LD	DE,0		;   else, set zero addr (char not valid)
+CMDADRX: LD	A,D		; set status (Z-Flag), non-zero = ok
+	OR	E
+	RET
+
+	; get _past_ delimiter(s) parsing command line
+	; read string, skip whitespace (<SP>, <TAB>) and Comma
+	; stop if other char or terminating <NUL> byte is found
+	;  in: HL= ptr to string
+	;      B= max. char count
+	; out: HL= ptr to first non-matching char, Z-Flag set if end reached
+CMDPDL: LD	A,(HL)		; get byte
+	OR	A		; check for <NUL> (end of string)
+	RET	Z		; ..if so, return (Z-Flag set)
+	CALL	CAPS		; make char uppercase
+	CALL	CHKDLM		; check for <SP>, <TAB>, or Comma
+	RET	NZ		; ..if other char, return
+	INC	HL		;   else, ptr fwd
+	DJNZ	CMDPDL		;   ..and loop
+	XOR	A		; reached max. char count, set flag
+	RET			;   and return
+
+
+	; stop _at_ next delimiter parsing command line
+	; read string, skip any char until <SP>, <TAB>, or Comma is found
+	; (opposite to previous fn), stop if <SP>, <TAB>, Comma or terminating <NUL>
+	;  in: HL= ptr in cmdline string
+	;      B= char count (remaining chars)
+	; out: HL= ptr to found <SP>, <TAB>, or Comma / <NUL> at end of string
+	;      B= decremented accordingly
+	;      A= char, Z-Flag not set (NZ) if found
+	;      A= 0, Z-Flag set if not found
+CMDATDL: LD	A,(HL)		; get byte
+	OR	A		; check for <NUL> (end of string)
+	RET	Z		; ..if so, return (Z-Flag set)
+	CALL	CHKDLM		; check for <SP>, <TAB>, or Comma
+	JR	Z,CMDATD0	; ..if found, jump exit
+	INC	HL		;   else, ptr fwd
+	DJNZ	CMDATDL		;   ..and loop
+	XOR	A		; reached max. char count, set flag
+	RET			;   and return
+
+CMDATD0: OR	A		; char is <SP>, <TAB>, or Comma - set status (NZ)
+	RET
+
+
+	; checks if char is a delimiter (<SP>, <TAB>, or Comma)
+	;  in: A= char
+	; out: Z-Flag set if match, NZ= none of them
+CHKDLM: CP	' '
+	RET	Z
+	CP	','
+	RET	Z
+	CP	TAB
+	RET
+
+
+	; get next char from command line
+	;  in: HL= ptr in cmdline string
+	;      B= char counter (remaining chars)
+	; out: A= next char (capitalized)
+	;      Z-Flag set if end of string, NZ= valid
+	;      HL= incremented, B= decremented
+CMDNCHR: INC	HL		; move ptr fwd
+	LD	A,(HL)		; get char
+	CALL	CAPS		; capitalize it
+	DEC	B		; counter -1
+	RET
+
+	; get console input (1 char) and capitalize
+CINCAPS: CALL	CIN
+	JP	CAPS
+
+
+	; get console input, hex addr in HL
+	;  in: A= (possible) first char
+	; out: HL= addr
+CINADR:	CALL	CAPS		; capitalize A
+	LD	(CHARTMP),A	;   store for echo
+	CP	CR		; is it <CR> (marks end) ?
+	RET	Z		; ..if so, return
+	CALL	CHKXDIG		;   else, check if hex digit
+	JR	NC,CINADR0	; ..if not, get next char
+	PUSH	AF
+	LD	A,(CHARTMP)	; get char back
+	CALL	COUT		; ..and echo
+	POP	AF
+	CALL	ADDDIGA		; add to HL
+CINADR0: CALL	CIN		; get console input
+	JR	CINADR		; ..and loop
+
+
+	; check if char is a valid hex digit
+	;  in: A= char
+	; out: A= converted char, C-Flag set if ok, NC= not ok
+CHKXDIG: SUB	'0'		; convert ascii to number
+	JP	M,CHKXDI0
+	CP	9+1		; is it below 10 ?
+	RET	C		; ..if so, return (= ok)
+	SUB	7		;   else, check A..H
+	CP	10
+	JR	C,CHKXDI0
+	CP	16
+	RET			; return with C-Flag (status) set accordingly
+
+CHKXDI0: XOR	A		; nullify A
+	DEC	A		; exit with C-Flag reset (digit not valid)
+	RET
+
+
+	; add hex digit in A to HL
+ADDDIGA: ADD	HL,HL		; make room for new digit in HL by shifting
+	ADD	HL,HL		;   4 bits left (*8, power-of-two-multiple)
+	ADD	HL,HL
+	ADD	HL,HL
+	ADD	A,L		; add A
+	LD	L,A		;   and store new total
+	RET
+
+
+	; print YES / NO with highlighting
+	;  in: Z-Flag not set (NZ) = YES, set = NO
+PYESNO:	JR	Z,PYSNO0
+	CALL	VPRINT
+	DEFB	1,'YES',2
+	DEFB	0
+	RET
+PYSNO0:	CALL	VPRINT
+	DEFB	1,'NO',2,' '
+	DEFB	0
+	RET
+
+
+	; verbose print - print string to CON: if quiet option is off
+	;  in: (Stack) contains start addr of nul-terminated string
+PVBOSE:	CALL	GETQUIET	; get quiet flag
+	JP	Z,VPRINT	; if verbose (= not quiet), jump to display
+				;   and let return from there
+	EX	(SP),HL		; swap HL and string addr
+PVBOSE0: LD	A,(HL)		; get char
+	INC	HL		; move ptr fwd
+	OR	A		; is it <NUL> (= end of string) ?
+	JR	NZ,PVBOSE0	; ..if not, loop get next char
+	EX	(SP),HL		;   else, swap back (on Stack = addr behind string)
+	RET
+
+
+	; print value as hex if in verbose mode (quiet flag = off)
+	;  in: DE= value
+PV$DEX:	CALL	GETQUIET	; get quiet flag
+	JR	NZ,PV$DEX0	; if quiet, skip over
+	EX	DE,HL		; swap regs
+	CALL	PHLXH		; display addr in HL (as hex)
+	EX	DE,HL		; swap back
+	CALL	CRLF		; display extra <CR><LF>
+PV$DEX0: AND	A		; clear C-Flag
+	RET
+
+
+	; print status of Access/Create/Modify routines
+	; based on Time flag byte (new in v2)
+	;  in: A= bit to test (0= Acc, 1= Cre, 2= Mod)
+PSTAMPS: LD	IX,(OFLGADR)	; ptr to ZSDOS Flag byte
+	AND	(IX+1)		; compare with flag byte
+				;   (did not exist in v1, apparently added in v2)
+	JR	PSTMPS0		; jump to continue
+
+	; ##### orphaned code, seems as if combined print function was planned
+	LD	DE,(TIMEDIS)	; get disable vector
+	OR	A
+	SBC	HL,DE
+	ADD	HL,DE
+	; #####
+
+PSTMPS0: JR	Z,PDISABL	; ..if bit not set, jump display 'disabled'
+	CALL	VPRINT		;   else, display 'enabled'
+	DEFB	1,'Enabled',2
+	DEFB	0
+	JP	EREOL
+
+
+	; print status of Time routines - addr or 'disabled'
+PTIMERS: LD	DE,(TIMEDIS)	; get disable vector
+	OR	A		; clear Flags
+	SBC	HL,DE		; compare HL and DE
+	ADD	HL,DE		;   preserving registers
+	JR	Z,PDISABL	; ..if disable vector, display msg
+	CALL	PHLXHHI		;   else, display addr (as hex w/ highlighting)
+	JP	EREOL
+
+PDISABL: CALL	VPRINT
+	DEFB	1,'Disabled',2
+	DEFB	0
+	JP	EREOL
+
+	; print addr in HL with highlighting
+	;  in: HL= addr
+PHLXHHI: CALL	STNDOUT		; turn on 'standout' display
+	CALL	PHLXH		; display as hex plus 'H'
+	JP	STNDEND		; turn off 'standout'
+
+
+	; print addr in HL as four-digit hex and append 'H'
+	;  in: HL= addr
+PHLXH:	CALL	PHL4HC		; display as 4-digit hex
+	LD	A,'H'		;   and display 'H'
+	JP	COUT		; print <CR>, <LF> then jump to GXYMSG (return addr on stack)
+
+
+CRLFGXY: CALL	CRLF
+	JP	GXYMSG		; ask user whether to disable routine, or set addr for it
+
+
+	; print 'Routine...' and ask for disable/set
+ASKSET: CALL	VPRINT
+	DEFB	' Routine [('
+	DEFB	1,'D',2,')isable), ('
+	DEFB	1,'S',2,')et] : '
+	DEFB	0
+ASKSET0: CALL	CINCAPS		; get user input (capitalized)
+	CP	'D'		; disable ?
+	LD	HL,(TIMEDIS)	; get disable vector
+	SCF			; set C-Flag for later calc
+	RET	Z		; ..if disable, return
+	CP	'S'		; set addr ?
+	JR	NZ,ASKSET0	; ..if not, loop ask for new input
+	CALL	CRLFGXY		;   else, prompt user to enter addr
+	DEFB	22,25,'Enter Address of Routine : '
+	DEFB	0
+	LD	HL,0
+	JP	CINADR		; jump to get input, and let return from there
+
+
+	; print 'Routine...' and ask for disable/enable it
+	; out: C-Flag set = disable, NC= enable
+ASKENBL: CALL	VPRINT
+	DEFB	' Routine [('
+	DEFB	1,'D',2,')isable), ('
+	DEFB	1,'E',2,')nable] : '
+	DEFB	0
+ASKENB0: CALL	CINCAPS		; get user input (char) and capitalize it
+	CP	'D'		; is it 'D'isable ?
+	SCF			; set C-Flag (indicator)
+	RET	Z
+	CP	'E'		; is it 'E'nable ?
+	JR	NZ,ASKENB0	; ..if not, loop ask for new input
+	RET			;   else, return with C-Flag reset (NC)
+
+
+	; error msg
+E$ZSDOS: CALL	VPRINT
+	DEFB	CR,LF,BEL,'*** ERROR: DOS is not ZSDOS!',CR,LF
+	DEFB	0
+	JP	EXIT
+
+
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::
+; VLIB - 0x114f
+; Z3LIB - 0x1370
+; SYSLIB - 0x13e9
+; end addr 0x145e (begin DSEG)
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+;::::: RAM STORAGE
+
+	DSEG
+
+DOSBASE:	DEFW	0	; DOS base addr
+OFLGADR:	DEFW	0	; addr FLAGS byte in ZSDOS hdr
+ZPTHADR:	DEFW	0	; addr of Path in ENV
+ZWHLADR:	DEFW	0	; addr of Wheel byte in ENV
+TIMEDIS:	DEFW	0	; addr of Time routines disable vector
+CHARCMD:	DEFB	0	; ExMod Time Stamp - remember char from cmdline
+OFLGWIP:	DEFB	0	; Option Flag ('work in progress')
+OFLGMSK:	DEFB	0	; effective Bit Mask for Option Flag
+RUNMODE:	DEFB	0	; indicator run mode (0= interactive)
+		DEFB	0	; not used
+CHARTMP:	DEFB	0	; temporary storage of char
+DOSTYVE:	DEFW	0	; (ZS)DOS type and version #
+
+		DEFS	40H	; room for stack
+STACK:		DEFW	0	; stack storage location
+
+	END
+
+
+;************************************************************************
+; Remarks jxl:
+;   From available options in ZSCFG2 it can be assumed that configuration
+; area in ZSDOS v2 is almost identical to v1. Most options can be altered
+; by changing the respective bit in the OPTION FLAG byte.
+;
+; Bit  7 6 5 4 3 2 1 0
+;      \ \ \ \ \ \ \ \__ Public Files enable (1) - disable (0)
+;       \ \ \ \ \ \ \____ Public/Path Write enable (1) - disable (0)
+;        \ \ \ \ \ \______ Read-Only enable (1) - disable (0)
+;         \ \ \ \ \________ Fast Fixed Disk Relog enable (1) - disable (0)
+;          \ \ \ \__________ Disk Change Warning enable (1) - disable (0)
+;           \ \ \____________ ZCPR Path enable (1) - disable (0)
+;            \ \______________ Path w/o System Attr enable (1) - disable (0)
+;             \________________ Reserved
+;
+;   Offsets to other features remained unchanged, compared to v1, and so
+; Path and Wheel addresses can be found at the same locations. Apparently,
+; a new "reference" Path address was added at offset Option Flag byte +8/9.
+; It is used to reset the configurable Path address, but cannot be changed
+; itself.
+;   Some changes were obviously be made to Time Stamp related options. An
+; additional flag byte was implemented at offset Option Flag byte +1. The
+; address of the Time Stamp routine (v1: GSTIME) was moved by one byte
+; position and is located at offset +2/3. The pointer to remove Time Stamp
+; routine (v1: UNLOAD) is now located at offset +6/7.
+; Bytes at offset +4/5 are not in use anymore.
+;
+; TIME FLAG byte
+; Bit  7 6 5 4 3 2 1 0
+;                \ \ \__ Access stamp enable enable (1) - disable (0)
+;                 \ \____ Create stamp enable (1) - disable (0)
+;                  \______ Modify stamp enable (1) - disable (0)
+;
+;
+; Source code
+;   ZSCFG2.COM, included in available B/P Bios package(s), was disassembled
+; and extensively commented. Labels are up to seven chars long to comply
+; with M-REL standards. However, it is recommended to use SLR tools that
+; support labels up to sixteen chars.
+;   The program supports an interactive and a so-called expert mode.
+; To indicate the respective mode, labels start either with "IM" or "EM"
+; where appropriate.
+;
+;   In its current state, the compiled/linked file matches exactly the
+; original ZSCFG2.COM, i.e. no changes to the source were made. Possible
+; optimisations detected during disassembly are marked with "#####" in the
+; comment.
+;************************************************************************

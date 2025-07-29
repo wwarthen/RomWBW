@@ -245,11 +245,11 @@ YM_NOTE:	;CALL	PRTHEXWORDHL
 		LD	DE,40			; Calculate the ym2612 block (octave)
 		ADD	HL,DE			; This will go into b13-b11
 		LD	DE,48			; HL / DE
-		CALL	DIV16			; BC = block (octave) HL = quarter semitone note
+		CALL	DIV16			; BC = block (octave) HL = quarter semitone
 ;				
 		ADD	HL,HL
 		LD	DE,ym_notetable		; point HL to frequency entry
-		ADD	HL,DE			; for the quarter semitone note
+		ADD	HL,DE			; for the quarter semitone
 
 		;CALL	PRTHEXWORDHL
 		;CALL	PC_COLON

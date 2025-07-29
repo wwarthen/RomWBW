@@ -142,6 +142,14 @@ currently selected.  The upper 32KB is "fixed".  This area of memory
 is never swapped out and is used to contain software and operating
 systems that must remain in the Z80 address space.
 
+Throughout this document, this mechanism of selecting banks of memory
+into the lower 32K is referred to as memory management.  Achieving
+this functionality requires some type of hardware which is generally
+referred to as the system's Memory Management Unit (MMU).  RomWBW
+supports a variety of MMUs -- but they all perform the same function
+of swapping in/out banks of memory in the lower 32K of CPU address
+space.
+
 Figure 4.1 depicts the memory layout for a system running the CP/M
 operating system.  Applications residing in TPA invoke BDOS services
 of CP/M, BDOS invokes the custom CBIOS APIs, and finally CBIOS
@@ -289,6 +297,62 @@ Common Bank:
 : This bank is mapped to the upper 32K of the processors memory space.
 It is a fixed mapping that is never changed in normal RomWBW operation
 hence the name "Common".
+
+## Memory Managers
+
+The following hardware memory managers are supported by RomWBW.  The
+operation of these memory managers is not documented here -- please
+refer to the documentation of your hardware provider for that.
+
+Z2:
+
+: Memory memory manager introduced by Sergey Kiselv in the Zeta 2 SBC.
+Popular in many RCBus systems.
+
+Z180:
+
+: Memory manager built into the Z180 CPU
+
+Z280:
+
+: Memory manager built into the Z280 CPU
+
+ZRC:
+
+: Memory manager onboard the ZRC series of computers by Bill Shen.
+
+SBC:
+
+: Memory manager onboard the N8VEM SBC series of computers by
+Andrew Lynch.
+
+MBC:
+
+: Memory manager onboard the Nhyodyne computer system by Andrew Lynch.
+
+N8:
+
+: Memory manager onboard the N8 SBC computer by Andrew Lynch.
+
+EZ512:
+
+: Memory manager onboard the EaZy80-512 Z80 CPU Module by Bill Shen.
+
+RPH:
+
+: Memory manager onboard the Rhyophyre computer system by Andrew Lynch.
+
+The memory manager used is determined by the configuration choices
+that are part of a RomWBW build process.  A given ROM can only have a
+single memory manager -- it is not selected dynamically.
+
+The configuration variable `MEMMGR` sets the memory mannager used by
+the ROM build.  It must be set to one of the above memory manager
+types.  For example, for the Z2 memory manager, `MEMMGR` should be set
+to `MM_Z2`.
+
+Note that the term memory manager (MM) and memory management unit (MMU)
+are used interchangeably in the documentation and code.
 
 # Disk Layout
 
@@ -1024,6 +1088,7 @@ below enumerates their values.
 | DIODEV_SYQ      | 0x0C   | Syquest Sparq Disk                       | syq.asm    |
 | DIODEV_CHUSB    | 0x0D   | CH375/376 USB Disk                       | ch.asm     |
 | DIODEV_CHSD     | 0x0E   | CH375/376 SD Card                        | ch.asm     |
+| DIODEV_USB      | 0x0F   | CH376 Native USB Device                  | ch376.asm  |
 
 A fixed set of media types are defined. The currently defined media 
 types identifiers are listed below. Each driver will support one or
@@ -1352,6 +1417,7 @@ unit.  The table below enumerates these values.
 | RTCDEV_DS7      | 0x04   | Maxim DS1307 PCF I2C RTC w/ NVRAM        | ds7rtc.asm  |
 | RTCDEV_RP5      | 0x05   | Ricoh RPC01A Real-Time Clock w/ NVRAM    | rp5rtc.asm  |
 | RTCDEV_EZ80     | 0x07   | eZ80 on-chip RTC                         | ez80rtc.asm |
+| RTCDEV_PC       | 0x08   | MC146818/DS1285/DS12885 RTC w/ NVRAM     | pcrtc.asm   |
 
 The time functions to get and set the time (RTCGTM and RTCSTM) require a
 6 byte date/time buffer in the following format. Each byte is BCD 
@@ -1700,14 +1766,17 @@ All video units are assigned a Device Type ID which indicates
 the specific hardware device driver that handles the unit.  The table
 below enumerates their values.
 
-| **Device Type** | **ID** | **Description**                          | **Driver** |
-|-----------------|-------:|------------------------------------------|------------|
-| VDADEV_VDU      | 0x00   | MC6845 Family Video Display Controller   | vdu.asm    |
-| VDADEV_CVDU     | 0x01   | MC8563-based Video Display Controller    | cvdu.asm   |
-| VDADEV_GDC      | 0x02   | uPD7220 Video Display Controller         | gdc.asm    |
-| VDADEV_TMS      | 0x03   | TMS9918/38/58 Video Display Controller   | tms.asm    |
-| VDADEV_VGA      | 0x04   | HD6445CP4-based Video Display Controller | vga.asm    |
-| VDADEV_VRC      | 0x05   | VGARC                                    | vrc.asm    |
+| **Device Type** | **ID** | **Description**                            | **Driver** |
+|-----------------|-------:|--------------------------------------------|------------|
+| VDADEV_VDU      | 0x00   | MC6845 Family Video Display Controller     | vdu.asm    |
+| VDADEV_CVDU     | 0x01   | MC8563-based Video Display Controller      | cvdu.asm   |
+| VDADEV_GDC      | 0x02   | uPD7220 Video Display Controller           | gdc.asm    |
+| VDADEV_TMS      | 0x03   | TMS9918/38/58 Video Display Controller     | tms.asm    |
+| VDADEV_VGA      | 0x04   | HD6445CP4-based Video Display Controller   | vga.asm    |
+| VDADEV_VRC      | 0x05   | VGARC                                      | vrc.asm    |
+| VDADEV_EF       | 0x06   | EF9345                                     | ef.asm     |
+| VDADEV_FV       | 0x07   | S100 FPGA VGA                              | fv.asm     |
+| VDADEV_XOSERA   | 0x08   | Xosera FPGA-based Video Display Controller | xosera.asm |
 
 Depending on the capabilities of the hardware, the use of colors and
 attributes may or may not be supported. If the hardware does not support
@@ -2208,16 +2277,16 @@ using values that correspond to musical notes.  The frequency will be
 applied when the next SNDPLAY function is invoked.  The returned Status 
 (A) is a standard HBIOS result code.
 
-The Note (HL) values correspond to quarter notes.  Increasing/decreasing
-the value by 4 results in a full note increment/decrement.  
+The Note (HL) values correspond to eighth tones.  Increasing/decreasing
+the value by 8 results in a full tone increment/decrement.  
 Increasing/decreasing the value by 48 results in a full octave 
 increment/decrement.  The value 0 corresponds to Bb/A# in octave 0.
 
 The sound chip resolution and its oscillator limit the range and 
 accuracy of the notes played. The typical range of the AY-3-8910 is six 
 octaves: Bb2/A#2 to A7, where each value is a unique tone.  Values above
-and below can still be played but each quarter tone step may not result
-in a note change.
+and below can still be played but each eighth tone step may not result
+in a tone change.
 
 The following table shows the mapping of the Note (HL) value to the 
 corresponding octave and note.
@@ -2436,9 +2505,8 @@ If the Unit specified is not a hard disk the Media ID will be returned and
 the slice parameter ignored. If there is no media in device, or the slice
 number is invaid (Parameter Out Of Range) the function will return an error status.
 
-**NOTE:
-This function was placed in HBIOS to be shared between the diffeent CP/M
-varients supported by RomWBW. It is not strictly a BIOS function,
+**NOTE:** This function was placed in HBIOS to be shared between the different CP/M
+variants supported by RomWBW. It is not strictly a BIOS function,
 and may be moved in future.
 
 `\clearpage`{=latex}

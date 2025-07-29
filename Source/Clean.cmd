@@ -8,6 +8,7 @@ pushd QPM && call Clean.cmd & popd
 pushd ZCPR && call Clean.cmd & popd
 pushd ZCPR-DJ && call Clean.cmd & popd
 pushd ZSDOS && call Clean.cmd & popd
+pushd ZSDOS2 && call Clean.cmd & popd
 pushd CBIOS && call Clean.cmd & popd
 pushd CPM3 && call Clean.cmd & popd
 pushd ZPM3 && call Clean.cmd & popd

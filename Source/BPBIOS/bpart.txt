@@ -1,0 +1,1247 @@
+        Banked/Portable Basic IO System (B/P Bios) Pt I
+                               by
+             Harold F. Bower and Cameron W. Cotrill
+
+===============================================================
+NOTE: The first two parts of this article were published in The
+Computer Journal (TCJ), but the third part was pending when TCJ
+ceased publishing.  Harold F. Bower
+===============================================================
+For the past several years we have attempted to address some of 
+what we consider to be fundamental problems in the 8-bit 
+Z80/Z180/HD64180 system software arena.  Our first effort, ZSDOS, 
+was directed toward what we believed to be architectural weak-
+nesses in CP/M and its clones in the late 1980s.  Such weaknesses 
+included; inefficient code, inconsistent implementations of some 
+DOS functions, numerous different and incompatible file Date/Time 
+Stamping methods, and just plain errors (remember Function 37?).  
+Now in the 1990s, even more effort is needed to correct the 
+proliferation of systems designed on faulty (or at least weak) 
+architectures, and to provide a logical and consistent path to 
+increase the functionality of our systems.
+        
+To understand our concerns in this area, let us review the way in 
+which CP/M 2.2, as modified by the Z-System, uses available 
+memory.  For standard CP/M and compatible systems, the only 
+absolute memory addresses are contained in the Base Page which is 
+the range of 0 to 100H.  All addresses above this point are 
+variable (within certain limits).  User programs are normally run 
+from the Transient Program Area (TPA) which is the space from the 
+top of the Base Page (100H) to the base of the Basic Disk Operat-
+ing System (BDOS). Figure 1 depicts assigned areas pictorially 
+along with some common elements assigned to each memory area.
+        
+   FFFFH   +------------------+
+           | Z-System Buffers |   ENV, TCAP, IOP, FCP, RCP
+           +------------------+       (~5k)
+           |       Bios       |   Code + ALV, CSV, Sector Buffers
+           +------------------+       (~5.5k)
+           | Operating System |   CP/M 2.2, ZRDOS, ZSDOS1
+           +------------------+       (3.5k)
+           | Command Processor|   CCP, ZCPR3.x
+           +------------------+       (2k)
+           |   Transient      |
+           |                  |
+           |      Program     |
+           |                  |
+           |          Area    |
+   0100H   +------------------+
+           |    Base Page     |  IOBYTE, Jmp WB, Jmp Dos, FCB, Bufr
+   0000H   +------------------+
+        Figure 1.  Typical Z-System Memory Map
+        
+The sizes depicted for the Z-System buffers is typical of many, 
+and allows a certain functionality.  It is sometimes necessary to 
+delete some capabilities to add others, since every addition in 
+this area pushes the other components lower, decreasing available 
+TPA space.  Likewise, any new features or more elaborate routines 
+in the Bios decreases available TPA.
+        
+There have been some attempts at ameliorating these difficulties, 
+but none have directly addressed the entire problem.  One system 
+in relatively widespread use is NZCOM.  It allows a fairly easy 
+method of changing systems "on the fly".  The main drawback, 
+however, is that to obtain large TPA, system features must be 
+sacrificed by deleting or downsizing the resident Z-System seg-
+ments (FCP,IOP,RCP,NDR,TCAP).  To us, this method is only viable 
+in systems which do not have extended memory capabilities.  With 
+the ever-increasing use of systems based on the Hitachi 64180 and 
+Zilog Z180, other solutions are more attractive and offer a 
+larger TPA without sacrificing system capabilities.
+        
+The final major factor contributing to shrinkage of TPA is the 
+increasing commonality of large hard disk drives.  Disk space is 
+managed by a bit-mapped buffer (ALV) where each bit represents an 
+allocation block of storage space.  Typical allocation units are 
+2k for floppy diskettes and 4k for Hard Disk Partitions.  Assum-
+ing 4k allocation blocks, a 20 MB drive needs approximately 
+20000/4 = 5000 bits or 625 bytes.  With 80 to 100 MB drives being 
+common these days (one B/P user reported that the smallest drive 
+he could obtain was 850 MB!) you should see that several kilo-
+bytes are now required, further reducing available TPA space.
+        
+The first requirement to place us on the road to more powerful 
+systems is to overcome the 64k memory limit imposed on direct 
+access by the Z80 family of processors in a consistent and logi-
+cal manner.  Such a technique, generically called memory banking, 
+means that we can access more than 64k of memory for something 
+more than simply a RAM disk.
+        
+One of the first attempts to tackle the 64k memory barrier was 
+Digital Research with CP/M Plus (aka CP/M3).  While it banked 
+both portions of the BIOS as well as the Basic Disk Operating 
+System (BDOS) and included some useful additions to the BIOS, it 
+was relatively incompatible with CP/M 2.2 in many key features.  
+In addition, CP/M Plus made no provision for banking application 
+code.  The adoption of a CP/M 2.2 standard for the Z-System has 
+served to widen the compatibility gap even further on the majori-
+ty of our systems.
+        
+There are some internal inconsistencies in the CP/M 3 architec-
+ture as well which were never fully resolved.  A prime case in 
+point is the function to return Disk Free Space (Function 46).  
+The specification states that three bytes are returned reflecting 
+the number of available 128-byte records on a disk.  This equates 
+to 2^24 * 128 or 16,777,216 * 128 = 2,097,152 kB.  While we know 
+of no one who has actually installed a single disk partition of 
+more than 2 Gigabytes on a Z-System, it would create problems 
+since CP/M Plus can handle disks up to eight times this size, but 
+not correctly report free space.  Simply returning free space in 
+terms of 128-byte records is inconsistent as well since disk 
+space is allocated in blocks which have a minimum size of 1k, 
+with 2k and 4k commonly used.  This is only one example of 
+several, and we do not consider it a viable system for future Z-
+System growth; although it is still being actively installed.
+        
+Several manufacturers have attempted to bank portions of operat-
+ing system software over the years, yet either locked the soft-
+ware into their hardware as Epson did with the QX-10, or made 
+such changes as to limit portability of common tools as in the 
+XLM-180.  This latter system, while it used the Hitachi 64180 
+processor with its memory mapping capabilities, required system 
+tailoring of much of the common Z-System software base.
+        
+The release of MicroMint's SB-180 in the early 1980s marked a 
+decision point in Z-System development.  First, it retained all 
+standard ZCPR3 definitions, it used a CP/M 2.2 compatible BDOS, 
+and it forced programmers to think more of portability and compa-
+tibility in system software.  This was a major thrust in the 
+development of XBIOS which placed the greatest possible amount of 
+BIOS code in alternate memory locations outside of the primary 
+64k address space.  Furthermore, capabilities to bank additional 
+features (Resident System eXtensions, or RSXs) were widely sup-
+ported with DateStamper, DosDisk and others requiring no sacri-
+fice in TPA to execute.  Since its last upgrade, however, several 
+severe problems have come to light, among them are the inability 
+to properly handle hard disk sizes greater than 32MB and sluggish 
+performance due to banking of Console routines.
+        
+We considered this history and wanted to develop a system which 
+included as much machine independence as possible.  Not only 
+should newer systems with the 64180/Z180 processor be included, 
+but S100 systems with banked memory, addon boards such as Terry 
+Hazen's MDISK for the Ampro Little Board, and homebrew systems as 
+well.  The goal here was as much selfish desire as anything else.  
+By developing a single common architecture, only one tool for a 
+given purpose would be needed across a variety of machines.  As 
+an example, Hal has several YASBECs, two SB-180s (one modified 
+with static memory), an SB180FX, an Ampro Little Board, a couple 
+of mongrel S-100 systems, and recently acquired a P112.  Each 
+system had its own Formatter, Configuration utility, Clock type, 
+native disk formats, etc.  To us, this seems out of place now, 
+particularly with the scarcity of systems programmers in the Z-
+Community.  It made more sense to develop a common software 
+architecture so that more programming resources could be devoted 
+to applications type efforts.
+        
+Another goal of the effort was to retain the maximum compatibili-
+ty with existing Z-System software for the same reasons cited 
+above.  Customizing a huge number of common utilities as was done 
+in the XLM-180, seemed to be the wrong approach.  We therefore 
+decided to retain the greatest possible commonality with CP/M 2.2 
+(actually our ZSDOS), and use existing Z-System segments to their 
+greatest potential without sacrificing performance.  As those of 
+you who tracked our efforts as we developed ZSDOS know, we do not 
+like slow systems or large code sizes (TCJ issues 37 and 38).  We 
+also decided that our architecture had to be capable of outra-
+geous expansion and extension capabilities without invalidating 
+previous software efforts.  Further, we wanted to create a gener-
+al purpose banked memory interface that allows applications 
+programs as well as the operating system to access alternate 
+banks of memory.  The final results are the Banked & Portable 
+(B/P) Bios.
+
+B/P Bios attacks the memory problem in a manner which is easily 
+adaptable to different hardware.  All HD64180/Z180-based systems 
+bank memory in 4k slices, and many S100 and addon systems bank in 
+16 or 32k increments.  We therefore decided on an architecture 
+which retains common memory in the upper 32k of address space 
+(8000-FFFFH), and switches the lower 32k (0-7FFFH) among any 
+available banks of RAM.  Figure 2 displays this architecture 
+pictorially.
+
+   FFFFH +----------+
+         |          |
+         |   BNK1   |
+         |          |
+   8000H +----------+  +----------+   +----------+   +----------+
+         |          |  |          |+  |          |+  |          |+
+         |   BNK0   |  |  System  ||  |   User   ||  | RAM Disk ||+
+         |          |  |          ||  |          ||  |          |||
+   0000H +----------+  +----------+|  +----------+|  +----------+||
+                        +- - - - - +   +- - - - - +   +- - - - - +|
+                                                       | Max Bank |
+                                                       +----------+
+            Figure 2.  B/P Bios Memory Scheme
+        
+BNK1 is ALWAYS present in the address space and is referred to as 
+the Common Bank.  It contains all Z-System buffers, Common por-
+tions of the Bios, BDOS and the Command Processor as well as the 
+upper portion of TPA.  Part of the Bios which makes B/P unique is 
+the structure which allows controlled access to other banks in 
+the lower 32k.
+        
+At least one 32k bank is required in a minimal banked B/P system.  
+The system bank, as a minimum, holds portions Bios and a copy of 
+the Command Processor which speeds Warm Boots by simply copying 
+the banked code to the Common bank and executing the warm entry.  
+Figure 3 depicts memory use in a maximally-configured banked 
+system.  In such configurations the System bank holds banked 
+portions of; the ZSDos2 operating System, banked Command Proces-
+sor, BIOS, and Hard Disk allocation bit maps.
+        
+   FFFFH  +------------------+
+          | Z-System Buffers |
+          +------------------+
+          |    User Space    |
+          +------------------+
+          |       Bios       |
+          +------------------+
+          | Operating System |    +------------------+ 8000H
+          +------------------+  / |   Bios Buffers   |
+          | Command Processor| /  | Banked Bios Part |
+          +------------------+/   +------------------+
+   8000H  |   Transient      |    | Banked Dos Part  |
+          |                  |    +------------------+
+          |      Program     |    | Banked CCP Part  |
+          |                  |    +------------------+
+          |          Area    |    |  CCP Restoral    |
+   0100H  +------------------+    +------------------+ 0100H
+          |    Base Page     |    |  Base Page Copy  |
+   0000H  +------------------+    +------------------+ 0000H
+            TPA (BNK0/BNK1)            System Bank
+             Figure 3.  Fully-banked Memory Map
+        
+The B/P Bios began with one of Cam's superb architectures.  He 
+started with the standard CP/M 2.2 Jump Table, added in those 
+from CP/M Plus with changes to correct some of the inconsisten-
+cies, then added in a new series to permit logical and easy 
+access to new routines.  The code, in assembly source form, was 
+divided into logically functioning elements, with the greatest 
+possible amount placed into machine independent modules.  As an 
+example, the Disk deblocker and IOBYTE decoder functions are 
+machine independent and need no change between systems, while the 
+actual disk and character device drivers require custom tailoring 
+for each type of computer.  Standard interfaces, in terms of 
+register usage and value limits, result in common software re-
+quirements across vastly different hardware systems.
+        
+Each software module of the Bios includes relocation directives 
+to the assembler telling it whether the code is to go into the 
+main memory, or into another bank of memory.  If a non-banked 
+system is assembled, all code is placed into the main 64k area, 
+while banked systems use the main 64k area for common code and 
+data as well as banked code and data areas.  All tools (format-
+ter, configuration utility, etc) automatically accommodate both 
+types of Bios without any intervention.  The choice of whether to 
+bank each section of code or not was painstakingly examined for 
+performance and size penalties.  Many of our design choices may 
+be debated, but B/P is here and it works!
+        
+By itself, fixing the Bios is not a complete answer to our cur-
+rent Z-System dilemma, but it is a prerequisite.  We also consid-
+ered it essential to bank the Disk Operating System.  Starting 
+with ZSDOS, Hal used the new BIOS banking functions to bank 
+significant portions of the BDOS.  At every juncture, size and 
+speed were traded off to keep the system small and fast.  We 
+corrected the flaw in the CP/M Plus Disk Size function cited 
+above by returning four bytes containing the number of kilobytes 
+free (a more meaningful measure).  File Time/Date stamping func-
+tions for DateStamper(tm), P2DOS (CP/M Plus compatible), and Joe 
+Wright's NZTIM are all embedded within the Operating System and 
+are concurrently active.  While ZSDos2 is still a work in pro-
+gress, copies are included in the B/P Bios package to allow users 
+to benefit from the newer system.  Latest versions were posted in 
+the BPBIOS: directory on the Ladera Z-Node until its demise, and 
+no replacement is yet available.  The most recent version of 
+ZSDos2 in 1993 added directory hashing for true speed demons.
+        
+Also incorporated in ZSDos2 is a ZCPR34-compliant Command Line 
+Parser.  With the permission of Jay Sage, we also modified ZCPR34 
+to operate in the banked environment, added many common features 
+of Resident Command Processor packages, and simplified it to use 
+the new ZSDos2 Command Line Parser.  By folding all features into 
+the CPR, the need for a Resident Command Processor (RCP) exten-
+sion in high memory all but disappears, typically adding 2k to 
+the TPA.
+        
+As a closing note to this first installment, systems using B/P 
+Bios, ZSDos2 and the expanded CPR are currently in operation on 
+the new D-X Designs Pty Ltd P112, Micromint's SB180, a modified 
+SB180 with static memory, two versions of the SB180FX, three 
+YASBEC configurations including a laptop with VGA LCD display, 
+Ampro Little Board (with Terry Hazen's MDISK expansion), and in 
+non-banked mode on a Compu/Time S100 and Teletek.  All tools are 
+common across the hardware systems with a complete Z3 Environment 
+and additional segments typically resulting in the equivalent of 
+a "standard" 60k CP/M system.  This size is without the RCP 
+typically used to enhance the Command Processor.
+        
+The next part of this article will describe the B/P Bios inter-
+faces and standards, while part 3 will cover proposed standards 
+for the evolving ZSDos2, its associated Command Processor and 
+some of the support utilities.
+        
+===================================================================
+        Banked/Portable Basic IO System (B/P Bios) Pt II
+                               by
+             Harold F. Bower and Cameron W. Cotrill
+        
+As we discussed in the first part of this article, our efforts in 
+the design and construction of our Banked/Portable Bios were 
+directed towards building an architecture that would viably 
+support applications on Z80/180 computers for a number of years.  
+One of the initial ground rules was a prohibition on the use of 
+Self-Modifying code.  As in our development of ZSDOS, we want to 
+retain the ability to place operating system components into ROM 
+if desired.  This goal was met, but at the price of slightly 
+increased code size, particularly in non-banked systems such as 
+those placed on system boot disks.  Exceptions to this rule do 
+exist, but primarily in system components which are intended 
+specifically for execution from RAM such as portions dynamically 
+relocated at load time.
+        
+Another key consideration addressed in B/P Bios was the need to 
+provide a mechanism to identify the Bios and to locate Bios-
+specific data areas and options.  The solution to this was Bios 
+Function 30 which returns, among other things, a pointer to the 
+start of a standardized data structure containing configuration 
+information.  This vector allows examination or alteration of 
+various parameters such as Data Rates, Drive parameters and 
+configuration flags.  Using this vector instead of assuming 
+absolute locations within the BIOS is crucial to obtaining and 
+maintaining portability and standardization.
+        
+The Configuration Area pointer serves a secondary purpose as 
+well.  The six bytes preceding the returned address point to a 
+string which must begin with the Ascii letters "B/P".  The fol-
+lowing three characters contain a suffixing identifier for the 
+hardware base.  Between us, we have either implemented or planned 
+B/P Bios installations to varying degrees on the following sys-
+tems:
+        
+  "-18" - MicroMint SB-180    (HD64180 CPU, 9266 FDC, 5380 SCSI)
+  "-FX" - MicroMint SB180FX   (Z180 CPU, 9266 FDC, 53C80 CSI)
+  "-YS" - YASBEC              (Z180 CPU, 1772 FDC, DP8490 SCSI)
+  "-DX" - D-X Designs P112    (Z182 CPU, 37C665 FDC, Flash ROM)
+                                 (Add-on 5380 SCSI supported)
+  "-CT" - Compu/Time S-100 set (Z80 CPU, 1795 FDC, 1MB Memory)
+  "-TT" - Teletek             (Z80 CPU, 765 FDC)
+  "-AM" - Ampro Little Board  (Z80 CPU, 1770 FDC, T. Hazen's MDISK)
+  "-XL" - XL M-180 SBC         (HD64180 CPU, 9266 FDC, PIO SCSI)
+        
+This method of identification can serve to prevent customized 
+programs from operating on the incorrect hardware.  For example, 
+the HDBOOT hardware-specific program distributed for YASBEC and 
+Ampro Little Board computers will not modify a Hard Disk boot 
+record unless the system on the Boot Tracks contains either the 
+"-YS" or "-AM" identifiers.
+        
+With the additions made to the ZCPR3 Environment Descriptor in 
+Version 3.4, it readily became apparent to us that the Environ-
+ment belongs to low-level hardware-dependent portions of the 
+Operating System, with allowances being made for high-level use.  
+While this decision may be debated, we adopted the ENV structure 
+and require it within the Bios with only one necessary change.  
+The four bytes associated with the second printer have been 
+usurped to provide data on a resident User Space.  To provide 
+compatibility with other vectors added to Operating System com-
+ponents, the four bytes are reallocated as:
+        
+     1 byte  - Number of free 128-byte blocks
+     2 bytes - Pointer to start of User Space
+     1 byte  - Total size in 128-byte blocks
+        
+The User Space is always assigned below all other ZCPR3 System 
+Segments and the Starting Address Pointer serves double-duty as 
+the lowest address in reserved memory.  This is needed in hard 
+disk systems since the ALV buffers are dynamically calculated at 
+system load (boot) time.  For Non-banked systems, if the amount 
+of space needed by the ALV buffers extends beyond the base of the 
+User Space pointer, a warning is printed to alert users that a 
+smaller system is required to allow full use of the hard drive 
+without overwriting System Segments.  In banked systems, the 
+check is performed against the end of the primary 32k System 
+Bank.  The use of a byte to indicate amount of free space remain-
+ing will allow multiple RSX-like additions to be chained into the 
+User Space in a (hopefully) controlled manner.  A similar con-
+struct is being developed for banked applications, but has not 
+yet been fully developed.
+        
+As most of us are painfully aware, Floppy Disk formats in the 
+CP/M compatible world are woefully non-standardized.  To maximize 
+the efficiency of B/P Bios, we have NO required format.  Our 
+system may be assembled with hard-coded invariant formats (the 
+smallest code requirements), with calculated skew values or 
+indexed tables, or with a user-configurable suite of non-con-
+flicting formats, including 3.5", 5.25" and 8" drives as well as 
+"High-Density" formats where the hardware is supported.  For 
+standard distribution, the Ampro/SB-180 5.25" formats are includ-
+ed in an auto-select mode.  8" drive capability is in the SB-180, 
+SB180FX, P112, Compu/Time and Teletek versions, but not in YASBEC 
+or Ampro Little Board since those controllers will not handle the 
+higher data rates.  Using this scheme, tailoring options may be 
+used to gain every byte and clock cycle possible, for example, by 
+deleting 8" formats if you only have 3.5 or 5.25" drives connect-
+ed to the system.
+        
+The B/P BIOS is divided into a number of files, some of which are 
+machine dependent, and some are generic and need not be edited to 
+assemble a working system.  Much use is made of conditional 
+assembly to include option-dependent modules and relocation 
+bases.  The Basic file, BPBIO-xx.Z80, specifies which source code 
+elements are used to assemble the Bios image under the direction 
+of an included file, DEF-xx.LIB, which selects features and 
+contains Hardware-dependent equates.  Modules requiring customi-
+zation for different hardware systems are given names which end 
+with a generic "-xx" designator to identify specific versions.  
+These names correspond to the suffix embedded in the identifier 
+string covered above.  By maintaining the maximum possible code 
+in common modules which require no alteration, B/P Bios is rela-
+tively easy to convert to different machines.
+        
+While some of these versions cannot take full advantage of B/P 
+Bios, such as the Ampro Little Board which, without Terry Hazen's 
+MDISK, contains only 64k of memory, the benefits of having only 
+one set of support utilities and common operating procedures 
+across different computers often outweigh the disadvantages of a 
+slightly larger Bios.  Those of you with several different types 
+of computers will readily understand.
+        
+With B/P Bios, systems may be changed "on the fly" in a manner 
+similar to that employed with NZBLITZ/NZCOM.  The system placed 
+on the boot disk's system tracks must be relatively small to fit 
+in the limited space, often sacrificing features.  Once started, 
+however, the rules change.  A special loader is used to move pre-
+configured system images in place and start execution.  These 
+images are built from an assembled B/P Bios REL file, ZSDOS 
+version 1 or 2 ZRL file, and a Command Processor REL or ZRL file.  
+The utilities to build the image file and load it into position 
+account for both banked and unbanked component locations.  The 
+build utility also allows you to alter many of the Environment 
+parameters as the image is built.  For example, the extra large 
+Command Processor demonstrated several years ago at the Trenton 
+Computer Fest includes most of the common features from RCPs.  
+Consequently, RCP space is often not needed and may be removed 
+typically freeing 2k for the TPA.
+        
+Different system images may be generated with BPBUILD and then 
+loaded as specific functions or configurations are desired, 
+without regard to the system on the Boot Tracks.  Tailoring of 
+these image files is performed with the B/P Bios configuration 
+utility, BPCNFG, to include Startup Alias file names unique to 
+that system.  In this manner, different images may chain from one 
+to another as system sizes and needs change.  A given image file 
+might be duplicated with only minor configuration changes.  Hal 
+uses this technique in system backups where two hard disk parti-
+tions are activated for backups to external hard drives, but 
+different parameters are configured for various backup media and 
+drive types.
+        
+To provide some comparative numbers, a YASBEC with a 20MB hard 
+drive is typically limited to a 53K non-banked system for place-
+ment on the Boot Tracks.  A 56K system is achieved simply by 
+banking portions of the Bios.  With the banked ZSDos2 and the 
+associated large Command Processor, Z41, a 58.0K system is stan-
+dard with the default 2K RCP and 1.5K IOP space reservations. 
+This expands to 60K with no RCP and 61.5K if no IOP is needed.  
+The large expansion in size with the banked ZSDos2 is due to 
+banking of the ALV and CSV bit storage areas needed for hard and 
+floppy drives.  Placing these elements into the system bank means 
+that large system sizes are no longer dependent on the hard disk 
+sizes (yes, even a 200 MB hard drive on a YASBEC sports a 60K 
+system configuration), but with the penalty that normal programs 
+which count ALV bits to determine disk free space and file size 
+no longer function correctly.  This difficulty has, in part, been 
+addressed by providing modules in the DSLIB utility library (a 
+companion to SYSLIB and Z3LIB) which "know" about ZSDos2 and 
+properly return disk free space values.  Source code for DSLIB 
+was released to Z-Nodes several years ago, and many of the in-
+cluded routines are used in our utilities, such as the ZXD direc-
+tory lister provided as part of the B/P Bios package.
+        
+If even more Transient Program Area is needed, one additional 
+means exists to expand available memory, but at a possible ex-
+pense.  Part of the BPBUILD process is to size the Code and Data 
+requirements of the relocatable modules, and locate them at 
+static addresses for loading.  Since the resident portions of 
+both the Z41 Command Processor and ZSDos2 are smaller than their 
+non-banked counterparts, the lower limit for applications pro-
+grams, which are allowed to overwrite the Command Processor, and 
+Resident System Extensions (RSXes) which nestle immediately below 
+the Command Processor see a higher memory address.  The caveat to 
+this approach, however, is that only programs which use the 
+enhanced environment parameters compliant with ZCPR 3.4 and later 
+will function properly.  To avoid such potential problems and 
+provide maximum commonality with existing CP/M programs, BPBUILD 
+also allows the user to direct that the Command Processor and 
+resident DOS elements be linked to begin at "standard" locations 
+reflecting sizes of 2K and 3.5K respectively.
+        
+THE INTERFACE.
+        
+B/P Bios entry points are contained in a Table of 3-byte Absolute 
+jumps at the beginning of the Bios Image.  Parameters needed for 
+each function are passed to the Bios in specified registers.  To 
+avoid future compatibility problems, some of the ground rules for 
+Bios construction include; No alteration of Alternate or Index 
+registers as a result of Bios calls, and all registers listed in 
+the documentation as being Preserved/Unaffected MUST be returned 
+to the calling program in their entry state.  The first seventeen 
+jumps (indices 0-16) constitute the standard CP/M 2.2 jump table.  
+
+Following those are additional sequences patterned roughly after 
+CP/M 3 and the B/P-unique extensions.  The Bios entry points 
+listed in order of their appearance in the jump table are:
+        
+ 0 - CBOOT   Execute Cold Start initialization on the first
+              execution.  The code is later overwritten, and the
+              argument of this jump then points to the IOP Device
+              jump table.  (all registers used)
+ 1 - WBOOT   Execute Warm Restart initialization, reload the
+              Resident part of the Command Processor and log onto
+              the default drive.  (all registers used)
+ 2 - CONST   Return Console Input Status as; A=0FFH if Character
+              is ready, A=0 if No character is ready.  (Uses AF)
+ 3 - CONIN   Read a character from the Console, waiting until one
+              if ready, then return it in A masked as specified in
+              the Bios, Normally with Bit 7 set to 0. (Uses AF)
+ 4 - CONOUT  Send the character in C register to the console masked
+              as specified in the Bios (Uses AF)
+ 5 - LIST    Send the character in C register to the List Device
+              (normally a printer) masked as specified in the Bios.
+              (Uses AF)
+ 6 - AUXOUT  Send the character in C register to the Auxiliary
+              Output masked as specified in the Bios. (Uses AF)
+ 7 - AUXIN   Read a character from the Auxiliary Input port masked
+              as specified in the Bios. (Uses AF)
+ 8 - HOME    Position the head(s) on the selected drive to Track 0.
+              (Uses All primary registers)
+ 9 - SELDSK  Select the drive specified by the value in Drive C
+              where Drive A=0...P=15. (Uses All primary registers)
+10 - SETTRK  Select the Logical track contained in Register BC for
+              a future disk operation (All registers preserved)
+11 - SETSEC  Select the Logical sector contained in Register BC
+              for a future This difficulty has, in part, been 
+              addressed by providing modules in the DSLIB utility
+              library (a companion to SYSLIB and Z3 disk operation
+              (All registers preserved)
+12 - SETDMA  Set the address in Register BC for a future disk
+              operation (All registers preserved)
+13 - READ    Read a Logical 128-byte sector from the Disk, Track
+              and Sector set by Functions 9-11 to the address set
+              with Function 12.  On return, Register A=0 if the
+              operation was successful, Non-Zero if Errors occurred.
+              (Uses All primary registers)
+14 - WRITE   Write a logical 128-byte sector to the Disk, Track and
+              Sector set by Functions 9-11 from the address set with
+              Function 12.  If Register C=1, an immediate write and
+              flush of the Bios buffer is performed.  If C=0, the
+              write may be delayed due to the deblocking. (Uses all
+              Primary registers)
+15 - LISTST  Return A=FF if the Printer is ready to accept a charac-
+              ter for printing, otherwise return A=0. (Uses AF)
+16 - SECTRN  Translate the Logical Sector Number in register BC
+              (Only C used at present) to a Physical Sector number
+              using the Translation Table addressed in the Selected
+              Drive's DPH. (Uses All Primary regs)
+        
+This ends the strict CP/M 2.2-compliant portion of the Bios Jump 
+Table.  The next series of entry Jumps roughly follows those used 
+in CP/M Plus (aka CP/M 3), but with corrections to what we per-
+ceived to be deficiencies in the calling parameters and struc-
+tures.
+        
+17 - CONOST  Return A=FF if the Console is ready to accept another
+              output character, otherwise return A=0. (Uses AF)
+18 - AUXIST  Return A=FF if the Auxiliary Input has a character
+              waiting, otherwise return A=0. (Uses AF)
+19 - AUXOST  Return A=FF if the Aux. Output is ready to accept
+              another character for output, otherwise return A=0.
+              (Uses AF)
+20 - DEVTBL  This corresponds roughly to an analogous CP/M Plus
+              function although precise bit definitions vary some-
+              what.  The Character IO table consists of four
+              devices; defaulting to COM1, COM2, PIO, and NUL.
+              Each has an input and output mask, data rate settings
+              and protocol flags.  Not all defined settings (e.g.
+              ACK/NAK and XON/XOFF handshaking, etc) are imple-
+              mented in all versions, but are available for use.
+              (Uses HL)
+21 - DEVINI  Initialize Character IO settings and other specified
+              functions.  This is very close to the CP/M Plus
+              function and can be used torestore IO configurations
+              after alteration by programs which directly access
+              hardware such as modem programs.  (Uses all primary
+              registers)
+22 - DRVTBL  Return a Pointer to the DPH table for Drives A-P where
+              a 16-bit 00 entry means that no drive is defined.
+              (Uses HL)
+23 - MULTIO  <Reserved for Multiple Sector IO>
+24 - FLUSH   Write any pending Data to disk as mentioned in Func-
+              tion 14 above.  (Uses all primary registers)
+25 - MOVE    Move number of bytes specified in BC from the location
+              starting at (HL) to an area addressed by (DE).  For
+              banked moves, the Source and Destination banks must
+              have been previously specified with an XMOVE function.
+              Note that this function reverses the functions of the
+              DE and HL register pairs from the CP/M Plus function.
+              (Uses all Primary registers except A)
+26 - TIME    If Register C=0, Read the Date and Time to a 6-byte
+              field addressed by (DE).  If C=1, Set the Date and
+              Time from 6-byte field addressed by (DE).  On exit,
+              register A=1 if the operation was successful, A=0 if
+              an error occurred or No clock exists.  The Date/Time
+              string is in ZSDOS format as opposed to Digital
+              Research's format used in CP/M Plus for this function.
+              Also, This function must conform to additional re-
+              quirements of DateStamper(c) in that on exit, register
+              E must contain the entry contents of (DE+5) and HL 
+              must point to the entry (DE)+5.  If the clock supports
+              1/10 second increments, the current .1 second count
+              may be returned in register D.  A recent addition
+              (suggested by Terry Hazen in TCJ #79) uses BC to
+              return the address of a free-running 8-bit counter
+              decremented every 100 milliseconds.  Such a feature is
+              invaluable in user programs such as modem drivers.
+              (Uses all primary registers)
+27 - SELMEM  Select the Memory Bank specified in the A register and
+              make it active in the address range 0-7FFFH. (All
+              registers preserved)
+28 - SETBNK  Set the Bank Number in A for the next Disk IO. (All
+              registers preserved)
+29 - XMOVE   Set Source and Destination Bank numbers in registers C
+              and B respectively for a future Move (Function 25).
+              (All registers preserved)
+        
+This marks the end of the CP/M Plus "Type" jumps and begins the 
+unique additions to the B/P Bios table to support Banking, Direct 
+IO and interfacing.
+        
+30 - RETBIO  Return the Bios version number and a pointer to
+              internal BIOS data areas as:
+                 A = Bios Version Number
+                 BC --> Page Address of B/P Bios
+                 DE --> Start of Configuration area
+                 HL --> Start of Device Vector table
+31 - DIRDIO  Execute low-level functions directly on Floppy or SCSI
+              devices. (described below)
+32 - STFARC  Set the bank number for a subsequent Function 33
+              execution. (All resisters preserved)
+33 - FRJP    Switch to bank number specified with Function 32, then
+              execute routine at address in HL, returning to
+              address on stack top. (Uses all primary registers)
+34 - FRCLR   This entry is used for error exits from banked routines
+              to return to the entry bank. (Uses all primary
+              registers)
+35 - FRGETB  Load the byte addressed by HL from the bank number
+              specified by the C register into the register A.
+              (Uses A)
+36 - FRGETW  Load the Word addressed by HL from the bank number
+              specified by the C register into the DE register pair.
+              (Uses DE)
+37 - FRPUTB  Store the byte in register A to the memory addressed by
+              HL in the bank specified in register C. (All registers
+              preserved)
+38 - FRPUTW  Save the Word in DE to the memory addressed by HL in
+              the bank specified in register C. (All registers
+              preserved)
+39 - RETMEM  Return a Byte identifying the Memory Bank number
+              currently in context in the A Register. (Uses A)
+        
+        
+DIRECT DISK IO.  BIOS Function 31 permits low-level access to 
+Floppy and Hard Disks (currently via SCSI interface) by specify-
+ing a Driver Number and desired Function.  While some hardware 
+types do not support all of the parameters specified, particular-
+ly for Floppy Drives, this architecture supports all types, 
+although specific systems may ignore certain functions.  In this 
+manner, for example, a single Format program supports NEC765, 
+SMC9266, SMC37C665, DP8743 and WD1770/1772/179x controller types 
+with widely differing interfaces.  Floppy Disk functions are 
+accessed by entering a 1 value into Register B (Floppy Driver 
+Number) and the desired function number in Register C, then 
+jumping to or calling BIOS Entry jump number 31.
+        
+FLOPPY DISK SUBFUNCTIONS:
+        
+ 0 - (STMODE)  Set the Floppy Disk Controller for Read/Write opns.
+      On entry, Register A contains a Density Flag (0 = Double,
+      0FFH = Single Density).  No data is returned from this
+      function.  NOTE: This routine assumes that Functions 1
+      (STSIZE) and 3 (STSECT) have been called first. (Uses AF)
+ 1 - (STSIZE) Set Drive Size (3.5/5.25" or 8"), Drive Speed (300 or
+      360 rpm) and Motor Needed flag.  On entry, A=0 for normal
+      floppy speed (synonymous with "Normal" 250 kbps MFM Double-
+      Density), A=0FFH for High speed motors (synonymous with "Hi-
+      Density" 500 kbps MFM).  Register D=0 if the motor is always
+      on or no motor control is needed, while D=0FFH if motor
+      control is necessary.  Finally, register E must contain the
+      drive size as; 0=Hard Disk, 001B=8" Drive, 010B=5.25" Drive,
+      and 011B=3.5" Drive.  Nothing is returned from this command.
+      While all of these functions may not be supported on any
+      specific computer type, the interface from using programs
+      should always pass the necessary parameters for compatibility.  
+      NOTE: This routine assumes that Function 2 (STHDRV) has been
+      called first.  Call this routine before calling Function 0
+      (STMODE). (Uses AF)
+ 2 - (STHDRV) Set Head and Drive Number for Disk Operations.  This
+      routine is entered with register A containing the Floppy unit
+      number coded in bits 0 and 1 (Unit 0=00, 1=01 ..3=11), and the
+      Head in Bit 2 (0=Head 0, 1=Head 1).  Nothing is returned from
+      this function. (Uses AF)
+ 3 - (STSECT) Set Physical Sector Number, Size and Last Sector
+      Number on the Track.  On entry, Register A contains the
+      desired physical sector number desired, D contains the sector
+      size where 0=128 byte sectors, 1=256..3=1024, and E contains
+      the last sector number on a side.  Normally register E is
+      unused in Western Digital controllers, but is needed with 765-
+      compatible units.  Nothing is returned from this function. 
+      (Uses AF)
+ 4 - (SPEC) Set Step Rate and Head Load/Unload Time.  On entry, the
+      A register contains the drive step rate in milliseconds.
+      Within the Bios, this rate is rounded up to the nearest slower
+      controller rate if the specified rate is not an even match.
+      Implementation of this function in the Bios also accommodates
+      the need to adjust values reflecting the step rate when the
+      data rates are changed from 250 to 500 kbps and vice versa.
+      Register D should contain the desired Head Unload time in mil-
+      liseconds, and E to the desired Head Load time in mS.  With
+      some controllers such as the Western Digital 177x and 179x
+      family, only the Step Rate is universally variable.  In these
+      systems, rates signaled by the Bios settings are rounded up to
+      the closest fixed step rate such as the 2, 3, 5, or 6 milli-
+      second rates in the 1772 (YASBEC) or 6, 10, 20, or 30 milli-
+      second rates used in the 1770 (Ampro Little Board) and 1795 
+      (Compu/Time).  Nothing is returned from this function.
+      (Uses AF)
+ 5 - (RECAL) - Recalibrate Drive (moves the head to track 0).  There
+      are no entry parameters for this function.  On exit, the zero
+      flag is Set and A=0 if no errors occurred, otherwise the Zero
+      flag is Reset and A is Non-Zero.  NOTE: This routine assumes
+      that STHDRV, STSIZE and SPEC have been called first. (Uses AF)
+ 6 - (SEEK) - Set the Track for disk operations and seek to it.  On
+      entry, Register A is set to the desired Track Number, D sig-
+      nifies whether Verification of the seek is required (D=0 for
+      No Verify, D=0FFH if verifying), and E indicates whether or
+      not to double-step (E <> 0 for Double-Step, E=0 for No Double-
+      Step).  On exit, A=0 and the Zero Flag is Set (Z) if the
+      operation was successfully completed while A <> 0 and the Zero
+      Flag is cleared (NZ) if an error occurred.  NOTE: This routine 
+      assumes that STHDRV, STMODE and SPEC have been called first.
+      (Uses AF)
+ 7 - (SREAD) - Read from the floppy disk.  On entry, HL must point
+      to a Buffer to receive the data read.  It assumes that Mode,
+      Track, Head/Drive, and Sector have been previously set.  On
+      exit, A=0 and the Zero flag is set (Z) if the sector was
+      satisfactorily read, A <> 0 and the Zero flag is cleared (NZ)
+      if an error occurred. (Uses AF and HL)
+ 8 - (SWRITE) - Write to the floppy disk.  On entry, HL must point
+      to a Buffer from which to send the data.  It assumes that
+      Mode, Head/Drive, Track, and Sector have been previously set.
+      On exit, A=0 and the Zero flag is set (Z) if the sector was
+      successfully written, A <> 0 and the Zero flag is cleared (NZ)
+      if an error occurred. (Uses AF and HL)
+ 9 - (READID) - Read the first correct ID information on a track.
+      There are no entry parameters for this function.  The Zero
+      flag is set (Z) and A=0 if no errors occurred, otherwise the
+      Zero flag is Reset (NZ) and A is non-zero.  NOTE: This routine
+      assumes that STHDRV and STMODE have been called first.
+      (Uses AF)
+10 - (RETDST) - Return the status of a drive.  There are no entry
+      parameters for this function.  On exit, A contains the raw
+      unmasked status byte of the drive or the last operation
+      depending on the controller type, BC contains the binary
+      number representing the FDC controller type (e.g. 765, 9266,
+      1772, etc), and HL contains the address of the status byte 
+      returned in register A.  NOTE: This routine assumes that
+      STHDRV has already been called. (Uses AF, BC and HL)
+11 - (FMTTRK) - Format a complete track on one side of a Floppy
+      Disk.  It assumes that the Mode, Head/Drive, Track, and
+      Sector have already been set.  On entry, HL points to data
+      required by the controller to format a track.  This varies
+      between controllers, so RETDST should be called to determine
+      controller type before setting up data structures.  On entry,
+      D must also contain the number of Sectors per Track, and E
+      must contain the number of bytes to use for Gap 3 in the
+      floppy format.  On exit, A=0 and the Zero flag is Set (Z) if
+      the operation was satisfactorily completed, A <> 0 and the
+      Zero flag cleared (NZ) if errors occurred. (Uses all primary
+      registers)
+        
+HARD DISK SUBFUNCTIONS:
+        
+These functions are available to directly access Hard Drives.  To 
+date, only drives connected by a SCSI type interface have been 
+used, but the interface is generic enough to allow mapping to 
+other interfaces such as IDE.  The functions are accessed by 
+loading the desired function number in the C register, loading a 
+2 (SCSI driver) into the B register and calling or jumping to 
+Jump number 31 in the Bios entry jump table.  Since this inter-
+face is not as standardized as Floppy functions in order to 
+handle SASI as well as SCSI devices, the interface has only basic 
+functions with the precise operations specified by the User in 
+the Command Descriptor Block passed with Function 2.  This places 
+a greater burden on User programs, but it allows more flexibility 
+to take advantage of changing features in the newer SCSI drives.
+        
+An additional constraint placed on the Hard Disk interface is the 
+restriction to 512 byte physical sectors at the interface.  Since 
+most hard drives now default to this sector size, no difficulties 
+have been reported in the few years since B/P Bios has been 
+released, so this constraint should pose no serious limitation.
+        
+ 0 - Set User Data Area Address for Direct SCSI IO, Return number
+      of bytes available for the SCSI Command Descriptor Block.
+      On entry, DE must point to a 512 byte User Data Area to Send/
+      Receive.  This is mandatory since 512 bytes are always
+      returned from a direct access due to the wide variety of
+      controller types handled.  On exit, A contains the number of
+      bytes available in the Command Descriptor Block which will
+      usually be 10, but may be scaled back to 6 in limited
+      applications. (Uses AF and HL)
+
+ 1 - Set Physical Device bit and store Logical Unit Number (LUN) in
+      SCSI Command Block (Byte 1, bits 7-5) from byte in A.  On
+      entry, register A contains a bit-mapped byte indicating the
+      SCSI Physical Unit number (bits 0-2) and Logical Unit Number
+      (bits 5-7).  On exit, A returns a "1" bit in the proper
+      position for the SCSI physical drive unit with Bit 7 being the
+      host computer, Bit 0 indicating Unit 0, etc. (Uses AF)
+        
+ 2 - Direct SCSI driver.  This routine performs the function
+      described by the command in the SCSI Command Descriptor Block
+      addressed by DE.  On entry, register A must also contain a
+      flag signifying whether or not user data is to be written by
+      this command (A=0 if No data to be written, FF if the address
+      set with Function 0 contains user data to write).  At the end
+      of the function, 512 bytes are always transferred from the
+      Bios IO Buffer to the User's Space set by Fcn 0.  This may be
+      inefficient, but was the only way we could accommodate the
+      wide variety of different SASI/SCSI controllers within reason-
+      able code constraints.  Additionally, Register A contains 0 if
+      the function performed with no errors, and 02H if a check
+      condition was encountered.  Also, Register L returns the
+      unmasked Status byte (0FFH indicating a timeout error), and H
+      returns the first Message byte received. (Uses all primary
+      registers)
+      NOTE: This routine assumes the Command Block is properly
+      configured for the type of Hard Disk Controller set in B/P
+      Bios, and that the selected disk is properly described in the
+      Bios Unit definitions (if necessary).  Errors in phasing
+      result in program exit and Warm Boot.  It assumes the user
+      has executed Functions 0 and 1 to set the data transfer source/
+      destination address and logical/physical drive addresses.
+        
+In the final part of this series, we will describe some of the 
+utilities developed and modified to support banked systems and 
+address our ongoing efforts with the banked ZSDos2, Command 
+Processor and future directions.
+        
+===================================================================
+        Banked/Portable Basic IO System (B/P Bios) Pt III
+                               by
+             Harold F. Bower and Cameron W. Cotrill
+        
+Having covered the Bios in detail in Part 2 of this series, we 
+now turn our attention to the rest of the operating system.  For 
+those who have seen or operate a B/P Bios-based system, you 
+probably wondered if the Command Processor (Z4x) or the Banked 
+Operating System (ZSDos2) will ever be finished.  In a nutshell, 
+probably not.  They are furnished with the B/P Bios package to 
+allow system owners to glimpse the possibilities and to take full 
+advantage of the Bios primitives as well as experiment with some 
+different concepts.  With that said, ZSDos2 is still a "work-in-
+progress".
+        
+Banking the operating system creates some inefficiencies and 
+incompatibilities.  An example of the former is that for file 
+functions, File Control Block (FCB) information must be copied to 
+high memory, the banked portion of the operating system swapped 
+in context, and the operation concluded.  This is not the end, 
+however, for the modified FCB must then be copied back to the 
+User Transient Program Area (TPA) in case the application needs 
+to access the updated data such as record number which is au-
+tomatically incremented after each sequential read or write.  
+This adds overhead and was optimized as much as possible.  Also, 
+certain functions such as character IO were not banked at all to 
+keep responsive to acceptable levels.
+
+Incompatibilities were handled by documenting them, and providing 
+utilities adapted to handle the new features.  An example of this 
+is the free space calculations handled by counting bits in the 
+Allocation Bit Map (ALV) buffer which contains one bit for each 
+allocation unit on the drive.  ALV data is placed in the system 
+bank to allow large (several hundred megabyte) drives to be used 
+without sacrificing any TPA space.  We provide the ZXD.COM direc-
+tory lister (a heavily modified version of Richard Conn's XD) 
+linked with DSLIB routines which "know" about the banked systems 
+and correctly compute and return free space.  DSLIB is freely 
+available from many systems.
+
+The last "standard" version of the banked ZSDos2 was produced in 
+1993 as ZS227G.ZRL, with a significant change released shortly 
+thereafter as ZS203.ZRL (the .ZRL type stands for Z-System Relo-
+catable, a Microsoft .REL file with named Commons for selected Z-
+System structures).  This latter version supports "hashed" direc-
+tories for very rapid access to files since it drastically reduc-
+es the number of comparisons needed to locate files in the direc-
+tory.  Both are included in the distribution package for use.  
+The reasons why will become clear after a small tutorial.
+
+Conventional CP/M 2.2 (and clones) set a pointer to the first 
+file in a directory upon a Search First (function 17) then use a 
+sequential search method with Search Next (function 18) until the 
+request is satisfied or the list of files is exhausted.  With 
+ZS203 running with a hashed directory (identified by a 20H in the 
+user byte of the first file on a disk when logged in), a Search 
+First request performs a mathematical calculation over a portion 
+of the FCB to obtain the number of a "bucket" which is a fixed 
+number of directory entries.  Subsequent Search Next requests 
+then begin a sequential search until either the file is found, or 
+an uninitialized entry (E5H in the User byte) is located.  For 
+sparsely-populated directories, the search seems nearly instanta-
+neous, and a comparable time is taken to find the first file 
+placed in a disk as the last.  Only in a very heavily-loaded disk 
+does the time approach that of a conventional CP/M 2.2 system.
+
+One nuance of this type of a directory structure is that removing 
+a file from the directory cannot be done in the common way by 
+placing an E5H in the User byte, since that signifies an unini-
+tialized entry and would terminate a search if following entries 
+hashed to the same value.  0C6H was defined to mark an unused 
+(erased), but not terminal entry.  Adding or renaming a file 
+computes the hash value, then examines the computed "bucket" 
+sequentially until either a C6H or E5H byte is found, then uses 
+that position.
+
+With this brief description, you might be wondering why anyone 
+would want to continue with non-hashed directories, so to 'fess 
+up...there are some incompatibilities.  First, this is a "classi-
+cal" hashing structure taught in Computer Science classes and not 
+the table-driven method used in CP/M+, so anyone using tools for 
+that system will probably encounter problems.  Next, directory 
+listing programs that do not recognize the C6H byte in the User 
+position as a deleted entry will probably report the file with a 
+weird user number.  In addition, DateStamper(tm) File Stamps are 
+not supported since the !!!TIME&.DAT needed by that system cannot 
+use the first directory entry due to the hash flag, so you must 
+use P2DOS or ZSTIME stamps.
+
+If you carefully tickled the gray matter while reading the de-
+scription, you probably wondered what the impact of a REName 
+function would be on performance.  In a word..horrible!  To 
+rename a file, the new name must be hashed and an available 
+directory entry (or more) must be located.  Next, the contents of 
+each directory entry after the File Type field for the old file 
+name must be copied to the corresponding new location, and the 
+old entries must be marked as unused with the C6H User byte.  For 
+this reason, programs such as WordStar4 which frequently rename 
+files pause noticeably with much head activity during these 
+operations.
+
+Finally, the biggest caution of all with hashed directories is to 
+insure that you NEVER write to a hashed directory with a non-
+hashed Operating System.  For this reason, your A: drive upon 
+bootup should always contain a Non-hashed directory.  When creat-
+ing a large image file (see Part 2), you can exchange drive and 
+partitions to place a hashed unit as A: but only with ZS203 as 
+the Operating system.  Should you make an error, you will prob-
+ably see files in a directory list that you cannot access and 
+can't remove without using raw sector reads and writes with DU3 
+or suffering further corruption of the directory system!
+
+With all of these cautions, you might wonder why anyone in their 
+right mind would want to choose this scheme!  The short answer is 
+SPEED!!!  Once set up properly, overlays, such as those used with 
+WordStar4 load almost instantly.  This is due to finding the file 
+in the directory very quickly, on the first disk read for sparse-
+ly-occupied directories.  This is where you really begin to 
+appreciate how much time is wasted in the operating system simply 
+searching for files.  Consequently, we offer it as an alternative 
+for learning.
+
+Both variants of ZSDos2 contain some new Operating System func-
+tion calls which can be used to advantage by your programs if 
+they first verify that you are running under ZSDos2.  They are 
+also used by many of the support utilities as well as the banked 
+Command Processor.  They are:
+        
+46  - Return Disk Free Space in kilobytes to DMA location (4
+           bytes)
+       Enter:  C = 46
+               E = drive (A=0)
+       Exit : Drive free space in K is at DMA+0 (LSB)..DMA+3 (MSB)
+               A reflects 0 on success, <>0 on Error logging drive
+        
+49  - Return Address of Environment Descriptor
+       Enter:  C = 49
+       Exit : HL - Points to Z34+ Environment Descriptor
+        
+152 - Parse Filename to Z34 specs
+       Enter:  C = 152
+              DE - points to FCB to receive parse
+               DMA points to start of string to parse
+       Exit :  A = L = Number of Question Marks in fn.ft
+              DE - points to character after last one parsed (delim)
+              FCB+15 will be 0 for Ok parse, 0FFH if errors occurred
+        
+        
+Z41.ZRL is the latest version of the banked Command Processor 
+based on ZCPR34.  One of the first things you will probably 
+notice is that warm boots of the system after completing an 
+operation that overwrites the Command Processor is that the 
+system does not reload the Command Processor from Disk.  A copy 
+of the portion that resides in TPA space is retained in the 
+System Bank and simply restored via an Inter-Bank block move; 
+much faster than a disk seek and read!
+        
+Z41 integrates many of the RCP features commonly in use and may 
+mean that you can completely eliminate the use of a Resident 
+Command Processor (RCP) at a typical saving of 2k bytes.  Dis-
+playing the built-in Help with Wheel privileges (the Z-System 
+"Superuser" equivalent) results in the following:
+        
+          CPR
+            CLS    cp     DATE   DIR    ECHO
+            era    feed   get    go     H
+            jump   list   NOTE   p      poke
+            port   prot   reg    ren    res
+            save   sp     spop   TIME   type
+            VER    WHL
+        
+Of the 27 resident commands available, only the ones listed in 
+capital letters are available when the Wheel Byte is turned off, 
+such as when operating in a dial in BBS system.  Even some func-
+tions available to all users, have certain features disabled, 
+such as the DATE/TIME Setting functions which are reserved for 
+those with Wheel privileges.  For those not familiar with the Z-
+System, these built-in functions are:
+        
+   CLS  - Clear the screen using the current TermCap definition
+   cp   - Copy a file from one location to another
+   DATE - Display the date
+   DIR  - Display files in the current or a specified directory
+   ECHO - Print the remainder of the line to the Console
+   era  - Erase a file or files
+   feed - Send a Form Feed byte to the Paper (eject)
+   get  - Load a file from the current directory to a specified
+           memory address
+   go   - Execute code at 100H.  Typically used to re-execute
+           command files
+   H    - Help.  Display list of available commands in CP, RCP and
+           FCP
+   jump - Execute code at specified address
+   list - Send specified file to the List Device (usually printer)
+   NOTE - Simply ignore the rest of the line
+   p    - Display (Peek) memory contents
+   poke - Enter Hex bytes into memory at specified address
+   port - Read from or write a byte to a specified IO Port
+   prot - Set/Clear System and Read-Only Attribute bits in
+           specified file
+   reg  - Set, increment, decrement, clear the 10 ZCPR3 Registers
+   ren  - Rename a file
+   res  - Reset Disk Subsystem and relog all drives
+   save - Write memory from 100h to file for specified length
+   sp   - Return free space on specified drive
+   spop - "Pop" the value from the Top of the ZCPR3 Shell Stack
+   TIME - Display the time (Set if Wheel)
+   type - Display a file on the Console
+   VER  - Display the Z41, ZSDos2 and B/P Bios Version Numbers
+   WHL  - Turn Wheel Byte On (w/password), Off or Display status
+             
+This Command Processor relies on ZSDos2 and a banked B/P Bios and 
+will NOT work without them.  To keep duplicated code to a mini-
+mum, the Command Line parser in ZSDos2 as well as the other new 
+functions are used instead of discrete code used in other Command 
+Processor Replacements.  As additional enhancements, the prompt 
+line can optionally display the time from ZSDos2, and the date 
+display can be configured to display in either "Mmm DD,YY" (US 
+style) or "DD Mmm YY" (European) forms.  These two features were 
+"hard-wired" in the original Z40 distributed several years ago 
+but have since been made configurable via the CONFZ4.COM Utility 
+with Z41.
+
+The actual TPA memory requirements of Z41 and ZSDos2 are less 
+than the "standard" CP/M sizes of 2 and 3.5 kilobytes respective-
+ly.  For the largest possible TPA space, they can be autosized 
+(an option in the BPBUILD utility).  Unfortunately, there are 
+still some legacy programs out there that incorrectly subtract 
+the BDOS "standard" size from the base of the BIOS jump table 
+resulting in an incorrect memory reference.  To handle this 
+occasional hiccup, there is an option to locate the start of Z41 
+and ZSDos2 TPA portions at "standard" locations below the BIOS 
+with dead space on the high end padding to the next higher system 
+element.  This has proven to be an adequate method of handling 
+the occasional problem if the need arises.
+
+We have developed a suite of utilities to support B/P Bios in the 
+same manner as we did with the original ZSDOS1.  Several of these 
+are modifications to older routines and contain changes necessary 
+to function in the banked environment.  In addition, a few of 
+them have been released in source code to illustrate methods of 
+accessing the enhanced features of B/P Bios.  The core programs 
+distributed with the package are:
+        
+BPBUILD - Create a loadable banked image file.  Input files 
+        needed include the output of assembling a BPBIO-xx file
+        (in MicroSoft REL format), a REL or ZRL image of an
+        Operating System (ZSDOS1 or the current version of the
+        banked ZSDos2 are recommended), and a REL or ZRL image of
+        a Command Processor (ZCPR33.REL or later, or the current
+        banked ZCPR4 are recommended).
+        
+BPCNFG - Configure the B/P Bios options in a system Image File, 
+        Diskette Boot Tracks, or executing in memory.  Due to the
+        memory mapping, some features such as re-defining hard
+        drive partitions are disabled if configuring the currently
+        executing system.
+        
+BPDBUG - A DDT-like debugger with support for B/P Bios Banked
+        memory.  While primitive, it allows poking around in a
+        banked or non-banked environment.
+        
+BPFORMAT - Format a floppy drive under B/P Bios from either built-in
+        formats (from available DPB definitions) or from a library
+        of alien formats.
+        
+BPSWAP - Swap B/P Bios logical drive definitions.
+        
+BPSYSGEN - Our generic version of the classic SYSGEN program used to
+        add a system image onto the boot sectors of a hard or floppy 
+        disk.
+        
+EMULATE - Lock any or all Floppy Disk Drive(s) to specified formats,
+        native or alien, from a Database of formats.  Also displays
+        current formats and restores drives to auto-selection if the
+        Bios was assembled with AUTOSEL option.
+        
+HDBOOT - Add Hard Drive Boot record to an image applied to the first
+        tracks of a Hard Drive with BPSYSGEN (currently only avail-
+        able for YASBEC and AMPRO).
+        
+HDIAG - Run Diagnostics, Format, Verify and examine Hard Drive 
+        parameters.  While SASI/SCSI controllers have been supported 
+        since the first release, GIDE support was added in 1997.
+        Due to the wide variation in disks, controllers, vendors and
+        versions, not all functions are supported on all variations.
+        The program currently recognizes the following Hard Disk/
+        Controller subsystems:
+        
+           Adaptec ACB-4000A
+           Shugart 1610-3 / Xebec 1410A
+           Seagate SCSI
+           Shugart 1610-4 (Minimal SCSI)
+           Conner SCSI
+           Maxtor SCSI
+           Quantum SCSI
+           Syquest SCSI
+           GIDE (Generic IDE)
+        
+INIRAMD - Initialize a RAM Drive and prepare it for P2DOS and/or 
+        DateStamper style file stamps.
+
+INITDIR - ZSDOS utility to initialize disks with P2DOS (CP/M+) 
+        stamps.
+        
+INSTAL12 - Install CCP, DOS, B/P Bios in a MOVCPM "type" image from
+        standard size (2k CCP, 3.5k DOS, ~4.375k Bios) files.
+        
+IOPINIT - Initialize an IOP Buffer defined in a Z3 Environment to 
+        the standard Dummy format and patch it into the Jump Table.
+        This utility was necessary to overcome size constraints in
+        a Boot Track image where some of the initialization code
+        normally in a Bios had to be removed to fit existing popular
+        disk formats.
+        
+LDSYS - Load an IMG file created by BPBUILD into memory and begin 
+        execution.
+        
+MOVxxSYS - System generation facility for Boot Track installation 
+        where the "xx" identifies the version.  System images of 50
+        to 53k are typically configured in non-banked bootable
+        systems.  An image size of 53k will typically accommodate a
+        20 MB Hard drive with three partitions.  If you configure
+        for more storage or use 2k allocation blocks, you may have
+        to configure a smaller system.  You will be warned of this
+        necessity by a beep and "Mem Ovfl" warning on bootup.  These
+        programs can create a system image in memory, or write the
+        image to a disk file for later transfer to boot tracks with
+        BPSYSGEN.
+        
+PARK - Move Hard Drive heads to designated Landing Zone if available
+        (provided in source code form as an example of using direct 
+        drivers).
+        
+SETCLOK - Extract a clock from ZSDOS1 CLOCKS.DAT file and set the
+        B/P Bios clock from a library of different clocks.  This is
+        a legacy program from ZSDOS1 and is usually not needed.
+        
+SIZERAM - Test the memory complement of the system and display the
+        RAM allocation by 32k bank number as well as the parameters 
+        reported in the Environment.
+        
+SHOWHD - Display current Drive Disk Parameter Block data on any 
+        system to assist in maintaining Hard Drive Partitions during 
+        conversion to B/P Bios.
+        
+TDD - Customized version of ZSDOS utility TD to display, set or 
+        update the Bios Interrupt clock as well as a growing number
+        of additional clocks such as the Dallas DS-1216E (aka No-
+        Slot-Clock) and Dallas DS-1202 used in the D-X Designs' P112.
+        
+TURB - A routine available for Z8S180 and Z80182 systems which allow
+        bypassing of the divide-by-two circuit from the crystal 
+        oscillator via chip-level register settings.  It also allows 
+        addition and removal of Memory Wait States to accommodate
+        speed changes.  This program was originally named TURBO, but
+        shortened when we realized the name conflict with Borland's
+        Pascal Compiler.
+
+ZSCFG2 - Configure ZSDos2 options in running system.
+        
+ZXD - Directory Lister from ZSDOS1, updated to function properly
+        with the banked ZSDos2.  Other directory listers may not
+        correctly display disk free space in banked systems.
+        
+As with all of the programs we produce, each of the above utili-
+ties contains built-in Help accessed with the // argument, and is 
+aware of necessary environment limitations.  We have attempted to 
+make them as bulletproof as possible, but they have been known to 
+err.  User feedback is always welcome in this regard.
+        
+WHAT'S NEXT?
+        
+This package is probably the end of the line for us.  Will we 
+ever release the source?  Yes, when we decide to stop supporting 
+it.  Until then, it remains our "labor of love" product and an 
+exciting as well as challenging learning experience.  We are all 
+a little older, hopefully wiser, and looking for new challenges, 
+so stay tuned for UZI180, an adaptation of Doug Braun's original 
+Unix Z80 Implementation, enhanced by Stefan Nitschke for the 
+Z280, now ported to the Zilog Z180 family.
+        
+--------------------------------------------------------------
+Closing note: The B/P Bios System is released under the GNU GPL 
+in 2001.  It is now Free Software subject to the provisions of 
+the GPL.			H.F.Bower, 2 December 2001.

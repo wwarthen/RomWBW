@@ -38,7 +38,7 @@ It is an independent disassembly and reconstruction of CCP/BDOS.
 DRI CPM22PAT01 was already applied.  Unclear why, but the BDOS
 source was checking for a blank instead of a ctrl-s in the
 KBSTAT routine.  Ctrl-s seems to be correct based on all other
-BDOS images I have encountered.  Also, these files imbed the
+BDOS images I have encountered.  Also, these files embed the
 CP/M version number into the serial number fields.  Other than
 this, they are byte identical to the OS2CCP/OS3BDOS images above.
 
@@ -51,17 +51,24 @@ BDOS22.ASM - Modified ORG & fix for ctrl-S
 CCPB03 & BDOSB01
 ----------------
 
-Sourced from N8VEM effort to create an enhanced
-variant of CP/M 2.2.
+These files were derived from a disassembly of the Jade DD CP/M-80
+image by William Beech in 1982.
 
-It appears to be a disassembly and reconstruction of CCP/BDOS,
-but there are no comments attributing the work.  DRI CPM22PAT01
-was already applied.  The message string literals are all
+- Modified by Bill Beech for global CP/M size configuration
+  and separate CCP and BDOSE 2013.
+
+- Modified by Bill Beech for addition of MON
+  command and display/change of user on command line
+  1984.  Also removed all SN checks.
+
+Eventually modified as part of the N8VEM project and converted to
+the Z80 instruction set.
+
+DRI CPM22PAT01 has been applied.  The message string literals are all
 in CAPS in BDOS.  Additionally, there is explicit filler of 0x55
 value bytes at the end of the CCP/BDOS files padding their
 length out to full page.  Other than this, the BDOS
-is byte identical to the others above.  CCP contains multiple
-enhancements and is, therefore, not identical to others.
+is byte identical to the others above.
 
 CCPB03.ASM - Enhanced reassembly of CCP
 

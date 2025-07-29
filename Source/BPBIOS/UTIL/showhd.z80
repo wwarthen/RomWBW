@@ -1,0 +1,409 @@
+	TITLE	"B/P Bios HD drive partition display"
+;************************************************************************
+;*  S H O W H D								*
+;* Display DPH and DPB data for making B/P HD Partition data the same	*
+;*  by Harold F. Bower and Cameron W. Cotrill				*
+;*----------------------------------------------------------------------*
+;* Disassembly:	jxl					Jan 2025	*
+;*		public release 1.0			Apr 2025	*
+;*		see remarks at the end					*
+;*----------------------------------------------------------------------*
+;* LINK with Version 4 libraries: SYSLIB				*
+;*									*
+;* A>Z80ASM SHOWHD/RS							*
+;* A>SLRNK SHOWHD/N,/A:100,/D:064D,SHOWHD,SYSLIBS/S,/E			*
+;************************************************************************
+
+VER	EQU	10
+REV	EQU	' '
+
+DATE	MACRO
+	DEFB	'2 Nov 91'
+	ENDM
+
+
+CTRLC	EQU	03H		; Control-C character
+BEL	EQU	07H		; Bell character
+TAB	EQU	09H		; Tab character
+LF	EQU	0AH		; Line Feed character
+CR	EQU	0DH		; Carriage Return character
+ESC	EQU	1BH		; Escape character
+
+CPMBIOS	EQU	0		; CP/M BIOS warm boot (JP)
+CPMFCB	EQU	5CH		; CP/M standard FCB #1 (+1 filename, +9 filetype)
+
+
+; For SYSLIB make visible...
+	PUBLIC	COUT
+
+; From SYSLIB Get..
+	EXTRN	EPRINT, BOUT, CAPINE, PAFDC, PHLFDC, PA2HC
+
+
+;::::: PROGRAM START
+
+	ORG	100H
+	CSEG
+
+
+SHOWHD:	JP	START		; bypass header
+	DEFB	'Z3ENV'		; this is (not really) a Z3CPR utility
+	DEFB	1		; show external environment
+
+ENVADR: DEFW	0		; addr of Z3 environment
+
+START:	LD	(STACK),SP
+	LD	SP,STACK
+	CALL	EPRINT
+	DEFB	CR,LF,'Show Hard Drive Partition Data - '
+	DATE
+	DEFB	CR,LF
+	DEFB	0
+
+	LD	A,(CPMFCB+1)	; check first char of cmdline
+	CP	'/'		; is this a help request ?
+	JP	Z,HELP		; ..if so, jump
+
+START0:	CALL	EPRINT
+	DEFB	CR,LF,'Enter Drive Letter [A..P] : '
+	DEFB	0
+	CALL	CAPINE		; get user input
+	CP	CTRLC		; is it <Ctrl-C> ?
+	JP	Z,0		; ..abort
+	CP	ESC		; is it <ESC> ?
+	JP	Z,0		; ..abort
+	CP	'A'		; below ascii 'A' ?
+	JR	C,START0	; ..if so, loop ask for new input
+	CP	'P'+1		; greater than ascii 'P' ?
+	JR	NC,START0	; ..if so, loop ask for new input
+	LD	(DRLTR),A	; store drive letter
+
+	CALL	EPRINT
+	DEFB	CR,LF,LF,'Drive: '
+	DEFB	0
+	CALL	COUT	; display drive
+	CALL	EPRINT
+	DEFB	CR,LF,TAB,'DPH Info',TAB,TAB,'BPCNFG Info',CR,LF
+	DEFB	0
+
+	CALL	GDPHADR		; get DPH addr for selected Disk drive
+	LD	(DPHADR),HL	; ..and store it
+	LD	A,H		; check if invalid (= zero)
+	OR	L
+	JR	NZ,PDSKDAT	; ..if not, skip over
+	CALL	EPRINT
+	DEFB	CR,LF,BEL,'+++ Invalid Drive : '
+	DEFB	0
+	LD	A,(DRLTR)	; get drive letter
+	CALL	COUT		; ..and display it
+	JP	START0		; then loop to ask for new input
+
+
+;::::: DISPLAY DISK DRIVE DATA
+
+PDSKDAT: LD	DE,10		; offset in DPH to DPB addr
+	ADD	HL,DE
+	LD	E,(HL)		; DPB addr in DE
+	INC	HL
+	LD	D,(HL)
+	EX	DE,HL		; swap regs
+	LD	(DPBADR),HL	; ..and store DPB addr
+	CALL	EPRINT
+	DEFB	CR,LF,LF,'  Sectors/Track  = '
+	DEFB	0
+	LD	E,(HL)		; get Sect/Trk from DPB in DE
+	INC	HL
+	LD	D,(HL)
+	INC	HL
+	EX	DE,HL		; swap regs
+	CALL	PHLFDC		; ..and display (as decimal)
+	SRL	H		; divide by 2
+	RR	L
+	SRL	H		; .. /4
+	RR	L
+	SRL	H		; .. /8
+	RR	L
+	LD	(KBTRK),HL	; store kByte/Trk
+	EX	DE,HL		; swap regs
+	CALL	P2TAB
+	CALL	EPRINT
+	DEFB	'(same)',CR,LF,'  Blk Shift Fctr = '
+	DEFB	0
+	LD	A,(HL)		; get next byte from DPB (= BSH, Block Shift Factor)
+	INC	HL		; move ptr fwd
+	CALL	PAFDC		; display BSH
+	CALL	P2TAB
+	SUB	3		; BSH -3
+	LD	B,A		; use as counter for multiplication
+	LD	(BSH3),A	; ..and also store it
+	LD	A,1		; set initial value
+	JR	Z,PBLKSIZ	; if BSH -3 = 0, skip over
+
+BLKSZLP: ADD	A,A		; *2
+	DJNZ	BLKSZLP		; loop
+
+PBLKSIZ: CALL	PAFDC		; display block size
+				;   (BSH= 3 -> 1k, 4 -> 2k, ... 8 -> 32k)
+	CALL	EPRINT
+	DEFB	'k/Block',CR,LF,'  Block Mask     = '
+	DEFB	0
+	LD	A,(HL)		; next byte from DPB (= BSM, Block Mask)
+	INC	HL
+	CALL	PAFDC		; ..display it
+	CALL	EPRINT
+	DEFB	CR,LF,'  Extent Mask    = '
+	DEFB	0
+	LD	A,(HL)		; next byte from DPB (= EXM, Extent Mask)
+	INC	HL
+	CALL	PAFDC		; ..display it
+	CALL	EPRINT
+	DEFB	CR,LF,'  Disk Blocks-1  = '
+	DEFB	0
+	LD	E,(HL)		; next 16-bit value from DPB in DE
+	INC	HL		;   (= Disk Size in BLS units -1)
+	LD	D,(HL)
+	INC	HL
+	EX	DE,HL		; swap regs
+	CALL	PHLFDC		; display value
+	CALL	P2TAB
+	INC	HL		; +1 (= Disk Size)
+	LD	A,(BSH3)	; get BSH-3
+	LD	B,A		; set as initial loop counter
+	OR	A		; check if zero (means single density 1k/block)
+	LD	A,0		; nullify A
+	JR	Z,PDSKCAP	; ..if already zero, no more calc needed
+
+DSKCLP:	ADD	HL,HL		; double HL (2, 4, 8 etc. k/block)
+	ADC	A,0		;   a power-of-two multiple
+	DJNZ	DSKCLP		;   ..and loop
+	LD	(DCAPH),A	; store disk capacity in kByte
+	LD	(DCAPML),HL	;   as 24-bit value
+
+PDSKCAP: CALL	PDSKSZ		; ..and display it
+	CALL	EPRINT
+	DEFB	'k Total ('
+	DEFB	0
+	PUSH	DE
+	LD	DE,(KBTRK)	; kByte/Trk
+	LD	HL,(DCAPML)	; disk capacity in kByte
+	LD	A,(DCAPH)
+	LD	BC,-1		; set initial counter value
+	OR	A
+
+DSKTRLP: INC	BC		; increase counter (quotient)
+	SBC	HL,DE		; divide by subtraction
+	SBC	A,0		; check for underflow
+	JR	NC,DSKTRLP	; ..and loop while more to go
+
+	LD	H,B		; result in HL
+	LD	L,C
+	CALL	PHLFDC		; ..display it
+	CALL	EPRINT
+	DEFB	' Tracks)'
+	DEFB	0
+	POP	DE		; restore DPB ptr
+	EX	DE,HL		; swap to HL
+	CALL	EPRINT
+	DEFB	CR,LF,'  Max Dirs - 1   = '
+	DEFB	0
+	LD	E,(HL)		; get next 16-bit value from DPB in DE
+	INC	HL		;   (= Dir Max -1)
+	LD	D,(HL)
+	INC	HL
+	EX	DE,HL		; swap regs
+	CALL	PHLFDC		; ..and display value
+	CALL	P2TAB
+	INC	HL		; +1 (= Dir Max)
+	CALL	PHLFDC		; ..and display, too
+	EX	DE,HL
+	CALL	EPRINT
+	DEFB	' Dir Entries',CR,LF,'  Alloc bytes    = '
+	DEFB	0
+	LD	A,(HL)		; next byte from DPB (= AL0, Allocation byte 0)
+	INC	HL
+	LD	D,(HL)		;   (= AL1, Allocation byte 1)
+	INC	HL
+	CALL	PA2HC		; display AL0 as hex
+	CALL	EPRINT
+	DEFB	'H, '
+	DEFB	0
+	LD	A,D		; AL1 in A
+	CALL	PA2HC		; ..and display as hex
+	CALL	EPRINT
+	DEFB	'H',CR,LF,'  Check Size     = '
+	DEFB	0
+	LD	E,(HL)		; next 16-bit value from DPB in DE
+	INC	HL		;   (= CKS, Check Size)
+	LD	D,(HL)
+	INC	HL
+	EX	DE,HL		; swap regs
+	CALL	PHLFDC		; display value
+	EX	DE,HL		; swap regs back
+	CALL	EPRINT
+	DEFB	CR,LF,'  Track Offset   = '
+	DEFB	0
+	LD	E,(HL)		; next 16-bit value from DPB in DE
+	INC	HL		;   (= Track Offset)
+	LD	D,(HL)
+	INC	HL
+	EX	DE,HL		; swap regs
+	CALL	PHLFDC		; display value
+	EX	DE,HL		; swap regs back
+	CALL	P2TAB
+	CALL	EPRINT
+	DEFB	'(same)',CR,LF
+	DEFB	0
+	JP	0		; and exit with Warm Boot
+
+
+	; print 2 tabs on CON:
+P2TAB:	PUSH	AF
+	LD	A,TAB		; <TAB> in A
+	CALL	COUT		; display on CON:
+	CALL	COUT		; 2x
+	POP	AF		; restore
+	RET
+
+
+;::::: HELP
+
+HELP
+	CALL	EPRINT
+	DEFB	CR,LF,'SHOWHD - Display DPH and DPB data for '
+	DEFB	'specified drive for making B/P',CR,LF
+	DEFB	' Hard Drive Partition data the same as '
+	DEFB	'an operating system.',CR,LF,LF
+	DEFB	'  Syntax:',CR,LF,LF
+	DEFB	TAB,'SHOWHD        <-- Execute program interactively',CR,LF
+	DEFB	TAB,'SHOWHD //     <-- Display this message',CR,LF
+	DEFB	0
+	LD	SP,(STACK)
+	RET
+
+
+;::::: SUPPORT FUNCTIONS
+
+	; get addr of Disk Parameter Header (DPH)
+	;  in: Disk drive letter in mem variable
+	; out: HL= addr DPH
+GDPHADR: LD	HL,(CPMBIOS+1)	; addr Bios fn #1 (WBOOT)
+	LD	L,9*3		; adjust ptr to fn #9 (SELDSK)
+	LD	A,(DRLTR)	; get drive letter
+	SUB	'A'		; ..and convert to number
+	LD	C,A		; copy to reg. C (for Bios call)
+	LD	E,0
+	JP	(HL)		; "call" Bios fn #9 and let return from there
+				;   (SELDSK returns DPH addr in HL)
+
+
+	; print disk size to CON: (capacity of a drive in kB)
+	; output as decimal with provision for 3-byte values - see ZXD21.Z80 PRBIG
+	;  in: 24-bit value to print in A,H,L
+PDSKSZ:	PUSH	DE		; save regs
+	PUSH	BC
+	EX	AF,AF'		; swap AF
+	PUSH	AF		; save it
+	EX	AF,AF'		; ..and swap back
+	LD	B,0
+	LD	C,-1		; set initial result
+	LD	DE,86A0H	; 100,000 = 0x0186A0, set lower 2 bytes
+	OR	A		; clear C-Flag
+PDSKSZ0: INC	C		; accumulate count
+	SBC	HL,DE		; subtract lower 2 bytes
+	SBC	A,1		; ..and upper byte
+	JR	NC,PDSKSZ0	; loop till done
+	ADD	HL,DE		; adjust underflow
+	ADC	A,1
+	CALL	PHLD1
+	LD	DE,10000	; print 10000's
+	CALL	PHLD
+	LD	DE,1000		; print 1000's
+	CALL	PHLD
+	LD	DE,100		; print 100's
+	CALL	PHLD
+	LD	DE,10		; print 10's
+	CALL	PHLD
+	LD	A,L		; print 1's
+	CALL	PHLD2
+	POP	AF		; restore regs
+	EX	AF,AF'		; swap
+	POP	BC		; ..and also restore other regs
+	POP	DE
+	RET
+
+
+	; print content of HL to CON: as decimal
+	; divide HL by DE, convert remainder to ascii digit and print it
+	; (similar to SYSLIB's PHLFDC/PHDC1 - see ZXD21.Z80 DECDSP)
+	;  in: HL= value, DE= divisor
+PHLD:	LD	C,-1		; set initial count
+	OR	A		; clear C-Flag
+PHLD0:	INC	C		; accumulate count
+	SBC	HL,DE		; divide by subtraction
+	SBC	A,0
+	JR	NC,PHLD0	; ..and loop while more to go
+	ADD	HL,DE		; compensate underflow
+	ADC	A,0
+PHLD1:	EX	AF,AF'		; swap to retain flags
+	LD	A,C		; get result (quotient)
+	OR	A		; is it zero ?
+	JR	NZ,PHLD2	; ..if not, skip over
+	OR	B		; get prior digit print flag
+	JR	Z,PHLD3		; ..if anything printed yet, jump
+	XOR	A		;   else, print a zero
+PHLD2:	ADD	A,'0'		; convert to ascii
+	LD	B,A		; remember for next loop
+	CALL	COUT		; ..and display it
+PHLD3:	EX	AF,AF'		; swap regs back
+	RET
+
+
+	; intercept COUT to re-route SYSLIB calls to to BOUT
+	;   --> declare COUT as PUBLIC, and do _not_ import from SYSLIB
+COUT:	JP	BOUT
+
+
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::
+; SYSLIB - 0x0530
+; end addr 0x064d (begin DSEG)
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+;::::: RAM STORAGE
+
+	DSEG
+
+KBTRK:		DEFW	0	; kByte/Trk  (Sect/Trk divided by 8)
+BSH3:		DEFB	0	; BSH -3     (Block Shift Factor -3)
+
+				; disk capacity as 24-bit value
+DCAPH:		DEFB	0	; high byte
+DCAPML:		DEFW	0	; middle and low byte
+
+DRLTR:		DEFB	0	; drive letter (entered by user)
+DPHADR:		DEFW	0	; addr DPH     (not used)
+DPBADR:		DEFW	0	; addr DPB     (not used)
+
+		DEFS	30H	; room for stack
+STACK:		DEFW	0	; stack storage location
+
+	END
+
+
+;************************************************************************
+; Remarks jxl:
+;   SHOWHD.COM, included in available B/P Bios package(s), was dis-
+; assembled and extensively commented. Labels are up to seven chars long
+; to comply with M-REL standards. However, it is recommended to use SLR
+; tools that support labels up to sixteen chars.
+;   In its current state, the compiled/linked file matches exactly the
+; original SHOWHD.COM, i.e. no changes to the source were made.
+;
+;   The program is not very complex. However, one thing might be worth
+; to be pointed out: SYSLIB's routine COUT is replaced with an own
+; implementation. While it is just a re-routing to another SYSLIB routine,
+; it shows how simply this can be achieved. Bear in mind that _all_
+; SYSLIB routines calling COUT would now call the local implementation
+; instead. With this technique existing routines can be modified without
+; rewriting them entirely.
+;************************************************************************

@@ -114,20 +114,24 @@ Source/ZPM3/genbnk.dat
 Source/ZSDOS/zsdos.err
 
 # Lets explicit list all generate untracked binary files
+Binary/*.upd
+Binary/Apps/bbcbasic.txt
+Binary/Apps/copysl.doc
+Binary/Apps/copysl.doc
+Binary/Apps/fdu.doc
+Binary/Apps/fdu.doc
 Binary/Apps/Tunes/bgm.vgm
 Binary/Apps/Tunes/ending.vgm
 Binary/Apps/Tunes/inchina.vgm
 Binary/Apps/Tunes/shirakaw.vgm
 Binary/Apps/Tunes/startdem.vgm
 Binary/Apps/Tunes/wonder01.vgm
-Binary/Apps/copysl.doc
-Binary/Apps/fdu.doc
 Binary/Apps/zmconfig.ovr
 Binary/Apps/zminit.ovr
-Binary/Apps/zmp.doc
-Binary/Apps/zmp.hlp
 Binary/Apps/zmp.cfg
+Binary/Apps/zmp.doc
 Binary/Apps/zmp.fon
+Binary/Apps/zmp.hlp
 Binary/Apps/zmterm.ovr
 Binary/Apps/zmxfer.ovr
 Binary/CPM3/bdos3.spr
@@ -146,13 +150,12 @@ Binary/CPNET/cpn12ser.lbr
 Binary/CPNET/cpn3duo.lbr
 Binary/CPNET/cpn3mt.lbr
 Binary/CPNET/cpn3ser.lbr
-Binary/*.upd
+Binary/hd1k_prefix.dat
 Binary/ZPM3/bnkbdos3.spr
 Binary/ZPM3/bnkbios3.spr
 Binary/ZPM3/gencpm.dat
 Binary/ZPM3/resbdos3.spr
 Binary/ZPM3/zinstal.zpm
-Binary/hd1k_prefix.dat
 Source/BPBIOS/def-ww.lib
 Source/CPNET/cpn12duo.lbr
 Source/CPNET/cpn12mt.lbr
@@ -169,6 +172,9 @@ Source/Fonts/font8x16u.asm
 Source/Fonts/font8x8c.asm
 Source/Fonts/font8x8c.bin
 Source/Fonts/font8x8u.asm
+Source/Fonts/font6x8c.asm
+Source/Fonts/font6x8c.bin
+Source/Fonts/font6x8u.asm
 Source/Fonts/fontcgac.asm
 Source/Fonts/fontcgac.bin
 Source/Fonts/fontcgau.asm
@@ -177,6 +183,8 @@ Source/Fonts/fontvgarcc.bin
 Source/Fonts/fontvgarcu.asm
 Source/HBIOS/*.upd
 Source/HBIOS/build_env.cmd
+Source/HBIOS/build_env.cmd
+Source/HBIOS/hbios_env.sh
 Source/HBIOS/hbios_env.sh
 Source/HBIOS/netboot.mod
 Source/Images/*.cat
@@ -194,4 +202,3 @@ Source/ZPM3/setz3.com
 Tools/unix/OpenSpin/build/
 Tools/unix/zxcc/config.h
 Tools/unix/zxcc/zxcc
-Binary/Apps/bbcbasic.txt
