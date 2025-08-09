@@ -5,5 +5,3 @@ main()
         	printf("Hello World, from Aztec C line %d\n", i);
         }
 }
-
-
