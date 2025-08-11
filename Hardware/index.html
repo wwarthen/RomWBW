@@ -384,7 +384,7 @@
 <p><strong>RomWBW Hardware</strong> \
 Version 3.6 \
 Wayne Warthen  (<a href="mailto:wwarthen@gmail.com">wwarthen@gmail.com</a>) \
-06 Aug 2025</p>
+10 Aug 2025</p>
 <h1 id="overview">Overview</h1>
 <h2 id="supported-platforms">Supported Platforms</h2>
 <p>This section contains a summary of the system configuration target for
@@ -1226,16 +1226,21 @@ of the SIO ports, for ease of use with modern computers.</p>
 </table>
 <h4 id="supported-hardware_5">Supported Hardware</h4>
 <ul>
-<li>FP: LEDIO=255</li>
 <li>DS5RTC: RTCIO=104, IO=104</li>
 <li>SSER: IO=52</li>
 <li>LPT: MODE=S100, IO=199</li>
 <li>FV: IO=192, KBD MODE=FV, KBD IO=3</li>
 <li>KBD: ENABLED</li>
 <li>SCON: IO=0</li>
+<li>ESPSD: IO=128, PRIMARY</li>
+<li>ESPSD: IO=128, SECONDARY</li>
 <li>MD: TYPE=RAM</li>
-<li>PPIDE: IO=48, MASTER</li>
-<li>PPIDE: IO=48, SLAVE</li>
+<li>PPIDE: MODE=STD, IO=48, MASTER</li>
+<li>PPIDE: MODE=STD, IO=48, SLAVE</li>
+<li>PPIDE: MODE=S100A, IO=56, MASTER</li>
+<li>PPIDE: MODE=S100A, IO=56, SLAVE</li>
+<li>PPIDE: MODE=S100B, IO=56, MASTER</li>
+<li>PPIDE: MODE=S100B, IO=56, SLAVE</li>
 <li>SD: MODE=FZ80, IO=108, UNITS=2</li>
 </ul>
 <h4 id="notes">Notes:</h4>
@@ -3314,6 +3319,13 @@ slave as defined by the IEEE-696 specs.</p>
 <li>MD: TYPE=RAM</li>
 <li>MD: TYPE=ROM</li>
 <li>SD: MODE=SC, IO=12, UNITS=1</li>
+<li>ESPSD: IO=128, PRIMARY</li>
+<li>ESPSD: IO=128, SECONDARY</li>
+<li>ESPSD occupies 995 bytes.</li>
+<li>PPIDE: MODE=S100A, IO=48, MASTER</li>
+<li>PPIDE: MODE=S100A, IO=48, SLAVE</li>
+<li>PPIDE: MODE=S100B, IO=48, MASTER</li>
+<li>PPIDE: MODE=S100B, IO=48, SLAVE</li>
 </ul>
 <h4 id="notes_4">Notes:</h4>
 <ul>
@@ -4201,6 +4213,10 @@ the active platform and configuration.</p>
 <tr>
 <td>SYQ</td>
 <td>Iomega SparQ Drive on PPI</td>
+</tr>
+<tr>
+<td>ESPSD</td>
+<td>S100 ESP32-based SD Card Interface</td>
 </tr>
 </tbody>
 </table>
