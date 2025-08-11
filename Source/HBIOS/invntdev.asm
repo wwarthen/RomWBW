@@ -1,6 +1,6 @@
 ;==============================================================================
 ; DEVIVE INVENTORY - Inventory Device
-; Version  June-2025
+; Version  August-2025
 ;==============================================================================
 ;
 ; This was extracted from HBIOS and converted into a ROM Application
@@ -10,6 +10,7 @@
 ;
 ; Change Log:
 ;   2025-06-30 [MAP] Initial Release copied from HBIOS.ASM
+;   2025-08-09 [WBW] Add support for ESPSD driver
 ;______________________________________________________________________________
 ;
 ; Include Files
@@ -582,6 +583,7 @@ PS_DDSYQ	.TEXT	"SYQ$"
 PS_DDCHUSB	.TEXT	"CHUSB$"
 PS_DDCHSD	.TEXT	"CHSD$"
 PS_DDCHNATUSB	.TEXT	"USB$"
+PS_DDESPSD	.TEXT	"ESPSD$"
 ;
 ; DISK TYPE STRINGS
 ;

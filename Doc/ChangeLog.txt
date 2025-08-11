@@ -22,6 +22,7 @@ Version 3.6
 - D?N: Added native USB driver support (keyboard, floppy, mass storage)
 - MGG: Added sample program source files for all language disk iamges
 - WBW: Added support for S100 Dual CF Interface
+- WBW: Added support for S100 ESP32 SD Interface
 
 Version 3.5.1
 -------------

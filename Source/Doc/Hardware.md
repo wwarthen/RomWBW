@@ -436,16 +436,21 @@ An FPGA Z80 based S100 SBC
 
 #### Supported Hardware
 
-- FP: LEDIO=255
 - DS5RTC: RTCIO=104, IO=104
 - SSER: IO=52
 - LPT: MODE=S100, IO=199
 - FV: IO=192, KBD MODE=FV, KBD IO=3
 - KBD: ENABLED
 - SCON: IO=0
+- ESPSD: IO=128, PRIMARY
+- ESPSD: IO=128, SECONDARY
 - MD: TYPE=RAM
-- PPIDE: IO=48, MASTER
-- PPIDE: IO=48, SLAVE
+- PPIDE: MODE=STD, IO=48, MASTER
+- PPIDE: MODE=STD, IO=48, SLAVE
+- PPIDE: MODE=S100A, IO=56, MASTER
+- PPIDE: MODE=S100A, IO=56, SLAVE
+- PPIDE: MODE=S100B, IO=56, MASTER
+- PPIDE: MODE=S100B, IO=56, SLAVE
 - SD: MODE=FZ80, IO=108, UNITS=2
 
 #### Notes:
@@ -1766,6 +1771,13 @@ as defined by the IEEE-696 specs.
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - SD: MODE=SC, IO=12, UNITS=1
+- ESPSD: IO=128, PRIMARY
+- ESPSD: IO=128, SECONDARY
+- ESPSD occupies 995 bytes.
+- PPIDE: MODE=S100A, IO=48, MASTER
+- PPIDE: MODE=S100A, IO=48, SLAVE
+- PPIDE: MODE=S100B, IO=48, MASTER
+- PPIDE: MODE=S100B, IO=48, SLAVE
 
 #### Notes:
 
@@ -2266,6 +2278,7 @@ the active platform and configuration.
 | RF        | RAM Floppy Disk Interface                              |
 | SD        | SD Card Interface                                      |
 | SYQ       | Iomega SparQ Drive on PPI                              |
+| ESPSD     | S100 ESP32-based SD Card Interface                     |
 
 ## Video
 
