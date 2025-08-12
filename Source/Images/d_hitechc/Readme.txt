@@ -51,3 +51,14 @@ warning and error messages.  The code number for each of these
 messages will still be printed.  The textual description for all of
 these warnings/errors can be found in the Doc/Language directory,
 HI-TECH Z80 C Compiler Messages.txt.
+
+== Sample Application ==
+
+This disk image includes a very small sample application called
+HELLO.C that can be used to demonstrate the build process.  The
+following commands will build this sample application.
+
+C -V HELLO.C
+
+Then run it by typeing
+HELLO
