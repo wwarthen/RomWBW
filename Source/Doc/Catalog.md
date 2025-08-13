@@ -1238,6 +1238,7 @@ The following files are found in
 | `DRTCPM.OBJ`   | Startup Object File (???) |
 | `EXEC.H`       | Language include file (see manual) |
 | `FLOAT.H`      | Language include file (see manual) |
+| `HELLO.C`      | Sample C source file |
 | `HITECH.H`     | Language include file (see manual) |
 | `LIBC.LIB`     | Standard C Runtime Library |
 | `LIBF.LIB`     | Floating Point Library |
