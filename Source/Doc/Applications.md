@@ -1431,7 +1431,7 @@ The source code is provided in the RomWBW distribution.
 The purpose of this utility is to allow the copying of whole disk slices
 from one disk slice to another slice
 
-This tool is only supported by RomWBW HBIOS, it uses HDIOS for all its
+This tool is only supported by RomWBW HBIOS, it uses HBIOS for all its
 disk IO. UNA UBIOS is not supported by this tool.
 
 This tool is running on CP/M 2.2 or 3.0 and has access to full 64kb of
@@ -2954,17 +2954,17 @@ emulation software for specific instructions on how to use XModem.
 
 #### Notes
 
-The ZMP adaptation that comes with RomWBW will default to using
+The ZMD adaptation that comes with RomWBW will default to using
 the current HBIOS console port for transfers.  Note that if you
 change your console port at the OS level (e.g., STAT CON:=UC1:),
 this does not change the HBIOS console.
 
-`ZMP` attempts to determine the best way to drive the serial port based
+`ZMD` attempts to determine the best way to drive the serial port based
 on your hardware configuration. When possible, it will bypass the
 HBIOS for faster operation. However, in many cases, it will use HBIOS
 so that flow control can be used.
 
-`ZMP` is dependent on a reliable communications channel. You must
+`ZMD` is dependent on a reliable communications channel. You must
 ensure that the serial port can be serviced fast enough by either
 using a baud rate that is low enough or ensuring that hardware flow
 control is fully functional (end to end).

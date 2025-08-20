@@ -1530,9 +1530,9 @@ Work in progress, documentation required...
 Returns device information for the RTC unit.  The Status (A) is a 
 standard HBIOS result code.
 
-Device Attribute (C) values are not yet defined.  Device Type (D) 
-indicates the specific hardware driver that handles the specified 
-character unit.  Values are listed at the start of this section. Device 
+Device Attributes (C) values are not yet defined.  Device Type (D) 
+indicates the specific hardware driver that handles the RTC unit.
+Values are listed at the start of this section.  Device 
 Number (E) indicates the physical device number assigned per driver 
 which is always 0 for RTC.
 
