@@ -13,21 +13,21 @@
 ;  IBM PC STANDARD PARALLEL PORT (SPP):
 ;  - NHYODYNE PRINT MODULE
 ;
-;  PORT 0 (OUTPUT):
+;  DATA (BASE PORT + 0, OUTPUT):
 ;
 ;	D7	D6	D5	D4	D3	D2	D1	D0
 ;     +-------+-------+-------+-------+-------+-------+-------+-------+
 ;     | PD7   | PD6   | PD5   | PD4   | PD3   | PD2   | PD1   | PD0   |
 ;     +-------+-------+-------+-------+-------+-------+-------+-------+
 ;
-;  PORT 1 (INPUT):
+;  STATUS (BASE PORT + 1, INPUT):
 ;
 ;	D7	D6	D5	D4	D3	D2	D1	D0
 ;     +-------+-------+-------+-------+-------+-------+-------+-------+
 ;     | /BUSY | /ACK  | POUT  | SEL   | /ERR  | 0     | 0     | 0     |
 ;     +-------+-------+-------+-------+-------+-------+-------+-------+
 ;
-;  PORT 2 (OUTPUT):
+;  CONTROL (BASE PORT + 2, OUTPUT):
 ;
 ;	D7	D6	D5	D4	D3	D2	D1	D0
 ;     +-------+-------+-------+-------+-------+-------+-------+-------+
@@ -39,21 +39,21 @@
 ;  MG014 STYLE INTERFACE:
 ;  - RCBUS MG014 MODULE
 ;
-;  PORT 0 (OUTPUT):
+;  DATA (BASE PORT + 0, OUTPUT):
 ;
 ;	D7	D6	D5	D4	D3	D2	D1	D0
 ;     +-------+-------+-------+-------+-------+-------+-------+-------+
 ;     | PD7   | PD6   | PD5   | PD4   | PD3   | PD2   | PD1   | PD0   |
 ;     +-------+-------+-------+-------+-------+-------+-------+-------+
 ;
-;  PORT 1 (INPUT):
+;  STATUS (BASE PORT + 1, INPUT):
 ;
 ;	D7	D6	D5	D4	D3	D2	D1	D0
 ;     +-------+-------+-------+-------+-------+-------+-------+-------+
 ;     |       |       |       | /ERR  | SEL   | POUT  | BUSY  | /ACK  |
 ;     +-------+-------+-------+-------+-------+-------+-------+-------+
 ;
-;  PORT 2 (OUTPUT):
+;  CONTROL (BASE PORT + 2, OUTPUT):
 ;
 ;	D7	D6	D5	D4	D3	D2	D1	D0
 ;     +-------+-------+-------+-------+-------+-------+-------+-------+
@@ -65,21 +65,21 @@
 ;  S100 STYLE INTERFACE:
 ;  - S100 FPGA Z80
 ;
-;  BASE I/O PORT (OUTPUT):
+;  DATA (BASE PORT + 0, OUTPUT):
 ;
 ;	D7	D6	D5	D4	D3	D2	D1	D0
 ;     +-------+-------+-------+-------+-------+-------+-------+-------+
 ;     | PD7   | PD6   | PD5   | PD4   | PD3   | PD2   | PD1   | PD0   |
 ;     +-------+-------+-------+-------+-------+-------+-------+-------+
 ;
-;  STATUS PORT (INPUT, BASE I/O - 1):
+;  STATUS (BASE PORT + 0, INPUT):
 ;
 ;	D7	D6	D5	D4	D3	D2	D1	D0
 ;     +-------+-------+-------+-------+-------+-------+-------+-------+
 ;     |       |       |       |       |       |       | BUSY  | /ACK  |
 ;     +-------+-------+-------+-------+-------+-------+-------+-------+
 ;
-;  CONTROL PORT (OUTPUT, BASE I/O - 1):
+;  CONTROL (BASE PORT - 1, OUTPUT):
 ;
 ;	D7	D6	D5	D4	D3	D2	D1	D0
 ;     +-------+-------+-------+-------+-------+-------+-------+-------+
@@ -168,13 +168,18 @@ LPT_IN:
 ; BYTE OUTPUT
 ;
 LPT_OUT:
+	; WAIT WHILE PRINTER IS BUSY
 	CALL	LPT_OST			; READY TO SEND?
 	JR	Z,LPT_OUT		; LOOP IF NOT
+;
+	; SET DATA PORT BITS
 	LD	C,(IY+3)		; PORT 0 (DATA)
 	EZ80_IO
 	OUT	(C),E			; OUTPUT DATA TO PORT
+;
+	; SET STROBE
 #IF (LPTMODE == LPTMODE_SPP)
-	LD	A,%00001101		; SELECT & STROBE, LEDS OFF
+	LD	A,%00001101		; SELECT & STROBE, LED OFF
 #ENDIF
 #IF (LPTMODE == LPTMODE_MG014)
 	LD	A,%00000100		; SELECT & STROBE, LED OFF
@@ -192,6 +197,8 @@ LPT_OUT:
 	EZ80_IO
 	OUT	(C),A			; OUTPUT DATA TO PORT
 	CALL	DELAY
+;
+	; CLEAR STROBE
 #IF (LPTMODE == LPTMODE_SPP)
 	LD	A,%00001100		; SELECT, LEDS OFF
 #ENDIF
@@ -199,11 +206,12 @@ LPT_OUT:
 	LD	A,%00000101		; SELECT, LED OFF
 #ENDIF
 #IF (LPTMODE == LPTMODE_S100)
-	LD	A,%11111111		; STROBE
+	LD	A,%11111111		; CLEAR STROBE
 #ENDIF
 	EZ80_IO
 	OUT	(C),A			; OUTPUT DATA TO PORT
 	CALL	DELAY
+;
 	XOR	A			; SIGNAL SUCCESS
 	RET
 ;
@@ -215,21 +223,19 @@ LPT_IST:
 	RET				; DONE
 ;
 ; OUTPUT STATUS
+; 0 = BUSY, 1 = READY
 ;
 LPT_OST:
 	LD	C,(IY+3)		; BASE PORT
 #IF ((LPTMODE == LPTMODE_SPP) | (LPTMODE == LPTMODE_MG014))
 	INC	C			; SELECT STATUS PORT
 #ENDIF
-#IF (LPTMODE == LPTMODE_S100)
-	DEC	C			; SELECT STATUS PORT
-#ENDIF
 	EZ80_IO
 	IN	A,(C)			; GET STATUS INFO
 #IF (LPTMODE == LPTMODE_SPP)
 	AND	%10000000		; ISOLATE /BUSY
 #ENDIF
-#IF (LPTMODE == LPTMODE_MG014)
+#IF ((LPTMODE == LPTMODE_MG014) | (LPTMODE == LPTMODE_S100))
 	AND	%00000010		; ISOLATE BUSY
 	XOR	%00000010		; INVERT TO READY
 #ENDIF
@@ -295,6 +301,7 @@ LPT_INITDEV0:
 	LD	A,$FF			; INIT VALUE
 	EZ80_IO
 	OUT	(C),A			; DO IT
+	XOR	A			; SIGNAL SUCCESS
 	RET				; RETURN
 #ENDIF
 ;
