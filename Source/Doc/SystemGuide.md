@@ -659,8 +659,10 @@ latter version of the SBC.
 On systems with RTC devices (that have Non-Volatile RAM), RomWBW supports storing
 some limited configuration option options inside this RAM.
 
-Several configuration options are currently supported; these are known as Switches.
-The following switch ID's are defined, and described in sections below.
+Several configuration options are currently supported; these are 
+referred to as Switches. In this case the term Switches refers to "soft"
+switches stored in NVRAM, not physical panel switches. The following 
+switch ID's are defined, and described in sections below.
 
 | Switch Number | Name         | Description                                   |      
 |---------------|--------------|-----------------------------------------------|      
@@ -682,6 +684,11 @@ the bytes in NVRAM to check for authenticity before using the configuration.
 
 The above data is copied into the HBIOS Configuration Block (HCB) at startup at 
 the location starting at CB_SWITCHES.
+
+Although the switch data is stored in NVRAM, it is intended that you
+use [SYSGET Subfunction 0xC0 -- Get Switches (SWITCH)] or
+[SYSSET Subfunction 0xC0 -- Set Switches (SWITCH)] to read or write
+the switch values described here.
 
 ### Boot Options (NVSW_BOOTOPTS) 
 
@@ -705,13 +712,15 @@ automatic booting is enabled.
 
 ### Status Reset (0xFF)
 
-The Status Reset switch is not a general purpose switch, it is a control mechanism
-to allow the global status of all switches to be determined. The meaning of the switch
-is different for Read (Get Status) and Write (Reset NVRAM)
+The Status Reset switch is a virtual switch that does not have a 
+corresponding stored value.  It is a control mechanism to allow the 
+global status of all switches to be determined. The meaning of the 
+switch is different for Read (Get Status) and Write (Reset NVRAM)
 
 #### GET (Get Status)
 
-The read Get Status of switches. This returns very specific values from the function call.
+When the switch number 0xFF is read (using the Get Switches function),
+the status of the NVRAM switches will be returned as follows:
 
 | Status                                       | A Register | Z / NZ Flag  |
 |----------------------------------------------|------------|--------------|
@@ -721,8 +730,10 @@ The read Get Status of switches. This returns very specific values from the func
 
 #### SET (Reset NVRAM)
 
-Reset NVRAM to default values. This will wipe any existing data and set default
-values into NVRAM.
+When the switch number 0xFF is written (using the Set Switches 
+function), the stored values of all switches will be reset to their 
+default values.  This will wipe any existing data and set default values
+into NVRAM.
 
 # Driver Model
 
