@@ -659,7 +659,7 @@
 <p><strong>RomWBW System Guide</strong> \
 Version 3.6 \
 Wayne Warthen  (<a href="mailto:wwarthen@gmail.com">wwarthen@gmail.com</a>) \
-20 Aug 2025</p>
+23 Aug 2025</p>
 <h1 id="overview">Overview</h1>
 <p>The objective of RomWBW is to provide firmware, operating systems, and
 applications targeting the Z80 family of CPUs. The firmware, in the form
@@ -1389,9 +1389,10 @@ latter version of the SBC.</p>
 <p>On systems with RTC devices (that have Non-Volatile RAM), RomWBW
 supports storing some limited configuration option options inside this
 RAM.</p>
-<p>Several configuration options are currently supported; these are known
-as Switches. The following switch ID’s are defined, and described in
-sections below.</p>
+<p>Several configuration options are currently supported; these are
+referred to as Switches. In this case the term Switches refers to “soft”
+switches stored in NVRAM, not physical panel switches. The following
+switch ID’s are defined, and described in sections below.</p>
 <table>
 <thead>
 <tr>
@@ -1464,6 +1465,12 @@ using the configuration.</p>
 </table>
 <p>The above data is copied into the HBIOS Configuration Block (HCB) at
 startup at the location starting at CB_SWITCHES.</p>
+<p>Although the switch data is stored in NVRAM, it is intended that you use
+<a href="#sysget-subfunction-0xc0-get-switches-switch">SYSGET Subfunction 0xC0 – Get Switches
+(SWITCH)</a> or <a href="#sysset-subfunction-0xc0-set-switches-switch">SYSSET
+Subfunction 0xC0 – Set Switches
+(SWITCH)</a> to read or write
+the switch values described here.</p>
 <h3 id="boot-options-nvsw_bootopts">Boot Options (NVSW_BOOTOPTS)</h3>
 <p>16 bit Switch defining the ROM application or Disk device to boot if
 automatic booting is enabled.</p>
@@ -1521,13 +1528,13 @@ automatic booting is enabled.</p>
 </tbody>
 </table>
 <h3 id="status-reset-0xff">Status Reset (0xFF)</h3>
-<p>The Status Reset switch is not a general purpose switch, it is a control
-mechanism to allow the global status of all switches to be determined.
-The meaning of the switch is different for Read (Get Status) and Write
-(Reset NVRAM)</p>
+<p>The Status Reset switch is a virtual switch that does not have a
+corresponding stored value. It is a control mechanism to allow the
+global status of all switches to be determined. The meaning of the
+switch is different for Read (Get Status) and Write (Reset NVRAM)</p>
 <h4 id="get-get-status">GET (Get Status)</h4>
-<p>The read Get Status of switches. This returns very specific values from
-the function call.</p>
+<p>When the switch number 0xFF is read (using the Get Switches function),
+the status of the NVRAM switches will be returned as follows:</p>
 <table>
 <thead>
 <tr>
@@ -1555,8 +1562,10 @@ the function call.</p>
 </tbody>
 </table>
 <h4 id="set-reset-nvram">SET (Reset NVRAM)</h4>
-<p>Reset NVRAM to default values. This will wipe any existing data and set
-default values into NVRAM.</p>
+<p>When the switch number 0xFF is written (using the Set Switches
+function), the stored values of all switches will be reset to their
+default values. This will wipe any existing data and set default values
+into NVRAM.</p>
 <h1 id="driver-model">Driver Model</h1>
 <p>The framework code for bank switching also allows hardware drivers to be
 implemented mostly without concern for memory management. Drivers are
@@ -3149,11 +3158,10 @@ result code.</p>
 </table>
 <p>Returns device information for the RTC unit. The Status (A) is a
 standard HBIOS result code.</p>
-<p>Device Attribute (C) values are not yet defined. Device Type (D)
-indicates the specific hardware driver that handles the specified
-character unit. Values are listed at the start of this section. Device
-Number (E) indicates the physical device number assigned per driver
-which is always 0 for RTC.</p>
+<p>Device Attributes (C) values are not yet defined. Device Type (D)
+indicates the specific hardware driver that handles the RTC unit. Values
+are listed at the start of this section. Device Number (E) indicates the
+physical device number assigned per driver which is always 0 for RTC.</p>
 <p>Device Mode (H) is used to indicate the variant of the chip or circuit
 that is used by the specified unit. The Device I/O Base Address (L)
 indicates the starting port address of the hardware interface that is

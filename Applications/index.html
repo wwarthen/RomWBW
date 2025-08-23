@@ -368,7 +368,7 @@
 <p><strong>RomWBW Applications Guide</strong> \
 Version 3.6 \
 MartinR \&amp; Phillip Summers  (<a href="mailto:"></a>) \
-20 Aug 2025</p>
+23 Aug 2025</p>
 <h1 id="summary">Summary</h1>
 <p>RomWBW is supplied with a suite of software applications that enhance
 the use of the system. Some of these applications have been written
@@ -1910,7 +1910,7 @@ not operate correctly on non-RomWBW systems.</p>
 </table>
 <p>The purpose of this utility is to allow the copying of whole disk slices
 from one disk slice to another slice</p>
-<p>This tool is only supported by RomWBW HBIOS, it uses HDIOS for all its
+<p>This tool is only supported by RomWBW HBIOS, it uses HBIOS for all its
 disk IO. UNA UBIOS is not supported by this tool.</p>
 <p>This tool is running on CP/M 2.2 or 3.0 and has access to full 64kb of
 RAM, with a minimum of 48kb TPA</p>
@@ -3554,15 +3554,15 @@ the following:</p>
 <p>Please refer to the documentation of your host computer’s terminal
 emulation software for specific instructions on how to use XModem.</p>
 <h4 id="notes_25">Notes</h4>
-<p>The ZMP adaptation that comes with RomWBW will default to using the
+<p>The ZMD adaptation that comes with RomWBW will default to using the
 current HBIOS console port for transfers. Note that if you change your
 console port at the OS level (e.g., STAT CON:=UC1:), this does not
 change the HBIOS console.</p>
-<p><code>ZMP</code> attempts to determine the best way to drive the serial port based
+<p><code>ZMD</code> attempts to determine the best way to drive the serial port based
 on your hardware configuration. When possible, it will bypass the HBIOS
 for faster operation. However, in many cases, it will use HBIOS so that
 flow control can be used.</p>
-<p><code>ZMP</code> is dependent on a reliable communications channel. You must ensure
+<p><code>ZMD</code> is dependent on a reliable communications channel. You must ensure
 that the serial port can be serviced fast enough by either using a baud
 rate that is low enough or ensuring that hardware flow control is fully
 functional (end to end).</p>
