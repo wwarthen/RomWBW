@@ -139,8 +139,9 @@ typedef unsigned char volatile *PUINT8V;
  * input: mode code
  * 00H=Device mode not enabled
  * 01H=Device mode enabled and using external firmware mode (serial port not
- * supported) 02H=Device mode enabled and using built-in firmware mode 03H=SD
- * card host mode/inactive host mode, used to manage and access files in SD card
+ * supported) 
+ * 02H=Device mode enabled and using built-in firmware mode 
+ * 03H=SD card host mode/inactive host mode, used to manage and access files in SD card
  * 04H=Host mode not enabled
  * 05H=Host mode enabled
  * 06H=Host mode enabled and SOF packet generated automatically

@@ -207,11 +207,13 @@ done:
 usb_error read_all_configs(enumeration_state *const state) {
   uint8_t           result;
   _usb_state *const work_area = get_usb_work_area();
+  uint8_t retry_count = 0;
 
   _working working;
   memset(&working, 0, sizeof(_working));
   working.state = state;
 
+retry:
   CHECK(usbtrn_get_descriptor(&working.desc));
 
   state->next_device_address++;
@@ -226,6 +228,12 @@ usb_error read_all_configs(enumeration_state *const state) {
 
   return USB_ERR_OK;
 done:
+  if (result == USB_ERR_STALL && retry_count == 0) {
+    retry_count++;
+    ch_command(CMD1H_CLR_STALL);
+    ch_get_status();
+    goto retry;
+  }
   return result;
 }
 

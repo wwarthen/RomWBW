@@ -101,7 +101,7 @@ uint8_t ch_probe(void) {
     if (ch_cmd_check_exist())
       return true;
 
-    delay_medium();
+    delay_short();
   } while (--i != 0);
 
   return false;
