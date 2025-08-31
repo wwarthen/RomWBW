@@ -23,6 +23,7 @@ Version 3.6
 - MGG: Added sample program source files for all language disk iamges
 - WBW: Added support for S100 Dual CF Interface
 - WBW: Added support for S100 ESP32 SD Interface
+- MAP: User guide. Reorder sections around disk formatting
 
 Version 3.5.1
 -------------

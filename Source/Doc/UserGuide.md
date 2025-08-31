@@ -1117,100 +1117,6 @@ starting the operating system.  Even better, you can use an auto-submit
 batch file to customzie the assignments at startup without any user
 intervention.
 
-## Disk Operations/Commands
-
-With some understanding of how RomWBW presents disk space to the
-operating systems, we need to go over the options for actually setting
-up your disk(s) with content.
-
-### Preparing Media for First Use
-
-You can initialize the media in-place using your RomWBW system.
-Essentially, this means you are creating a set of blank directories on
-your disk so that files can be saved there.
-This is somewhat analogous to partitioning of a hard disk
-or doing a low level format of a floppy disk.
-
-Initilizing a Floppy disk is covered in the section [Floppy Disk Formatting],
-or for a Hard disk the section [Hard Disk Preparation] covers the steps to 
-manually setup a hard disk for first use. 
-
-### Clearing (Formatting) Drives 
-
-This is somewhat analogous to doing a FORMAT operation on other systems.
-
-With RomWBW you use the `CLRDIR` command to do this.
-This command is merely "clearing out" the directory space of the drive
-referred to by a drive letter and setting up the new empty directory.
-
-Refer to $doc_apps$ for more information on use of the `CLRDIR` command.
-
-Since `CLRDIR` works on drive letters, make
-absolutely sure you know what media and slice are assigned to that
-drive letter before using `CLRDIR` because `CLRDIR` will wipe out any
-pre-existing contents of the slice.
-
-After `CLRDIR` completes, the slice should be ready to use by the operating
-system via the drive letter assigned.
-Start by using the `DIR` command on the drive.
-This should return without error, but list no files.
-
-Here is an example of using `CLRDIR`.  In this example, the `ASSIGN`
-command is used to show the current drive letter assignments.  Then
-the `CLRDIR` command is used to initialize the directory of drive 'G'
-which is slice 2 of hard disk device IDE0 ("IDE0:2").
-
-```
-B>ASSIGN
-
-   A:=MD0:0
-   B:=MD1:0
-   C:=FD0:0
-   D:=FD1:0
-   E:=IDE0:0
-   F:=IDE0:1
-   G:=IDE0:2
-   H:=IDE0:3
-
-B>CLDIR G:
-CLRDIR Version 1.2B May 2024 by Max Scane
-
-Warning - this utility will overwrite the directory sectors of Drive: G
-Type CAPITAL Y to proceed, any key other key to exit. Y
-Directory cleared.
-B>
-```
-
-### Checking Disk Layout
-
-If you are not sure which disk layout is used for your existing
-media, you can use the CP/M 2.2 `STAT` command to display information
-including the number of "32  Byte Directory Entries"
-for a drive letter on the corresponding hard disk.  
-
-- If it indicates 512, your disk layout is Classic (hd512).  
-- If it indicates 1024, your disk layout is Modern (hd1k).
-
-Here is an example of checking the disk layout.  
-
-```
-B>STAT E:DSK:
-
-    E: Drive Characteristics
-65408: 128 Byte Record Capacity
- 8176: Kilobyte Drive  Capacity
- 1024: 32  Byte Directory Entries
-    0: Checked  Directory Entries
-  256: Records/ Extent
-   32: Records/ Block
-   64: Sectors/ Track
-    2: Reserved Tracks
-```
-
-It is critical that you include `DSK:` after the drive letter in the
-`STAT` command line.  The important line to look at is labeled "32 Byte
-Directory Entries".
-
 # Disk Types
 
 ## RAM & ROM Disks
@@ -1500,7 +1406,9 @@ There are two approaches to preparing disks for use by RomWBW.
   including files to a disk.
 
 This section of the document describes the manual process of preparing
-empty disks that are ready for use by an operating system. 
+empty disks that are ready for use by an operating system.
+This is somewhat analogous to partitioning and formatting of a hard disk
+or doing a low level format of a floppy disk.
 
 Alternatively, you can use the pre-built RomWBW disk images to quickly
 create disk media that already has a large selection of files and
@@ -1728,12 +1636,7 @@ You need to initialize each slice for CP/M to use it.
 This is somewhat analogous to doing a FORMAT operation on other systems,
 and is done using the `CLRDIR` command. 
 
-This is covered in the section [Clearing (Formatting) Drives]
-
-**WARNING**: Earlier versions of the `CLRDIR` application do not
-appear to check for disk errors when it runs.  If you attempt to run
-`CLRDIR` on a drive that is mapped to a slice that does not actually fit
-on the physical disk, it may behave erratically.
+This is covered in the next section [Clearing (Formatting) Drives]
 
 Assuming you want to use additional slices, you should initialize them
 using the same process.  You may need to reassign drive letters to
@@ -1742,10 +1645,56 @@ You can use the `ASSIGN` command to handle this.
 
 ## Post Disk Preparation
 
-Once a disk (either floppy or hard disk) has been initialised and 
-formattted you may optionally;
+Once a disk has been initialised you may need to do one or more of the following;
+* Clear (Format) the drive 
 * Make the disk bootable
 * Copy system (or other) files to the disk
+
+### Clearing (Formatting) Drives
+
+This is somewhat analogous to doing a FORMAT operation on other systems.
+
+With RomWBW you use the `CLRDIR` command to do this.
+This command is merely "clearing out" the directory space of the drive
+referred to by a drive letter and setting up the new empty directory.
+
+Refer to $doc_apps$ for more information on use of the `CLRDIR` command.
+
+Since `CLRDIR` works on drive letters, make
+absolutely sure you know what media and slice are assigned to that
+drive letter before using `CLRDIR` because `CLRDIR` will wipe out any
+pre-existing contents of the slice.
+
+After `CLRDIR` completes, the drive should be ready to use by the operating
+system via the drive letter assigned.
+Start by using the `DIR` command on the drive.
+This should return without error, but list no files.
+
+Here is an example of using `CLRDIR`.  In this example, the `ASSIGN`
+command is used to show the current drive letter assignments.  Then
+the `CLRDIR` command is used to initialize the directory of drive 'G'
+which is slice 2 of hard disk device IDE0 ("IDE0:2").
+
+```
+B>ASSIGN
+
+   A:=MD0:0
+   B:=MD1:0
+   C:=FD0:0
+   D:=FD1:0
+   E:=IDE0:0
+   F:=IDE0:1
+   G:=IDE0:2
+   H:=IDE0:3
+
+B>CLDIR G:
+CLRDIR Version 1.2B May 2024 by Max Scane
+
+Warning - this utility will overwrite the directory sectors of Drive: G
+Type CAPITAL Y to proceed, any key other key to exit. Y
+Directory cleared.
+B>
+```
 
 ### Making a Disk Bootable
 
@@ -1776,6 +1725,38 @@ As well as making the disk bootable, you may need to transfer other
 system and application files to your disks.
 Refer to [Transferring Files] for more information on getting
 files onto your disks.
+
+### Checking Disk Layout
+
+If you are not sure which disk layout is used for your existing
+media, you can use the CP/M 2.2 `STAT` command to display information
+including the number of "32  Byte Directory Entries"
+for a drive letter on the corresponding hard disk.
+
+Note: For CP/M 3 the command is `SHOW [DRIVE]`
+
+- If it indicates 512, your disk layout is Classic (hd512).
+- If it indicates 1024, your disk layout is Modern (hd1k).
+
+Here is an example of checking the disk layout.
+
+```
+B>STAT E:DSK:
+
+    E: Drive Characteristics
+65408: 128 Byte Record Capacity
+ 8176: Kilobyte Drive  Capacity
+ 1024: 32  Byte Directory Entries
+    0: Checked  Directory Entries
+  256: Records/ Extent
+   32: Records/ Block
+   64: Sectors/ Track
+    2: Reserved Tracks
+```
+
+It is critical that you include `DSK:` after the drive letter in the
+`STAT` command line.  The important line to look at is labeled "32 Byte
+Directory Entries".
 
 # Disk Images
 
