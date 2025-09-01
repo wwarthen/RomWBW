@@ -95,8 +95,8 @@ _usb_init:
 	jr	NZ,l_usb_init_00104
 ;source-doc/base-drv/usb-base-drv.c:30: ch_cmd_reset_all();
 	call	_ch_cmd_reset_all
-;source-doc/base-drv/usb-base-drv.c:31: delay_medium();
-	call	_delay_medium
+;source-doc/base-drv/usb-base-drv.c:31: delay_short();
+	call	_delay_short
 ;source-doc/base-drv/usb-base-drv.c:33: if (!ch_probe()) {
 	call	_ch_probe
 	ld	a, l

@@ -952,104 +952,115 @@ _read_all_configs:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-	ld	hl, -171
+	ld	hl, -174
 	add	hl, sp
 	ld	sp, hl
-;source-doc/base-drv/enumerate.c:212: memset(&working, 0, sizeof(_working));
+;source-doc/base-drv/enumerate.c:213: memset(&working, 0, sizeof(_working));
 	ld	hl,0
 	add	hl, sp
-	ld	e,l
-	ld	d,h
-	ld	b,$56
-	jr	l_read_all_configs_00150
-l_read_all_configs_00149:
 	ld	(hl),$00
-	inc	hl
-l_read_all_configs_00150:
-	ld	(hl),$00
-	inc	hl
-	djnz	l_read_all_configs_00149
-;source-doc/base-drv/enumerate.c:213: working.state = state;
-	ld	l, e
-	ld	h, d
+	ld	e, l
+	ld	d, h
+	inc	de
+	ld	bc,$00aa
+	ldir
+;source-doc/base-drv/enumerate.c:214: working.state = state;
 	ld	a,(ix+4)
+	ld	hl,0
+	add	hl, sp
 	ld	(hl), a
-	inc	hl
 	ld	a,(ix+5)
+	inc	hl
 	ld	(hl), a
-;source-doc/base-drv/enumerate.c:215: CHECK(usbtrn_get_descriptor(&working.desc));
-	push	de
-	ld	hl,5
+;source-doc/base-drv/enumerate.c:216: retry:
+	ld	a,(ix+4)
+	ld	(ix-3),a
+	ld	a,(ix+5)
+	ld	(ix-2),a
+	ld	(ix-1),$00
+l_read_all_configs_00101:
+;source-doc/base-drv/enumerate.c:217: CHECK(usbtrn_get_descriptor(&working.desc));
+	ld	hl,3
 	add	hl, sp
 	push	hl
 	call	_usbtrn_get_descriptor
 	pop	af
 	ld	a, l
-	pop	de
 	or	a
-	jr	NZ,l_read_all_configs_00108
-;source-doc/base-drv/enumerate.c:217: state->next_device_address++;
-	ld	b,(ix+5)
-	ld	a,(ix+4)
-	ld	l, a
-	ld	h, b
+	jr	NZ,l_read_all_configs_00109
+;source-doc/base-drv/enumerate.c:219: state->next_device_address++;
+	ld	l,(ix-3)
+	ld	h,(ix-2)
 	ld	c, (hl)
 	inc	c
-	ld	l, a
-	ld	h, b
 	ld	(hl), c
-;source-doc/base-drv/enumerate.c:218: working.current_device_address = state->next_device_address;
-	ld	hl,$0018
-	add	hl, de
+;source-doc/base-drv/enumerate.c:220: working.current_device_address = state->next_device_address;
+	ld	hl,24
+	add	hl, sp
 	ld	(hl), c
-;source-doc/base-drv/enumerate.c:219: CHECK(usbtrn_set_address(working.current_device_address));
-	push	de
+;source-doc/base-drv/enumerate.c:221: CHECK(usbtrn_set_address(working.current_device_address));
 	ld	l, c
 	call	_usbtrn_set_address
 	ld	a, l
-	pop	de
-;source-doc/base-drv/enumerate.c:221: for (uint8_t config_index = 0; config_index < working.desc.bNumConfigurations; config_index++) {
+;source-doc/base-drv/enumerate.c:223: for (uint8_t config_index = 0; config_index < working.desc.bNumConfigurations; config_index++) {
 	or	a
-	jr	NZ,l_read_all_configs_00108
+	jr	NZ,l_read_all_configs_00109
 	ld	c,a
-l_read_all_configs_00110:
+l_read_all_configs_00114:
 	ld	hl,20
 	add	hl, sp
 	ld	b, (hl)
 	ld	a, c
 	sub	b
-	jr	NC,l_read_all_configs_00107
-;source-doc/base-drv/enumerate.c:222: working.config_index = config_index;
-	ld	hl,$0015
-	add	hl, de
+	jr	NC,l_read_all_configs_00108
+;source-doc/base-drv/enumerate.c:224: working.config_index = config_index;
+	ld	hl,21
+	add	hl, sp
+	ld	b,l
 	ld	(hl), c
-;source-doc/base-drv/enumerate.c:224: CHECK(op_get_cfg_desc(&working));
-	ld	l, e
-	ld	h, d
+;source-doc/base-drv/enumerate.c:226: CHECK(op_get_cfg_desc(&working));
 	push	bc
-	push	de
+	ld	hl,2
+	add	hl, sp
 	call	_op_get_cfg_desc
-	pop	de
-	pop	bc
-	or	a
-	jr	NZ,l_read_all_configs_00108
-;source-doc/base-drv/enumerate.c:221: for (uint8_t config_index = 0; config_index < working.desc.bNumConfigurations; config_index++) {
-	inc	c
-	jr	l_read_all_configs_00110
-l_read_all_configs_00107:
-;source-doc/base-drv/enumerate.c:227: return USB_ERR_OK;
-	ld	l,$00
-	jr	l_read_all_configs_00112
-;source-doc/base-drv/enumerate.c:228: done:
-l_read_all_configs_00108:
-;source-doc/base-drv/enumerate.c:229: return result;
 	ld	l, a
-l_read_all_configs_00112:
-;source-doc/base-drv/enumerate.c:230: }
+	pop	bc
+	ld	a, l
+	or	a
+	jr	NZ,l_read_all_configs_00109
+;source-doc/base-drv/enumerate.c:223: for (uint8_t config_index = 0; config_index < working.desc.bNumConfigurations; config_index++) {
+	inc	c
+	jr	l_read_all_configs_00114
+l_read_all_configs_00108:
+;source-doc/base-drv/enumerate.c:229: return USB_ERR_OK;
+	ld	l,$00
+	jr	l_read_all_configs_00116
+;source-doc/base-drv/enumerate.c:230: done:
+l_read_all_configs_00109:
+;source-doc/base-drv/enumerate.c:231: if (result == USB_ERR_STALL && retry_count == 0) {
+	ld	a, l
+	sub	$02
+	jr	NZ,l_read_all_configs_00111
+	ld	a,(ix-1)
+	or	a
+	jr	NZ,l_read_all_configs_00111
+;source-doc/base-drv/enumerate.c:232: retry_count++;
+	inc	(ix-1)
+;source-doc/base-drv/enumerate.c:233: ch_command(CMD1H_CLR_STALL);
+	ld	l,$41
+	call	_ch_command
+;source-doc/base-drv/enumerate.c:234: ch_get_status();
+	call	_ch_get_status
+;source-doc/base-drv/enumerate.c:235: goto retry;
+	jr	l_read_all_configs_00101
+l_read_all_configs_00111:
+;source-doc/base-drv/enumerate.c:237: return result;
+l_read_all_configs_00116:
+;source-doc/base-drv/enumerate.c:238: }
 	ld	sp, ix
 	pop	ix
 	ret
-;source-doc/base-drv/enumerate.c:232: usb_error enumerate_all_devices(void) {
+;source-doc/base-drv/enumerate.c:240: usb_error enumerate_all_devices(void) {
 ; ---------------------------------
 ; Function enumerate_all_devices
 ; ---------------------------------
@@ -1058,8 +1069,8 @@ _enumerate_all_devices:
 	ld	ix,0
 	add	ix,sp
 	push	af
-;source-doc/base-drv/enumerate.c:233: _usb_state *const work_area = get_usb_work_area();
-;source-doc/base-drv/enumerate.c:235: memset(&state, 0, sizeof(enumeration_state));
+;source-doc/base-drv/enumerate.c:241: _usb_state *const work_area = get_usb_work_area();
+;source-doc/base-drv/enumerate.c:243: memset(&state, 0, sizeof(enumeration_state));
 	ld	hl,0
 	add	hl, sp
 	ld	e,l
@@ -1068,18 +1079,18 @@ _enumerate_all_devices:
 	ld	(hl), a
 	inc	hl
 	ld	(hl), a
-;source-doc/base-drv/enumerate.c:237: usb_error result = read_all_configs(&state);
+;source-doc/base-drv/enumerate.c:245: usb_error result = read_all_configs(&state);
 	push	de
 	push	de
 	call	_read_all_configs
 	pop	af
 	pop	de
-;source-doc/base-drv/enumerate.c:239: work_area->count_of_detected_usb_devices = state.next_device_address;
+;source-doc/base-drv/enumerate.c:247: work_area->count_of_detected_usb_devices = state.next_device_address;
 	ld	bc,_x + 1
 	ld	a, (de)
 	ld	(bc), a
-;source-doc/base-drv/enumerate.c:242: return result;
-;source-doc/base-drv/enumerate.c:243: }
+;source-doc/base-drv/enumerate.c:250: return result;
+;source-doc/base-drv/enumerate.c:251: }
 	ld	sp, ix
 	pop	ix
 	ret

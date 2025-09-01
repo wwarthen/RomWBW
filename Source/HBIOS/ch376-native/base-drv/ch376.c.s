@@ -234,8 +234,8 @@ l_ch_probe_00103:
 	ld	l,$01
 	jr	l_ch_probe_00107
 l_ch_probe_00102:
-;source-doc/base-drv/ch376.c:104: delay_medium();
-	call	_delay_medium
+;source-doc/base-drv/ch376.c:104: delay_short();
+	call	_delay_short
 ;source-doc/base-drv/ch376.c:105: } while (--i != 0);
 	dec	(ix-1)
 	jr	NZ,l_ch_probe_00103

@@ -26,7 +26,7 @@ extern uint8_t CH376_DAT_PORT_ADDR;
 extern uint8_t CH376_CMD_PORT_ADDR;
 extern uint8_t USB_MOD_LEDS_ADDR;
 
-// there is a weird bug with the compilier - somtimes string literals containing
+// there is a weird bug with the compiler - sometimes string literals containing
 // a dollar sign -- the dollar sign is ignored!
 const char comma_0_x_dollar[] = {' ', '0', 'x', '$'};
 
