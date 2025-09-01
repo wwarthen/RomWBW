@@ -1332,6 +1332,11 @@ Use `CLRDIR` with caution as changes made to disks by `CLRDIR` cannot be undone.
 If `CLRDIR` is used on disk containing data then the directory area will be
 reinitialised and the data previously stored will be lost.
 
+**WARNING**: Earlier versions of the `CLRDIR` application do not
+appear to check for disk errors when it runs.  If you attempt to run
+`CLRDIR` on a drive that is mapped to a slice that does not actually fit
+on the physical disk, it may behave erratically.
+
 `\clearpage`{=latex}
 
 ## CPUSPD (CPU Speed)
