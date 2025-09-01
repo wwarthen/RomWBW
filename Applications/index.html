@@ -368,7 +368,7 @@
 <p><strong>RomWBW Applications Guide</strong> \
 Version 3.6 \
 MartinR \&amp; Phillip Summers  (<a href="mailto:"></a>) \
-23 Aug 2025</p>
+01 Sep 2025</p>
 <h1 id="summary">Summary</h1>
 <p>RomWBW is supplied with a suite of software applications that enhance
 the use of the system. Some of these applications have been written
@@ -1796,6 +1796,10 @@ undone.</p>
 <h4 id="notes_3">Notes</h4>
 <p>If <code>CLRDIR</code> is used on disk containing data then the directory area will
 be reinitialised and the data previously stored will be lost.</p>
+<p><strong>WARNING</strong>: Earlier versions of the <code>CLRDIR</code> application do not appear
+to check for disk errors when it runs. If you attempt to run <code>CLRDIR</code> on
+a drive that is mapped to a slice that does not actually fit on the
+physical disk, it may behave erratically.</p>
 <h2 id="cpuspd-cpu-speed">CPUSPD (CPU Speed)</h2>
 <table>
 <thead>

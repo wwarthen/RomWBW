@@ -223,22 +223,6 @@
             </li>
               </ul>
             </li>
-            <li class="nav-item" data-bs-level="2"><a href="#disk-operationscommands" class="nav-link">Disk Operations/Commands</a>
-              <ul class="nav flex-column">
-            <li class="nav-item" data-bs-level="3"><a href="#preparing-media-for-first-use" class="nav-link">Preparing Media for First Use</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-bs-level="3"><a href="#clearing-formatting-drives" class="nav-link">Clearing (Formatting) Drives</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-bs-level="3"><a href="#checking-disk-layout" class="nav-link">Checking Disk Layout</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-              </ul>
-            </li>
               </ul>
             </li>
             
@@ -295,11 +279,19 @@
             </li>
             <li class="nav-item" data-bs-level="2"><a href="#post-disk-preparation" class="nav-link">Post Disk Preparation</a>
               <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#clearing-formatting-drives" class="nav-link">Clearing (Formatting) Drives</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
             <li class="nav-item" data-bs-level="3"><a href="#making-a-disk-bootable" class="nav-link">Making a Disk Bootable</a>
               <ul class="nav flex-column">
               </ul>
             </li>
             <li class="nav-item" data-bs-level="3"><a href="#copying-system-files" class="nav-link">Copying System Files</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#checking-disk-layout" class="nav-link">Checking Disk Layout</a>
               <ul class="nav flex-column">
               </ul>
             </li>
@@ -535,7 +527,7 @@
 <p><strong>RomWBW User Guide</strong> \
 Version 3.6 \
 Wayne Warthen  (<a href="mailto:wwarthen@gmail.com">wwarthen@gmail.com</a>) \
-23 Aug 2025</p>
+01 Sep 2025</p>
 <h4 id="preface">Preface</h4>
 <p>This document is a general usage guide for the RomWBW software and is
 generally the best place to start with RomWBW.</p>
@@ -1669,83 +1661,6 @@ use of the <code>ASSIGN</code> command.</p>
 starting the operating system. Even better, you can use an auto-submit
 batch file to customzie the assignments at startup without any user
 intervention.</p>
-<h2 id="disk-operationscommands">Disk Operations/Commands</h2>
-<p>With some understanding of how RomWBW presents disk space to the
-operating systems, we need to go over the options for actually setting
-up your disk(s) with content.</p>
-<h3 id="preparing-media-for-first-use">Preparing Media for First Use</h3>
-<p>You can initialize the media in-place using your RomWBW system.
-Essentially, this means you are creating a set of blank directories on
-your disk so that files can be saved there. This is somewhat analogous
-to partitioning of a hard disk or doing a low level format of a floppy
-disk.</p>
-<p>Initilizing a Floppy disk is covered in the section <a href="#floppy-disk-formatting">Floppy Disk
-Formatting</a>, or for a Hard disk the section
-<a href="#hard-disk-preparation">Hard Disk Preparation</a> covers the steps to
-manually setup a hard disk for first use.</p>
-<h3 id="clearing-formatting-drives">Clearing (Formatting) Drives</h3>
-<p>This is somewhat analogous to doing a FORMAT operation on other systems.</p>
-<p>With RomWBW you use the <code>CLRDIR</code> command to do this. This command is
-merely “clearing out” the directory space of the drive referred to by a
-drive letter and setting up the new empty directory.</p>
-<p>Refer to <a href="../Applications/">RomWBW Applications</a> for more information on
-use of the <code>CLRDIR</code> command.</p>
-<p>Since <code>CLRDIR</code> works on drive letters, make absolutely sure you know
-what media and slice are assigned to that drive letter before using
-<code>CLRDIR</code> because <code>CLRDIR</code> will wipe out any pre-existing contents of the
-slice.</p>
-<p>After <code>CLRDIR</code> completes, the slice should be ready to use by the
-operating system via the drive letter assigned. Start by using the <code>DIR</code>
-command on the drive. This should return without error, but list no
-files.</p>
-<p>Here is an example of using <code>CLRDIR</code>. In this example, the <code>ASSIGN</code>
-command is used to show the current drive letter assignments. Then the
-<code>CLRDIR</code> command is used to initialize the directory of drive ‘G’ which
-is slice 2 of hard disk device IDE0 (“IDE0:2”).</p>
-<pre><code>B&gt;ASSIGN
-
-   A:=MD0:0
-   B:=MD1:0
-   C:=FD0:0
-   D:=FD1:0
-   E:=IDE0:0
-   F:=IDE0:1
-   G:=IDE0:2
-   H:=IDE0:3
-
-B&gt;CLDIR G:
-CLRDIR Version 1.2B May 2024 by Max Scane
-
-Warning - this utility will overwrite the directory sectors of Drive: G
-Type CAPITAL Y to proceed, any key other key to exit. Y
-Directory cleared.
-B&gt;
-</code></pre>
-<h3 id="checking-disk-layout">Checking Disk Layout</h3>
-<p>If you are not sure which disk layout is used for your existing media,
-you can use the CP/M 2.2 <code>STAT</code> command to display information including
-the number of “32 Byte Directory Entries” for a drive letter on the
-corresponding hard disk.</p>
-<ul>
-<li>If it indicates 512, your disk layout is Classic (hd512).  </li>
-<li>If it indicates 1024, your disk layout is Modern (hd1k).</li>
-</ul>
-<p>Here is an example of checking the disk layout.</p>
-<pre><code>B&gt;STAT E:DSK:
-
-    E: Drive Characteristics
-65408: 128 Byte Record Capacity
- 8176: Kilobyte Drive  Capacity
- 1024: 32  Byte Directory Entries
-    0: Checked  Directory Entries
-  256: Records/ Extent
-   32: Records/ Block
-   64: Sectors/ Track
-    2: Reserved Tracks
-</code></pre>
-<p>It is critical that you include <code>DSK:</code> after the drive letter in the
-<code>STAT</code> command line. The important line to look at is labeled “32 Byte
-Directory Entries”.</p>
 <h1 id="disk-types">Disk Types</h1>
 <h2 id="ram-rom-disks">RAM &amp; ROM Disks</h2>
 <p>A typical RomWBW system has 512KB of ROM and 512KB of RAM. Some portions
@@ -1987,7 +1902,9 @@ filesystem slices and a 384KB FAT filesystem.</p>
   including files to a disk.</li>
 </ul>
 <p>This section of the document describes the manual process of preparing
-empty disks that are ready for use by an operating system.</p>
+empty disks that are ready for use by an operating system. This is
+somewhat analogous to partitioning and formatting of a hard disk or
+doing a low level format of a floppy disk.</p>
 <p>Alternatively, you can use the pre-built RomWBW disk images to quickly
 create disk media that already has a large selection of files and
 bootable operating system slices. Using images to prepare a disk is
@@ -2191,20 +2108,54 @@ FAT partition.</p>
 <p>You need to initialize each slice for CP/M to use it. This is somewhat
 analogous to doing a FORMAT operation on other systems, and is done
 using the <code>CLRDIR</code> command.</p>
-<p>This is covered in the section <a href="#clearing-formatting-drives">Clearing (Formatting)
+<p>This is covered in the next section <a href="#clearing-formatting-drives">Clearing (Formatting)
 Drives</a></p>
-<p><strong>WARNING</strong>: Earlier versions of the <code>CLRDIR</code> application do not appear
-to check for disk errors when it runs. If you attempt to run <code>CLRDIR</code> on
-a drive that is mapped to a slice that does not actually fit on the
-physical disk, it may behave erratically.</p>
 <p>Assuming you want to use additional slices, you should initialize them
 using the same process. You may need to reassign drive letters to access
 some slices that are beyond the ones automatically assigned. You can use
 the <code>ASSIGN</code> command to handle this.</p>
 <h2 id="post-disk-preparation">Post Disk Preparation</h2>
-<p>Once a disk (either floppy or hard disk) has been initialised and
-formattted you may optionally; * Make the disk bootable * Copy system
-(or other) files to the disk</p>
+<p>Once a disk has been initialised you may need to do one or more of the
+following; * Clear (Format) the drive * Make the disk bootable * Copy
+system (or other) files to the disk</p>
+<h3 id="clearing-formatting-drives">Clearing (Formatting) Drives</h3>
+<p>This is somewhat analogous to doing a FORMAT operation on other systems.</p>
+<p>With RomWBW you use the <code>CLRDIR</code> command to do this. This command is
+merely “clearing out” the directory space of the drive referred to by a
+drive letter and setting up the new empty directory.</p>
+<p>Refer to <a href="../Applications/">RomWBW Applications</a> for more information on
+use of the <code>CLRDIR</code> command.</p>
+<p>Since <code>CLRDIR</code> works on drive letters, make absolutely sure you know
+what media and slice are assigned to that drive letter before using
+<code>CLRDIR</code> because <code>CLRDIR</code> will wipe out any pre-existing contents of the
+slice.</p>
+<p>After <code>CLRDIR</code> completes, the drive should be ready to use by the
+operating system via the drive letter assigned. Start by using the <code>DIR</code>
+command on the drive. This should return without error, but list no
+files.</p>
+<p>Here is an example of using <code>CLRDIR</code>. In this example, the <code>ASSIGN</code>
+command is used to show the current drive letter assignments. Then the
+<code>CLRDIR</code> command is used to initialize the directory of drive ‘G’ which
+is slice 2 of hard disk device IDE0 (“IDE0:2”).</p>
+<pre><code>B&gt;ASSIGN
+
+   A:=MD0:0
+   B:=MD1:0
+   C:=FD0:0
+   D:=FD1:0
+   E:=IDE0:0
+   F:=IDE0:1
+   G:=IDE0:2
+   H:=IDE0:3
+
+B&gt;CLDIR G:
+CLRDIR Version 1.2B May 2024 by Max Scane
+
+Warning - this utility will overwrite the directory sectors of Drive: G
+Type CAPITAL Y to proceed, any key other key to exit. Y
+Directory cleared.
+B&gt;
+</code></pre>
 <h3 id="making-a-disk-bootable">Making a Disk Bootable</h3>
 <p>To make a disk bootable you will need to follow the specific
 instructions in <a href="#operating-systems">Operating Systems</a>, as each
@@ -2229,6 +2180,32 @@ Disk</a> for details on this.</p>
 system and application files to your disks. Refer to <a href="#transferring-files">Transferring
 Files</a> for more information on getting files onto
 your disks.</p>
+<h3 id="checking-disk-layout">Checking Disk Layout</h3>
+<p>If you are not sure which disk layout is used for your existing media,
+you can use the CP/M 2.2 <code>STAT</code> command to display information including
+the number of “32 Byte Directory Entries” for a drive letter on the
+corresponding hard disk.</p>
+<p>Note: For CP/M 3 the command is <code>SHOW [DRIVE]</code></p>
+<ul>
+<li>If it indicates 512, your disk layout is Classic (hd512).</li>
+<li>If it indicates 1024, your disk layout is Modern (hd1k).</li>
+</ul>
+<p>Here is an example of checking the disk layout.</p>
+<pre><code>B&gt;STAT E:DSK:
+
+    E: Drive Characteristics
+65408: 128 Byte Record Capacity
+ 8176: Kilobyte Drive  Capacity
+ 1024: 32  Byte Directory Entries
+    0: Checked  Directory Entries
+  256: Records/ Extent
+   32: Records/ Block
+   64: Sectors/ Track
+    2: Reserved Tracks
+</code></pre>
+<p>It is critical that you include <code>DSK:</code> after the drive letter in the
+<code>STAT</code> command line. The important line to look at is labeled “32 Byte
+Directory Entries”.</p>
 <h1 id="disk-images">Disk Images</h1>
 <p>Since it would be quite a bit of work to transfer over all the files you
 might want initially to your disk(s), It is generally easier to use
