@@ -729,6 +729,7 @@ distribution.  Some provide command line help themselves.  Some are fairly obvio
 | `CRUNCH28.CFG` |                   | ZCNFG configuration file for CRUNCH & UNCR             |                                            
 | `DDTZ.COM`     |                   | Z80 debug tool (modified to use RST 6)                 |                                             
 | `DDTZ.DOC`     |                   | Documentation for DDTZ                                 |  
+| `DOWNLOAD.COM` | Grant Searle      | Grant Searle's DOWNLOAD, used by File Packager         |  
 | `EX.COM`       |                   | Batch file processor (alternative to DRI SUBMIT)       |  
 | `FIND.COM`     | Jay Cotton        | Search all drives for a file ()                        |  
 | `GENHEX.COM`   |                   | Generates an Intel Hex file from the input file        |  
