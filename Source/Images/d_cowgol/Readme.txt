@@ -62,3 +62,8 @@ The Cowgol distribution has been updated based on the latest
 release by Ladislau Szilagyi as of 2/25/2025.
 
 -- WBW 1:24 PM 3/29/2025
+
+Updated COWFIX.COM by Ladislau Szilagyi.  See
+https://groups.google.com/g/rc2014-z80/c/RwMdqNOPWXw
+
+-- WBW 9:42 AM 9/12/2025

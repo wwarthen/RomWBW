@@ -25,6 +25,7 @@ Version 3.6
 - WBW: Added support for S100 ESP32 SD Interface
 - MAP: User guide. Reorder sections around disk formatting
 - R?M: Randy Merkel provided ZSDOS Programmer's Manual as translated by Wayne Hortensius
+- WBW: Updated Cowgol disk image with latest COWFIX.COM from Ladislau Szilagyi
 
 Version 3.5.1
 -------------
@@ -95,7 +96,7 @@ Version 3.5
 - WBW: Add options to TUNE/HBIOS to force detection of MSX and RC AY/YM standard PSG ports
 - MAP: Added /B=OPTIONS for automated drive assignment to ASSIGN.COM
 - WBW: Added TE Editor (Ladislau Szilagyi)
-- WBW: Refrech Cowgol disk image (Ladislau Szilagyi)
+- WBW: Refresh Cowgol disk image (Ladislau Szilagyi)
 
 Version 3.4
 -----------
