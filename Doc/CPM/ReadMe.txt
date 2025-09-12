@@ -62,12 +62,17 @@ ZCPR D&J User Manual.  This manual supplements the ZCPR Manual.
 
 
 ZSDOS Manual ("ZSDOS Manual.pdf")
+ZSDOS Programmer's Manual ("ZSDOS Programmers Manual.pdf")
 ---------------------------------
 
 ZSDOS is the DOS portion of Z-System.  This is the manual for ZSDOS
 1.x as included in RomWBW.  The installation instructions can be
 ignored since that work has already been completed as part of the
 RomWBW distribution.
+
+The ZSDOS Programmer's Manual is also included courtesy of Wayne 
+Hortensius and Randy Merkel.  This manual includes documentation of the
+ZSDOS BDOS API enhancements.
 
 ZPM3 ("ZPM3.txt")
 -----------------

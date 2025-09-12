@@ -2474,6 +2474,7 @@ via the NZ-COM adaptation (see below).
 * [ZCPR Manual]($doc_root$/CPM/ZCPR Manual.pdf)
 * [ZCPR-DJ]($doc_root$/CPM/ZCPR-DJ.doc)
 * [ZSDOS Manual]($doc_root$/CPM/ZSDOS Manual.pdf)
+* [ZSDOS Programmer's Manual]($doc_root$/CPM/ZSDOS Programmers Manual.pdf)
 
 #### Boot Disk
 
@@ -2554,6 +2555,7 @@ Manual.pdf" document in order to use this operating system effectively.
 * [NZCOM Users Manual]($doc_root$/CPM/NZCOM Users Manual.pdf)
 * [Z-System Users Guide]($doc_root$/CPM/Z-System Users Guide.pdf)
 * [ZCPR3.3 User Guide]($doc_root$/CPM/ZCPR3.3 User Guide.pdf)
+* [ZSDOS Programmer's Manual]($doc_root$/CPM/ZSDOS Programmers Manual.pdf)
 
 #### Boot Disk
 

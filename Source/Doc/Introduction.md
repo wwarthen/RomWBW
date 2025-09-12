@@ -342,6 +342,9 @@ please let me know if I missed you!
 * Marshall Gates has contriubed sample program source files for all
   of the language disk images.
 
+* Randy Merkel provided the ZSDOS Programmer's Manual as translated
+  by Wayne Hortensius.
+
 `\clearpage`{=latex}
 
 ## Related Projects

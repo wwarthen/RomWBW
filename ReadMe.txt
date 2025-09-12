@@ -1,6 +1,6 @@
 RomWBW Introduction
 Wayne Warthen (wwarthen@gmail.com)
-01 Sep 2025
+12 Sep 2025
 
 
 
@@ -364,6 +364,9 @@ let me know if I missed you!
 
 - Marshall Gates has contriubed sample program source files for all of
   the language disk images.
+
+- Randy Merkel provided the ZSDOS Programmer’s Manual as translated by
+  Wayne Hortensius.
 
 
 Related Projects
