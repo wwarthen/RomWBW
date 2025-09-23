@@ -100,7 +100,7 @@ Tools/unix/zx/zx
 !Source/EZ512/*.bin
 !Source/Z1RCC/*.bin
 !Source/ZZRCC/*.bin
-!Source/FZ80/*.bin
+!Source/SZ80/*.bin
 !Tools/cpm/**
 !Tools/unix/zx/*
 !Tools/zx/*
