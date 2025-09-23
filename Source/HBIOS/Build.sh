@@ -53,7 +53,8 @@ if [ "${ROM_PLATFORM}" == "dist" ] ; then
 	ROM_PLATFORM="EPITX"; ROM_CONFIG="std"; bash Build.sh
 #	ROM_PLATFORM="MON"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="NABU"; ROM_CONFIG="std"; bash Build.sh
-	ROM_PLATFORM="FZ80"; ROM_CONFIG="std"; bash Build.sh
+	ROM_PLATFORM="SZ80"; ROM_CONFIG="std"; bash Build.sh
+	ROM_PLATFORM="SZ80"; ROM_CONFIG="fpga"; bash Build.sh
 	ROM_PLATFORM="UNA"; ROM_CONFIG="std"; bash Build.sh
 	exit
 fi

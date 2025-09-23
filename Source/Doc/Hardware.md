@@ -118,7 +118,8 @@ Others
 | [Heath H8 Z80 System]^5^                                    | H8       | HEATH_std.rom               |        115200 |
 | [NABU w/ RomWBW Option Board]^5^                            | NABU     | NABU_std.rom                |        115200 |
 | [S100 Computers Z180 SBC]^4^                                | S100     | S100_std.rom                |         57600 |
-| [S100 Computers FPGA Z80 SBC]^4^                            | S100     | FZ80_std.rom                |          9600 |
+| [S100 Computers Z80 CPU]^4^                                 | S100     | SZ80_std.rom                |          9600 |
+| [S100 Computers FPGA Z80 SBC]^4^                            | S100     | SZ80_fpga.rom               |          9600 |
 | [UNA Hardware BIOS]^1^                                      | -        | UNA_std.rom                 |             - |
 | [Z80-Retro SBC]^3^                                          | -        | Z80RETRO_std.rom            |         38400 |
 | [Z180 Mark IV SBC]^1^                                       | ECB      | MK4_std.rom                 |         38400 |
@@ -414,14 +415,56 @@ of the SIO ports, for ease of use with modern computers.
 
 `\clearpage`{=latex}
 
-## S100 Computers FPGA Z80 SBC
+## S100 Computers
+
+### S100 Computers Z80 CPU
+
+Z80-based S100 Modular System
+
+* Creator: John Monahan
+* Website: [S100 Computers Z80 CPU](http://www.s100computers.com/My%20System%20Pages/Z80%20Board/Z80%20CPU%20Board.htm)
+
+#### ROM Image File:  SZ80_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Bus               | S100          |
+| Default CPU Speed | 8.000 MHz     |
+| Interrupts        | None          |
+| System Timer      | None          |
+| Serial Default    | 9600 Baud     |
+| Memory Manager    | SZ80          |
+| ROM Size          | 0 KB          |
+| RAM Size          | 512 KB        |
+
+#### Supported Hardware
+
+- SCON: IO=0
+- ESPSD: IO=128, PRIMARY
+- ESPSD: IO=128, SECONDARY
+- MD: TYPE=RAM
+- PPIDE: MODE=STD, IO=48, MASTER
+- PPIDE: MODE=STD, IO=48, SLAVE
+- PPIDE: MODE=S100A, IO=56, MASTER
+- PPIDE: MODE=S100A, IO=56, SLAVE
+- PPIDE: MODE=S100B, IO=56, MASTER
+- PPIDE: MODE=S100B, IO=56, SLAVE
+- SD: MODE=FZ80, IO=108, UNITS=2
+
+#### Notes:
+
+- Requires Propeller Console Board (or equivalent)
+
+`\clearpage`{=latex}
+
+### S100 Computers FPGA Z80 SBC
 
 An FPGA Z80 based S100 SBC
 
-* Creator: John Monahan                                                                           |
+* Creator: John Monahan
 * Website: [S100 Computers FPGA Z80 SBC](http://www.s100computers.com/My%20System%20Pages/FPGA%20Z80%20SBC/FPGA%20Z80%20SBC.htm)
 
-#### ROM Image File:  FZ80_std.rom
+#### ROM Image File:  SZ80_fpga.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -455,7 +498,7 @@ An FPGA Z80 based S100 SBC
 
 #### Notes:
 
-- Requires matching FPGA code
+- Requires matching FPGA code, see [S100 Projects RomWBW T35 Project](https://github.com/s100projects/ROMWBW_T35).
 
 `\clearpage`{=latex}
 
