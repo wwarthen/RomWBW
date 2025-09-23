@@ -1,4 +1,4 @@
-FZ80 Disk Prefix Layout
+SZ80 Disk Prefix Layout
 =======================
 
 ---- Bytes ----   --- Sectors ---
@@ -13,7 +13,7 @@ Start   Length    Start   Length    Description
 Notes
 -----
 
-- Z80 Monitor reads 384KB (RomWBW) from sectors 1024-1791 of CF into first 384KB of physical RAM
-- Z80 Monitor maps first 32KB of physical RAM to first 32KB of CPU RAM and starts execution at 0x0000
+- Z80 Monitor reads 128KB (RomWBW) from sectors 1024-1279 of CF into first 128KB of RAM
+- Z80 Monitor maps first 16KB of physical RAM to first 32KB of CPU RAM and starts execution at 0x0000
 
--- WBW 3:18 PM 6/30/2024
+-- WBW 10:07 AM 9/23/2025

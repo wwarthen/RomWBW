@@ -1,9 +1,17 @@
-S100 Z80 has no real ROM.  It has 1024K RAM.
+S100 Z80 CPU
+============
+
+S100 Z80 has only a small monitor ROM at the to of CPU address space
+which is not utilized by RomWBW.  RomWBW treats the system as a
+ROMless system.  RAM is provided by a separate board.  RomWBW assumes
+the RAM board has >= 1024K which is the maximum RAM supported by the
+Z80 CPU memory manager.
 
 The ROMless startup mode treats the entire 1024KB as RAM.  128KB of RAM 
 must be preloaded by the Monitor CF Loader.  There will be no ROM 
-disk available under RomWBW.  There will be a RAM Disk and it's initial 
-contents will be seeded by the image loaded by the CF Loader.
+disk available under RomWBW.
+
+The RomWBW 32K bank layout is as follows:
 
 Bank		Contents	Description
 --------	--------	-----------
@@ -11,19 +19,50 @@ Bank		Contents	Description
 0x1		IMG0		ROM Loader, Monitor, ROM OSes
 0x2		IMG1		ROM Applications
 0x3		IMG2		Reserved
-0x4-0x1B	RAMD		RAM Disk Banks
+0x4-0xF		RAMD		RAM Disk Banks
+0x10-1B		APP		Application Banks
 0x1C		BUF		OS Buffers (CP/M3)
 0x1D		AUX		Aux Bank (CP/M 3, BPBIOS, etc.)
 0x1E		USR		User Bank (CP/M TPA, etc.)
 0x1F		COM		Common Bank, Upper 32KB
 
+Memory Manager
+--------------
 
-FPGA Z80 has no real ROM.  It has a single 512K RAM chip.
+The Z80 CPU implements a custom memory manager that allows mapping the 2
+lowest 16K portions of CPU address space ($0000-$3FFFF, and $4000-$7FFF).
+Each of these banks can be mapped to any physical 16K bank.
+The physical 16K banks are 16K aligned.  The memory manager
+can address a maximum of 1MB of physical memory.  Which is
+64 x 16K banks (bank numbers $00-$3F)
+
+The top 32K of CPU address space ($8000-$FFFF) is statically mapped
+to physical banks $02 & $03.  RomWBW is designed to have the top
+32K of CPU address space assigned to the last two banks of
+RAM.  So the RomWBW memory manager for this board (MM_SZ80)
+rotates the requested bank numbers by 4.  With wrapping, this
+causes a RomWBW request for the top two banks to be mapped to
+physical banks $02 & $03.
+
+Z80 CPU Physical:  00 01 02 03 ... 38 39 3A 3B 3C 3D 3E 3F
+RomWBW Logical:    04 05 06 07 ... 3C 3D 3E 3F 00 01 02 03
+
+As a result, the Z80 CPU Monitor loads RomWBW starting at
+physical bank 04.
+
+
+S100 FPGA Z80 SBC
+=================
+
+FPGA Z80 has no real ROM.  It has a single onboard 512K RAM chip.
+
+RomWBW assumes the use of the T35 FPGA with associated firmware.
 
 The ROMless startup mode treats the entire 512KB as RAM.  384KB of RAM 
 must be preloaded by the FPGA Monitor CF Loader.  There will be no ROM 
-disk available under RomWBW.  There will be a RAM Disk and it's initial 
-contents will be seeded by the image loaded by the CF Loader.
+disk available under RomWBW.
+
+The RomWBW 32K bank layout is as follows:
 
 Bank		Contents	Description
 --------	--------	-----------
@@ -36,3 +75,8 @@ Bank		Contents	Description
 0xD		AUX		Aux Bank (CP/M 3, BPBIOS, etc.)
 0xE		USR		User Bank (CP/M TPA, etc.)
 0xF		COM		Common Bank, Upper 32KB
+
+Memory Manager
+--------------
+
+The T35 FPGA Z80 implements the Zeta 2 (Z2) memory manager.
