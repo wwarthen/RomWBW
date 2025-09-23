@@ -446,7 +446,7 @@ IDBIO:
 ;
 IDBIO1:
 	; Check for RomWBW (HBIOS)
-	LD	HL,($FFFE)	; HL := HBIOS ident location
+	LD	HL,($FFFC)	; HL := HBIOS ident location
 	LD	A,'W'		; First byte of ident
 	CP	(HL)		; Compare
 	JR	NZ,IDBIO2	; Not HBIOS

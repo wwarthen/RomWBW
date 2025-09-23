@@ -53,7 +53,7 @@ bf_sysres_int	.equ	$00		; reset hbios internal
 bf_sysres_warm	.equ	$01		; warm start (restart boot loader)
 bf_sysres_cold	.equ	$02		; cold start
 ;
-ident		.equ	$FFFE		; loc of RomWBW HBIOS ident ptr
+ident		.equ	$FFFC		; loc of RomWBW HBIOS ident ptr
 ;
 ;===============================================================================
 ;

@@ -180,7 +180,7 @@ IDBIO:
 ;
 IDBIO1:
 	; Check for RomWBW (HBIOS)
-	LD	HL,(0FFFEH)	; HL := HBIOS ident location
+	LD	HL,(0FFFCH)	; HL := HBIOS ident location
 	LD	A,'W'		; First byte of ident
 	CP	(HL)		; Compare
 	JR	NZ,IDBIO2	; Not HBIOS

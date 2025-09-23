@@ -68,7 +68,7 @@ bf_sysreset	.equ	$F0		; restart system
 bf_sysres_int	.equ	$00		; reset hbios internal
 bf_sysres_warm	.equ	$01		; warm start (restart boot loader)
 ;
-ident		.equ	$FFFE		; loc of RomWBW HBIOS ident ptr
+ident		.equ	$FFFC		; loc of RomWBW HBIOS ident ptr
 ;
 sigbyte1	.equ	$A5		; 1st sig byte boot info sector (bb_sig)
 sigbyte2	.equ	$5A		; 2nd sig byte boot info sector (bb_sig)

@@ -1,4 +1,4 @@
-IDENT		.EQU	$FFFE		; loc of RomWBW HBIOS ident ptr
+IDENT		.EQU	$FFFC		; loc of RomWBW HBIOS ident ptr
 ;
 BF_SYSVER	.EQU	$F1		; BIOS: VER function
 BF_SYSGET	.EQU	$F8		; HBIOS: SYSGET function

@@ -190,7 +190,7 @@ init:
 	ldir			; do the copy
 ;
 	; determine end of CBIOS (assume HBIOS for now)
-	ld	hl,($FFFE)	; get proxy start address
+	ld	hl,($FFFC)	; get proxy start address
 	ld	(bioend),hl	; save as CBIOS end address
 ;
 	; check for UNA (UBIOS)

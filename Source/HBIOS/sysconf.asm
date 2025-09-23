@@ -51,7 +51,7 @@ cmdmax		.EQU	$20		; Max cmd input length
 stksiz		.EQU	$40		; Working stack size
 restart		.EQU	$0000		; CP/M restart vector
 bdos		.EQU	$0005		; BDOS invocation vector
-ident		.EQU	$FFFE		; loc of RomWBW HBIOS ident ptr
+ident		.EQU	$FFFC		; loc of RomWBW HBIOS ident ptr
 ;
 ETX		.EQU	3		; CTRL-C
 BEL		.EQU	7		; ASCII bell

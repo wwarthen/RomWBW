@@ -31,7 +31,7 @@ stksiz	.equ	$40		; Working stack size
 restart	.equ	$0000		; CP/M restart vector
 bdos	.equ	$0005		; BDOS invocation vector
 ;
-ident	.equ	$FFFE		; loc of RomWBW HBIOS ident ptr
+ident	.equ	$FFFC		; loc of RomWBW HBIOS ident ptr
 ;
 rmj	.equ	2		; intended CBIOS version - major
 rmn	.equ	9		; intended CBIOS version - minor

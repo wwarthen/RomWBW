@@ -37,7 +37,7 @@ fcb2		.equ	$006C	; second CP/M parsed FCB
 cr		.equ	13	; carriage return
 lf		.equ	10	; line feed
 ;	                        
-ident		.equ	$FFFE	; loc of RomWBW HBIOS ident ptr
+ident		.equ	$FFFC	; loc of RomWBW HBIOS ident ptr
 ;
 bf_sysver	.equ	$F1	; BIOS: VER function
 bf_sysget	.equ	$F8	; HBIOS: SYSGET function

@@ -52,7 +52,7 @@ STKSIZ		.EQU	$40		; Working stack size
 RESTART		.EQU	$0000		; CP/M restart vector
 BDOS		.EQU	$0005		; BDOS invocation vector
 ;
-IDENT		.EQU	$FFFE		; loc of RomWBW HBIOS ident ptr
+IDENT		.EQU	$FFFC		; loc of RomWBW HBIOS ident ptr
 ;
 BF_SYSVER	.EQU	$F1		; BIOS: VER function
 BF_SYSGET	.EQU	$F8		; HBIOS: SYSGET function
@@ -322,7 +322,7 @@ IDBIO:
 ;
 IDBIO1:
 	; Check for RomWBW (HBIOS)
-	LD	HL,($FFFE)		; HL := HBIOS ident location
+	LD	HL,(IDENT)		; HL := HBIOS ident location
 	LD	A,'W'			; First byte of ident
 	CP	(HL)			; Compare
 	JR	NZ,IDBIO2		; Not HBIOS

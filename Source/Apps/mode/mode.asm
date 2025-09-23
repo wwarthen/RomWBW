@@ -48,7 +48,7 @@ stksiz	.equ	$40		; Working stack size
 restart	.equ	$0000		; CP/M restart vector
 bdos	.equ	$0005		; BDOS invocation vector
 ;
-ident	.equ	$FFFE		; loc of RomWBW HBIOS ident ptr
+ident	.equ	$FFFC		; loc of RomWBW HBIOS ident ptr
 ;
 bf_cioinit	.equ	$04	; HBIOS: CIOINIT function
 bf_cioquery	.equ	$05	; HBIOS: CIOQUERY function
