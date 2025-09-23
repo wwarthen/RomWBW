@@ -160,8 +160,16 @@
             </li>
               </ul>
             </li>
-            <li class="nav-item" data-bs-level="2"><a href="#s100-computers-fpga-z80-sbc" class="nav-link">S100 Computers FPGA Z80 SBC</a>
+            <li class="nav-item" data-bs-level="2"><a href="#s100-computers" class="nav-link">S100 Computers</a>
               <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#s100-computers-z80-cpu" class="nav-link">S100 Computers Z80 CPU</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#s100-computers-fpga-z80-sbc" class="nav-link">S100 Computers FPGA Z80 SBC</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
               </ul>
             </li>
             <li class="nav-item" data-bs-level="2"><a href="#genesis-z180-system" class="nav-link">Genesis Z180 System</a>
@@ -384,7 +392,7 @@
 <p><strong>RomWBW Hardware</strong> \
 Version 3.6 \
 Wayne Warthen  (<a href="mailto:wwarthen@gmail.com">wwarthen@gmail.com</a>) \
-17 Sep 2025</p>
+22 Sep 2025</p>
 <h1 id="overview">Overview</h1>
 <h2 id="supported-platforms">Supported Platforms</h2>
 <p>This section contains a summary of the system configuration target for
@@ -731,9 +739,15 @@ external bank switching.</p>
 <td style="text-align: right;">57600</td>
 </tr>
 <tr>
+<td><a href="#s100-computers-z80-cpu">S100 Computers Z80 CPU</a><sup>4</sup></td>
+<td>S100</td>
+<td>SZ80_std.rom</td>
+<td style="text-align: right;">9600</td>
+</tr>
+<tr>
 <td><a href="#s100-computers-fpga-z80-sbc">S100 Computers FPGA Z80 SBC</a><sup>4</sup></td>
 <td>S100</td>
-<td>FZ80_std.rom</td>
+<td>SZ80_fpga.rom</td>
 <td style="text-align: right;">9600</td>
 </tr>
 <tr>
@@ -1174,14 +1188,83 @@ of the SIO ports, for ease of use with modern computers.</p>
 <li>CTC: IO=16, TIMER MODE=COUNTER, DIVISOR=18432, HI=256, LO=72,
   INTERRUPTS ENABLED</li>
 </ul>
-<h2 id="s100-computers-fpga-z80-sbc">S100 Computers FPGA Z80 SBC</h2>
+<h2 id="s100-computers">S100 Computers</h2>
+<h3 id="s100-computers-z80-cpu">S100 Computers Z80 CPU</h3>
+<p>Z80-based S100 Modular System</p>
+<ul>
+<li>Creator: John Monahan</li>
+<li>Website: <a href="http://www.s100computers.com/My%20System%20Pages/Z80%20Board/Z80%20CPU%20Board.htm">S100 Computers Z80
+  CPU</a></li>
+</ul>
+<h4 id="rom-image-file-sz80_stdrom">ROM Image File: SZ80_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>S100</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>8.000 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>None</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>9600 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>SZ80</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>0 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_5">Supported Hardware</h4>
+<ul>
+<li>SCON: IO=0</li>
+<li>ESPSD: IO=128, PRIMARY</li>
+<li>ESPSD: IO=128, SECONDARY</li>
+<li>MD: TYPE=RAM</li>
+<li>PPIDE: MODE=STD, IO=48, MASTER</li>
+<li>PPIDE: MODE=STD, IO=48, SLAVE</li>
+<li>PPIDE: MODE=S100A, IO=56, MASTER</li>
+<li>PPIDE: MODE=S100A, IO=56, SLAVE</li>
+<li>PPIDE: MODE=S100B, IO=56, MASTER</li>
+<li>PPIDE: MODE=S100B, IO=56, SLAVE</li>
+<li>SD: MODE=FZ80, IO=108, UNITS=2</li>
+</ul>
+<h4 id="notes">Notes:</h4>
+<ul>
+<li>Requires Propeller Console Board (or equivalent)</li>
+</ul>
+<h3 id="s100-computers-fpga-z80-sbc">S100 Computers FPGA Z80 SBC</h3>
 <p>An FPGA Z80 based S100 SBC</p>
 <ul>
-<li>Creator: John Monahan |</li>
+<li>Creator: John Monahan</li>
 <li>Website: <a href="http://www.s100computers.com/My%20System%20Pages/FPGA%20Z80%20SBC/FPGA%20Z80%20SBC.htm">S100 Computers FPGA Z80
   SBC</a></li>
 </ul>
-<h4 id="rom-image-file-fz80_stdrom">ROM Image File: FZ80_std.rom</h4>
+<h4 id="rom-image-file-sz80_fpgarom">ROM Image File: SZ80_fpga.rom</h4>
 <table>
 <thead>
 <tr>
@@ -1224,7 +1307,7 @@ of the SIO ports, for ease of use with modern computers.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_5">Supported Hardware</h4>
+<h4 id="supported-hardware_6">Supported Hardware</h4>
 <ul>
 <li>DS5RTC: RTCIO=104, IO=104</li>
 <li>SSER: IO=52</li>
@@ -1243,9 +1326,10 @@ of the SIO ports, for ease of use with modern computers.</p>
 <li>PPIDE: MODE=S100B, IO=56, SLAVE</li>
 <li>SD: MODE=FZ80, IO=108, UNITS=2</li>
 </ul>
-<h4 id="notes">Notes:</h4>
+<h4 id="notes_1">Notes:</h4>
 <ul>
-<li>Requires matching FPGA code</li>
+<li>Requires matching FPGA code, see <a href="https://github.com/s100projects/ROMWBW_T35">S100 Projects RomWBW T35
+  Project</a>.</li>
 </ul>
 <h2 id="genesis-z180-system">Genesis Z180 System</h2>
 <p>A Z180 based board with 512k ram, 512k rom, dual serial / parallel, RTC
@@ -1298,7 +1382,7 @@ Big board and some designs of Stephen Cousins</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_6">Supported Hardware</h4>
+<h4 id="supported-hardware_7">Supported Hardware</h4>
 <ul>
 <li>GM7303: IO=48</li>
 <li>DSRTC: MODE=STD, IO=132</li>
@@ -1361,7 +1445,7 @@ Big board and some designs of Stephen Cousins</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_7">Supported Hardware</h4>
+<h4 id="supported-hardware_8">Supported Hardware</h4>
 <ul>
 <li>H8P: IO=240</li>
 <li>INTRTC: ENABLED</li>
@@ -1430,7 +1514,7 @@ access to additional peripheral boards.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_8">Supported Hardware</h4>
+<h4 id="supported-hardware_9">Supported Hardware</h4>
 <ul>
 <li>DSRTC: MODE=STD, IO=138</li>
 <li>ASCI: IO=64, INTERRUPTS ENABLED</li>
@@ -1508,7 +1592,7 @@ Card</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_9">Supported Hardware</h4>
+<h4 id="supported-hardware_10">Supported Hardware</h4>
 <ul>
 <li>NABU: IO=64</li>
 <li>INTRTC: ENABLED</li>
@@ -1522,7 +1606,7 @@ Card</p>
 <li>PPIDE: IO=96, SLAVE</li>
 <li>AY38910: MODE=NABU, IO=65, CLOCK=1789772 HZ</li>
 </ul>
-<h4 id="notes_1">Notes:</h4>
+<h4 id="notes_2">Notes:</h4>
 <ul>
 <li>TMS video assumes F18A replacement for TMS9918</li>
 </ul>
@@ -1586,7 +1670,7 @@ minimum capability.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_10">Supported Hardware</h4>
+<h4 id="supported-hardware_11">Supported Hardware</h4>
 <ul>
 <li>PKD: IO=96, SIZE=8X1</li>
 <li>DSRTC: MODE=STD, IO=112</li>
@@ -1677,7 +1761,7 @@ standard.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_11">Supported Hardware</h4>
+<h4 id="supported-hardware_12">Supported Hardware</h4>
 <ul>
 <li>DSRTC: MODE=STD, IO=112</li>
 <li>UART: MODE=SBC, IO=104</li>
@@ -1746,7 +1830,7 @@ standard.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_12">Supported Hardware</h4>
+<h4 id="supported-hardware_13">Supported Hardware</h4>
 <ul>
 <li>SIMRTC: IO=254</li>
 <li>SSER: IO=109</li>
@@ -1754,7 +1838,7 @@ standard.</p>
 <li>MD: TYPE=ROM</li>
 <li>HDSK: IO=253, DEVICE COUNT=2</li>
 </ul>
-<h4 id="notes_2">Notes:</h4>
+<h4 id="notes_3">Notes:</h4>
 <ul>
 <li>CPU speed and Serial configuration not relevant in emulator</li>
 </ul>
@@ -1814,7 +1898,7 @@ additional boards are required.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_13">Supported Hardware</h4>
+<h4 id="supported-hardware_14">Supported Hardware</h4>
 <ul>
 <li>DSRTC: MODE=STD, IO=136</li>
 <li>ASCI: IO=64, INTERRUPTS ENABLED</li>
@@ -1828,7 +1912,7 @@ additional boards are required.</p>
 <li>SD: MODE=CSIO, IO=136, UNITS=1</li>
 <li>AY38910: MODE=N8, IO=156, CLOCK=1789772 HZ</li>
 </ul>
-<h4 id="notes_3">Notes:</h4>
+<h4 id="notes_4">Notes:</h4>
 <ul>
 <li>SD Card interface is configured for CSIO (N8 date code &gt;= 2312)</li>
 </ul>
@@ -1878,7 +1962,7 @@ additional boards are required.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_14">Supported Hardware</h4>
+<h4 id="supported-hardware_15">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -1951,7 +2035,7 @@ additional boards are required.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_15">Supported Hardware</h4>
+<h4 id="supported-hardware_16">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -2034,7 +2118,7 @@ single module, thus saving space on the backplane.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_16">Supported Hardware</h4>
+<h4 id="supported-hardware_17">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -2121,7 +2205,7 @@ of the RAM is reserved to act as ROM.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_17">Supported Hardware</h4>
+<h4 id="supported-hardware_18">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -2205,7 +2289,7 @@ layout. The intent to replace the STD config with the RAM config.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_18">Supported Hardware</h4>
+<h4 id="supported-hardware_19">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -2287,7 +2371,7 @@ specifically for ROM-less RomWBW. HBIOS is loaded from disk at boot</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_19">Supported Hardware</h4>
+<h4 id="supported-hardware_20">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -2374,7 +2458,7 @@ supported RomWBW.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_20">Supported Hardware</h4>
+<h4 id="supported-hardware_21">Supported Hardware</h4>
 <ul>
 <li>DSRTC: MODE=STD, IO=192</li>
 <li>SIO MODE=STD, IO=8, CHANNEL A, INTERRUPTS ENABLED</li>
@@ -2437,7 +2521,7 @@ replacing the older K80W rev 1</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_21">Supported Hardware</h4>
+<h4 id="supported-hardware_22">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -2513,7 +2597,7 @@ external memory management)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_22">Supported Hardware</h4>
+<h4 id="supported-hardware_23">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>DSRTC: MODE=STD, IO=12</li>
@@ -2588,7 +2672,7 @@ management)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_23">Supported Hardware</h4>
+<h4 id="supported-hardware_24">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>DSRTC: MODE=STD, IO=12</li>
@@ -2673,7 +2757,7 @@ RomWBW image from CF disk, then start RomWBW from 0x0</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_24">Supported Hardware</h4>
+<h4 id="supported-hardware_25">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>DSRTC: MODE=STD, IO=12</li>
@@ -2748,7 +2832,7 @@ external memory management)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_25">Supported Hardware</h4>
+<h4 id="supported-hardware_26">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -2824,7 +2908,7 @@ management)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_26">Supported Hardware</h4>
+<h4 id="supported-hardware_27">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -2914,7 +2998,7 @@ of the RAM is reserved to act as ROM.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_27">Supported Hardware</h4>
+<h4 id="supported-hardware_28">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -2998,7 +3082,7 @@ layout. The intent to replace the STD config with the RAM config.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_28">Supported Hardware</h4>
+<h4 id="supported-hardware_29">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -3082,7 +3166,7 @@ EPROM for other computers</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_29">Supported Hardware</h4>
+<h4 id="supported-hardware_30">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -3168,7 +3252,7 @@ available from the manufacturer today</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_30">Supported Hardware</h4>
+<h4 id="supported-hardware_31">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -3241,7 +3325,7 @@ Graphics Display Controller</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_31">Supported Hardware</h4>
+<h4 id="supported-hardware_32">Supported Hardware</h4>
 <ul>
 <li>DSRTC: MODE=STD, IO=132</li>
 <li>ASCI: IO=64</li>
@@ -3310,7 +3394,7 @@ slave as defined by the IEEE-696 specs.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_32">Supported Hardware</h4>
+<h4 id="supported-hardware_33">Supported Hardware</h4>
 <ul>
 <li>INTRTC: ENABLED</li>
 <li>ASCI: IO=192, INTERRUPTS ENABLED</li>
@@ -3327,7 +3411,7 @@ slave as defined by the IEEE-696 specs.</p>
 <li>PPIDE: MODE=S100B, IO=48, MASTER</li>
 <li>PPIDE: MODE=S100B, IO=48, SLAVE</li>
 </ul>
-<h4 id="notes_4">Notes:</h4>
+<h4 id="notes_5">Notes:</h4>
 <ul>
 <li>Z180 SBC SW2 (IOBYTE) Dip Switches:</li>
 </ul>
@@ -3431,7 +3515,7 @@ system.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_33">Supported Hardware</h4>
+<h4 id="supported-hardware_34">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=13, SWIO=0</li>
 <li>DSRTC: MODE=STD, IO=12</li>
@@ -3459,7 +3543,7 @@ system.</p>
 <li>PPIDE: IO=32, SLAVE</li>
 <li>SD: MODE=SC, IO=12, UNITS=1</li>
 </ul>
-<h4 id="notes_5">Notes:</h4>
+<h4 id="notes_6">Notes:</h4>
 <ul>
 <li>When disabled, watchdog requires /IM to be pulsed. If an RCBus module
   holds the CPU in WAIT for more than this, the watchdog will fire when
@@ -3515,7 +3599,7 @@ RomWBW (and CP/M)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_34">Supported Hardware</h4>
+<h4 id="supported-hardware_35">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>DSRTC: MODE=STD, IO=12</li>
@@ -3593,7 +3677,7 @@ RomWBW (and CP/M)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_35">Supported Hardware</h4>
+<h4 id="supported-hardware_36">Supported Hardware</h4>
 <ul>
 <li>INTRTC: ENABLED</li>
 <li>ASCI: IO=192, INTERRUPTS ENABLED</li>
@@ -3651,7 +3735,7 @@ RomWBW (and CP/M)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_36">Supported Hardware</h4>
+<h4 id="supported-hardware_37">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=160, SWIO=160</li>
 <li>DSRTC: MODE=STD, IO=12</li>
@@ -3729,7 +3813,7 @@ RomWBW (and CP/M)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_37">Supported Hardware</h4>
+<h4 id="supported-hardware_38">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=160, SWIO=160</li>
 <li>DSRTC: MODE=STD, IO=12</li>
@@ -3812,7 +3896,7 @@ RomWBW (and CP/M)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_38">Supported Hardware</h4>
+<h4 id="supported-hardware_39">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0</li>
 <li>LCD: IO=170, SIZE=20X4</li>
@@ -3899,7 +3983,7 @@ presented by John’s Basement on youTube)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_39">Supported Hardware</h4>
+<h4 id="supported-hardware_40">Supported Hardware</h4>
 <ul>
 <li>SIO MODE=Z80R, IO=128, CHANNEL A, INTERRUPTS ENABLED</li>
 <li>SIO MODE=Z80R, IO=128, CHANNEL B, INTERRUPTS ENABLED</li>
@@ -3959,7 +4043,7 @@ compatible with N8VEM SBC and Disk I/O boards.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_40">Supported Hardware</h4>
+<h4 id="supported-hardware_41">Supported Hardware</h4>
 <ul>
 <li>DSRTC: MODE=STD, IO=112</li>
 <li>UART: IO=104</li>
@@ -3970,7 +4054,7 @@ compatible with N8VEM SBC and Disk I/O boards.</p>
 <li>MD: TYPE=ROM</li>
 <li>FD: MODE=DIO, IO=54, DRIVE 0, TYPE=3.5” HD</li>
 </ul>
-<h4 id="notes_6">Notes:</h4>
+<h4 id="notes_7">Notes:</h4>
 <ul>
 <li>If ParPortProp is installed, initial console output is determined by
   JP1:</li>
@@ -4036,7 +4120,7 @@ is made using CMOS technology and more power efficient than FDC9266</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_41">Supported Hardware</h4>
+<h4 id="supported-hardware_42">Supported Hardware</h4>
 <ul>
 <li>DSRTC: MODE=STD, IO=112</li>
 <li>UART: IO=104</li>
@@ -4049,7 +4133,7 @@ is made using CMOS technology and more power efficient than FDC9266</p>
 <li>CTC: IO=32, TIMER MODE=COUNTER, DIVISOR=18432, HI=256, LO=72,
   INTERRUPTS ENABLED</li>
 </ul>
-<h4 id="notes_7">Notes:</h4>
+<h4 id="notes_8">Notes:</h4>
 <ul>
 <li>If ParPortProp is installed, initial console output is determined by
   JP1:</li>
