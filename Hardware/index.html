@@ -184,6 +184,10 @@
               <ul class="nav flex-column">
               </ul>
             </li>
+            <li class="nav-item" data-bs-level="2"><a href="#msx" class="nav-link">MSX</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
             <li class="nav-item" data-bs-level="2"><a href="#nabu-w-romwbw-option-board" class="nav-link">NABU w/ RomWBW Option Board</a>
               <ul class="nav flex-column">
               </ul>
@@ -392,7 +396,7 @@
 <p><strong>RomWBW Hardware</strong> \
 Version 3.6 \
 Wayne Warthen  (<a href="mailto:wwarthen@gmail.com">wwarthen@gmail.com</a>) \
-23 Sep 2025</p>
+24 Sep 2025</p>
 <h1 id="overview">Overview</h1>
 <h2 id="supported-platforms">Supported Platforms</h2>
 <p>This section contains a summary of the system configuration target for
@@ -727,6 +731,12 @@ external bank switching.</p>
 <td style="text-align: right;">115200</td>
 </tr>
 <tr>
+<td><a href="#msx">MSX</a><sup>9</sup></td>
+<td>MSX</td>
+<td>MSX_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
+<tr>
 <td><a href="#nabu-w-romwbw-option-board">NABU w/ RomWBW Option Board</a><sup>5</sup></td>
 <td>NABU</td>
 <td>NABU_std.rom</td>
@@ -777,7 +787,8 @@ external bank switching.</p>
 <sup>5</sup>Designed by Les Bird<br />
 <sup>6</sup>Designed by Alan Cox<br />
 <sup>7</sup>Designed by Doug Jackson<br />
-<sup>8</sup>Designed by Dean Netherton</p>
+<sup>8</sup>Designed by Dean Netherton<br />
+<sup>9</sup>MSX Port by Henk Berends</p>
 <h2 id="general-guidance">General Guidance</h2>
 <p>The standard ROM images will detect and install support for certain
 devices and peripherals that are on-board or frequently used with each
@@ -1539,6 +1550,65 @@ access to additional peripheral boards.</p>
 <li>IDE: MODE=MK4, IO=128, SLAVE</li>
 <li>SD: MODE=MK4, IO=137, UNITS=1</li>
 </ul>
+<h2 id="msx">MSX</h2>
+<p>Support for standard MSX hardware by Henk Berends</p>
+<h4 id="rom-image-file-msx_stdrom">ROM Image File: MSX_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>MSX</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>3.579 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 1</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>TMS</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>MSX</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>0 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>448 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_10">Supported Hardware</h4>
+<ul>
+<li>RP5C01: IO=180</li>
+<li>UART: IO=128</li>
+<li>UART: IO=136</li>
+<li>TMS: MODE=MSXMKY, IO=152, SCREEN=80X24, KEYBOARD=MKY, INTERRUPTS
+  ENABLED</li>
+<li>MKY: IO=168</li>
+<li>MD: TYPE=RAM</li>
+<li>IDE: MODE=RC, IO=16, MASTER</li>
+<li>IDE: MODE=RC, IO=16, SLAVE</li>
+<li>AY38910: MODE=MSX, IO=160, CLOCK=1789772 HZ</li>
+</ul>
+<h4 id="notes_2">Notes:</h4>
 <h2 id="nabu-w-romwbw-option-board">NABU w/ RomWBW Option Board</h2>
 <p>No modifications to the NABU motherboard needed. Leave the standard NABU
 ROM in its socket on the motherboard, no need to remove it. You can
@@ -1592,7 +1662,7 @@ Card</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_10">Supported Hardware</h4>
+<h4 id="supported-hardware_11">Supported Hardware</h4>
 <ul>
 <li>NABU: IO=64</li>
 <li>INTRTC: ENABLED</li>
@@ -1606,7 +1676,7 @@ Card</p>
 <li>PPIDE: IO=96, SLAVE</li>
 <li>AY38910: MODE=NABU, IO=65, CLOCK=1789772 HZ</li>
 </ul>
-<h4 id="notes_2">Notes:</h4>
+<h4 id="notes_3">Notes:</h4>
 <ul>
 <li>TMS video assumes F18A replacement for TMS9918</li>
 </ul>
@@ -1670,7 +1740,7 @@ minimum capability.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_11">Supported Hardware</h4>
+<h4 id="supported-hardware_12">Supported Hardware</h4>
 <ul>
 <li>PKD: IO=96, SIZE=8X1</li>
 <li>DSRTC: MODE=STD, IO=112</li>
@@ -1761,7 +1831,7 @@ standard.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_12">Supported Hardware</h4>
+<h4 id="supported-hardware_13">Supported Hardware</h4>
 <ul>
 <li>DSRTC: MODE=STD, IO=112</li>
 <li>UART: MODE=SBC, IO=104</li>
@@ -1830,7 +1900,7 @@ standard.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_13">Supported Hardware</h4>
+<h4 id="supported-hardware_14">Supported Hardware</h4>
 <ul>
 <li>SIMRTC: IO=254</li>
 <li>SSER: IO=109</li>
@@ -1838,7 +1908,7 @@ standard.</p>
 <li>MD: TYPE=ROM</li>
 <li>HDSK: IO=253, DEVICE COUNT=2</li>
 </ul>
-<h4 id="notes_3">Notes:</h4>
+<h4 id="notes_4">Notes:</h4>
 <ul>
 <li>CPU speed and Serial configuration not relevant in emulator</li>
 </ul>
@@ -1898,7 +1968,7 @@ additional boards are required.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_14">Supported Hardware</h4>
+<h4 id="supported-hardware_15">Supported Hardware</h4>
 <ul>
 <li>DSRTC: MODE=STD, IO=136</li>
 <li>ASCI: IO=64, INTERRUPTS ENABLED</li>
@@ -1912,7 +1982,7 @@ additional boards are required.</p>
 <li>SD: MODE=CSIO, IO=136, UNITS=1</li>
 <li>AY38910: MODE=N8, IO=156, CLOCK=1789772 HZ</li>
 </ul>
-<h4 id="notes_4">Notes:</h4>
+<h4 id="notes_5">Notes:</h4>
 <ul>
 <li>SD Card interface is configured for CSIO (N8 date code &gt;= 2312)</li>
 </ul>
@@ -1962,7 +2032,7 @@ additional boards are required.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_15">Supported Hardware</h4>
+<h4 id="supported-hardware_16">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -2035,7 +2105,7 @@ additional boards are required.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_16">Supported Hardware</h4>
+<h4 id="supported-hardware_17">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -2118,7 +2188,7 @@ single module, thus saving space on the backplane.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_17">Supported Hardware</h4>
+<h4 id="supported-hardware_18">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -2205,7 +2275,7 @@ of the RAM is reserved to act as ROM.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_18">Supported Hardware</h4>
+<h4 id="supported-hardware_19">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -2289,7 +2359,7 @@ layout. The intent to replace the STD config with the RAM config.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_19">Supported Hardware</h4>
+<h4 id="supported-hardware_20">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -2371,7 +2441,7 @@ specifically for ROM-less RomWBW. HBIOS is loaded from disk at boot</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_20">Supported Hardware</h4>
+<h4 id="supported-hardware_21">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -2458,7 +2528,7 @@ supported RomWBW.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_21">Supported Hardware</h4>
+<h4 id="supported-hardware_22">Supported Hardware</h4>
 <ul>
 <li>DSRTC: MODE=STD, IO=192</li>
 <li>SIO MODE=STD, IO=8, CHANNEL A, INTERRUPTS ENABLED</li>
@@ -2521,7 +2591,7 @@ replacing the older K80W rev 1</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_22">Supported Hardware</h4>
+<h4 id="supported-hardware_23">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -2597,7 +2667,7 @@ external memory management)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_23">Supported Hardware</h4>
+<h4 id="supported-hardware_24">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>DSRTC: MODE=STD, IO=12</li>
@@ -2672,7 +2742,7 @@ management)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_24">Supported Hardware</h4>
+<h4 id="supported-hardware_25">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>DSRTC: MODE=STD, IO=12</li>
@@ -2757,7 +2827,7 @@ RomWBW image from CF disk, then start RomWBW from 0x0</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_25">Supported Hardware</h4>
+<h4 id="supported-hardware_26">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>DSRTC: MODE=STD, IO=12</li>
@@ -2832,7 +2902,7 @@ external memory management)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_26">Supported Hardware</h4>
+<h4 id="supported-hardware_27">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -2908,7 +2978,7 @@ management)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_27">Supported Hardware</h4>
+<h4 id="supported-hardware_28">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -2998,7 +3068,7 @@ of the RAM is reserved to act as ROM.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_28">Supported Hardware</h4>
+<h4 id="supported-hardware_29">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -3082,7 +3152,7 @@ layout. The intent to replace the STD config with the RAM config.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_29">Supported Hardware</h4>
+<h4 id="supported-hardware_30">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -3166,7 +3236,7 @@ EPROM for other computers</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_30">Supported Hardware</h4>
+<h4 id="supported-hardware_31">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -3252,7 +3322,7 @@ available from the manufacturer today</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_31">Supported Hardware</h4>
+<h4 id="supported-hardware_32">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -3325,7 +3395,7 @@ Graphics Display Controller</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_32">Supported Hardware</h4>
+<h4 id="supported-hardware_33">Supported Hardware</h4>
 <ul>
 <li>DSRTC: MODE=STD, IO=132</li>
 <li>ASCI: IO=64</li>
@@ -3394,7 +3464,7 @@ slave as defined by the IEEE-696 specs.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_33">Supported Hardware</h4>
+<h4 id="supported-hardware_34">Supported Hardware</h4>
 <ul>
 <li>INTRTC: ENABLED</li>
 <li>ASCI: IO=192, INTERRUPTS ENABLED</li>
@@ -3411,7 +3481,7 @@ slave as defined by the IEEE-696 specs.</p>
 <li>PPIDE: MODE=S100B, IO=48, MASTER</li>
 <li>PPIDE: MODE=S100B, IO=48, SLAVE</li>
 </ul>
-<h4 id="notes_5">Notes:</h4>
+<h4 id="notes_6">Notes:</h4>
 <ul>
 <li>Z180 SBC SW2 (IOBYTE) Dip Switches:</li>
 </ul>
@@ -3515,7 +3585,7 @@ system.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_34">Supported Hardware</h4>
+<h4 id="supported-hardware_35">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=13, SWIO=0</li>
 <li>DSRTC: MODE=STD, IO=12</li>
@@ -3543,7 +3613,7 @@ system.</p>
 <li>PPIDE: IO=32, SLAVE</li>
 <li>SD: MODE=SC, IO=12, UNITS=1</li>
 </ul>
-<h4 id="notes_6">Notes:</h4>
+<h4 id="notes_7">Notes:</h4>
 <ul>
 <li>When disabled, watchdog requires /IM to be pulsed. If an RCBus module
   holds the CPU in WAIT for more than this, the watchdog will fire when
@@ -3599,7 +3669,7 @@ RomWBW (and CP/M)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_35">Supported Hardware</h4>
+<h4 id="supported-hardware_36">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>DSRTC: MODE=STD, IO=12</li>
@@ -3677,7 +3747,7 @@ RomWBW (and CP/M)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_36">Supported Hardware</h4>
+<h4 id="supported-hardware_37">Supported Hardware</h4>
 <ul>
 <li>INTRTC: ENABLED</li>
 <li>ASCI: IO=192, INTERRUPTS ENABLED</li>
@@ -3735,7 +3805,7 @@ RomWBW (and CP/M)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_37">Supported Hardware</h4>
+<h4 id="supported-hardware_38">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=160, SWIO=160</li>
 <li>DSRTC: MODE=STD, IO=12</li>
@@ -3813,7 +3883,7 @@ RomWBW (and CP/M)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_38">Supported Hardware</h4>
+<h4 id="supported-hardware_39">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=160, SWIO=160</li>
 <li>DSRTC: MODE=STD, IO=12</li>
@@ -3896,7 +3966,7 @@ RomWBW (and CP/M)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_39">Supported Hardware</h4>
+<h4 id="supported-hardware_40">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0</li>
 <li>LCD: IO=170, SIZE=20X4</li>
@@ -3983,7 +4053,7 @@ presented by John’s Basement on youTube)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_40">Supported Hardware</h4>
+<h4 id="supported-hardware_41">Supported Hardware</h4>
 <ul>
 <li>SIO MODE=Z80R, IO=128, CHANNEL A, INTERRUPTS ENABLED</li>
 <li>SIO MODE=Z80R, IO=128, CHANNEL B, INTERRUPTS ENABLED</li>
@@ -4043,7 +4113,7 @@ compatible with N8VEM SBC and Disk I/O boards.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_41">Supported Hardware</h4>
+<h4 id="supported-hardware_42">Supported Hardware</h4>
 <ul>
 <li>DSRTC: MODE=STD, IO=112</li>
 <li>UART: IO=104</li>
@@ -4054,7 +4124,7 @@ compatible with N8VEM SBC and Disk I/O boards.</p>
 <li>MD: TYPE=ROM</li>
 <li>FD: MODE=DIO, IO=54, DRIVE 0, TYPE=3.5” HD</li>
 </ul>
-<h4 id="notes_7">Notes:</h4>
+<h4 id="notes_8">Notes:</h4>
 <ul>
 <li>If ParPortProp is installed, initial console output is determined by
   JP1:</li>
@@ -4120,7 +4190,7 @@ is made using CMOS technology and more power efficient than FDC9266</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_42">Supported Hardware</h4>
+<h4 id="supported-hardware_43">Supported Hardware</h4>
 <ul>
 <li>DSRTC: MODE=STD, IO=112</li>
 <li>UART: IO=104</li>
@@ -4133,7 +4203,7 @@ is made using CMOS technology and more power efficient than FDC9266</p>
 <li>CTC: IO=32, TIMER MODE=COUNTER, DIVISOR=18432, HI=256, LO=72,
   INTERRUPTS ENABLED</li>
 </ul>
-<h4 id="notes_8">Notes:</h4>
+<h4 id="notes_9">Notes:</h4>
 <ul>
 <li>If ParPortProp is installed, initial console output is determined by
   JP1:</li>
