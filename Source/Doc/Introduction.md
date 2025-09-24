@@ -345,6 +345,8 @@ please let me know if I missed you!
 * Randy Merkel provided the ZSDOS Programmer's Manual as translated
   by Wayne Hortensius.
 
+* Henk Berends added support for the MSX platform.
+
 `\clearpage`{=latex}
 
 ## Related Projects

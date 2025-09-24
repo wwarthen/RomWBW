@@ -116,6 +116,7 @@ Others
 | [eZ80 for RCBus Module]^8^, 512K RAM/ROM                    | RCBus    | RCEZ80_std.rom              |        115200 |
 | [Genesis Z180 System]^7^                                    | STD      | GMZ180_std.rom              |        115200 |
 | [Heath H8 Z80 System]^5^                                    | H8       | HEATH_std.rom               |        115200 |
+| [MSX]^9^                                                    | MSX      | MSX_std.rom                 |        115200 |
 | [NABU w/ RomWBW Option Board]^5^                            | NABU     | NABU_std.rom                |        115200 |
 | [S100 Computers Z180 SBC]^4^                                | S100     | S100_std.rom                |         57600 |
 | [S100 Computers Z80 CPU]^4^                                 | S100     | SZ80_std.rom                |          9600 |
@@ -132,6 +133,7 @@ Others
 | ^6^Designed by Alan Cox
 | ^7^Designed by Doug Jackson
 | ^8^Designed by Dean Netherton
+| ^9^MSX Port by Henk Berends
 
 `\clearpage`{=latex}
 
@@ -622,6 +624,39 @@ It also has an interface to the RetroBrew bus (ECB) for access to additional per
 - IDE: MODE=MK4, IO=128, MASTER
 - IDE: MODE=MK4, IO=128, SLAVE
 - SD: MODE=MK4, IO=137, UNITS=1
+
+`\clearpage`{=latex}
+
+## MSX
+
+Support for standard MSX hardware by Henk Berends
+
+#### ROM Image File:  MSX_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Bus               | MSX           |
+| Default CPU Speed | 3.579 MHz     |
+| Interrupts        | Mode 1        |
+| System Timer      | TMS           |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | MSX           |
+| ROM Size          | 0 KB          |
+| RAM Size          | 448 KB        |
+
+#### Supported Hardware
+
+- RP5C01: IO=180
+- UART: IO=128
+- UART: IO=136
+- TMS: MODE=MSXMKY, IO=152, SCREEN=80X24, KEYBOARD=MKY, INTERRUPTS ENABLED
+- MKY: IO=168
+- MD: TYPE=RAM
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- AY38910: MODE=MSX, IO=160, CLOCK=1789772 HZ
+
+#### Notes:
 
 `\clearpage`{=latex}
 

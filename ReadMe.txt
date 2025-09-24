@@ -1,6 +1,6 @@
 RomWBW Introduction
 Wayne Warthen (wwarthen@gmail.com)
-22 Sep 2025
+24 Sep 2025
 
 
 
@@ -367,6 +367,8 @@ let me know if I missed you!
 
 - Randy Merkel provided the ZSDOS Programmer’s Manual as translated by
   Wayne Hortensius.
+
+- Henk Berends added support for the MSX platform.
 
 
 Related Projects
