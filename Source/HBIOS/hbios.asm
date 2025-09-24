@@ -960,6 +960,17 @@ HBX_ROM:
 	RET				; DONE
 #ENDIF
 ;
+#IF (MEMMGR == MM_MSX)
+	; MSX_NOTE: THE MSX PLATFORM PRELOADS THE ROM IMAGE IN RAM AND THE BANK ID ROM/RAM FLAG IS IGNORED
+	RES	7,A			; CLEAR RAM BIT
+	ADD	A,RAMBIAS		; ADD 2 x 32K - RAM STARTS FROM 16K SEGMENT 4
+	RLCA				; TIMES 2 - GET 16K PAGE INSTEAD OF 32K
+	OUT	(MPGSEL_0),A		; BANK_0: 0K - 16K
+	INC	A			;
+	OUT	(MPGSEL_1),A		; BANK_1: 16K - 32K
+	RET				; DONE
+#ENDIF
+;
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ; Copy Data - Possibly between banks.  This resembles CP/M 3, but
 ;  usage of the HL and DE registers is reversed.
@@ -1891,7 +1902,13 @@ ROMRESUME:
   #ENDIF
 ;
 #ENDIF
-
+;
+#IF (MEMMGR == MM_MSX)
+	LD	A,((ROMSIZE + RAMSIZE) / 16) - 2 + RAMBIAS * 2
+	OUT	(MPGSEL_2),A
+	INC	A
+	OUT	(MPGSEL_3),A
+#ENDIF
 ;
 ;--------------------------------------------------------------------------------------------------
 ; PROXY INSTALLATION
@@ -1930,7 +1947,12 @@ ROMRESUME:
 ;
 	LD	DE,HBX_LOC		; RUNNING LOCATION OF PROXY
 	LD	HL,HBX_IMG		; LOCATION OF PROXY IMAGE
+#IF (PLATFORM == PLT_MSX)
+	; MSX_NOTE: AVOID WRITING TO SECONDARY SLOT REGISTER AT ADDRESS $FFFF
+	LD	BC,HBX_SIZ-2		; SIZE OF PROXY
+#ELSE
 	LD	BC,HBX_SIZ		; SIZE OF PROXY
+#ENDIF
 	LDIR				; COPY IT
 ;
 ; NOTIFICATION THAT WE HAVE COMPLETED HARDWARE INIT.
@@ -3296,6 +3318,9 @@ HB_Z280BUS1:
 #ENDIF
 #IF (MEMMGR == MM_SZ80)
 	.TEXT	"SZ80$"
+#ENDIF
+#IF (MEMMGR == MM_MSX)
+	.TEXT	"MSX$"
 #ENDIF
 	CALL	PRTSTRD
 	.TEXT	" MMU$"
