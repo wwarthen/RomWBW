@@ -272,5 +272,6 @@ call Build NABU std || exit /b
 call Build SZ80 std || exit /b
 call Build SZ80 fpga || exit /b
 call Build UNA std || exit /b
+call Build MSX std || exit /b
 
 goto :eof
