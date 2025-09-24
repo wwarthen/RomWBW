@@ -1144,7 +1144,10 @@ romcopy:
 	cp	bid_cur			; special value?
 	jr	nz,romcopy1		; if not, continue
 	ld	a,(bid_ldr)		; else substitute
+	jr	romcopy2		; and continue
 romcopy1:
+	add	a,BID_IMG0		; add to start of image banks
+romcopy2:
 	push	af			; save source bank
 	;
 	ld	e,a			; source bank to E
@@ -2695,8 +2698,11 @@ ra_ent		.equ	12
 ; *_SIZ *_END and any code generated which does not include LAYOUT.INC is
 ; synced.
 ;
-; Note: The loadable ROM images are placed in ROM banks BID_IMG0 and
-; BID_IMG1.  However, RomWBW supports a mechanism to load a complete
+; Note: The loadable ROM images are placed in ROM banks starting with
+; BID_IMG0.  The bank numbers below are an offset from BID_IMG0 because
+; the actual bank id of BID_IMG0 varies per system.
+;
+; RomWBW supports a mechanism to load a complete
 ; new system dynamically as a runnable application (see appboot
 ; in hbios.asm).  In this case, the contents of BID_IMG0 will
 ; be pre-loaded into the currently executing ram bank thereby allowing
@@ -2705,48 +2711,48 @@ ra_ent		.equ	12
 ; normally found in BID_IMG0.  This special value will cause
 ; the associated image to be loaded from the currently executing bank
 ; which will be correct regardless of the load mode.  Images in other
-; banks (BID_IMG1) will always be loaded directly from ROM.
+; image banks (BID_IMG1).
 ;
 ra_tbl:
 ;
-;      Name	  Key	   Dsky	  Bank	     Src	   Dest	    Size     Entry
-;      ---------  -------  -----  --------   -----         -------  -------  ----------
-ra_ent(str_mon,	  'M',	   KY_CL, MON_BNK,   MON_IMGLOC,   MON_LOC, MON_SIZ, MON_SERIAL)
+;	Name		Key		Dsky		Bank		Src		Dest		Size		Entry
+;	---------	------		-----		--------	-----		------- 	------- 	----------
+ra_ent(str_mon,		'M',		KY_CL,		MON_BNK,	MON_IMGLOC,	MON_LOC,	MON_SIZ,	MON_SERIAL)
 ra_entsiz	.equ	$ - ra_tbl
 #if (BIOS == BIOS_WBW)
   #if (PLATFORM == PLT_S100)
-ra_ent(str_smon,  'O',	   $FF,	  bid_cur,   $8000,        $8000,   $0001,   s100mon)
+ra_ent(str_smon,	'O',		$FF,		bid_cur,	$8000,		$8000,		$0001,		s100mon)
   #endif
 #endif
-ra_ent(str_cpm22, 'C',	   KY_BK, CPM22_BNK, CPM22_IMGLOC, CPM_LOC, CPM_SIZ, CPM_ENT)
-ra_ent(str_zsys,  'Z',	   KY_FW, ZSYS_BNK,  ZSYS_IMGLOC,  CPM_LOC, CPM_SIZ, CPM_ENT)
+ra_ent(str_cpm22,	'C',		KY_BK,		CPM22_BNK,	CPM22_IMGLOC,	CPM_LOC,	CPM_SIZ,	CPM_ENT)
+ra_ent(str_zsys,	'Z',		KY_FW,		ZSYS_BNK,	ZSYS_IMGLOC,	CPM_LOC,	CPM_SIZ,	CPM_ENT)
 #if (BIOS == BIOS_WBW)
-ra_ent(str_bas,	  'B',	   KY_DE, BAS_BNK,   BAS_IMGLOC,   BAS_LOC, BAS_SIZ, BAS_LOC)
-ra_ent(str_tbas,  'T',	   KY_EN, TBC_BNK,   TBC_IMGLOC,   TBC_LOC, TBC_SIZ, TBC_LOC)
-ra_ent(str_fth,	  'F',	   KY_EX, FTH_BNK,   FTH_IMGLOC,   FTH_LOC, FTH_SIZ, FTH_LOC)
-ra_ent(str_play,  'P',	   $FF,	  GAM_BNK,   GAM_IMGLOC,   GAM_LOC, GAM_SIZ, GAM_LOC)
-ra_ent(str_net,   'N'+$80, $FF,	  NET_BNK,   NET_IMGLOC,   NET_LOC, NET_SIZ, NET_LOC)
-ra_ent(str_upd,   'X',	   $FF,	  UPD_BNK,   UPD_IMGLOC,   UPD_LOC, UPD_SIZ, UPD_LOC)
-ra_ent(str_blnk,  'W'+$80, $FF,	  NVR_BNK,   NVR_IMGLOC,   NVR_LOC, NVR_SIZ, NVR_LOC)
-ra_ent(str_blnk,  'D'+$80, $FF,	  DEV_BNK,   DEV_IMGLOC,   DEV_LOC, DEV_SIZ, DEV_LOC)
-ra_ent(str_blnk,  'S'+$80, $FF,	  SLC_BNK,   SLC_IMGLOC,   SLC_LOC, SLC_SIZ, SLC_LOC)
-ra_ent(str_user,  'U',	   $FF,	  USR_BNK,   USR_IMGLOC,   USR_LOC, USR_SIZ, USR_LOC)
+ra_ent(str_bas,		'B',		KY_DE,		BAS_BNK,	BAS_IMGLOC,	BAS_LOC,	BAS_SIZ,	BAS_LOC)
+ra_ent(str_tbas,	'T',		KY_EN,		TBC_BNK,	TBC_IMGLOC,	TBC_LOC,	TBC_SIZ,	TBC_LOC)
+ra_ent(str_fth,		'F',		KY_EX,		FTH_BNK,	FTH_IMGLOC,	FTH_LOC,	FTH_SIZ,	FTH_LOC)
+ra_ent(str_play,	'P',		$FF,		GAM_BNK,	GAM_IMGLOC,	GAM_LOC,	GAM_SIZ,	GAM_LOC)
+ra_ent(str_net,		'N'+$80,	$FF,		NET_BNK,	NET_IMGLOC,	NET_LOC,	NET_SIZ,	NET_LOC)
+ra_ent(str_upd,		'X',		$FF,		UPD_BNK,	UPD_IMGLOC,	UPD_LOC,	UPD_SIZ,	UPD_LOC)
+ra_ent(str_blnk,	'W'+$80,	$FF,		NVR_BNK,	NVR_IMGLOC,	NVR_LOC,	NVR_SIZ,	NVR_LOC)
+ra_ent(str_blnk,	'D'+$80,	$FF,		DEV_BNK,	DEV_IMGLOC,	DEV_LOC,	DEV_SIZ,	DEV_LOC)
+ra_ent(str_blnk,	'S'+$80,	$FF,		SLC_BNK,	SLC_IMGLOC,	SLC_LOC,	SLC_SIZ,	SLC_LOC)
+ra_ent(str_user,	'U',		$FF,		USR_BNK,	USR_IMGLOC,	USR_LOC,	USR_SIZ,	USR_LOC)
 #endif
 #if (DSKYENABLE)
-ra_ent(str_dsky,  'Y'+$80, KY_GO, MON_BNK,   MON_IMGLOC,   MON_LOC, MON_SIZ, MON_DSKY)
+ra_ent(str_dsky,	'Y'+$80,	KY_GO,		MON_BNK,	MON_IMGLOC,	MON_LOC,	MON_SIZ,	MON_DSKY)
 #endif
-ra_ent(str_blnk,  'E'+$80, $FF,   EGG_BNK,   EGG_IMGLOC,   EGG_LOC, EGG_SIZ, EGG_LOC)
+ra_ent(str_blnk,	'E'+$80,	$FF,		EGG_BNK,	EGG_IMGLOC,	EGG_LOC,	EGG_SIZ,	EGG_LOC)
 ;
 		.dw	0		; table terminator
 ;
 ra_tbl_app:
 ;
-;      Name	  Key	   Dsky	  Bank	    Src	         Dest	    Size     Entry
-;      ---------  -------  -----  --------  -----       -------  -------  ----------
-ra_ent(str_mon,	  'M',	   KY_CL, bid_cur,  MON_IMGLOC,  MON_LOC, MON_SIZ, MON_SERIAL)
-ra_ent(str_zsys,  'Z',	   KY_FW, bid_cur,  ZSYS_IMGLOC, CPM_LOC, CPM_SIZ, CPM_ENT)
+;	Name		Key		Dsky		Bank		Src		Dest		Size		Entry
+;	---------	------		-----		--------	-----		------- 	------- 	----------
+ra_ent(str_mon,		'M',		KY_CL,		bid_cur,	MON_IMGLOC,	MON_LOC,	MON_SIZ,	MON_SERIAL)
+ra_ent(str_zsys,	'Z',		KY_FW,		bid_cur,	ZSYS_IMGLOC,	CPM_LOC,	CPM_SIZ,	CPM_ENT)
 #if (DSKYENABLE)
-ra_ent(str_dsky,  'Y'+$80, KY_GO, bid_cur,  MON_IMGLOC,  MON_LOC, MON_SIZ, MON_DSKY)
+ra_ent(str_dsky,	'Y'+$80,	KY_GO,		bid_cur,	MON_IMGLOC,	MON_LOC,	MON_SIZ,	MON_DSKY)
 #endif
 ;
 		.dw	0		; table terminator

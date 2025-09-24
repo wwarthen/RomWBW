@@ -60,7 +60,7 @@ CPM_IMGSIZ	.EQU	$3000			; CPM IMAGE SIZE ON ROM
 ;--------------------------------------------------------------------------------------------------
 ;
 BNK_NXTLOC	.EQU	$0000			; RESET TO START OF BANK
-BNK_CUR		.EQU	1			; THIS IS ROM BANK 1 (BID_IMG0)
+BNK_CUR		.EQU	0			; BANK OFFSET FROM BID_IMG0
 ;
 LDR_BNK		.EQU	BNK_CUR
 LDR_LOC		.EQU	$0000			; RUNNING LOCATION OF BOOT LOADER
@@ -103,7 +103,7 @@ BNK1_SLACK	.EQU	BNKTOP - BNK_NXTLOC	; REMAINING BANK SPACE
 ;--------------------------------------------------------------------------------------------------
 ;
 BNK_NXTLOC	.SET	$0000			; RESET TO START OF BANK
-BNK_CUR		.SET	2			; THIS IS ROM BANK 2 (BID_IMG1)
+BNK_CUR		.SET	1			; BANK OFFSET FROM BID_IMG0
 ;
 ; NOTE FOLLOWING ARE COPY/PASTED INTO camel80.azm !!!!!!!!
 FTH_BNK		.EQU	BNK_CUR
@@ -178,7 +178,7 @@ BNK2_SLACK	.EQU	BNKTOP - BNK_NXTLOC	; REMAINING BANK SPACE
 ;--------------------------------------------------------------------------------------------------
 ;
 BNK_NXTLOC	.SET	$0000			; RESET TO START OF BANK
-BNK_CUR		.SET	3			; THIS IS ROM BANK 3 (BID_IMG2)
+BNK_CUR		.SET	2			; BANK OFFSET FROM BID_IMG0
 ;
 HWMON_BNK	.EQU	BNK_CUR
 HWMON_LOC	.EQU	$E000

@@ -49,13 +49,14 @@
 ; - std.asm
 ;   - ../ver.inc
 ;   - build.inc
-;     - Config/<plt>_std.asm
+;     - Config/<plt>_<cfg>.asm
 ;       - cfg_<plt>.asm
 ;         - cfg_MASTER.asm
 ;           - hbios.inc
 ;   - [z180.inc]
 ;   - [z280.inc]
 ;   - [eipc.inc]
+;   - layout.inc
 ; - util.asm
 ; - time.asm
 ; - bcd.asm
@@ -941,8 +942,23 @@ Z280_SYSCALL_GO:
 ;
 #IF (MEMMGR == MM_SZ80)
 ;
-; 1MB OF RAM IN 16K PAGES.  STARTS AT 4TH 16K PAGE AND WRAPS AROUND
-; BECAUSE PAGE 2 & 3 ARE FIXED TO HIGH 32K OF CPU ADDRESS SPACE.
+; The S100 Z80 CPU implements a custom memory manager that allows mapping the 2
+; lowest 16K portions of CPU address space ($0000-$3FFFF, and $4000-$7FFF).
+; Each of these banks can be mapped to any physical 16K bank.
+; The physical 16K banks are 16K aligned.  The memory manager
+; can address a maximum of 1MB of physical memory.  Which is
+; 64 x 16K banks (bank numbers $00-$3F)
+; 
+; The top 32K of CPU address space ($8000-$FFFF) is statically mapped
+; to physical banks $02 & $03.  RomWBW is designed to have the top
+; 32K of CPU address space assigned to the last two banks of
+; RAM.  So the RomWBW memory manager for this board (MM_SZ80)
+; rotates the requested bank numbers by 4.  With wrapping, this
+; causes a RomWBW request for the top two banks to be mapped to
+; physical banks $02 & $03.
+; 
+; Z80 CPU Physical:  $00 $01 $02 $03 ... $38 $39 $3A $3B $3C $3D $3E $3F
+; RomWBW Logical:    $04 $05 $06 $07 ... $3C $3D $3E $3F $00 $01 $02 $03
 ;
 	BIT	7,A			; BIT 7 SET REQUESTS RAM PAGE
 	JR	Z,HBX_ROM		; NOT SET, SELECT ROM PAGE
