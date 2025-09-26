@@ -1,17 +1,21 @@
 ;===============================================================================
 ; TIMER - Display system timer value
-; Version 1.31 24-July-2024
+; Version 1.4 25-September-2025
 ;===============================================================================
 ;
 ;	Author:  Wayne Warthen (wwarthen@gmail.com)
-;	Updated: MartinR (July 2024) - A user of uppercase mnemonics
+;	Updated: MartinR (September 2025) - A user of uppercase Z80 mnemonics
+;_______________________________________________________________________________
+;
+; This source code would benefit from a complete resstructuring to aid clarity.
 ;_______________________________________________________________________________
 ;
 ; Usage:
-;   TIMER [/C] [/?]
-;     ex: TIMER		(display current timer value)
-;         TIMER /?	(display version and usage)
-;         TIMER /C	(display timer value continuously)
+;   TIMER [/C] [Z] [/?]
+;     ex: TIMER		Display current timer value
+;         TIMER /?	Display version and usage
+;         TIMER /C	Display timer value continuously
+;	  TIMER /Z	Set the system timer to zero
 ;
 ; Operation:
 ;   Reads and displays system timer value.
@@ -21,7 +25,7 @@
 ; This source code assembles with TASM V3.2 under Windows-11 using the
 ; following command line:
 ;	tasm -80 -g3 -l TIMER.ASM TIMER.COM
-;	ie: Z80 CPU; output format 'binary' named .COM (rather than .OBJ)
+;	ie: Z80 CPU, output format 'binary' named .COM (rather than .OBJ)
 ;	and includes a symbol table as part of the listing file.
 ;_______________________________________________________________________________
 ;
@@ -31,6 +35,7 @@
 ;   2019-11-08 [WBW] Add seconds support
 ;   2024-06-30 [MR ] Display values in decimal rather than hexadecimal
 ;   2024-07-24 [MR ] Also display value in Hours-Mins-Secs format
+;   2025-09-25 [MR ] Add the option to set the system timer back to zero
 ;_______________________________________________________________________________
 ;
 ; Includes binary-to-decimal subroutine by Alwin Henseler
@@ -63,14 +68,14 @@ BF_SYSGETSECS	.EQU	$D1		; SECONDS subfunction
 BF_SYSSETSECS	.EQU	$D1		; SECONDS subfunction
 ;
 ;ASCII Control Characters
-LF		.EQU 	00AH		; Line Feed
-CR		.EQU 	00DH		; Carriage Return
+LF		.EQU 	$0A		; Line Feed
+CR		.EQU 	$0D		; Carriage Return
 ;
 ;===============================================================================
 ; Code Section
 ;===============================================================================
 ;
-	.ORG	$100
+	.ORG	$0100
 ;
 	; setup stack (save old value)
 	LD	(STKSAV),SP		; save stack
@@ -98,7 +103,7 @@ INIT:
 	CALL	PRTSTR			; print it
 ;
 	CALL	IDBIO			; identify active BIOS
-	CP	1				; check for HBIOS
+	CP	1			; check for HBIOS
 	JP	NZ,ERRBIO		; handle BIOS error
 ;
 	LD	A,RMJ << 4 | RMN	; expected HBIOS ver
@@ -282,10 +287,12 @@ OPTION:
 	RET	Z			; done if so
 	CP	' '			; blank?
 	RET	Z			; done if so
-	CP	'?'			; is it a '?'?
-	JP	Z,USAGE			; yes, display usage
-	CP	'C'			; is it a 'C', continuous?
-	JP	Z,SETCONT		; yes, set continuous display
+	CP	'?'			; Is it a '?' for 'help' command?
+	JP	Z,USAGE			; Yes, display usage
+	CP	'C'			; Is it a 'C' for 'continuous' command?
+	JP	Z,SETCONT		; Yes, set continuous display mode
+	CP	'Z'			; Is it a 'Z' for 'zero timer' command?
+	JR	Z,ZEROISE		; Set the timer to zero
 	JP	ERRPRM			; anything else is an error
 ;
 USAGE:
@@ -293,9 +300,21 @@ USAGE:
 ;
 SETCONT:
 ;
-	OR	$FF			; SET A TO TRUE
-	LD	(CONT),A		; AND SET CONTINUOUS FLAG
-	JR	OPTION			; CHECK FOR MORE OPTION LETTERS
+	OR	$FF			; Set A to true
+	LD	(CONT),A		; and set CONT(inous) flag
+	JR	OPTION			; Check for any more option letters.
+;
+ZEROISE:
+;
+	LD	DE,MSGZERO		; Confirm resetting system timer to zero
+	CALL	PRTSTR	
+;
+	LD	B,BF_SYSSET		; HBIOS SYSSET function
+	LD	C,BF_SYSSETSECS		; SETSECS subfunction
+	LD	DE,$0000		; set seconds value
+	LD	HL,$0000		; ... to zero
+	RST	08			; Call HBIOS, DE:HL := seconds value
+	JP	EXIT			; Done - so exit back to CCP
 ;
 ; Identify active BIOS.  RomWBW HBIOS=1, UNA UBIOS=2, else 0
 ;
@@ -772,14 +791,16 @@ LOOPDIV1:
 ; Messages Section
 ;===============================================================================
 
-MSGBAN	.DB	"TIMER v1.31, 24-Jul-2024",CR,LF
+MSGBAN	.DB	"TIMER v1.4, 25-Sep-2025",CR,LF
 	.DB	"Copyright (C) 2019, Wayne Warthen, GNU GPL v3",CR,LF
-	.DB	"Updated by MartinR 2024",0
-MSGUSE	.DB	"Usage: TIMER [/C] [/?]",CR,LF
-	.DB	"  ex. TIMER           (display current timer value)",CR,LF
-	.DB	"      TIMER /?        (display version and usage)",CR,LF
-	.DB	"      TIMER /C        (display timer value continuously)",0
+	.DB	"Updated by MartinR 2024 & 2025",CR,LF,0
+MSGUSE	.DB	"Usage: TIMER [/C] [Z] [/?]",CR,LF
+	.DB	"  ex. TIMER           Display current timer value",CR,LF
+	.DB	"      TIMER /?        Display version and usage",CR,LF
+	.DB	"      TIMER /C        Display timer value continuously",CR,LF
+	.DB	"      TIMER /Z        Set the timer to zero",0
 MSGPRM	.DB	"Parameter error (TIMER /? for usage)",0
+MSGZERO	.DB	"Setting system timer to zero",0
 MSGBIO	.DB	"Incompatible BIOS or version, "
 	.DB	"HBIOS v", '0' + rmj, ".", '0' + rmn, " required",0
 STRTICK	.DB	" Ticks   ",0

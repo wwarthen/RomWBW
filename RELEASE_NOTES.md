@@ -8,10 +8,27 @@ release of RomWBW.
 - **Please** review the "Upgrading" Section of the RomWBW User Guide.
 
 - The RomWBW ROM and the RomWBW disk images are intended to be a
-  matched set.  After upgrading your ROM, it is important to update
-  the OS boot tracks of your disks as well as the RomWBW-specific
-  applications.  This is discussed in the "Upgrading" section of the
-  RomWBW User Guide.
+  matched set.  After upgrading your ROM, you need to update your
+  boot disk media by doing one of the following:
+  
+  - Write a new disk image (typically hd1k_combo.img) onto your
+    disk media (will overwrite existing data/files).
+  - Update the boot tracks of the bootable OS images as described in
+    the RomWBW User Guid.
+
+## Version 3.6
+
+### Upgrade Notes
+
+- The FZ80 (S100 FPGA Z80) platform has been renamed to SZ80 (S100 Z80)
+  and has two configurations.  SZ80_std is for the generic S100
+  Z80 CPU.  SZ80_fpga is for the FPGA Z80 SBC.
+
+### New Features
+
+### New Hardware Support
+
+- Support for MSX systems.
 
 ## Version 3.5.1
 
@@ -93,7 +110,6 @@ This is a patch release of v3.5.
 
 - Enhancements to ASSIGN command to automatically assign drives
   (Mark Pruden).
-
 
 ### New Hardware Support
 

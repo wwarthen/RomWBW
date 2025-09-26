@@ -28,6 +28,7 @@ Version 3.6
 - WBW: Updated Cowgol disk image with latest COWFIX.COM from Ladislau Szilagyi
 - WBW: Preliminary support for S100 Computers Z80 CPU
 - HJB: Added MSX platform
+- M?R: Update Timer app with "zero" option
 
 Version 3.5.1
 -------------

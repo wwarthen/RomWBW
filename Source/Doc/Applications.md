@@ -2487,6 +2487,7 @@ displays the value of the counter.
 `TIMER`
 `TIMER /?`
 `TIMER /C`
+`TIMER /Z`
 
 #### Usage
 
@@ -2494,9 +2495,11 @@ Use `TIMER` to display the current value of the counter.
 
 Use `TIMER /C` to display the value of the counter continuously.
 
+Use `TIMER /Z` to zero the seconds counter.
+
 The display of the counter will be something like this:
 
-`13426 Ticks     268.52 Seconds`
+`2859 Ticks   24.18 Seconds   0:00:24.18 HH:MM:SS`
 
 The first number is the total number of ticks since system startup, where
 there are 50 ticks per second. The second number is the total number of
@@ -2504,15 +2507,18 @@ seconds since system startup. Numbers are displayed in decimal format.
 
 #### Notes
 
-The seconds value is displayed with a fractional value which is not a
-an actual fraction, but rather the number of ticks past the seconds
-rollover.  All values are in hex.
+Not all systems will have a system timer.  In this case, the
+`TIMER` command will output 0 for both ticks and seconds and never
+increment.
+
+The resolution of the timer is determined by the system timer
+frequency which is typically 50Hz.  This means that the seconds
+fraction will increment 0.02 seconds with each timer tick.
 
 The primary use of the `TIMER` application is to test the system
-timer functionality of your system.
-
-In theory, you could capture the value before and after some process
-you want to time.
+timer functionality of your system.  However, it can be used to
+capture the value before and after some process you want to measure
+elapsed runtime.
 
 #### Etymology
 
