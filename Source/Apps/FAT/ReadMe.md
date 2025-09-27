@@ -1,7 +1,7 @@
 # RomWBW HBIOS CP/M FAT Utility ("FAT.COM")
 
 Author: Wayne Warthen \
-Updated: 6-May-2024
+Updated: 27-Aug-2025
 
 This application allows copying files between CP/M filesystems and FAT 
 filesystems (DOS, Windows, Mac, Linux, etc.).  The application runs on 
@@ -142,10 +142,10 @@ creation.
 
 | Date        | Version | Notes                                                       |
 |------------:|-------- |-------------------------------------------------------------|
-| 2-May-2019  | v0.9    | (beta) initial release                                      |
-| 7-May-2019  | v0.9.1  | (beta) added REN and DEL                                    |
-| 8-May-2019  | v0.9.2  | (beta) handle file collisions w/ user prompt                |
-| 8-Oct-2019  | v0.9.3  | (beta) fixed incorrect filename buffer size (MAX_FN)        |
+|  2-May-2019 | v0.9    | (beta) initial release                                      |
+|  7-May-2019 | v0.9.1  | (beta) added REN and DEL                                    |
+|  8-May-2019 | v0.9.2  | (beta) handle file collisions w/ user prompt                |
+|  8-Oct-2019 | v0.9.3  | (beta) fixed incorrect filename buffer size (MAX_FN)        |
 | 10-Oct-2019 | v0.9.4  | (beta) upgraded to FatFs R0.13c                             |
 | 10-Oct-2019 | v0.9.5  | (beta) added MD (make directory)                            |
 | 10-Oct-2019 | v0.9.6  | (beta) added FORMAT                                         |
@@ -153,6 +153,7 @@ creation.
 |             |         | add attributes to directory listing                         |
 | 12-Apr-2021 | v0.9.8  | (beta) support CP/NET drives                                |
 | 12-Oct-2023 | v0.9.9  | (beta) handle updated HBIOS Disk Device call                |
-| 6-Jan-2024  | v1.0.0  | updated to latest FsFat (v0.15)                             |
+|  6-Jan-2024 | v1.0.0  | updated to latest FsFat (v0.15)                             |
 |             |         | updated to latest SDCC (v4.3)                               |
-| 6-May-2024  | v1.1.0  | improve floppy format boot record                           |
+|  6-May-2024 | v1.1.0  | improve floppy format boot record                           |
+| 27-Aug-2025 | v1.2.0  | update location of RomWBW IDENT pointer                     |
