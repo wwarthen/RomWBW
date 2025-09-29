@@ -1729,7 +1729,7 @@ to format and test floppy disk media.
 
 #### Syntax
 
-`FDU`
+| `FDU`
 
 #### Usage
 
@@ -1850,7 +1850,7 @@ make it simpler to format media including floppy disks.
 
 #### Syntax
 
-`FORMAT`
+| `FORMAT`
 
 #### Notes
 
@@ -1877,16 +1877,16 @@ against HBIOS Character Units.
 
 #### Syntax
 
-`HTALK COMn:`
+| `HTALK `*<unit>*
 
 #### Usage
 
 `HTALK` operates at the HBIOS level.
 
-The parameter to `TALK` refers to a HBIOS character unit.  Upon
-execution all characters typed at the console will be sent to the
-device specified and all characters received by the specified device
-will be echoed on the console.
+The *<unit>* parameter to `TALK` is a single number referring to an HBIOS 
+character unit.  Upon execution all characters typed at the console will
+be sent to the device specified and all characters received by the 
+specified device will be echoed on the console.
 
 Press Control+Z on the console to terminate the application.
 
@@ -1913,8 +1913,8 @@ ports dynamically.
 
 #### Syntax
 
-`MODE /?`
-`MODE COM`*`<n>`*`: [`*`<baud>`*`[,`*`<parity>`*`[,`*`<databits>`*`[,`*`<stopbits>`*`]]]] [/P]`
+| `MODE /?`
+| `MODE COM`*`<n>`*`: [`*`<baud>`*`[,`*`<parity>`*`[,`*`<databits>`*`[,`*`<stopbits>`*`]]]] [/P]`
 
 `/?` displays command usage and version information
 
@@ -2029,7 +2029,7 @@ and set the time and registers of the RTC.
 
 #### Syntax
 
-`RTC`
+| `RTC`
 
 #### Usage
 
@@ -2088,7 +2088,7 @@ the `SET` command
 
 #### Syntax
 
-`SLABEL [unit.slice=label] [/?]`
+| `SLABEL [unit.slice=label] [/?]`
 
 `unit.slice` the disk unit and slice number to apply the new label to. This 
 is in the same format as when booting the system to a disk
@@ -2416,7 +2416,7 @@ shown on your console.  The `TALK` application does this.
 
 #### Syntax
 
-`TALK [TTY:|CRT:|BAT:UC1:]`
+| `TALK [TTY:|CRT:|BAT:|UC1:]`
 
 #### Usage
 
@@ -2453,7 +2453,7 @@ Z80 port of Palo Alto Tiny Basic.
 
 #### Syntax
 
-`TBASIC` [*\<filename\>*]
+| `TBASIC` [*\<filename\>*]
 
 #### Usage
 
@@ -2484,10 +2484,10 @@ displays the value of the counter.
 
 #### Syntax
 
-`TIMER`
-`TIMER /?`
-`TIMER /C`
-`TIMER /Z`
+| `TIMER`
+| `TIMER /?`
+| `TIMER /C`
+| `TIMER /Z`
 
 #### Usage
 
@@ -2543,7 +2543,7 @@ whether support for it is included in the RomWBW HBIOS configuration
 
 #### Syntax
 
-`TUNE `*`<filename>`* `*`<options>`*`
+| `TUNE `*`<filename>`* `*`<options>`*`
 
 *`<filename>`* is the name of a sound file ending in .PT2, .PT3, or
 .MYM
@@ -2678,7 +2678,7 @@ chips.
 
 #### Syntax
 
-`VGMPLAY `*`<filename>`*
+| `VGMPLAY `*`<filename>`*
 
 *`<filename>`* is the name of a sound file ending in .VGM
 
@@ -2921,7 +2921,7 @@ to Z-System compatibility.
 
 #### Syntax
 
-`ZMD` *\<mode\>\<protocol\>\<unit\>* [*\<filename\>*]
+| `ZMD` *\<mode\>\<protocol\>\<unit\>* [*\<filename\>*]
 
 where *\<mode\>* can be:\
 **`   S  -`** Send file from BBS \
@@ -3001,7 +3001,7 @@ that is independent of the console running `ZMP`.
 
 #### Syntax
 
-`ZMD` *[\<unit\>]*
+| `ZMD` *[\<unit\>]*
 
 *\<unit\>* can specify a single digit (0-9) indicating
 the RomWBW Character Unit to use for the modem port.
