@@ -631,6 +631,8 @@ It also has an interface to the RetroBrew bus (ECB) for access to additional per
 
 Support for standard MSX hardware by Henk Berends
 
+The default configuration is for a European MSX 2 (PAL) with international keyboard and 512KB RAM Mapper extension.
+
 #### ROM Image File:  MSX_std.rom
 
 |                   |               |
@@ -654,9 +656,15 @@ Support for standard MSX hardware by Henk Berends
 - MD: TYPE=RAM
 - IDE: MODE=RC, IO=16, MASTER
 - IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: MODE=MSX_BEER, IO=48, MASTER
+- PPIDE: MODE=MSX_BEER, NO SLAVE
 - AY38910: MODE=MSX, IO=160, CLOCK=1789772 HZ
 
 #### Notes:
+
+- MSX 1 can be used with the TMS VDP set to 40 columns mode.
+- Storage options are the BEER IDE and SODA IDE interfaces.
+- Serial option is a 16550 UART interface.
 
 `\clearpage`{=latex}
 
