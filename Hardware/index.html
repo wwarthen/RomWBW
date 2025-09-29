@@ -396,7 +396,7 @@
 <p><strong>RomWBW Hardware</strong> \
 Version 3.6 \
 Wayne Warthen  (<a href="mailto:wwarthen@gmail.com">wwarthen@gmail.com</a>) \
-24 Sep 2025</p>
+29 Sep 2025</p>
 <h1 id="overview">Overview</h1>
 <h2 id="supported-platforms">Supported Platforms</h2>
 <p>This section contains a summary of the system configuration target for
@@ -1552,6 +1552,8 @@ access to additional peripheral boards.</p>
 </ul>
 <h2 id="msx">MSX</h2>
 <p>Support for standard MSX hardware by Henk Berends</p>
+<p>The default configuration is for a European MSX 2 (PAL) with
+international keyboard and 512KB RAM Mapper extension.</p>
 <h4 id="rom-image-file-msx_stdrom">ROM Image File: MSX_std.rom</h4>
 <table>
 <thead>
@@ -1606,9 +1608,16 @@ access to additional peripheral boards.</p>
 <li>MD: TYPE=RAM</li>
 <li>IDE: MODE=RC, IO=16, MASTER</li>
 <li>IDE: MODE=RC, IO=16, SLAVE</li>
+<li>PPIDE: MODE=MSX_BEER, IO=48, MASTER</li>
+<li>PPIDE: MODE=MSX_BEER, NO SLAVE</li>
 <li>AY38910: MODE=MSX, IO=160, CLOCK=1789772 HZ</li>
 </ul>
 <h4 id="notes_2">Notes:</h4>
+<ul>
+<li>MSX 1 can be used with the TMS VDP set to 40 columns mode.</li>
+<li>Storage options are the BEER IDE and SODA IDE interfaces.</li>
+<li>Serial option is a 16550 UART interface.</li>
+</ul>
 <h2 id="nabu-w-romwbw-option-board">NABU w/ RomWBW Option Board</h2>
 <p>No modifications to the NABU motherboard needed. Leave the standard NABU
 ROM in its socket on the motherboard, no need to remove it. You can

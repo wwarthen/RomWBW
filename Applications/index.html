@@ -368,7 +368,7 @@
 <p><strong>RomWBW Applications Guide</strong> \
 Version 3.6 \
 MartinR \&amp; Phillip Summers  (<a href="mailto:"></a>) \
-24 Sep 2025</p>
+29 Sep 2025</p>
 <h1 id="summary">Summary</h1>
 <p>RomWBW is supplied with a suite of software applications that enhance
 the use of the system. Some of these applications have been written
@@ -2307,13 +2307,13 @@ provided in the RomWBW distribution.</p>
 <p><code>HTALK</code> is a variation of the <code>TALK</code> utility, but it works directly
 against HBIOS Character Units.</p>
 <h4 id="syntax_9">Syntax</h4>
-<p><code>HTALK COMn:</code></p>
+<p><code>HTALK</code><em><unit></em></p>
 <h4 id="usage_10">Usage</h4>
 <p><code>HTALK</code> operates at the HBIOS level.</p>
-<p>The parameter to <code>TALK</code> refers to a HBIOS character unit. Upon execution
-all characters typed at the console will be sent to the device specified
-and all characters received by the specified device will be echoed on
-the console.</p>
+<p>The <em><unit></em> parameter to <code>TALK</code> is a single number referring to an
+HBIOS character unit. Upon execution all characters typed at the console
+will be sent to the device specified and all characters received by the
+specified device will be echoed on the console.</p>
 <p>Press Control+Z on the console to terminate the application.</p>
 <h4 id="notes_11">Notes</h4>
 <h4 id="etymology_9">Etymology</h4>
@@ -2342,7 +2342,7 @@ an original product designed specifically for RomWBW.</p>
 as baud rate, data bits, stop bits, and parity bits of serial ports
 dynamically.</p>
 <h4 id="syntax_10">Syntax</h4>
-<p><code>MODE /?</code>
+<p><code>MODE /?</code><br />
 <code>MODE COM</code><em><code>&lt;n&gt;</code></em><code>: [</code><em><code>&lt;baud&gt;</code></em><code>[,</code><em><code>&lt;parity&gt;</code></em><code>[,</code><em><code>&lt;databits&gt;</code></em><code>[,</code><em><code>&lt;stopbits&gt;</code></em><code>]]]] [/P]</code></p>
 <p><code>/?</code> displays command usage and version information</p>
 <p><em><code>&lt;n&gt;</code></em> is the character device unit number</p>
@@ -2972,7 +2972,7 @@ your second serial port, you might want to connect directly to it and
 have everything you type sent to it and everything it sends be shown on
 your console. The <code>TALK</code> application does this.</p>
 <h4 id="syntax_17">Syntax</h4>
-<p><code>TALK [TTY:|CRT:|BAT:UC1:]</code></p>
+<p><code>TALK [TTY:|CRT:|BAT:|UC1:]</code></p>
 <h4 id="usage_18">Usage</h4>
 <p><code>TALK</code> operates at the operating system level (not HBIOS).</p>
 <p>The parameter to <code>TALK</code> refers to logical CP/M serial devices. Upon
@@ -3041,24 +3041,29 @@ Dimitri Theulings. The primary distribution site for this work is
 incremented every time a timer tick occurs. The <code>TIMER</code> application
 displays the value of the counter.</p>
 <h4 id="syntax_19">Syntax</h4>
-<p><code>TIMER</code> <code>TIMER /?</code> <code>TIMER /C</code></p>
+<p><code>TIMER</code><br />
+<code>TIMER /?</code><br />
+<code>TIMER /C</code><br />
+<code>TIMER /Z</code></p>
 <h4 id="usage_20">Usage</h4>
 <p>Use <code>TIMER</code> to display the current value of the counter.</p>
 <p>Use <code>TIMER /C</code> to display the value of the counter continuously.</p>
+<p>Use <code>TIMER /Z</code> to zero the seconds counter.</p>
 <p>The display of the counter will be something like this:</p>
-<p><code>13426 Ticks     268.52 Seconds</code></p>
+<p><code>2859 Ticks   24.18 Seconds   0:00:24.18 HH:MM:SS</code></p>
 <p>The first number is the total number of ticks since system startup,
 where there are 50 ticks per second. The second number is the total
 number of seconds since system startup. Numbers are displayed in decimal
 format.</p>
 <h4 id="notes_20">Notes</h4>
-<p>The seconds value is displayed with a fractional value which is not a an
-actual fraction, but rather the number of ticks past the seconds
-rollover. All values are in hex.</p>
+<p>Not all systems will have a system timer. In this case, the <code>TIMER</code>
+command will output 0 for both ticks and seconds and never increment.</p>
+<p>The resolution of the timer is determined by the system timer frequency
+which is typically 50Hz. This means that the seconds fraction will
+increment 0.02 seconds with each timer tick.</p>
 <p>The primary use of the <code>TIMER</code> application is to test the system timer
-functionality of your system.</p>
-<p>In theory, you could capture the value before and after some process you
-want to time.</p>
+functionality of your system. However, it can be used to capture the
+value before and after some process you want to measure elapsed runtime.</p>
 <h4 id="etymology_18">Etymology</h4>
 <p>The <code>TIMER</code> command is an original product and the source code is
 provided in the RomWBW distribution.</p>
