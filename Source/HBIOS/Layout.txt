@@ -38,7 +38,8 @@ ROM2 [32K] -> rom2.bin
   netboot     [4.00K]
   updater.bin [3.25K]
   sysconf.bin [2.00K]
-  usrrom.bin  [3.75K]
+  usrrom.bin  [0.50K]
+  slack       [3.25K]
 
 ROM3 [32K] -> rom3.bin
   hwmon       [ 8.00K]
