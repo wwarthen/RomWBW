@@ -10,9 +10,12 @@
 
 ROMWBW_SEG	.equ	4			; RomWBW boot segment
 
+RDSLT		.equ	$000c			; read value of address in other slot
+CALSLT		.equ	$001c			; inter-slot call routine
 CHGCPU		.equ	$0180			; changes CPU mode
-P2_SEG  	.equ     $f2c9	          	; current segment page 2 (MSX-DOS 2)
+P2_SEG  	.equ	$f2c9	          	; current segment page 2 (MSX-DOS 2)
 CSRSW		.equ	$fca9			; cursor on/off flag
+MNROM		.equ	$fcc1			; main system rom slot
 H_TIMI		.equ	$fd9f			; timer interrupt hook (vdp vsync)
  
 ; ------------------------------------------------------------------------------
@@ -117,13 +120,18 @@ mtcount:	call	H_TIMI			; H.TIMI handler saves register AF
 		dec	a
 		jr	nz,mtcount
 
-		; set CPU to Z80 mode
-		ld	a,(CHGCPU)
-		cp	$c3
-		ld	a,$80			; set Z80 mode + switch Turbo LED indicator
-		call	z,CHGCPU		
+		; set CPU to Z80 mode / turbo off
+		ld	hl,CHGCPU
+		ld	a,(MNROM)
+		call	RDSLT			; routine to change CPU mode exists in BIOS?
+		cp	$c3			; z=yes
+		ld	a,$80			; Z80 mode + switch Turbo LED indicator
+		ld	ix,CHGCPU		; change CPU routine
+		ld	iy,(MNROM-1)		; in main rom
+		call	z,CALSLT
 
 		; select RomWBW bootloader bank and start RomWBW
+		di
 		ld	a,ROMWBW_SEG
 		out	($fc),a
 		inc	a
