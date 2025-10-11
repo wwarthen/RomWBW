@@ -188,7 +188,7 @@ SUPCTS	.EQU	FALSE		; SUPPRESS CTS DURING HBIOS BOOT
 ; MBC: LED Port=0x70, bits 1-0, normal, shared w/ RTC port (LEDMODE_RTC)
 ; RPH?
 ; DUO: LED Port=0x94, bits 1-0, normal, shared w/ RTC port (LEDMODE_RTC)
-; S100: LED Port = $0E, bit 2, inverted, dedicated port (LEDMODE_SC)
+; S100 Z180 SBC: LED Port = $0E, bit 2, inverted, dedicated port (LEDMODE_SC)
 ; NABU: LED Port = $00, bits 5-3, normal, shared w/ control port (LEDMODE_NABU)
 ;
 #IF (LEDENABLE)
@@ -3701,6 +3701,12 @@ HB_WDZ:
 	IN	A,($75)			; GET IO BYTE
 	AND	%00000001		; ISOLATE CONSOLE BIT
 	JR	NZ,INITSYS3		; NOT SET, BYPASS CONSOLE SWITCH
+  #ENDIF
+;
+  #IF ((PLATFORM == PLT_SZ80) & (MEMMGR == MM_SZ80))
+	IN	A,($EF)			; GET IO BYTE
+	AND	%00100000		; ISOLATE CONSOLE BIT
+	JR	Z,INITSYS3		; IF ZERO, BYPASS CONSOLE SWITCH
   #ENDIF
 ;
   #IF ((PLATFORM == PLT_SZ80) & (MEMMGR == MM_Z2))
