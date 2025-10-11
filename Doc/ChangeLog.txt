@@ -31,6 +31,7 @@ Version 3.6
 - M?R: Update Timer app with "zero" option
 - HJB: Update PPIDE driver, add support for MSX BEER IDE interface
 - HJB: Added loader for MSX
+- HJB: Added IDE driver master media detect option
 
 Version 3.5.1
 -------------
