@@ -45,6 +45,7 @@ OPENSPIN=$(BINDIR)/openspin
 CPMCP=$(BINDIR)/cpmcp
 CPMLS=$(BINDIR)/cpmls
 CPMCHATTR=$(BINDIR)/cpmchattr
+COMPRESS=$(BINDIR)/compress
 
 #
 # directory containing cpm binaries

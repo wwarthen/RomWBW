@@ -1,13 +1,15 @@
 DEST=../../Binary
+OTHERS=*.hex *.upd *.cmp
 
 HD1KIMGS = $(DEST)/hd1k_cpm22.img $(DEST)/hd1k_zsdos.img $(DEST)/hd1k_nzcom.img \
 	$(DEST)/hd1k_cpm3.img $(DEST)/hd1k_zpm3.img $(DEST)/hd1k_ws4.img
 
-ROMS := $(wildcard $(DEST)/RCZ80_ez512_*.rom)
-ROMS := $(patsubst $(DEST)/%.rom,%,$(ROMS))
+ROMS := $(wildcard $(DEST)/RCZ80_ez512_*.upd)
+ROMS := $(patsubst $(DEST)/%.upd,%,$(ROMS))
 
 OBJECTS := $(patsubst %,%_hd1k_prefix.dat,$(ROMS))
 OBJECTS += $(patsubst %,%_hd1k_combo.img,$(ROMS))
+OBJECTS += $(patsubst %,%_64k.rom,$(ROMS))
 
 TOOLS = ../../Tools
 
@@ -25,3 +27,8 @@ DIFFPATH = $(DIFFTO)/Binary
 
 %_hd1k_combo.img: %_hd1k_prefix.dat  $(HD1KIMGS)
 	cat $^ > $@
+
+%_64k.rom: $(DEST)/%.upd decomp.hex
+	srec_cat $< -binary -exclude 0x13700 0x14A00 -fill 0xC9 0x13700 0x14A00 -o temp.upd -binary
+	$(COMPRESS) temp.upd
+	srec_cat decomp.hex -intel temp.upd.cmp -binary -offset 3 -o $@ -binary

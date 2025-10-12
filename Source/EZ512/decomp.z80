@@ -1,0 +1,151 @@
+; 251003 decomp_rom_v1.1
+; Mark Pruden: Fix for omitted Bank 4
+;
+; 250208 decomp_rom v1.0
+; Paul de Bak: Renamed and used in RomWBW utility program 'compress_upd.c'
+; to compress *.upd binary files
+;
+;1/17/25
+;decompress RomWBW v1.0 - Original version by Bill Shen
+;Routine in ROM that decompress RomWBW data file into RAM and jump to it.
+;copy data file to RAM starting from bank 0, addr 0.
+;when encountered two consecutive bytes of same values, the tird byte following the consecutive values
+;  describe how many more identical bytes need to be added.
+;decompression ends when 3 banks (96KB) are expanded
+;compressed data is stored from address $3 to below $FF00
+;decompress program is located at $FF00
+
+;register usage
+;regC points to bankreg
+;regB is ROM source ($20)
+;regD is RAM destination bank
+;regE is previous value
+;regHL is destination pointer
+;regIX is source pointer
+;regIY points to byte count
+
+bankreg	equ 0ch		;PIO port C is 512K RAM bank register
+SIOAData	equ 8h		;location of SIO chan A data
+SIOACmd	equ 9h		;location of SIO ch A command/status reg
+SIOBData	equ 0ah		;location of SIO chan B data
+SIOBCmd	equ 0bh		;location of SIO ch B command/status reg
+PORTCData	equ 0ch		;PIA port C data
+PORTCCmd	equ 0dh		;PIA port C command
+
+	org 0
+	jp 0ff00h			;do program at top of memory
+dataRomWBW:
+;compressed RomWBW data appended here
+	org 0ff00h
+	ld a,09h			;write to KIO command reg first, enable PIA mux
+	out (0eh),a		;  SIO-CTC-PIO priority daisy chain
+
+	ld hl,0ff00h		;copy self into RAM
+	ld de,0ff00h
+	ld bc,100h
+	ldir
+
+	xor a			;PortC are all outputs. This will cause both RAM and ROM
+	out (PORTCCmd),a		; to be enabled until following OUT instruction, since RAM and
+				; ROM have same contents, this won't cause contention
+	ld a,00100010b		; ROM enable, RAM disable, bank$2, nRTSA, nRTSB enabled
+	out (PORTCData),a
+;register usage
+;regC points to bankreg
+;regB is ROM source ($20)
+;regD is RAM destination bank
+;regE is previous value
+;regHL is destination pointer
+;regIX is source pointer
+;regIY points to byte count
+	ld c,bankreg		;regC points to bank register IO address
+	ld e,0			;make sure regE is not the same as very first byte which is 0xC3
+	ld b,20h			;regB is ROM source
+	ld d,80h			;regD is RAM destination
+	ld hl,0			;destination starts from bank 0, address 0
+	ld ix,dataRomWBW		;regIX points to compressed RomWBW
+	ld iy,cSame		;regIY points to the count of same value
+start:
+	out (c),b			;read data from ROM
+;these two lines are executing program in ROM which has same program as RAM
+	ld a,(ix)			;read from source
+	out (c),d
+;running in RAM
+	ld (hl),a			;write to destination
+	cp e			;two consecutive same values?
+	jp z,decomp
+	ld e,a			;update the 'previous' value
+	inc ix			;next value in ROM
+	inc hl			;next destination value
+	ld a,h
+	cp 80h			;check for address greater than 32KB
+	jp z,nxtDbank
+	jp start
+nxtDbank:
+	ld hl,0
+	inc d			;next bank
+	ld a,d
+;;	cp 83h			;compare to bank 3
+	cp 84h			;MP compare to bank 4
+	jp z,decompDone
+	jp start
+decomp:
+	out (c),b			;read data from ROM
+;running in ROM
+	inc ix			;point to byte count of same value
+	ld a,(ix)			;get the count value
+	out (c),d			;switch to RAM bank
+;running in RAM
+	dec a			;reduce by 1 because one byte is already written
+	ld (iy),a			;store count to cSame pointed by regIY
+	jp z,DoDecomp2		;just two consecutive values
+DoDecomp:
+	inc hl			;next destination value
+	ld a,h
+	cp 80h
+	jp z,nxtDbank1
+DoDecomp1:
+	ld (hl),e			;write previous value (in regE) to destination
+	dec (iy)
+	jp nz,DoDecomp
+DoDecomp2:
+;done with block decompression, get ready to start over
+	out (c),b
+;running in ROM
+	inc ix			;point to next data in ROM
+	ld e,(ix)
+	dec e			;make sure previous value does not match, in case of large
+				; block (>256) of same values
+	out (c),d
+;running in RAM
+	inc hl
+	ld a,h
+	cp 80h			;check for address grater than 32KB
+	jp z,nxtDbank2
+	jp start
+nxtDbank1:
+	ld hl,0
+	inc d			;next bank
+	ld a,d
+	cp 83h			;compare to bank3
+	jp z,decompDone
+	out (c),d			;update bank before continuing
+	jp DoDecomp1
+nxtDbank2:
+	ld hl,0
+	inc d			;next bank
+	ld a,d
+	cp 83h			;compare to bank 3
+	jp z,decompDone
+	jp start
+decompDone:
+;decompression is done, reaching 96KB of data
+	ld a,80h			;ROM disable, RAM enable, bank$0, nRTSA, nRTSB enabled
+	out (c),a
+	jp 0			;execute RomWBW
+
+cSame:	db 0			;count of the same value
+
+	end
+
+

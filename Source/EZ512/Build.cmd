@@ -3,9 +3,13 @@ setlocal
 
 set TOOLS=../../Tools
 
-set PATH=%TOOLS%\srecord;%PATH%
+set PATH=%TOOLS%\zxcc;%TOOLS%\srecord;%TOOLS%\compress;%PATH%
 
-for %%f in (..\..\Binary\RCZ80_ez512_*.rom) do call :build %%~nf
+set CPMDIR80=%TOOLS%/cpm/
+
+zxcc z80asm -decomp/HL
+
+for %%f in (..\..\Binary\RCZ80_ez512_*.upd) do call :build %%~nf
 
 goto :eof
 
@@ -22,5 +26,9 @@ srec_cat temp.dat -binary -exclude 0x24000 0xA4000 ..\..\Binary\%1.rom -binary -
 move temp.dat ..\..\Binary\%1_hd1k_prefix.dat
 
 copy /b ..\..\Binary\%1_hd1k_prefix.dat + ..\..\Binary\hd1k_cpm22.img + ..\..\Binary\hd1k_zsdos.img + ..\..\Binary\hd1k_nzcom.img + ..\..\Binary\hd1k_cpm3.img + ..\..\Binary\hd1k_zpm3.img + ..\..\Binary\hd1k_ws4.img ..\..\Binary\%1_hd1k_combo.img || exit /b
+
+srec_cat ..\..\Binary\%1.upd -binary -exclude 0x13700 0x14A00 -fill 0xC9 0x13700 0x14A00 -o temp.upd -binary
+compress temp.upd
+srec_cat decomp.hex -intel temp.upd.cmp -binary -offset 3 -o ..\..\Binary\%1_64k.rom -binary
 
 goto :eof
