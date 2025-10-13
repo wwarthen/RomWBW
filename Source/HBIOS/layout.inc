@@ -22,6 +22,19 @@
 ;   3 (ROM3)	BID_IMG2	ROM UTILITIES
 ;
 ;--------------------------------------------------------------------------------------------------
+; LAYOUT CHANGES WARNINGS
+;--------------------------------------------------------------------------------------------------
+;
+; IF THE ROM LAYOUT CHANGES, IT IS CRITICAL THAT THE ROMWBW BUILD PROCESS
+; IS ADJUSTED.  THE BUILD PROCESS CONCATENATES THE ROM COMPONENTS.  THE
+; ORDER AND SIZE OF THE COMPONENTS MUST MATCH THIS FILE.
+;
+; THE EZ512 SUPPLEMENTAL BUILD PROCESS REMOVES COMPONENTS OF THE ROM
+; TO ALLOW IT TO BE COMPRESSED INTO 64K.  IF THE LAYOUT OF THE ROM
+; COMPONENTS CHANGES, YOU MAY NEED TO UPDATE .../Source/EZ512/Build.cmd
+; AND .../Source/EZ512/Makefile.
+;
+;--------------------------------------------------------------------------------------------------
 ; CPU ADDRESS SPACE MEMORY LAYOUT
 ;--------------------------------------------------------------------------------------------------
 ;
