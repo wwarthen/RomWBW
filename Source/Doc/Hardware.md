@@ -1227,7 +1227,8 @@ It is designed specifically for ROM-less RomWBW. HBIOS is loaded from disk at bo
 Eazy80-512 is Eazy80 rev2 pc board configured with 512K RAM to run RomWBW. 
 The design was derived from modifications to Eazy80 Rev1 that supported RomWBW.
 
-HBIOS is loaded from disk at boot by ROM monitor
+HBIOS is loaded from disk at boot by ROM monitor or via a a compressed
+ROM image.
 
 (Not to be confused with EasyZ80)
 
@@ -1236,7 +1237,7 @@ HBIOS is loaded from disk at boot by ROM monitor
 * Retrobrew Wiki: [Eazy80 Rev2, Glue-less Configuration](https://www.retrobrewcomputers.org/doku.php?id=builderpages:plasmo:eazy80:eazy80rev2:eazy80rev2home)
 * Google Groups: [EaZy80, A Simple80 with KIO](https://groups.google.com/g/retro-comp/c/0cUDbZspHyQ)
 
-#### ROM Image File:  RCZ80_ez512_std.rom
+#### ROM Image File: RCZ80_ez512_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -1248,6 +1249,29 @@ HBIOS is loaded from disk at boot by ROM monitor
 | Memory Manager    | EZ512         |
 | ROM Size          | 0 KB          |
 | RAM Size          | 512 KB        |
+
+#### Compressed ROM Image File: RCZ80_ez512_std_64k.rom
+
+A 64K ROM image is supported. As there were many areas of $00 and $FF 
+bytes in RomWBW, it is possible to compress the 128K RomWBW *.upd file 
+to fit into 64K ROM. The compression routine looks for two or more 
+consecutive bytes of the same value (any values of $00 to $FF). If it 
+finds duplicates, it would leave two duplicate bytes followed by a byte 
+count, n-1, (with a max byte count of $FF) where n is the total number 
+of duplicates. 
+
+A stand-alone program written in C creates a ready-to-flash binary file 
+for the 64K ROM. The 64K binary file is in the following format. Layout 
+of the 64K ROM:
+
+* The first 3 bytes are always $C3 $00 $FF, a jump to the Z80 
+  decompression code located at $FF00 in the ROM.
+
+* Locations $0003 up to, and including, $FEFF are then available to 
+  store the compressed 128K *.upd file.
+
+* Locations $FF00 up to $FFFF, a seperate Z80 decompression routine that 
+  executes at startup to decompress the the 64K ROM into RAM.
 
 #### Supported Hardware
 
