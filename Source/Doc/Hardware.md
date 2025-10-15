@@ -1252,26 +1252,42 @@ ROM image.
 
 #### Compressed ROM Image File: RCZ80_ez512_std_64k.rom
 
-A 64K ROM image is supported. As there were many areas of $00 and $FF 
-bytes in RomWBW, it is possible to compress the 128K RomWBW *.upd file 
-to fit into 64K ROM. The compression routine looks for two or more 
-consecutive bytes of the same value (any values of $00 to $FF). If it 
-finds duplicates, it would leave two duplicate bytes followed by a byte 
-count, n-1, (with a max byte count of $FF) where n is the total number 
-of duplicates. 
+The RomWBW utility program 'compress' is designed to squeeze the 
+compiled RomWBW 128K file 'RCZ80_ez512_std.upd' into a 64K ROM. As there
+are many areas in RomWBW with repeating bytes of the same value, it is 
+possible to compress the 128K file to fit into a 64K ROM.
 
-A stand-alone program written in C creates a ready-to-flash binary file 
-for the 64K ROM. The 64K binary file is in the following format. Layout 
-of the 64K ROM:
+##### How Compression Works
+
+The compression program looks for two or more consecutive bytes of the 
+same value (any values of $00 to $FF). If it finds duplicates, it leaves
+two of the duplicate bytes followed by a byte count, n-1 (n <= $FF), 
+where n is the total number of duplicates. If the program succeeds in 
+compressing the input file to fit into the available space, the file 
+'RCZ80_ez512_std_64k.rom' is constructed, along with a short Z80 
+decompression program that will be stored in the last 256 bytes of the 
+ROM. The constructed 64K file is saved and the unused storage space is 
+output in bytes. Should compression fail to fit the input file into 
+available space, only an error message and the overrun in bytes is 
+output.
+
+##### How the 64K ROM Code Works
+
+The decompression program, located at $FF00, is executed at startup via 
+the 3-byte jump at location $0000, decompressing the stored code in ROM 
+into the computer's RAM. When decompression finishes, control is passed 
+to RAM location $0000, which in turn starts execution of RomWBW.
+
+##### The 64K ROM Layout
 
 * The first 3 bytes are always $C3 $00 $FF, a jump to the Z80 
   decompression code located at $FF00 in the ROM.
 
-* Locations $0003 up to, and including, $FEFF are then available to 
-  store the compressed 128K *.upd file.
+* Locations $0003 up to, and including, $FEFF are available to store 
+  the compressed 128K input file.
 
-* Locations $FF00 up to $FFFF, a seperate Z80 decompression routine that 
-  executes at startup to decompress the the 64K ROM into RAM.
+* Location $FF00 up to, and including, $FFFF, is where the Z80 
+  decompression program is stored.
 
 #### Supported Hardware
 
