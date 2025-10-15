@@ -1257,8 +1257,6 @@ compiled RomWBW 128K file 'RCZ80_ez512_std.upd' into a 64K ROM. As there
 are many areas in RomWBW with repeating bytes of the same value, it is 
 possible to compress the 128K file to fit into a 64K ROM.
 
-##### How Compression Works
-
 The compression program looks for two or more consecutive bytes of the 
 same value (any values of $00 to $FF). If it finds duplicates, it leaves
 two of the duplicate bytes followed by a byte count, n-1 (n <= $FF), 
@@ -1271,14 +1269,12 @@ output in bytes. Should compression fail to fit the input file into
 available space, only an error message and the overrun in bytes is 
 output.
 
-##### How the 64K ROM Code Works
-
 The decompression program, located at $FF00, is executed at startup via 
 the 3-byte jump at location $0000, decompressing the stored code in ROM 
 into the computer's RAM. When decompression finishes, control is passed 
 to RAM location $0000, which in turn starts execution of RomWBW.
 
-##### The 64K ROM Layout
+The 64K ROM Layout:
 
 * The first 3 bytes are always $C3 $00 $FF, a jump to the Z80 
   decompression code located at $FF00 in the ROM.
