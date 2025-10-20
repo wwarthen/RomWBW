@@ -67,3 +67,8 @@ Updated COWFIX.COM by Ladislau Szilagyi.  See
 https://groups.google.com/g/rc2014-z80/c/RwMdqNOPWXw
 
 -- WBW 9:42 AM 9/12/2025
+
+Updated multiple files from distribution.  See
+https://groups.google.com/g/rc2014-z80/c/RwMdqNOPWXw
+
+-- WBW 9:58 AM 10/20/2025
