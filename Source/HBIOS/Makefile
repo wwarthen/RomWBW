@@ -43,7 +43,7 @@ else
 endif
 
 ifeq ($(ROM_PLATFORM),S100)
-	HWMON=s100mon.bin
+	HWMON=sz180mon.bin
 else
 	HWMON=hwmon.bin
 endif
@@ -108,9 +108,9 @@ sysconf.com:
 	@$(TASM) -dCPM sysconf.asm sysconf.com sysconf_com.lst
 	cp $@ $(DEST)/Apps
 
-s100mon.bin:
-	$(ZXCC) $(CPM)/SLR180 -s100mon/FH
-	$(ZXCC) $(CPM)/MLOAD25 -s100mon.bin=s100mon
+sz180mon.bin:
+	$(ZXCC) $(CPM)/SLR180 -sz180mon/FH
+	$(ZXCC) $(CPM)/MLOAD25 -sz180mon.bin=sz180mon
 
 tastybasic.bin:
 	cp ../TastyBasic/src/$@ .
@@ -139,7 +139,7 @@ eastaegg.bin:	build.inc
 updater.bin:	build.inc
 romfonts.bin:	build.inc
 hwmon.bin:	build.inc
-s100mon.bin:	build.inc
+sz180mon.bin:	build.inc
 
 dumps:
 	for i in $(MOREDIFF) ; do \

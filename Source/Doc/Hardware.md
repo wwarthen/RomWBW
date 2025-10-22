@@ -118,9 +118,9 @@ Others
 | [Heath H8 Z80 System]^5^                                    | H8       | HEATH_std.rom               |        115200 |
 | [MSX]^9^                                                    | MSX      | MSX_std.rom                 |        115200 |
 | [NABU w/ RomWBW Option Board]^5^                            | NABU     | NABU_std.rom                |        115200 |
-| [S100 Computers Z180 SBC]^4^                                | S100     | S100_std.rom                |         57600 |
+| [S100 Computers Z180 SBC]^4^                                | S100     | SZ180_std.rom               |         57600 |
 | [S100 Computers Z80 CPU]^4^                                 | S100     | SZ80_std.rom                |          9600 |
-| [S100 Computers FPGA Z80 SBC]^4^                            | S100     | SZ80_fpga.rom               |          9600 |
+| [S100 Computers T35 FPGA Z80 SBC]^4^                        | S100     | SZ80_t35.rom                |          9600 |
 | [UNA Hardware BIOS]^1^                                      | -        | UNA_std.rom                 |             - |
 | [Z80-Retro SBC]^3^                                          | -        | Z80RETRO_std.rom            |         38400 |
 | [Z180 Mark IV SBC]^1^                                       | ECB      | MK4_std.rom                 |         38400 |
@@ -461,12 +461,12 @@ Z80-based S100 Modular System
 
 ### S100 Computers FPGA Z80 SBC
 
-An FPGA Z80 based S100 SBC
+A T35 FPGA Z80 based S100 SBC
 
 * Creator: John Monahan
 * Website: [S100 Computers FPGA Z80 SBC](http://www.s100computers.com/My%20System%20Pages/FPGA%20Z80%20SBC/FPGA%20Z80%20SBC.htm)
 
-#### ROM Image File:  SZ80_fpga.rom
+#### ROM Image File:  SZ80_t35.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -484,7 +484,7 @@ An FPGA Z80 based S100 SBC
 - DS5RTC: RTCIO=104, IO=104
 - SSER: IO=52
 - LPT: MODE=S100, IO=199
-- FV: IO=192, KBD MODE=FV, KBD IO=3
+- TVGA: IO=192, KBD MODE=T35, KBD IO=3
 - KBD: ENABLED
 - SCON: IO=0
 - ESPSD: IO=128, PRIMARY
@@ -496,9 +496,13 @@ An FPGA Z80 based S100 SBC
 - PPIDE: MODE=S100A, IO=56, SLAVE
 - PPIDE: MODE=S100B, IO=56, MASTER
 - PPIDE: MODE=S100B, IO=56, SLAVE
-- SD: MODE=FZ80, IO=108, UNITS=2
+- SD: MODE=T35, IO=108, UNITS=2
 
 #### Notes:
+
+This RomWBW build is specifically for the Trion T35 based module on the
+S100 Z80 FPGA board.  The Waveshare FPGA module is not supported at this
+time.
 
 - Requires matching FPGA code, see [S100 Projects RomWBW T35 Project](https://github.com/s100projects/ROMWBW_T35).
 
@@ -1871,7 +1875,7 @@ as defined by the IEEE-696 specs.
 * Creator: John Monahan                                                                           |
 * Website: [S100 Computers Z180 SBC](http://www.s100computers.com/My%20System%20Pages/Z180%20SBC/Z180%20SBC.htm)
 
-#### ROM Image File:  S100_std.rom
+#### ROM Image File:  SZ180_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -2408,10 +2412,10 @@ the active platform and configuration.
 |-----------|--------------------------------------------------------|
 | CVDU      | MC8563-based Video Display Controller                  |
 | EF        | EF9345 Video Display Controller                        |
-| FV        | S100 FPGA Z80 Onboard VGA/Keyboard                     |
+| TVGA      | S100 Trion FPGA Onboard VGA/Keyboard                   |
 | GDC       | uPD7220 Video Display Controller                       |
 | TMS       | TMS9918/38/58 Video Display Controller                 |
-| VDU       | MC6845 Family Video Display Controller (*)             |
+| VDU       | MC6845 Family Video Display Controller (\*)            |
 | VGA       | HD6445CP4-based Video Display Controller               |
 | VRC       | VGARC Video Display Controller                         |
 | XOSERA    | XOSERA FPGA-based Video Display Controller             |

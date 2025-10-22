@@ -1,9 +1,9 @@
 ;
 ;==================================================================================================
-; S100 Z80 FPGA T35 SERIAL DRIVER
+; S100 TRION SERIAL DRIVER
 ;==================================================================================================
 ;
-; THIS SERIAL DRIVER SUPPORTS THE SERIAL INTERFACE OF THE T35 FPGA.
+; THIS SERIAL DRIVER SUPPORTS THE SERIAL INTERFACE OF THE TRION FPGA.
 ;
 ; TODO:
 ;

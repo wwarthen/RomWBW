@@ -1,6 +1,6 @@
 ;
 ;==================================================================================================
-;   ROMWBW DEFAULT BUILD SETTINGS FOR S100
+;   ROMWBW DEFAULT BUILD SETTINGS FOR S100 Z180
 ;==================================================================================================
 ;
 ; THIS FILE DEFINES THE DEFAULT CONFIGURATION SETTINGS FOR THE PLATFORM
@@ -45,7 +45,7 @@
 #DEFINE AUTO_CMD	""		; AUTO CMD WHEN BOOT_TIMEOUT IS ENABLED
 #DEFINE DEFSERCFG	SER_57600_8N1 | SER_RTS	; DEFAULT SERIAL CONFIGURATION
 ;
-#INCLUDE "cfg_S100.asm"
+#INCLUDE "cfg_SZ180.asm"
 ;
 BOOT_TIMEOUT	.SET	-1		; AUTO BOOT TIMEOUT IN SECONDS, -1 TO DISABLE, 0 FOR IMMEDIATE
 BOOT_PRETTY	.SET	FALSE		; BOOT WITH PRETTY PLATFORM NAME

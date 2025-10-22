@@ -108,10 +108,10 @@ tasm -t%CPUType% -g3 -fFF -dCPM sysconf.asm sysconf.com sysconf_com.lst || exit 
 
 :: Create platform specific hardware monitor
 
-if %Platform%==S100 (
-    zxcc slr180 -s100mon/fh || exit /b
-    zxcc mload25 -s100mon || exit /b
-    set HwMon=s100mon.com
+if %Platform%==SZ180 (
+    zxcc slr180 -sz180mon/fh || exit /b
+    zxcc mload25 -sz180mon || exit /b
+    set HwMon=sz180mon.com
 ) else (
     call :asm hwmon || exit /b
     set HwMon=hwmon.bin
@@ -263,14 +263,14 @@ call Build GMZ180 std || exit /b
 call Build DYNO std || exit /b
 call Build RPH std || exit /b
 call Build Z80RETRO std || exit /b
-call Build S100 std || exit /b
+call Build SZ180 std || exit /b
 call Build DUO std || exit /b
 call Build HEATH std || exit /b
 call Build EPITX std || exit /b
 :: call Build MON std || exit /b
 call Build NABU std || exit /b
 call Build SZ80 std || exit /b
-call Build SZ80 fpga || exit /b
+call Build SZ80 t35 || exit /b
 call Build UNA std || exit /b
 call Build MSX std || exit /b
 

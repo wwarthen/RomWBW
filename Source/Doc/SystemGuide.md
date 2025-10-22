@@ -1787,7 +1787,7 @@ below enumerates their values.
 | VDADEV_VGA      | 0x04   | HD6445CP4-based Video Display Controller   | vga.asm    |
 | VDADEV_VRC      | 0x05   | VGARC                                      | vrc.asm    |
 | VDADEV_EF       | 0x06   | EF9345                                     | ef.asm     |
-| VDADEV_FV       | 0x07   | S100 FPGA VGA                              | fv.asm     |
+| VDADEV_TVGA     | 0x07   | S100 TRION FPGA VGA                        | tvga.asm   |
 | VDADEV_XOSERA   | 0x08   | Xosera FPGA-based Video Display Controller | xosera.asm |
 
 Depending on the capabilities of the hardware, the use of colors and
@@ -2594,14 +2594,14 @@ The hardware Platform (L) is identified as follows:
 | PLT_MBC       |     13 | NHYODYNE MULTI-BOARD COMPUTER           |
 | PLT_RPH       |     14 | RHYOPHYRE GRAPHICS SBC                  |
 | PLT_Z80RETRO  |     15 | Z80 RETRO COMPUTER                      |
-| PLT_S100      |     16 | S100 COMPUTERS Z180                     |
+| PLT_SZ180     |     16 | S100 COMPUTERS Z180                     |
 | PLT_DUO       |     17 | DUODYNE Z80 SYSTEM                      |
 | PLT_HEATH     |     18 | HEATHKIT H8 Z80 SYSTEM                  |
 | PLT_EPITX     |     19 | Z180 MINI-ITX                           |
 | PLT_MON       |     20 | MONSPUTER (DEPRECATED)                  |
 | PLT_GMZ180    |     21 | GENESIS Z180 SYSTEM                     |
 | PLT_NABU      |     22 | NABU PC W/ ROMWBW OPTION BOARD          |
-| PLT_FZ80      |     23 | S100 FPGA Z80                           |
+| PLT_SZ80      |     23 | S100 COMPUTERS Z80                      |
 | PLT_RCEZ80    |     24 | RCBUS W/ eZ80                           |
 
 For more information on these platforms see $doc_hardware$

@@ -47,14 +47,14 @@ if [ "${ROM_PLATFORM}" == "dist" ] ; then
 	ROM_PLATFORM="DYNO"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="RPH"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="Z80RETRO"; ROM_CONFIG="std"; bash Build.sh
-	ROM_PLATFORM="S100"; ROM_CONFIG="std"; bash Build.sh
+	ROM_PLATFORM="SZ180"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="DUO"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="HEATH"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="EPITX"; ROM_CONFIG="std"; bash Build.sh
 #	ROM_PLATFORM="MON"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="NABU"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="SZ80"; ROM_CONFIG="std"; bash Build.sh
-	ROM_PLATFORM="SZ80"; ROM_CONFIG="fpga"; bash Build.sh
+	ROM_PLATFORM="SZ80"; ROM_CONFIG="t35"; bash Build.sh
 	ROM_PLATFORM="MSX"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="UNA"; ROM_CONFIG="std"; bash Build.sh
 	exit

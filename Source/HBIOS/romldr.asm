@@ -1120,15 +1120,16 @@ romload:
 	ld	c,DSKY_MSG_LDR_LOAD	; point to load message
 	call	dsky_msg                ; display message
 ;
+	call	pdot			; show progress
 	call	romcopy			; Copy ROM App into working memory
-	ld	a,'.'			; dot character
-	call	cout			; show progress
+	call	pdot			; show progress
 ;
 	ld	c,DSKY_MSG_LDR_GO	; point to go message
 	call	dsky_msg                ; display message
 ;
 	ld	l,(ix+ra_ent)		; HL := app entry address
 	ld	h,(ix+ra_ent+1)		; ...
+	call	pdot			; show progress
 	jp	(hl)			; go
 ;
 ;=======================================================================
@@ -1601,18 +1602,18 @@ diskread:
 ; This bit of code just launches the monitor directly from that bank.
 ;
 #if (BIOS == BIOS_WBW)
-  #if (PLATFORM == PLT_S100)
+  #if (PLATFORM == PLT_SZ180)
 ;
-s100mon:
+sz180mon:
 	; Warn user that console is being directed to the S100 bus
 	; if the IOBYTE bit 0 is 0 (%xxxxxxx0).
 	in	a,($75)			; get IO byte
 	and	%00000001		; isolate console bit
-	jr	nz,s100mon1		; if 0, bypass msg
+	jr	nz,sz180mon1		; if 0, bypass msg
 	ld	hl,str_s100con		; console msg string
 	call	pstr			; display it
 ;
-s100mon1:
+sz180mon1:
 	; Launch S100 Monitor from ROM Bank 3
 	call	ldelay			; wait for UART buf to empty
 	di				; suspend interrupts
@@ -2720,8 +2721,8 @@ ra_tbl:
 ra_ent(str_mon,		'M',		KY_CL,		MON_BNK,	MON_IMGLOC,	MON_LOC,	MON_SIZ,	MON_SERIAL)
 ra_entsiz	.equ	$ - ra_tbl
 #if (BIOS == BIOS_WBW)
-  #if (PLATFORM == PLT_S100)
-ra_ent(str_smon,	'O',		$FF,		bid_cur,	$8000,		$8000,		$0001,		s100mon)
+  #if (PLATFORM == PLT_SZ180)
+ra_ent(str_smon,	'O',		$FF,		bid_cur,	$8000,		$8000,		$0001,		sz180mon)
   #endif
 #endif
 ra_ent(str_cpm22,	'C',		KY_BK,		CPM22_BNK,	CPM22_IMGLOC,	CPM_LOC,	CPM_SIZ,	CPM_ENT)

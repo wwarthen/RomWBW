@@ -45,9 +45,9 @@ camel80.bin:
 tastybasic.bin:
 	cp ../TastyBasic/src/$@ .
 
-s100mon.bin:
-	$(ZXCC) $(CPM)/SLR180 -s100mon/FH
-	$(ZXCC) $(CPM)/MLOAD25 -s100mon.bin=s100mon
+sz180mon.bin:
+	$(ZXCC) $(CPM)/SLR180 -sz180mon/FH
+	$(ZXCC) $(CPM)/MLOAD25 -sz180mon.bin=sz180mon
 
 %.build.inc:
 	echo $@
@@ -117,7 +117,7 @@ DUO_%.osimg1.bin: NETBOOT=netboot-duo.mod
 	cat camel80.bin $(*F).nascom.bin tastybasic.bin $(*F).game.bin $(*F).eastaegg.bin $(NETBOOT) $(*F).updater.bin $(*F).sysconf.bin $(*F).usrrom.bin >$@
 	srec_cat $@ -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o $@ -Binary
 
-S100_%.imgpad2.bin: s100mon.bin
+S100_%.imgpad2.bin: sz180mon.bin
 	cp $< $@
 	srec_cat $@ -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o $@ -Binary
 
