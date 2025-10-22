@@ -396,7 +396,7 @@
 <p><strong>RomWBW Hardware</strong> \
 Version 3.6 \
 Wayne Warthen  (<a href="mailto:wwarthen@gmail.com">wwarthen@gmail.com</a>) \
-15 Oct 2025</p>
+22 Oct 2025</p>
 <h1 id="overview">Overview</h1>
 <h2 id="supported-platforms">Supported Platforms</h2>
 <p>This section contains a summary of the system configuration target for
@@ -745,7 +745,7 @@ external bank switching.</p>
 <tr>
 <td><a href="#s100-computers-z180-sbc">S100 Computers Z180 SBC</a><sup>4</sup></td>
 <td>S100</td>
-<td>S100_std.rom</td>
+<td>SZ180_std.rom</td>
 <td style="text-align: right;">57600</td>
 </tr>
 <tr>
@@ -755,9 +755,9 @@ external bank switching.</p>
 <td style="text-align: right;">9600</td>
 </tr>
 <tr>
-<td><a href="#s100-computers-fpga-z80-sbc">S100 Computers FPGA Z80 SBC</a><sup>4</sup></td>
+<td>[S100 Computers T35 FPGA Z80 SBC]<sup>4</sup></td>
 <td>S100</td>
-<td>SZ80_fpga.rom</td>
+<td>SZ80_t35.rom</td>
 <td style="text-align: right;">9600</td>
 </tr>
 <tr>
@@ -1269,13 +1269,13 @@ of the SIO ports, for ease of use with modern computers.</p>
 <li>Requires Propeller Console Board (or equivalent)</li>
 </ul>
 <h3 id="s100-computers-fpga-z80-sbc">S100 Computers FPGA Z80 SBC</h3>
-<p>An FPGA Z80 based S100 SBC</p>
+<p>A T35 FPGA Z80 based S100 SBC</p>
 <ul>
 <li>Creator: John Monahan</li>
 <li>Website: <a href="http://www.s100computers.com/My%20System%20Pages/FPGA%20Z80%20SBC/FPGA%20Z80%20SBC.htm">S100 Computers FPGA Z80
   SBC</a></li>
 </ul>
-<h4 id="rom-image-file-sz80_fpgarom">ROM Image File: SZ80_fpga.rom</h4>
+<h4 id="rom-image-file-sz80_t35rom">ROM Image File: SZ80_t35.rom</h4>
 <table>
 <thead>
 <tr>
@@ -1323,7 +1323,7 @@ of the SIO ports, for ease of use with modern computers.</p>
 <li>DS5RTC: RTCIO=104, IO=104</li>
 <li>SSER: IO=52</li>
 <li>LPT: MODE=S100, IO=199</li>
-<li>FV: IO=192, KBD MODE=FV, KBD IO=3</li>
+<li>TVGA: IO=192, KBD MODE=T35, KBD IO=3</li>
 <li>KBD: ENABLED</li>
 <li>SCON: IO=0</li>
 <li>ESPSD: IO=128, PRIMARY</li>
@@ -1335,9 +1335,12 @@ of the SIO ports, for ease of use with modern computers.</p>
 <li>PPIDE: MODE=S100A, IO=56, SLAVE</li>
 <li>PPIDE: MODE=S100B, IO=56, MASTER</li>
 <li>PPIDE: MODE=S100B, IO=56, SLAVE</li>
-<li>SD: MODE=FZ80, IO=108, UNITS=2</li>
+<li>SD: MODE=T35, IO=108, UNITS=2</li>
 </ul>
 <h4 id="notes_1">Notes:</h4>
+<p>This RomWBW build is specifically for the Trion T35 based module on the
+S100 Z80 FPGA board. The Waveshare FPGA module is not supported at this
+time.</p>
 <ul>
 <li>Requires matching FPGA code, see <a href="https://github.com/s100projects/ROMWBW_T35">S100 Projects RomWBW T35
   Project</a>.</li>
@@ -3466,7 +3469,7 @@ slave as defined by the IEEE-696 specs.</p>
 <li>Website: <a href="http://www.s100computers.com/My%20System%20Pages/Z180%20SBC/Z180%20SBC.htm">S100 Computers Z180
   SBC</a></li>
 </ul>
-<h4 id="rom-image-file-s100_stdrom">ROM Image File: S100_std.rom</h4>
+<h4 id="rom-image-file-sz180_stdrom">ROM Image File: SZ180_std.rom</h4>
 <table>
 <thead>
 <tr>
@@ -4437,8 +4440,8 @@ the active platform and configuration.</p>
 <td>EF9345 Video Display Controller</td>
 </tr>
 <tr>
-<td>FV</td>
-<td>S100 FPGA Z80 Onboard VGA/Keyboard</td>
+<td>TVGA</td>
+<td>S100 Trion FPGA Onboard VGA/Keyboard</td>
 </tr>
 <tr>
 <td>GDC</td>
