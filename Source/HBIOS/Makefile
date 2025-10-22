@@ -42,7 +42,7 @@ else
 	BIOS=wbw
 endif
 
-ifeq ($(ROM_PLATFORM),S100)
+ifeq ($(ROM_PLATFORM),SZ180)
 	HWMON=sz180mon.bin
 else
 	HWMON=hwmon.bin
