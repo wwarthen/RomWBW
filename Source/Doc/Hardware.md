@@ -2219,7 +2219,7 @@ Z180 CPU (eg. SC722) with 1MB linear memory (eg. SC721)
 - PPIDE: IO=32, SLAVE
 - SD: MODE=SC, IO=12, UNITS=1
 
-\clearpage`{=latex}
+`\clearpage`{=latex}
 
 ## Z80-Retro SBC
 
@@ -2544,3 +2544,4 @@ for more information on UNA.
   CP/M 3, ZPM3, and p-System.
   
 - Some of the RomWBW-specific applications are not UNA compatible.
+
