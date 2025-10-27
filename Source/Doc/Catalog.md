@@ -978,6 +978,7 @@ The following files are found in
 | `TSTDSKNG.COM`      | DSKY NEXT GENERATION TEST APPLICATION                   |
 | `VDCONLY.COM`       | COLOR VDU TEST                                          |
 | `VDCTEST.COM`       | COLOR VDU TEST                                          |
+| `Z80TYPE.COM`       | Z80 Chip Variant Detection                              |
 | `ZEXALL.COM`        | Z80 Instruction Set Exerciser                           |
 | `ZEXDOC.COM`        | Z80 Instruction Set Exerciser                           |
 
