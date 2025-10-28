@@ -24,8 +24,8 @@ GitHub Repository is preferred.
 
 ## Submitting Content
 
-This RomWBW Project uses the standard [GitHub Flow]
-(https://docs.github.com/en/get-started/quickstart/github-flow).
+This RomWBW Project uses the standard
+[GitHub Flow](https://docs.github.com/en/get-started/quickstart/github-flow).
 Submission of content changes (including code) are ideally done via Pull
 Requests.
 
