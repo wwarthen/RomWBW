@@ -368,7 +368,7 @@
 <p><strong>RomWBW Applications Guide</strong> \
 Version 3.6 \
 MartinR \&amp; Phillip Summers  (<a href="mailto:"></a>) \
-22 Oct 2025</p>
+29 Oct 2025</p>
 <h1 id="summary">Summary</h1>
 <p>RomWBW is supplied with a suite of software applications that enhance
 the use of the system. Some of these applications have been written
@@ -625,7 +625,7 @@ contents in hexadecimal.</p>
 <h4 id="keyboard-echo">Keyboard Echo</h4>
 <p><strong><code>K</code></strong> - Echo any key-presses from the terminal. Press ‘ESC’ key to
 quit. This facility provides that any key stroke sent to the computer
-will be echoed back to the terminal. File down loads will be echoed as
+will be echoed back to the terminal. File downloads will be echoed as
 well while this facility is ‘on’.</p>
 <h4 id="load-hex">Load Hex</h4>
 <p><strong><code>L</code></strong> - Load a Intel Hex data via the terminal program. The load
@@ -647,8 +647,8 @@ operation and is the companion to the I operation. Use clip leaded LEDs
 to confirm the data written.</p>
 <h4 id="program-memory">Program Memory</h4>
 <p><strong><code>P xxxx</code></strong> - Program memory location xxxx. This routine will allow you
-to program a hexadecimal value ‘into memory starting at location xxxx.
-Press ’Enter’ on a blank line to return to the Monitor prompt.</p>
+to program a hexadecimal value into memory starting at location xxxx.
+Press ‘Enter’ on a blank line to return to the Monitor prompt.</p>
 <p>The limitation around programming memory is that it must be entered in
 hexadecimal. An alternative is to use the L command to load a program
 that has been assembled to a hex file on the remote computer.</p>
@@ -739,14 +739,13 @@ directory.</p>
 <h2 id="tastybasic">TastyBASIC</h2>
 <p>TastyBASIC offers a minimal implementation of BASIC that is only 2304
 bytes in size. It originates from Li-Chen Wang’s Palo Alto Tiny BASIC
-from around 1976. It’s small size is suited the tiny memory capacities
-of the time. This implementation is by Dimitri Theulings and his
-original source can be found at
-<a href="https://github.com/dimitrit/tastybasic">https://github.com/dimitrit/tastybasic</a>.</p>
+from around 1976. It’s small size suited the tiny memory capacities of
+the time. This implementation is by Dimitri Theulings and his original
+source can be found at <a href="https://github.com/dimitrit/tastybasic">https://github.com/dimitrit/tastybasic</a>.</p>
 <h3 id="features-limitations">Features / Limitations</h3>
 <ul>
 <li>Integer arithmetic, numbers -32767 to 32767</li>
-<li>Singles letter variables A-Z</li>
+<li>Single letter variables A-Z</li>
 <li>1-dimensional array support</li>
 <li>Strings are not supported</li>
 </ul>
@@ -1034,10 +1033,10 @@ identify which character-input/output device is to be used as the serial
 device for transfer.</p>
 <p>When your console is the serial device used for the transfer, no
 progress information is displayed as this would disrupt the x-modem file
-transfer. If you use an alternate character-input/output devices as the
+transfer. If you use an alternate character-input/output device as the
 serial device for the transfer then progress information will be
 displayed on the console device.</p>
-<p>Due to different platform processor speeds, serials speeds and flow
+<p>Due to different platform processor speeds, serial speeds and flow
 control capabilities the default console or serial device speed may need
 to be reduced for a successful transfer and flash to occur. The <strong>Set
 Console Interface/Baud code</strong> option at the Boot Loader can be used to
@@ -1060,12 +1059,12 @@ that progress information can be displayed during the transfer.</p>
 <p>Option ( \&lt; ) - Revert to Original Baud Rate</p>
 <h3 id="programming-options">Programming options</h3>
 <p>Option ( U ) - Begin Update</p>
-<p>The will begin the update process. The updater will expect to start
+<p>This will begin the update process. The updater will expect to start
 receiving an x-modem file on the serial device unit.</p>
 <p>X-modem sends the file in packets of 128 bytes. The updater will cache
 32 packets which is 1 flash sector and then write that sector to the
 flash device.</p>
-<p>If using separate console, bank and sector progress information will
+<p>If using separate console, bank and sector progress information will be
 shown</p>
 <pre><code>BANK 00 s00 s01 s02 s03 s04 s05 s06 s06 s07
 BANK 01 s00 s01 s02 s03 s04 s05 s06 s06 s07
@@ -1105,7 +1104,7 @@ ROM. Option ( 3 ) - Calculate and display CRC32 of a 1024k (2x512Kb)
 ROM.</p>
 <p>Can be used to verify if a ROM image has been transferred and flashed
 correctly. Refer to the Tera Term section below for details on
-configuring the automatic display of a files CRC after it has been
+configuring the automatic display of a file’s CRC after it has been
 transferred.</p>
 <p>In Windows, right clicking on a file should also give you a context menu
 option CRC SHA which will allow you to select a CRC32 calculation to be
@@ -1120,7 +1119,7 @@ be worthwhile if you are:</p>
 <li>Doing development on RomWBW drivers</li>
 </ul>
 <p>Macros can be used to automate sending ROM updates or images and for my
-own purposed I have set up a separate macro for transferring each of the
+own purpose I have set up a separate macro for transferring each of the
 standard build ROM, my own custom configuration ROM and update ROM.</p>
 <p>An example macro file to send an *.upd file, using checksum mode and
 display the crc32 value of the transmitted file:</p>
@@ -1217,13 +1216,17 @@ following guidelines.</p>
 table if desired. Feedback to the RomWBW developers on these guidelines
 would be appreciated.</p>
 <h3 id="notes">Notes</h3>
-<p>Notes * All testing was done with Tera Term x-modem, Forcing checksum
-mode using macros was found to give the most reliable transfer. *
-Partial writes can be completed with 39SF040 chips. Other chips<br />
-require entire flash to be erased before being written. * An SBC V2-005
-MegaFlash or Z80 MBC required for 1mb flash support. The Updater assumes
-both chips are same type * Failure handling has not been tested. *
-Timing broadly calibrated on a Z80 SBC-v2 * Unabios not supported</p>
+<ul>
+<li>All testing was done with Tera Term x-modem, Forcing checksum mode
+  using macros was found to give the most reliable transfer.</li>
+<li>Partial writes can be completed with 39SF040 chips. Other chips<br />
+  require entire flash to be erased before being written.</li>
+<li>An SBC V2-005 MegaFlash or Z80 MBC required for 1mb flash support. The
+  Updater assumes both chips are same type</li>
+<li>Failure handling has not been tested.</li>
+<li>Timing broadly calibrated on a Z80 SBC-v2</li>
+<li>Unabios not supported</li>
+</ul>
 <h2 id="user-application">User Application</h2>
 <p>RomWBW provides the facility for a user to build, include and execute
 their own custom application directly from the applications menu at
@@ -1252,7 +1255,7 @@ from the templated code.</p>
 <p>If required, the user application may make use of the Z80 interrupt
 system but if the user application wishes to rely on HBIOS functionality
 then it must adhere to the HBIOS framework for managing interupts.
-Alternatively, if the user appliction has no need for the HBIOS then it
+Alternatively, if the user application has no need for the HBIOS then it
 may use its own custom code for handling interrupts. In that case, a
 hard reset, rather than an HBIOS warm start, would be necessary to
 return control to RomWBW.</p>
@@ -1447,12 +1450,12 @@ all contain essentially the same set of applications.</p>
 <p>For systems starting CP/M from a disk created from an image file, there
 are a small number of additional applications stored in the <code>USER 2</code>
 area of the disk. These applications do not form part of CP/M, but
-rather are small utilities used for test purposes during develpment
-work. They may, or may not, fuction correctly with any given hardware or
-software configuration. Documentation for these untilities is very
-limited, though the source files maybe found in the /Source folder. Note
-that these utiltites are not available when starting CP/M from the ROM
-image or from a floppy disk.</p>
+rather are small utilities used for test purposes during development
+work. They may, or may not, function correctly with any given hardware
+or software configuration. Documentation for these utilities is very
+limited, though the source files may be found in the /Source folder.
+Note that these utiltites are not available when starting CP/M from the
+ROM image or from a floppy disk.</p>
 <p>A number of the CP/M applications available are described in more detail
 in the following sections, each with an indication as to whether that
 application may be found on the ROM-disk, a boot-disk, or both.</p>
@@ -1825,21 +1828,20 @@ reboot of the system.</p>
 <p>The functionality is highly dependent on the capabilities of your
 system.</p>
 <h4 id="syntax_3">Syntax</h4>
-<p><code>CPUSPD [</code><em><code>&lt;speed&gt;</code></em><code>[,[</code><em><code>&lt;memws&gt;</code></em><code>][,[</code><em><code>&lt;iows&gt;</code></em><code>]]]</code><br />
+<p><code>CPUSPD [</code><em>\&lt;speed&gt;</em><code>[,[</code><em>\&lt;memws&gt;</em><code>][,[</code><em>\&lt;iows&gt;</em><code>]]]</code><br />
 <code>CPUSPD (W)armBoot</code><br />
 <code>CPUSPD (C)oldBoot</code></p>
-<p><em><code>&lt;speed&gt;</code></em> is one of (H)alf, (F)ull, (D)ouble, or (Q)uad. <em><code>&lt;memws&gt;</code></em>
-is a number specifying the desired memory wait states. <em><code>&lt;iows&gt;</code></em> is a
-number specifying the desired I/O wait states.</p>
+<p><em>\&lt;speed&gt;</em> is one of (H)alf, (F)ull, (D)ouble, or (Q)uad.</p>
+<p><em>\&lt;memws&gt;</em> is a number specifying the desired memory wait states.</p>
+<p><em>\&lt;iows&gt;</em> is a number specifying the desired I/O wait states.</p>
 <h4 id="usage_4">Usage</h4>
 <p>Entering <code>CPUSPD</code> with no parameters will display the current CPU speed
 and wait state information of the running system. Wait state information
 is not available for all systems.</p>
-<p>To modify the running speed of a system, you can specify the
-<code>*</code><speed><code>*</code> parameter. To modify either or both of the wait states,
-you can enter the desired number. Either or both of the wait state
-parameters may be omitted and the current wait state settings will
-remain in effect.</p>
+<p>To modify the running speed of a system, you can specify the <em>\&lt;speed&gt;</em>
+parameter. To modify either or both of the wait states, you can enter
+the desired number. Either or both of the wait state parameters may be
+omitted and the current wait state settings will remain in effect.</p>
 <h4 id="notes_4">Notes</h4>
 <p>The ability to modify the running speed and wait states of a system
 varies widely depending on the hardware capabilities and the HBIOS
@@ -1914,18 +1916,18 @@ not operate correctly on non-RomWBW systems.</p>
 </table>
 <p>The purpose of this utility is to allow the copying of whole disk slices
 from one disk slice to another slice</p>
-<p>This tool is only supported by RomWBW HBIOS, it uses HBIOS for all its
+<p>This tool is only supported by RomWBW HBIOS; it uses HBIOS for all its
 disk IO. UNA UBIOS is not supported by this tool.</p>
 <p>This tool is running on CP/M 2.2 or 3.0 and has access to full 64kb of
 RAM, with a minimum of 48kb TPA</p>
-<p>This tool only works with hard disk devices, other media types like
+<p>This tool only works with hard disk devices; other media types like
 floppy, are not supported at this time. This tool works across different
 hard disk device types, even of different physical type</p>
 <p>Both hd1k and hd512 are fully supported, however copying from one layout
 type to the other is not supported.</p>
-<p>During operation data is copied in a single read/write pass, data is not
-verified by default. If there is a write error, it will be reported, and
-operation will stop.</p>
+<p>During operation, data is copied in a single read/write pass; data is
+not verified by default. If there is a write error, it will be reported,
+and operation will stop.</p>
 <h4 id="syntax_4">Syntax</h4>
 <p>This tool operates at the disk level via RomWBW, thus all disk
 identifiers are in the RomWBW \&lt;disk&gt;.\&lt;unit&gt; format.</p>
@@ -1941,7 +1943,7 @@ unattended mode, so you will not be asked to confirm the copy operation.</p>
 U - Unattended. Will complete copy without confirmation from the user.<br />
 V - Verify. Does an additional read and verify after write.</p>
 <h4 id="usage_5">Usage</h4>
-<p>When run COPYSL will perform command line argument validation and
+<p>When run, COPYSL will perform command line argument validation and
 display an error if they are illegal. Also any disk IO errors will cause
 COPYSL to exit.</p>
 <p>When specifying slice number(s) a check is made that the slice number is
@@ -2203,7 +2205,7 @@ in the RomWBW distribution.</p>
 </tbody>
 </table>
 <p>Most of the hardware platforms that run RomWBW support the use of
-EEPROMs – Electronically Erasable Programmable ROMs. The <code>FLASH</code>
+EEPROMs – Electrically Erasable Programmable ROMs. The <code>FLASH</code>
 application can be used to reprogram such ROMS in-situ (in-place), thus
 making it possible to upgrade ROMs without a programmer or even removing
 the ROM from your system.</p>
@@ -2228,7 +2230,7 @@ file<br />
 <code>/N8VEMSBC</code>: Force N8VEM SBC (v1, v2), Zeta (v1) SBC bank switching</p>
 <h4 id="usage_9">Usage</h4>
 <p>To program your EEPROM ROM chip, first transfer the file to your RomWBW
-system. Then use the command <code>FLASH WRITE *</code><filename>`*. The
+system. Then use the command <code>FLASH WRITE</code><em>\&lt;filename&gt;</em>. The
 application will auto-detect the type of EEPROM chip you have, program
 it, and verify it.</p>
 <p>You can use the <code>FLASH READ</code> form of the command to read the ROM image
@@ -2546,7 +2548,7 @@ support most of the hardware variations included with RomWBW.</p>
 </tbody>
 </table>
 <p>Display or change the label of a disk slice.</p>
-<p>The label applied is only used as informational purposes, displayed by
+<p>The label applied is only used for informational purposes, displayed by
 RomWBW when an OS is booted. It has no correlation with any OS volume
 label scheme that may exist. i.e. It does not affect the CP/M 3 disk
 label as applied by the <code>SET</code> command</p>
@@ -2569,7 +2571,7 @@ means only bootable media.</p>
 <p>This will only display labels for the first 64 slices of any device.
 Slices higher than this are currently ignored.</p>
 <p>Only bootable RomWBW disk images have a label, which is defined by the
-OS which is booted. i.e. NZ-COM has a label of “ZSDOS 1.1” since that is
+OS that is booted. i.e. NZ-COM has a label of “ZSDOS 1.1” since that is
 the booted OS. Prior to RomWBW 3.5 all disk images were defined with the
 label “Unlabeled”.</p>
 <h4 id="etymology_13">Etymology</h4>
@@ -2642,7 +2644,7 @@ may fail to discover ports that are ‘write-only’.</p>
 </tbody>
 </table>
 <p>System Configuration (<code>SYSCONF</code>) is a utility that allows system
-configuration to be set, dynamically and stored in NVRAM provided by an
+configuration to be set dynamically and stored in NVRAM provided by an
 RTC chip.</p>
 <p>(<code>SYSCONF</code>) is both a ROM utility (‘W’ Menu option), and a CP/M
 application. Noting however the CP/M application is not included on an
@@ -2672,8 +2674,6 @@ Commands:
   (R)eset - Init NVRAM to Defaults
   (H)elp [{SW}] - This help menu, or help on a switch
   e(X)it - Exit Configuration
-
-$
 </code></pre>
 <p>When you run (<code>SYSCONF</code>) for the first time the NVRAM will be
 uninitialised, and can be initialised using the (R)eset command, which
@@ -2688,7 +2688,7 @@ itself.</p>
 will just report the missing hardware and exit immediately.</p>
 <p>To exit from the application use the (Q)uit command.</p>
 <h4 id="commands-and-syntax">Commands and Syntax</h4>
-<p>The following are the accepted commands, unless otherwise specified a
+<p>The following are the accepted commands, unless otherwise specified. A
 “Space” character is used to delimit parameters in the command.</p>
 <table>
 <thead>
@@ -2769,7 +2769,7 @@ this replaces the (<code>AUTO_CMD</code>) variable defined in build configuratio
 </tr>
 <tr>
 <td></td>
-<td>Timout</td>
+<td>Timeout</td>
 <td>Timeout in seconds in the range 0-15, 0 = immediate</td>
 </tr>
 <tr>
@@ -2920,7 +2920,7 @@ that ZPM3 is in the file called CPM3.SYS, but it is normal for ZPM3.</p>
 considered its own operating system. Each slice can be made bootable
 with its own system tracks.</p>
 <p><code>SYSCOPY</code> uses drive letters to specify where to read/write the system
-boot images. However, at startup, the boot loaded will require you to
+boot images. However, at startup, the boot(?) loaded will require you to
 enter the actual disk device and slice to boot from. So, you need to be
 careful to pay attention to the device and slice that is assigned to a
 drive letter so you will know what to enter at the boot loader prompt.
@@ -2930,13 +2930,13 @@ because the operating system is not loaded yet.</p>
 currently assigned to a drive letter, you will need to assign a drive
 letter first.</p>
 <p>Not all disk formats include space for system tracks. Such disk formats
-cannot contains a system boot image and, therefore, cannot be made
+cannot contain a system boot image and, therefore, cannot be made
 bootable. The best example of such disk formats are the ROM and RAM
 disks. To maximize usable file space on these drives, they do not have
-system tracks. Obviously, ROM operating system is supported by choosing
-a ROM operating system at the boot loader prompt. Any attempt to write a
-system boot image to disk media with no system tracks will cause SYSCOPY
-to fail with an error message.</p>
+system tracks. Obviously, the ROM operating system is supported by
+choosing a ROM operating system at the boot loader prompt. Any attempt
+to write a system boot image to disk media with no system tracks will
+cause SYSCOPY to fail with an error message.</p>
 <p>The system boot images are paired with the ROM version in your system.
 So, you must take care to update the system tracks of any bootable disk
 when you upgrade your ROM firmware.</p>
@@ -3047,7 +3047,8 @@ displays the value of the counter.</p>
 <code>TIMER /Z</code></p>
 <h4 id="usage_20">Usage</h4>
 <p>Use <code>TIMER</code> to display the current value of the counter.</p>
-<p>Use <code>TIMER /C</code> to display the value of the counter continuously.</p>
+<p>Use <code>TIMER /C</code> to display the value of the counter continuously. Press
+any key to exit.</p>
 <p>Use <code>TIMER /Z</code> to zero the seconds counter.</p>
 <p>The display of the counter will be something like this:</p>
 <p><code>2859 Ticks   24.18 Seconds   0:00:24.18 HH:MM:SS</code></p>
@@ -3063,7 +3064,8 @@ which is typically 50Hz. This means that the seconds fraction will
 increment 0.02 seconds with each timer tick.</p>
 <p>The primary use of the <code>TIMER</code> application is to test the system timer
 functionality of your system. However, it can be used to capture the
-value before and after some process you want to measure elapsed runtime.</p>
+value before and after some process you want to measure the elapsed
+runtime of.</p>
 <h4 id="etymology_18">Etymology</h4>
 <p>The <code>TIMER</code> command is an original product and the source code is
 provided in the RomWBW distribution.</p>
@@ -3089,7 +3091,7 @@ provided in the RomWBW distribution.</p>
 <p>If your RomWBW system has a sound card based on either an AY-3-8190 or
 YM2149F sound chip, you can use the <code>TUNE</code> application to play PT or MYM
 sound files.</p>
-<p>Note: TUNE will detect an AY-3-8910/YM2149 Sound Module re-gardless of
+<p>Note: TUNE will detect an AY-3-8910/YM2149 Sound Module regardless of
 whether support for it is included in the RomWBW HBIOS configuration</p>
 <h4 id="syntax_20">Syntax</h4>
 <p><code>TUNE</code><em><code>&lt;filename&gt;</code></em> <code>*</code><options><code>*</code></p>
@@ -3433,10 +3435,13 @@ files between systems using a serial port.</p>
 <code>XM L</code><em><code>&lt;library&gt; &lt;filename&gt;</code></em><br />
 <code>XM LK</code><em><code>&lt;library&gt; &lt;filename&gt;</code></em><br />
 <code>XM R</code><em><code>&lt;filename&gt;</code></em></p>
-<p>The following may be added to the action codes: | <code>S</code>: Send a file |
-<code>L</code>: Send a file from a library | <code>R</code>: Receive a file | <code>K</code>: Use 1K
-blocksize (send operations) | <code>C</code>: Force use of checksum (receive
-operations) | <code>X</code>: Force 128-byte protocol (receive operations) |
+<p>The following may be added to the action codes:</p>
+<p><code>S</code>: Send a file<br />
+<code>L</code>: Send a file from a library<br />
+<code>R</code>: Receive a file<br />
+<code>K</code>: Use 1K blocksize (send operations)<br />
+<code>C</code>: Force use of checksum (receive operations)<br />
+<code>X</code>: Force 128-byte protocol (receive operations)<br />
 <code>0</code>-<code>9</code>: Specifies HBIOS character unit for transfers</p>
 <p><em><code>&lt;filename&gt;</code></em> is the name of a file to send or receive</p>
 <p><em><code>&lt;library&gt;</code></em> is the name of a library (.lbr) to extract a file to send</p>
@@ -3465,7 +3470,7 @@ the following:</p>
 </li>
 <li>
 <p>On your host computer, specify the name to assign to the received
-    file and initiate and XModem receive operation.</p>
+    file and initiate an XModem receive operation.</p>
 </li>
 </ol>
 <p>Please refer to the documentation of your host computer’s terminal
@@ -3541,7 +3546,7 @@ the following:</p>
 <li>
 <p>Enter one of the <code>ZMD</code> receive commands specifying the name you want
     to give to the received file (no filename required for ZModem
-    transfers).</p>
+    transfers).[“ZMD does not do ZModem transfers”]</p>
 </li>
 <li>
 <p>On your host computer select a file to send and initiate an XModem

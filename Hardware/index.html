@@ -396,7 +396,7 @@
 <p><strong>RomWBW Hardware</strong> \
 Version 3.6 \
 Wayne Warthen  (<a href="mailto:wwarthen@gmail.com">wwarthen@gmail.com</a>) \
-22 Oct 2025</p>
+29 Oct 2025</p>
 <h1 id="overview">Overview</h1>
 <h2 id="supported-platforms">Supported Platforms</h2>
 <p>This section contains a summary of the system configuration target for
@@ -1252,17 +1252,18 @@ of the SIO ports, for ease of use with modern computers.</p>
 </table>
 <h4 id="supported-hardware_5">Supported Hardware</h4>
 <ul>
+<li>FP: LEDIO=5</li>
+<li>PLDSER: IO=172</li>
+<li>SCC MODE=SZ80, IO=160, CHANNEL A</li>
+<li>SCC MODE=SZ80, IO=160, CHANNEL B</li>
 <li>SCON: IO=0</li>
 <li>ESPSD: IO=128, PRIMARY</li>
 <li>ESPSD: IO=128, SECONDARY</li>
 <li>MD: TYPE=RAM</li>
-<li>PPIDE: MODE=STD, IO=48, MASTER</li>
-<li>PPIDE: MODE=STD, IO=48, SLAVE</li>
-<li>PPIDE: MODE=S100A, IO=56, MASTER</li>
-<li>PPIDE: MODE=S100A, IO=56, SLAVE</li>
-<li>PPIDE: MODE=S100B, IO=56, MASTER</li>
-<li>PPIDE: MODE=S100B, IO=56, SLAVE</li>
-<li>SD: MODE=FZ80, IO=108, UNITS=2</li>
+<li>PPIDE: MODE=S100A, IO=48, MASTER</li>
+<li>PPIDE: MODE=S100A, IO=48, SLAVE</li>
+<li>PPIDE: MODE=S100B, IO=48, MASTER</li>
+<li>PPIDE: MODE=S100B, IO=48, SLAVE</li>
 </ul>
 <h4 id="notes">Notes:</h4>
 <ul>
@@ -1320,9 +1321,13 @@ of the SIO ports, for ease of use with modern computers.</p>
 </table>
 <h4 id="supported-hardware_6">Supported Hardware</h4>
 <ul>
+<li>FP: LEDIO=255</li>
 <li>DS5RTC: RTCIO=104, IO=104</li>
-<li>SSER: IO=52</li>
-<li>LPT: MODE=S100, IO=199</li>
+<li>TSER: IO=53</li>
+<li>PLDSER: IO=172</li>
+<li>SCC MODE=SZ80, IO=160, CHANNEL A</li>
+<li>SCC MODE=SZ80, IO=160, CHANNEL B</li>
+<li>LPT: MODE=T35, IO=199</li>
 <li>TVGA: IO=192, KBD MODE=T35, KBD IO=3</li>
 <li>KBD: ENABLED</li>
 <li>SCON: IO=0</li>
@@ -4044,7 +4049,6 @@ RomWBW (and CP/M)</p>
 <li>PPIDE: IO=32, SLAVE</li>
 <li>SD: MODE=SC, IO=12, UNITS=1</li>
 </ul>
-<p>`{=latex}</p>
 <h2 id="z80-retro-sbc">Z80-Retro SBC</h2>
 <p>The system comprises a Z80 retro computer board, and optonal VGA text
 video card, and PIO Keyboard and Sound Card. The system uses a custom 60
@@ -4316,11 +4320,23 @@ discovered by RomWBW in your system.</p>
 </tr>
 <tr>
 <td>SIO</td>
-<td>Zilog Serial Port Interface</td>
+<td>Zilog Serial Input/Output Controller (SIO)</td>
+</tr>
+<tr>
+<td>SCC</td>
+<td>Zilog Serial Communications Controller (SCC)</td>
 </tr>
 <tr>
 <td>SSER</td>
 <td>Simple Serial Interface</td>
+</tr>
+<tr>
+<td>TSER</td>
+<td>Trion FPGA Serial Interface</td>
+</tr>
+<tr>
+<td>PLDSER</td>
+<td>PLD USB Serial Interface</td>
 </tr>
 <tr>
 <td>UART</td>
@@ -4341,14 +4357,17 @@ discovers for the initial console. The following character devices are
 scanned in the order shown. The available character devices depend on
 the active platform and configuration.</p>
 <ol>
-<li>SSER: Simple Serial Interface</li>
 <li>ASCI: Zilog Z180 CPU Built-in Serial Ports</li>
 <li>Z2U: Zilog Z280 CPU Built-in Serial Ports</li>
 <li>UART: 16C550 Family Serial Interface</li>
 <li>DUART: SCC2681 or compatible Dual UART</li>
-<li>SIO: Zilog Serial Port Interface</li>
+<li>SIO: Zilog Serial Port Interface (SIO)</li>
+<li>SCC: Zilog Serial Port Interface (SCC)</li>
 <li>EZ80UART: eZ80 Serial Port Interface</li>
 <li>ACIA: MC68B50 Asynchronous Communications Interface Adapter</li>
+<li>SSER: Simple Serial Interface</li>
+<li>TSER: Trion FPGA Serial Interface</li>
+<li>PLDSER: PLD USB Serial Interface</li>
 <li>USB-FIFO: FT232H-based ECB USB FIFO</li>
 </ol>
 <h2 id="disk">Disk</h2>
