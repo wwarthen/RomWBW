@@ -441,17 +441,19 @@ Z80-based S100 Modular System
 
 #### Supported Hardware
 
+- FP: LEDIO=5
+- PLDSER: IO=172
+- SCC MODE=SZ80, IO=160, CHANNEL A
+- SCC MODE=SZ80, IO=160, CHANNEL B
 - SCON: IO=0
 - ESPSD: IO=128, PRIMARY
 - ESPSD: IO=128, SECONDARY
 - MD: TYPE=RAM
-- PPIDE: MODE=STD, IO=48, MASTER
-- PPIDE: MODE=STD, IO=48, SLAVE
-- PPIDE: MODE=S100A, IO=56, MASTER
-- PPIDE: MODE=S100A, IO=56, SLAVE
-- PPIDE: MODE=S100B, IO=56, MASTER
-- PPIDE: MODE=S100B, IO=56, SLAVE
-- SD: MODE=FZ80, IO=108, UNITS=2
+- PPIDE: MODE=S100A, IO=48, MASTER
+- PPIDE: MODE=S100A, IO=48, SLAVE
+- PPIDE: MODE=S100B, IO=48, MASTER
+- PPIDE: MODE=S100B, IO=48, SLAVE
+
 
 #### Notes:
 
@@ -481,9 +483,13 @@ A T35 FPGA Z80 based S100 SBC
 
 #### Supported Hardware
 
+- FP: LEDIO=255
 - DS5RTC: RTCIO=104, IO=104
-- SSER: IO=52
-- LPT: MODE=S100, IO=199
+- TSER: IO=53
+- PLDSER: IO=172
+- SCC MODE=SZ80, IO=160, CHANNEL A
+- SCC MODE=SZ80, IO=160, CHANNEL B
+- LPT: MODE=T35, IO=199
 - TVGA: IO=192, KBD MODE=T35, KBD IO=3
 - KBD: ENABLED
 - SCON: IO=0
@@ -2365,8 +2371,11 @@ may be discovered by RomWBW in your system.
 | PPPCON    | ParPortProp Serial Console Interface                   |
 | PRPCON    | PropIO Serial Console Interface                        |
 | SCON      | S100 Console                                           |
-| SIO       | Zilog Serial Port Interface                            |
+| SIO       | Zilog Serial Input/Output Controller (SIO)             |
+| SCC       | Zilog Serial Communications Controller (SCC)           |
 | SSER      | Simple Serial Interface                                |
+| TSER      | Trion FPGA Serial Interface                            |
+| PLDSER    | PLD USB Serial Interface                               |
 | UART      | 16C550 Family Serial Interface                         |
 | USB-FIFO  | FT232H-based ECB USB FIFO                              |
 | Z2U       | Zilog Z280 CPU Built-in Serial Ports                   |
@@ -2376,15 +2385,19 @@ discovers for the initial console.  The following character devices are
 scanned in the order shown.  The available character devices depend on
 the active platform and configuration.
 
-#. SSER: Simple Serial Interface
 #. ASCI: Zilog Z180 CPU Built-in Serial Ports
 #. Z2U: Zilog Z280 CPU Built-in Serial Ports
 #. UART: 16C550 Family Serial Interface
 #. DUART: SCC2681 or compatible Dual UART
-#. SIO: Zilog Serial Port Interface
+#. SIO: Zilog Serial Port Interface (SIO)
+#. SCC: Zilog Serial Port Interface (SCC)
 #. EZ80UART: eZ80 Serial Port Interface
 #. ACIA: MC68B50 Asynchronous Communications Interface Adapter
+#. SSER: Simple Serial Interface
+#. TSER: Trion FPGA Serial Interface
+#. PLDSER: PLD USB Serial Interface
 #. USB-FIFO: FT232H-based ECB USB FIFO
+
 
 ## Disk
 
