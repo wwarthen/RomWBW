@@ -18,6 +18,25 @@
 ;_____________________________________________________________________________
 ;
 #INCLUDE "std.asm"
+;;;;
+;;;;======================================================================
+;;;; ROM Application Header
+;;;;======================================================================
+;;;;
+;;;	.DW	RAHDR_SIG		; SIGNATURE
+;;;	.DB	'M'			; KEYBOARD INVOCATION KEY
+;;;	.DB	KY_CL			; DSKY INVOCATION KEY
+;;;	.DB	%00000000		; ATTRIBUTES
+;;;	.DB	$00			; SOURCE BANK (FILLED IN BY ROMLDR)
+;;;	.DW	$0000			; SOURCE ADR (FILLED IN BY ROMLDR)
+;;;	.DW	MON_LOC			; TARGET LOAD ADDRESS
+;;;	.DW	MON_LEN			; PAYLOAD LENGTH
+;;;	.DW	MON_LOC			; ENTRY ADDRESS
+;;;	.DW	$0000			; CHECKSUM (FUTURE USE)
+;;;	.TEXT	"Monitor"		; APPLICATION DESCRIPTION
+;;;	.FILL	RAHDR_LEN-$,$00		; FILL WITH NULLS
+;
+;======================================================================
 ;
 BUFLEN	.EQU	40			; INPUT LINE LENGTH
 ;
