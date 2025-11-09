@@ -166,7 +166,7 @@
               <ul class="nav flex-column">
               </ul>
             </li>
-            <li class="nav-item" data-bs-level="3"><a href="#s100-computers-fpga-z80-sbc" class="nav-link">S100 Computers FPGA Z80 SBC</a>
+            <li class="nav-item" data-bs-level="3"><a href="#s100-computers-t35-fpga-z80-sbc" class="nav-link">S100 Computers T35 FPGA Z80 SBC</a>
               <ul class="nav flex-column">
               </ul>
             </li>
@@ -396,7 +396,7 @@
 <p><strong>RomWBW Hardware</strong> \
 Version 3.6 \
 Wayne Warthen  (<a href="mailto:wwarthen@gmail.com">wwarthen@gmail.com</a>) \
-01 Nov 2025</p>
+09 Nov 2025</p>
 <h1 id="overview">Overview</h1>
 <h2 id="supported-platforms">Supported Platforms</h2>
 <p>This section contains a summary of the system configuration target for
@@ -752,10 +752,10 @@ external bank switching.</p>
 <td><a href="#s100-computers-z80-cpu">S100 Computers Z80 CPU</a><sup>4</sup></td>
 <td>S100</td>
 <td>SZ80_std.rom</td>
-<td style="text-align: right;">9600</td>
+<td style="text-align: right;">19200</td>
 </tr>
 <tr>
-<td>[S100 Computers T35 FPGA Z80 SBC]<sup>4</sup></td>
+<td><a href="#s100-computers-t35-fpga-z80-sbc">S100 Computers T35 FPGA Z80 SBC</a><sup>4</sup></td>
 <td>S100</td>
 <td>SZ80_t35.rom</td>
 <td style="text-align: right;">9600</td>
@@ -1234,7 +1234,7 @@ of the SIO ports, for ease of use with modern computers.</p>
 </tr>
 <tr>
 <td>Serial Default</td>
-<td>9600 Baud</td>
+<td>19200 Baud</td>
 </tr>
 <tr>
 <td>Memory Manager</td>
@@ -1246,7 +1246,7 @@ of the SIO ports, for ease of use with modern computers.</p>
 </tr>
 <tr>
 <td>RAM Size</td>
-<td>512 KB</td>
+<td>1024 KB</td>
 </tr>
 </tbody>
 </table>
@@ -1267,9 +1267,21 @@ of the SIO ports, for ease of use with modern computers.</p>
 </ul>
 <h4 id="notes">Notes:</h4>
 <ul>
-<li>Requires Propeller Console Board (or equivalent)</li>
+<li>
+<p>Initial console will depend on the IOBYTE dip switch settings. See
+  website for dip switch settings.</p>
+</li>
+<li>
+<p>Version 6.0 or greater of the S100 Z80 Monitor ROM is required to load
+  and run RomWBW.</p>
+</li>
+<li>
+<p>RomWBW is loaded by the S100 monitor from either CF Card or SD Card.
+  The CF/SD Card should be imaged using SZ80_std_hd1k_combo.img which
+  includes RomWBW.</p>
+</li>
 </ul>
-<h3 id="s100-computers-fpga-z80-sbc">S100 Computers FPGA Z80 SBC</h3>
+<h3 id="s100-computers-t35-fpga-z80-sbc">S100 Computers T35 FPGA Z80 SBC</h3>
 <p>A T35 FPGA Z80 based S100 SBC</p>
 <ul>
 <li>Creator: John Monahan</li>
@@ -1303,7 +1315,7 @@ of the SIO ports, for ease of use with modern computers.</p>
 </tr>
 <tr>
 <td>Serial Default</td>
-<td>9600 Baud</td>
+<td>19200 Baud</td>
 </tr>
 <tr>
 <td>Memory Manager</td>
@@ -1343,12 +1355,25 @@ of the SIO ports, for ease of use with modern computers.</p>
 <li>SD: MODE=T35, IO=108, UNITS=2</li>
 </ul>
 <h4 id="notes_1">Notes:</h4>
-<p>This RomWBW build is specifically for the Trion T35 based module on the
-S100 Z80 FPGA board. The Waveshare FPGA module is not supported at this
-time.</p>
 <ul>
-<li>Requires matching FPGA code, see <a href="https://github.com/s100projects/ROMWBW_T35">S100 Projects RomWBW T35
-  Project</a>.</li>
+<li>
+<p>This RomWBW build is specifically for the Trion T35 based module on
+  the S100 Z80 FPGA board. The Waveshare FPGA module is not supported at
+  this time.</p>
+</li>
+<li>
+<p>Requires matching FPGA code, see <a href="https://github.com/s100projects/ROMWBW_T35">S100 Projects RomWBW T35
+  Project</a>.</p>
+</li>
+<li>
+<p>Initial console will depend on the IOBYTE dip switch settings. See
+  website for dip switch settings.</p>
+</li>
+<li>
+<p>RomWBW is loaded by the S100 monitor from either CF Card or SD Card.
+  The CF/SD Card should be imaged using SZ80_t35_hd1k_combo.img which
+  includes RomWBW.</p>
+</li>
 </ul>
 <h2 id="genesis-z180-system">Genesis Z180 System</h2>
 <p>A Z180 based board with 512k ram, 512k rom, dual serial / parallel, RTC
@@ -3520,19 +3545,21 @@ slave as defined by the IEEE-696 specs.</p>
 <h4 id="supported-hardware_34">Supported Hardware</h4>
 <ul>
 <li>INTRTC: ENABLED</li>
+<li>PLDSER: IO=172</li>
 <li>ASCI: IO=192, INTERRUPTS ENABLED</li>
 <li>ASCI: IO=193, INTERRUPTS ENABLED</li>
+<li>SCC MODE=SZ80, IO=160, CHANNEL A</li>
+<li>SCC MODE=SZ80, IO=160, CHANNEL B</li>
 <li>SCON: IO=0</li>
-<li>MD: TYPE=RAM</li>
-<li>MD: TYPE=ROM</li>
-<li>SD: MODE=SC, IO=12, UNITS=1</li>
 <li>ESPSD: IO=128, PRIMARY</li>
 <li>ESPSD: IO=128, SECONDARY</li>
-<li>ESPSD occupies 995 bytes.</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
 <li>PPIDE: MODE=S100A, IO=48, MASTER</li>
 <li>PPIDE: MODE=S100A, IO=48, SLAVE</li>
 <li>PPIDE: MODE=S100B, IO=48, MASTER</li>
 <li>PPIDE: MODE=S100B, IO=48, SLAVE</li>
+<li>SD: MODE=SC, IO=12, UNITS=1</li>
 </ul>
 <h4 id="notes_6">Notes:</h4>
 <ul>
