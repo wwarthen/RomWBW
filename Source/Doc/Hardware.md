@@ -119,7 +119,7 @@ Others
 | [MSX]^9^                                                    | MSX      | MSX_std.rom                 |        115200 |
 | [NABU w/ RomWBW Option Board]^5^                            | NABU     | NABU_std.rom                |        115200 |
 | [S100 Computers Z180 SBC]^4^                                | S100     | SZ180_std.rom               |         57600 |
-| [S100 Computers Z80 CPU]^4^                                 | S100     | SZ80_std.rom                |          9600 |
+| [S100 Computers Z80 CPU]^4^                                 | S100     | SZ80_std.rom                |         19200 |
 | [S100 Computers T35 FPGA Z80 SBC]^4^                        | S100     | SZ80_t35.rom                |          9600 |
 | [UNA Hardware BIOS]^1^                                      | -        | UNA_std.rom                 |             - |
 | [Z80-Retro SBC]^3^                                          | -        | Z80RETRO_std.rom            |         38400 |
@@ -434,10 +434,10 @@ Z80-based S100 Modular System
 | Default CPU Speed | 8.000 MHz     |
 | Interrupts        | None          |
 | System Timer      | None          |
-| Serial Default    | 9600 Baud     |
+| Serial Default    | 19200 Baud    |
 | Memory Manager    | SZ80          |
 | ROM Size          | 0 KB          |
-| RAM Size          | 512 KB        |
+| RAM Size          | 1024 KB       |
 
 #### Supported Hardware
 
@@ -454,14 +454,21 @@ Z80-based S100 Modular System
 - PPIDE: MODE=S100B, IO=48, MASTER
 - PPIDE: MODE=S100B, IO=48, SLAVE
 
-
 #### Notes:
 
-- Requires Propeller Console Board (or equivalent)
+- Initial console will depend on the IOBYTE dip switch settings.
+  See website for dip switch settings.
+
+- Version 6.0 or greater of the S100 Z80 Monitor ROM is required to
+  load and run RomWBW.
+
+- RomWBW is loaded by the S100 monitor from either CF Card or SD Card.
+  The CF/SD Card should be imaged using SZ80_std_hd1k_combo.img which
+  includes RomWBW.
 
 `\clearpage`{=latex}
 
-### S100 Computers FPGA Z80 SBC
+### S100 Computers T35 FPGA Z80 SBC
 
 A T35 FPGA Z80 based S100 SBC
 
@@ -476,7 +483,7 @@ A T35 FPGA Z80 based S100 SBC
 | Default CPU Speed | 8.000 MHz     |
 | Interrupts        | None          |
 | System Timer      | None          |
-| Serial Default    | 9600 Baud     |
+| Serial Default    | 19200 Baud    |
 | Memory Manager    | Z2            |
 | ROM Size          | 0 KB          |
 | RAM Size          | 512 KB        |
@@ -504,13 +511,22 @@ A T35 FPGA Z80 based S100 SBC
 - PPIDE: MODE=S100B, IO=56, SLAVE
 - SD: MODE=T35, IO=108, UNITS=2
 
+
 #### Notes:
 
-This RomWBW build is specifically for the Trion T35 based module on the
-S100 Z80 FPGA board.  The Waveshare FPGA module is not supported at this
-time.
+- This RomWBW build is specifically for the Trion T35 based module on
+  the S100 Z80 FPGA board.  The Waveshare FPGA module is not supported
+  at this time.
 
-- Requires matching FPGA code, see [S100 Projects RomWBW T35 Project](https://github.com/s100projects/ROMWBW_T35).
+- Requires matching FPGA code, see
+  [S100 Projects RomWBW T35 Project](https://github.com/s100projects/ROMWBW_T35).
+
+- Initial console will depend on the IOBYTE dip switch settings.
+  See website for dip switch settings.
+
+- RomWBW is loaded by the S100 monitor from either CF Card or SD Card.
+  The CF/SD Card should be imaged using SZ80_t35_hd1k_combo.img which
+  includes RomWBW.
 
 `\clearpage`{=latex}
 
@@ -1897,19 +1913,21 @@ as defined by the IEEE-696 specs.
 #### Supported Hardware
 
 - INTRTC: ENABLED
+- PLDSER: IO=172
 - ASCI: IO=192, INTERRUPTS ENABLED
 - ASCI: IO=193, INTERRUPTS ENABLED
+- SCC MODE=SZ80, IO=160, CHANNEL A
+- SCC MODE=SZ80, IO=160, CHANNEL B
 - SCON: IO=0
-- MD: TYPE=RAM
-- MD: TYPE=ROM
-- SD: MODE=SC, IO=12, UNITS=1
 - ESPSD: IO=128, PRIMARY
 - ESPSD: IO=128, SECONDARY
-- ESPSD occupies 995 bytes.
+- MD: TYPE=RAM
+- MD: TYPE=ROM
 - PPIDE: MODE=S100A, IO=48, MASTER
 - PPIDE: MODE=S100A, IO=48, SLAVE
 - PPIDE: MODE=S100B, IO=48, MASTER
 - PPIDE: MODE=S100B, IO=48, SLAVE
+- SD: MODE=SC, IO=12, UNITS=1
 
 #### Notes:
 
