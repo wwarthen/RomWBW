@@ -1,4 +1,5 @@
 @Label="Microsoft Fortran"
+@SysImage="../ZSDOS/zsys_wbw.sys"
 #
 # Add the ReadMe document
 #

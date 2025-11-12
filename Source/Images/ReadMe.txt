@@ -133,7 +133,7 @@ slice disk image that has ZSDOS in the first slice and WordStar in
 the second slice, you could use the following command from a Windows 
 command prompt:
 
-  | C:\RomWBW\Binary>copy /b hd512_zsdos.img + hd512_ws4.img hd_multi.img
+  | C:\RomWBW\Binary>copy /b hd512_zsdos.img + hd512_wp.img hd_multi.img
 
 You can now write hd_multi.img onto your SD or CF Card and you will 
 have ZSDOS in the first slice and Wordstar in the second slice.
@@ -191,7 +191,7 @@ hd1k entry format that has ZSDOS in the first slice and Wordstar in
 the second slice, you could use the following command from a Windows 
 command prompt:
  
-  | C:\RomWBW\Binary>copy /b hd1k_prefix.dat + hd1k_zsdos.img + hd1k_ws4.img hd_multi.img
+  | C:\RomWBW\Binary>copy /b hd1k_prefix.dat + hd1k_zsdos.img + hd1k_wp.img hd_multi.img
 
 Since the hd512 format does not utilize a partition, you do not
 prefix the hd512_xxx.img files with anything.  You can simply

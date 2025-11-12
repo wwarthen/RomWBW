@@ -1,4 +1,5 @@
-@Label="WordStar 4"
+@Label="Word Processing"
+@SysImage="../ZSDOS/zsys_wbw.sys"
 #
 # Add the ZDE binaries
 #

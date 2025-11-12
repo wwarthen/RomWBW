@@ -1434,15 +1434,15 @@ The following files are found in
 | `TURBO.OVR`    | Part of TURBO Pascal           |
 | `TURBOMSG.OVR` | Part of TURBO Pascal           |
 
-## WordStar 4 (Word processor)
+## Word Processing
 
-| Floppy Disk Image: **fd_ws4.img**
-| Hard Disk Image: **hd_ws4.img**
+| Floppy Disk Image: **fd_wp.img**
+| Hard Disk Image: **hd_wp.img**
 | Combo Disk Image: **Slice 5**
 
 The following files are found in
 
-*  /Source/Images/d_ws4
+*  /Source/Images/d_wp
 
 | **File**       | **Description** |
 |----------------|-----------------|

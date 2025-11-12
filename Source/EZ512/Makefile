@@ -2,7 +2,7 @@ DEST=../../Binary
 OTHERS=*.hex *.upd *.cmp
 
 HD1KIMGS = $(DEST)/hd1k_cpm22.img $(DEST)/hd1k_zsdos.img $(DEST)/hd1k_nzcom.img \
-	$(DEST)/hd1k_cpm3.img $(DEST)/hd1k_zpm3.img $(DEST)/hd1k_ws4.img
+	$(DEST)/hd1k_cpm3.img $(DEST)/hd1k_zpm3.img $(DEST)/hd1k_wp.img
 
 ROMS := $(wildcard $(DEST)/RCZ80_ez512_*.upd)
 ROMS := $(patsubst $(DEST)/%.upd,%,$(ROMS))

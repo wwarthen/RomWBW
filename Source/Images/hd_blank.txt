@@ -1,4 +1,5 @@
 @Label="Blank"
+@SysImage="../ZSDOS/zsys_wbw.sys"
 #
 # Blank disk template
 #
