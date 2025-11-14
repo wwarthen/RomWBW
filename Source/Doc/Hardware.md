@@ -2492,6 +2492,7 @@ Note:
 | PCF       | PCF8584-based I2C Real-Time Clock                      |
 | RP5C01    | Ricoh RPC01A Real-Time Clock w/ NVRAM                  |
 | SIMRTC    | SIMH Simulator Real-Time Clock                         |
+| MMRTC     | NS MM58167B Real-Time Clock (no NVRAM)                 |
 
 ## DsKy (DiSplay KeYpad)
 

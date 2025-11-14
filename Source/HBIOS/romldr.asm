@@ -1230,26 +1230,26 @@ appload2:
 ;
 ;=======================================================================
 ; Routine - Copy chunk of data from Rom to a RAM location, source
-; chunk may span banks.
+; chunk may span banks.  Source address must be <= 32768.
 ; param : HL=Source Adr, DE=Dest Adr, BC=Length, A=Source Bank
 ;=======================================================================
 ;
-;;; loop:
-;;; 
-;;; CPYLEN = (32768 - SRCADR)
-;;; if (CPYLEN >= LEN) then CPYLEN = LEN
-;;; LEN = (LEN - CPYLEN)	; do it here to avoid saving CPYLEN
-;;; 
-;;; ; BnkCpy returns updated SRCADR, DSTADR
-;;; call BnkCpy(SRCBNK:SRCADR, DSTBNK:DSTADR, CPYLEN)
-;;; 
-;;; if (SRCADR == 32768)
-;;;   increment SRCBNK
-;;;   SRCADR = 0
-;;; 
-;;; if (LEN == 0) then done
-;;; 
-;;; goto loop
+; loop:
+; 
+; CPYLEN = (32768 - SRCADR)
+; if (CPYLEN >= LEN) then CPYLEN = LEN
+; LEN = (LEN - CPYLEN)	; do it here to avoid saving CPYLEN
+; 
+; ; BnkCpy returns updated SRCADR, DSTADR
+; call BnkCpy(SRCBNK:SRCADR, DSTBNK:DSTADR, CPYLEN)
+; 
+; if (SRCADR == 32768)
+;   increment SRCBNK
+;   SRCADR = 0
+; 
+; if (LEN == 0) then done
+; 
+; goto loop
 ;
 #if (BIOS == BIOS_WBW)
 ;
