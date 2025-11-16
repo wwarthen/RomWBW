@@ -1343,7 +1343,6 @@ findcon:
 	ld	c,a			; save command char in C
 findcon1:
 	ld	a,(ix+ra_conkey)	; get match char
-	and	~$80			; clear "hidden entry" bit
 	cp	c			; compare
 	ret	z			; if matched, return
 	ld	de,ra_entsiz		; table entry size
