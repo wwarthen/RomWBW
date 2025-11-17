@@ -11,24 +11,31 @@ BDOS1:	LD	A,0C0h
 	DEFB	0EDh,0FEh
 	RET
 ;
-; Hack for ZMAC.  ZMAC is using contents of 0FE22H to establish a memory pointer.
-; It makes no sense.  We stuff 04F4CH here because it is known to work...
-;
-	org	0FE22H
-	DEFW	04F4CH
-;
 ;This is not a real BIOS, so let its code live below the BIOS jumpblock.
 ;
 UBIOS:	LD	(XIX),IX
 	POP	IX		;IX = address of UBIOS function
+;
+; ZXCC was written on the assumption that the BIOS jumpblock was a series 
+; of CALL UBIOS instructions; in which case, IX would be the return address,
+; or the address of the jumpblock entry plus 3.
+;
+; Now that the BIOS jumpblock is a true jumpblock and the CALL instructions 
+; are elsewhere, the offset is relative to BIOS2 rather than CONST0. So 
+; adjust the offset.
+;
+	PUSH	DE
+	LD	DE,CONST0 - BIOS2
+	ADD	IX,DE
+	POP	DE
 	LD	A,0C3h		;C3h = BIOS call
-	DEFB	0EDh,0FEh
+	DEFB	0EDh,0FEh	;ZXCC trap; IX = BIOS function
 	LD	IX,(XIX)
 	RET
 ;
 XIX:	DEFW	0
 
-CBOOT:  LD      HL,WBOOT0
+CBOOT:  LD      HL,WBOOT0	;ZXCC cold boot: Initialise the Zero Page.
         LD      (1),HL
         LD      HL,BDOS0
         LD      (6),HL
@@ -49,6 +56,41 @@ WBOOT:  LD      A,0C3h          ;Program termination
         HALT
         JP      $
 ;
+; Implementation of all other BIOS functions
+;
+BIOS2:	CALL	UBIOS	
+BIOS3:	CALL	UBIOS	
+BIOS4:	CALL	UBIOS	
+BIOS5:	CALL	UBIOS	
+BIOS6:	CALL	UBIOS	
+BIOS7:	CALL	UBIOS	
+BIOS8:	CALL	UBIOS	
+BIOS9:	CALL	UBIOS	
+BIOS10:	CALL	UBIOS	
+BIOS11:	CALL	UBIOS	
+BIOS12:	CALL	UBIOS	
+BIOS13:	CALL	UBIOS	
+BIOS14:	CALL	UBIOS	
+BIOS15:	CALL	UBIOS	
+BIOS16:	CALL	UBIOS	
+BIOS17:	CALL	UBIOS	
+BIOS18:	CALL	UBIOS	
+BIOS19:	CALL	UBIOS	
+BIOS20:	CALL	UBIOS	
+BIOS21:	CALL	UBIOS	
+BIOS22:	CALL	UBIOS	
+BIOS23:	CALL	UBIOS	
+BIOS24:	CALL	UBIOS	
+BIOS25:	CALL	UBIOS	
+BIOS26:	CALL	UBIOS	
+BIOS27:	CALL	UBIOS	
+BIOS28:	CALL	UBIOS	
+BIOS29:	CALL	UBIOS	
+BIOS30:	CALL	UBIOS	
+BIOS31:	CALL	UBIOS	
+BIOS32:	CALL	UBIOS	
+;
+;
 	org	0FEECh
 tmpdrv:	defb	0FFh		;Temp drive = current
 
@@ -56,38 +98,47 @@ tmpdrv:	defb	0FFh		;Temp drive = current
 ;
 ;TODO: SCB at FE9Ch
 ;
+
+;
+; Mallard BASIC (and maybe other programs) assumes that the BIOS 
+; jumpblock is a list of jumps, not calls. So rather than composing the
+; BIOS jumpblock of a sequence of CALL UBIOS, it's now a sequence
+; of jumps to CALL UBIOS.
+;
 	org	0FF00h
 	JP	CBOOT	;FF00
 WBOOT0:	JP	WBOOT	;03
-	CALL	UBIOS	;06
-	CALL	UBIOS	;09
-	CALL	UBIOS	;0C
-        CALL    UBIOS	;0F
-        CALL    UBIOS	;12
-        CALL    UBIOS	;15
-        CALL    UBIOS	;18
-        CALL    UBIOS	;1B
-        CALL    UBIOS	;1E
-        CALL    UBIOS	;21
-        CALL    UBIOS	;24
-        CALL    UBIOS	;27
-        CALL    UBIOS	;2A
-        CALL    UBIOS	;2D
-        CALL    UBIOS	;30
-        CALL    UBIOS	;33
-        CALL    UBIOS	;36
-        CALL    UBIOS	;39
-        CALL    UBIOS	;42
-	CALL	UBIOS	;45
-	CALL	UBIOS	;48
-	CALL	UBIOS	;4B
-	CALL	UBIOS	;4E
-	CALL	UBIOS	;51
-	CALL	UBIOS	;54
-	CALL	UBIOS	;57
-	CALL	UBIOS	;5A, USERF
-	CALL	UBIOS	;5D, RESERV1
-	CALL	UBIOS	;60, RESERV2
+CONST0:	JP	BIOS2
+	JP	BIOS3
+	JP	BIOS4
+	JP	BIOS5
+	JP	BIOS6
+	JP	BIOS7
+	JP	BIOS8
+	JP	BIOS9
+	JP	BIOS10
+	JP	BIOS11
+	JP	BIOS12
+	JP	BIOS13
+	JP	BIOS14
+	JP	BIOS15
+	JP	BIOS16
+	JP	BIOS17
+	JP	BIOS18
+	JP	BIOS19
+	JP	BIOS20
+	JP	BIOS21
+	JP	BIOS22
+	JP	BIOS23
+	JP	BIOS24
+	JP	BIOS25
+	JP	BIOS26
+	JP	BIOS27
+	JP	BIOS28
+	JP	BIOS29
+	JP	BIOS30
+	JP	BIOS31
+	JP	BIOS32
 ;
 	org	0FFC0h	;Space for DPB
 dpb:	defs	20h

@@ -62,7 +62,7 @@ wwarthen@gmail.com
 
 January 9, 2022
 
-- Running zxcc under WSL (Windows Subsystem for Linux) was gererating output
+- Running zxcc under WSL (Windows Subsystem for Linux) was generating output
   that was correct but did not match standard Windows or Linux runs.  This
   turned out to be an assumption in a few places in the code that reading
   into a buffer would not modify the area of the buffer that was beyond
@@ -78,9 +78,21 @@ January 9, 2022
   Nicholson's GitHub repo at https://github.com/agn453/ZXCC.  The most
   significant difference in my code is that I am using the WIN32 API
   for all disk I/O.  Although the file tracking code is retained, I have
-  found this mechanism to fail insome scenarios.  By using the WIN32 API
+  found this mechanism to fail in some scenarios.  By using the WIN32 API
   I can achieve the same file sharing attributes as Unix which makes the
   file tracking mechanism optional.
 
 --WBW 9:34 AM 2/10/2022
 
+- Added a call to trackFile in fcb_close.  I think it was always
+  supposed to be there.  Was not causing any real problems other
+  than superfluous attempts by releaseFile to close files that
+  were already closed.
+  
+--WBW 3:58 PM 3/2/2022
+
+The CP/M BIOS was updated to sync with the latest from Tony
+Nicholson and to remove the ZMAC workaround that I had put there
+previously.  ZMAC was patched instead.
+
+--WBW 1:41 PM 11/17/2025
