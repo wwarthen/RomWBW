@@ -1732,7 +1732,7 @@ hwmon:
 ;;;hwmon1:
 	; Launch Hardware Monitor from ROM Bank 3
 	call	ldelay			; wait for UART buf to empty
-	di				; suspend interrupts
+	;;;di				; suspend interrupts
 	ld	a,HWMON_BNK + BID_IMG0	; hardware monitor bank offset by start of ROM APP banks
 	ld	ix,HWMON_IMGLOC		; execution resumes here
 	jp	HB_BNKCALL		; do it
