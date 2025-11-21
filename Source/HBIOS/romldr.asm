@@ -1576,8 +1576,8 @@ diskboot9:
 	ld	de,(bb_cpmloc)		; de := start
 	or	a			; clear carry
 	sbc	hl,de			; hl := length to load
-	jp	z,err_sig		; can't load zero length
-	jp	c,err_sig		; can't load negative length
+	jp	z,str_err_noboot	; can't load zero length
+	jp	c,str_err_noboot	; can't load negative length
 	; If load length is not a multiple of sector size (512)
 	; we need to round up to get everything loaded!
 	ld	de,511			; 1 less than sector size
@@ -2670,7 +2670,8 @@ str_err_noslice	.db	"Disk unit does not support slices",0
 str_err_badslice .db	"Slice specified is illegal",0
 str_err_nocon	.db	"Invalid character unit specification",0
 str_err_diskio	.db	"Disk I/O failure",0
-str_err_sig	.db	"Invalid boot record",0
+str_err_sig	.db	"No boot record",0
+str_err_noboot	.db	"No bootable image",0
 str_err_api	.db	"Unexpected hardware BIOS API failure",0
 ;
 ;=======================================================================
