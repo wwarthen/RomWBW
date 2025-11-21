@@ -1208,8 +1208,8 @@ point, all disk drivers support both LBA and CHS addressing.
 | E: Sector Count                        |                                        |
 | HL: Buffer Address                     |                                        |
 
-Read Sector Count (E) sectors into the buffer located in Buffer Bank ID (D) 
-at Buffer Address (HL) starting at the Current Sector.  The returned 
+Read Sector Count (E) sectors into the buffer located in Buffer Bank ID 
+(D) at Buffer Address (HL) starting at the Current Sector.  The returned
 Status (A) is a standard HBIOS result code.
 
 The Current Sector is established by a prior DIOSEEK function call;
@@ -1219,17 +1219,20 @@ successfully read. On error, the Current Sector will be the sector where
 the error occurred. Sectors Read (E) indicates the number of sectors 
 successfully read.
 
+A Sector Count of zero will result in no sectors being read and a
+status of success.  The buffer will not be modified.
+
+For buffers in the bottom 32KB ram, the Bank ID is used to identify the 
+bank to use for the buffer. If the buffer is located in your current 
+active bank, you will need to provide the current Bank ID, which can be 
+obtained using [Function 0xF3 -- System Get Bank (SYSGETBNK)].  For 
+buffers in the top 32K of memory the Bank ID is not strictly required as
+this memory is always mapped to the common bank. 
+
 The caller must ensure that the Buffer Address is large enough to
 contain all sectors requested.  Disk data transfers will be faster if
 the buffer resides in the top 32K of memory because it avoids a
 double buffer copy.
-
-Also for buffers in the top 32K of memory the Bank ID is not
-strictly required as this memory is alway mapped to the common bank.
-For buffers in the bottom 32KB ram, the Bank ID is used to identify
-the bank to use for the buffer. If you do not wih to use banked memory
-you will need to provide the current Bank ID, which can be obtained
-using [Function 0xF3 -- System Get Bank (SYSGETBNK)] 
 
 ### Function 0x14 -- Disk Write (DIOWRITE)
 
@@ -1241,9 +1244,9 @@ using [Function 0xF3 -- System Get Bank (SYSGETBNK)]
 | E: Sector Count                        |                                        |
 | HL: Buffer Address                     |                                        |
 
-Write Sector Count (E) sectors from the buffer located in Buffer Bank ID (D)
-at Buffer Address (HL) starting at the Current Sector.  The returned 
-Status (A) is a standard HBIOS result code.
+Write Sector Count (E) sectors from the buffer located in Buffer Bank ID
+(D) at Buffer Address (HL) starting at the Current Sector.  The 
+returned Status (A) is a standard HBIOS result code.
 
 The Current Sector is established by a prior DIOSEEK function call; 
 however, multiple read/write/verify function calls can be made after a 
@@ -1251,6 +1254,16 @@ seek function. The Current Sector is incremented after each sector
 successfully written. On error, the Current Sector will be the sector 
 where the error occurred. Sectors Written (E) indicates the number of 
 sectors successfully written.
+
+A Sector Count of zero will result in no sectors being written and a
+status of success.  The buffer will not be modified.
+
+For buffers in the bottom 32KB ram, the Bank ID is used to identify the 
+bank to use for the buffer. If the buffer is located in your current 
+active bank, you will need to provide the current Bank ID, which can be 
+obtained using [Function 0xF3 -- System Get Bank (SYSGETBNK)].  For 
+buffers in the top 32K of memory the Bank ID is not strictly required as
+this memory is always mapped to the common bank. 
 
 Disk data transfers will be faster if the buffer resides in the top 32K 
 of memory because it avoids a double copy.
