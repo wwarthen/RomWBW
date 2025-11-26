@@ -659,7 +659,7 @@
 <p><strong>RomWBW System Guide</strong> \
 Version 3.6 \
 Wayne Warthen  (<a href="mailto:wwarthen@gmail.com">wwarthen@gmail.com</a>) \
-09 Nov 2025</p>
+25 Nov 2025</p>
 <h1 id="overview">Overview</h1>
 <p>The objective of RomWBW is to provide firmware, operating systems, and
 applications targeting the Z80 family of CPUs. The firmware, in the form
@@ -2479,16 +2479,19 @@ seek function. The Current Sector is incremented after each sector
 successfully read. On error, the Current Sector will be the sector where
 the error occurred. Sectors Read (E) indicates the number of sectors
 successfully read.</p>
+<p>A Sector Count of zero will result in no sectors being read and a status
+of success. The buffer will not be modified.</p>
+<p>For buffers in the bottom 32KB ram, the Bank ID is used to identify the
+bank to use for the buffer. If the buffer is located in your current
+active bank, you will need to provide the current Bank ID, which can be
+obtained using <a href="#function-0xf3-system-get-bank-sysgetbnk">Function 0xF3 – System Get Bank
+(SYSGETBNK)</a>. For buffers in
+the top 32K of memory the Bank ID is not strictly required as this
+memory is always mapped to the common bank.</p>
 <p>The caller must ensure that the Buffer Address is large enough to
 contain all sectors requested. Disk data transfers will be faster if the
 buffer resides in the top 32K of memory because it avoids a double
 buffer copy.</p>
-<p>Also for buffers in the top 32K of memory the Bank ID is not strictly
-required as this memory is alway mapped to the common bank. For buffers
-in the bottom 32KB ram, the Bank ID is used to identify the bank to use
-for the buffer. If you do not wih to use banked memory you will need to
-provide the current Bank ID, which can be obtained using <a href="#function-0xf3-system-get-bank-sysgetbnk">Function 0xF3
-– System Get Bank (SYSGETBNK)</a></p>
 <h3 id="function-0x14-disk-write-diowrite">Function 0x14 – Disk Write (DIOWRITE)</h3>
 <table>
 <thead>
@@ -2529,6 +2532,15 @@ seek function. The Current Sector is incremented after each sector
 successfully written. On error, the Current Sector will be the sector
 where the error occurred. Sectors Written (E) indicates the number of
 sectors successfully written.</p>
+<p>A Sector Count of zero will result in no sectors being written and a
+status of success. The buffer will not be modified.</p>
+<p>For buffers in the bottom 32KB ram, the Bank ID is used to identify the
+bank to use for the buffer. If the buffer is located in your current
+active bank, you will need to provide the current Bank ID, which can be
+obtained using <a href="#function-0xf3-system-get-bank-sysgetbnk">Function 0xF3 – System Get Bank
+(SYSGETBNK)</a>. For buffers in
+the top 32K of memory the Bank ID is not strictly required as this
+memory is always mapped to the common bank.</p>
 <p>Disk data transfers will be faster if the buffer resides in the top 32K
 of memory because it avoids a double copy.</p>
 <h3 id="function-0x15-disk-verify-dioverify">Function 0x15 – Disk Verify (DIOVERIFY)</h3>
@@ -2908,6 +2920,18 @@ table below enumerates these values.</p>
 <td style="text-align: right;">0x08</td>
 <td>MC146818/DS1285/DS12885 RTC w/ NVRAM</td>
 <td>pcrtc.asm</td>
+</tr>
+<tr>
+<td>RTCDEV_MM</td>
+<td style="text-align: right;">0x09</td>
+<td>NS MM58167B RTC (no NVRAM)</td>
+<td>mmrtc.asm</td>
+</tr>
+<tr>
+<td>RTCDEV_DS12</td>
+<td style="text-align: right;">0x0A</td>
+<td>DS1288x RTC w/NVRAM</td>
+<td>ds12rtc.asm</td>
 </tr>
 </tbody>
 </table>
