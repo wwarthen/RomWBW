@@ -1444,6 +1444,7 @@ unit.  The table below enumerates these values.
 | RTCDEV_EZ80     | 0x07   | eZ80 on-chip RTC                         | ez80rtc.asm |
 | RTCDEV_PC       | 0x08   | MC146818/DS1285/DS12885 RTC w/ NVRAM     | pcrtc.asm   |
 | RTCDEV_MM       | 0x09   | NS MM58167B RTC (no NVRAM)               | mmrtc.asm   |
+| RTCDEV_DS12     | 0x0A   | DS1288x RTC w/NVRAM                      | ds12rtc.asm   |
 
 The time functions to get and set the time (RTCGTM and RTCSTM) require a
 6 byte date/time buffer in the following format. Each byte is BCD 

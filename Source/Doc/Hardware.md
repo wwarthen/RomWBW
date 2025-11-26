@@ -2493,6 +2493,7 @@ Note:
 | RP5C01    | Ricoh RPC01A Real-Time Clock w/ NVRAM                  |
 | SIMRTC    | SIMH Simulator Real-Time Clock                         |
 | MMRTC     | NS MM58167B Real-Time Clock (no NVRAM)                 |
+| DS12RTC   | Dallas Semiconductor DS1288x Real-Time Clock w/ NVRAM  |
 
 ## DsKy (DiSplay KeYpad)
 

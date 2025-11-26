@@ -993,9 +993,17 @@ Z280_SYSCALL_GO:
 ; rotates the requested bank numbers by 4.  With wrapping, this
 ; causes a RomWBW request for the top two banks to be mapped to
 ; physical banks $02 & $03.
-; 
-; Z80 CPU Physical:  $00 $01 $02 $03 ... $38 $39 $3A $3B $3C $3D $3E $3F
-; RomWBW Logical:    $04 $05 $06 $07 ... $3C $3D $3E $3F $00 $01 $02 $03
+;
+; RomWBW Logical:    $00 $01 $02 $03 ... $38 $39 $3A $3B $3C $3D $3E $3F
+; Z80 CPU Physical:  $04 $05 $06 $07 ... $3C $3D $3E $3F $00 $01 $02 $03
+;
+; RomWBW Bank Id:    $80    $81    $82    $83    ... $98    $99    $9A    $9B    $9C    $9D    $9E    $9F
+; Physical Address:  $10000 $18000 $20000 $28000 ... $D0000 $D8000 $E0000 $E8000 $F0000 $F8000 $00000 $08000
+;
+; WARNING: If the MS-DOS Support Board is used with ROM enabled it will
+; map ROM to $F0000-$FFFFF!  This means that we can only use bank ids
+; up to $9B which is 28 banks or 896K.  The RAMSIZE config must be limited
+; to 896 in this case.
 ;
 	BIT	7,A			; BIT 7 SET REQUESTS RAM PAGE
 	JR	Z,HBX_ROM		; NOT SET, SELECT ROM PAGE
@@ -1003,7 +1011,7 @@ Z280_SYSCALL_GO:
 	ADD	A,ROMSIZE / 32		; STARTING RAM BANK NUMBER OFFSET
 ;
 HBX_ROM:
-	ADD	A,2			; OFFSET TO SKIP OVER FIXED PAGES
+	ADD	A,2			; OFFSET TO ALIGN WITH FIXED COMMON BANK
 	RLA				; LOW 2 BITS
 	RLA				; ... ARE NOT USED
 	RLA				; TIMES 2 - GET 16K PAGE INSTEAD OF 32K
@@ -4274,6 +4282,9 @@ HB_INITTBL:
 #ENDIF
 #IF (MMRTCENABLE)
 	.DW	MMRTC_INIT
+#ENDIF
+#IF (DS12RTCENABLE)
+	.DW	DS12RTC_INIT
 #ENDIF
 #IF (INTRTCENABLE)
 	.DW	INTRTC_INIT
@@ -8916,6 +8927,15 @@ ORG_MMRTC	.EQU	$
 SIZ_MMRTC	.EQU	$ - ORG_MMRTC
 		MEMECHO	"MMRTC occupies "
 		MEMECHO	SIZ_MMRTC
+		MEMECHO	" bytes.\n"
+#ENDIF
+;
+#IF (DS12RTCENABLE)
+ORG_DS12RTC	.EQU	$
+  #INCLUDE "ds12rtc.asm"
+SIZ_DS12RTC	.EQU	$ - ORG_DS12RTC
+		MEMECHO	"DS12RTC occupies "
+		MEMECHO	SIZ_DS12RTC
 		MEMECHO	" bytes.\n"
 #ENDIF
 ;
