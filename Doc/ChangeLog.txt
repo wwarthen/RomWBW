@@ -1,3 +1,5 @@
+
+- DDW: Added support for the 'N8PC' platform. Includes support for the M6242 RTC chip.
 Version 3.6
 -----------
 - RDG: Added VDA driver for Xosera FPGA-based VDC

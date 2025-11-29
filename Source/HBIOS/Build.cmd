@@ -233,6 +233,7 @@ call Build MBC std || exit /b
 call Build ZETA std || exit /b
 call Build ZETA2 std || exit /b
 call Build N8 std || exit /b
+call Build N8PC std || exit /b
 call Build MK4 std || exit /b
 call Build RCZ80 std || exit /b
 call Build RCEZ80 std || exit /b
