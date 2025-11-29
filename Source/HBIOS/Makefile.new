@@ -6,7 +6,7 @@ DIST_OBJECTS := \
 	DUO_std SCZ180_sc126 SCZ180_sc130 SCZ180_sc131 SCZ180_sc140 \
 	SCZ180_sc503 SCZ180_sc700 S100_std UNA_std Z80RETRO_std \
 	ZETA_std ZETA2_std HEATH_std EPITX_std GMZ180_std
-#	RCZ80_mt RCZ80_duart MON_std
+#	RCZ80_mt RCZ80_duart MON_std N8PC_std
 
 OBJECTS := $(DIST_OBJECTS)
 OBJECTS := RCZ80_std
@@ -143,4 +143,3 @@ UNA_%.rom: UNA_%.osimg.bin UNA_%.hbios_env.sh
 
 %.upd: %.hbios_rom.bin %.osimg.bin %.osimg1.bin %.imgpad2.bin
 	cat $(*F).hbios_rom.bin $(*F).osimg.bin $(*F).osimg1.bin $(*F).imgpad2.bin >$@
-

@@ -200,6 +200,7 @@ to determine the <plt> component of the configuration filename:
 	GMZ180		Doug Jacksons' Genesis Z180 System
 	NABU		NABU w/ Les Bird's RomWBW Option Board
 	FZ80		S100 Computers FPGA Z80
+    N8PC        MSX-ish Z180 ATX SBC w/ onboard video and sound
 
 Configuration files are found in the Source\HBIOS\Config 
 directory.  If you look in the this directory, you will see a 
@@ -341,7 +342,7 @@ the specific platform and configuration for your ROM.  For platform, be
 sure to enter the platform identifier that corresponds to the ROM you
 are creating.  The prompt will look something like this:
 
-    Platform [SBC|MBC|ZETA|ZETA2|RCZ80|EZZ80|UNA|N8|MK4|RCZ180|SCZ180|DYNO|RCZ280]:
+    Platform [SBC|MBC|ZETA|ZETA2|RCZ80|EZZ80|UNA|N8|MK4|RCZ180|SCZ180|DYNO|RCZ280|N8PC]:
 
 You will subsequently be prompted for the specific configuration that
 you want to build.  It will display the available possibilities based
