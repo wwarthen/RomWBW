@@ -27,8 +27,7 @@
 ; 23. SZ80	S100 Computers Z80-based System
 ; 24. RCEZ80	RCBus eZ80
 ; 25. MSX	MSX Computers
-; 26.  N8PC	MSX-ish Z180 ATX SBC w/ onboard video and sound
-;
+; 26. N8PC	MSX-ish Z180 ATX SBC w/ onboard video and sound
 ;
 ; INCLUDE BUILD VERSION
 ;

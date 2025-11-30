@@ -1,5 +1,3 @@
-
-- DDW: Added support for the 'N8PC' platform. Includes support for the M6242 RTC chip.
 Version 3.6
 -----------
 - RDG: Added VDA driver for Xosera FPGA-based VDC
@@ -36,6 +34,7 @@ Version 3.6
 - HJB: Added IDE driver master media detect option
 - WBW: Add support for S100 Serial I/O DLP Serial connection
 - P?D: Generate compressed ROM for EaZyZ80 512
+- DDW: Added support for the 'N8PC' platform. Includes support for the M6242 RTC chip.
 
 Version 3.5.1
 -------------

@@ -69,6 +69,7 @@ Andrew Lynch
 | [Nhyodyne Z80 MBC]                                          | MBC     | MBC_std.rom                  | 38400         |
 | [Rhyophyre Z180 SBC]                                        | -       | RPH_std.rom                  | 38400         |
 | [N8 Z180 SBC] (date >= 2312)                                | ECB     | N8_std.rom                   | 38400         |
+| [N8 PC]                                                     | ECB     | N8PC_std.rom                 | 38400         |
 
 Bill Shen
 
@@ -926,6 +927,45 @@ This configuration is for the N8-2312 and latter (4314) revisions
 #### Notes:
 
 - SD Card interface is configured for CSIO (N8 date code >= 2312)
+
+`\clearpage`{=latex}
+
+## N8 PC
+
+This is a variant of the N8 computer.
+
+* Creator: Dan Werner
+
+#### ROM Image File:  N8PC_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Bus               | ECB           |
+| Default CPU Speed | 9.216 MHz     |
+| Interrupts        | Mode 2        |
+| System Timer      | Z180          |
+| Serial Default    | 38400 Baud    |
+| Memory Manager    | N8            |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+#### Supported Hardware
+
+- PKD: IO=132, SIZE=8X1
+- M6242RTC: IO=160
+- ASCI: IO=64, INTERRUPTS ENABLED
+- ASCI: IO=65, INTERRUPTS ENABLED
+- TMS: MODE=N8PC, IO=152, SCREEN=80X24, KEYBOARD=KBD
+- KBD: ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=N8, IO=140, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=N8, IO=140, DRIVE 1, TYPE=3.5" HD
+- PPIDE: MODE=STD, IO=132, MASTER
+- PPIDE: MODE=STD, IO=132, SLAVE
+- AY38910: MODE=N8, IO=156, CLOCK=3579545 HZ
+
+#### Notes:
 
 `\clearpage`{=latex}
 
@@ -2494,6 +2534,7 @@ Note:
 | SIMRTC    | SIMH Simulator Real-Time Clock                         |
 | MMRTC     | NS MM58167B Real-Time Clock (no NVRAM)                 |
 | DS12RTC   | Dallas Semiconductor DS1288x Real-Time Clock w/ NVRAM  |
+| M6242     | MSM6242 Real-Time Clock (no NVRAM)                     |
 
 ## DsKy (DiSplay KeYpad)
 

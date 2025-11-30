@@ -200,7 +200,7 @@ to determine the <plt> component of the configuration filename:
 	GMZ180		Doug Jacksons' Genesis Z180 System
 	NABU		NABU w/ Les Bird's RomWBW Option Board
 	FZ80		S100 Computers FPGA Z80
-    N8PC        MSX-ish Z180 ATX SBC w/ onboard video and sound
+	N8PC		MSX-ish Z180 ATX SBC w/ onboard video and sound
 
 Configuration files are found in the Source\HBIOS\Config 
 directory.  If you look in the this directory, you will see a 
