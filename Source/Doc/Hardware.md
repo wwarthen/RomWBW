@@ -69,7 +69,6 @@ Andrew Lynch
 | [Nhyodyne Z80 MBC]                                          | MBC     | MBC_std.rom                  | 38400         |
 | [Rhyophyre Z180 SBC]                                        | -       | RPH_std.rom                  | 38400         |
 | [N8 Z180 SBC] (date >= 2312)                                | ECB     | N8_std.rom                   | 38400         |
-| [N8 PC]                                                     | ECB     | N8PC_std.rom                 | 38400         |
 
 Bill Shen
 
@@ -118,6 +117,7 @@ Others
 | [Genesis Z180 System]^7^                                    | STD      | GMZ180_std.rom              |        115200 |
 | [Heath H8 Z80 System]^5^                                    | H8       | HEATH_std.rom               |        115200 |
 | [MSX]^9^                                                    | MSX      | MSX_std.rom                 |        115200 |
+| [N8 PC]^10^                                                 | ISA      | N8PC_std.rom                |         38400 |
 | [NABU w/ RomWBW Option Board]^5^                            | NABU     | NABU_std.rom                |        115200 |
 | [S100 Computers Z180 SBC]^4^                                | S100     | SZ180_std.rom               |         57600 |
 | [S100 Computers Z80 CPU]^4^                                 | S100     | SZ80_std.rom                |         19200 |
@@ -135,6 +135,7 @@ Others
 | ^7^Designed by Doug Jackson
 | ^8^Designed by Dean Netherton
 | ^9^MSX Port by Henk Berends
+| ^10^Designed by Dan Werner
 
 `\clearpage`{=latex}
 
@@ -935,14 +936,15 @@ This configuration is for the N8-2312 and latter (4314) revisions
 This is a variant of the N8 computer.
 
 * Creator: Dan Werner
+* Project GitHub: [N8 PC](https://github.com/danwerner21/N8PC)
 
 #### ROM Image File:  N8PC_std.rom
 
 |                   |               |
 |-------------------|---------------|
-| Bus               | ECB           |
+| Bus               | ISA           |
 | Default CPU Speed | 9.216 MHz     |
-| Interrupts        | Mode 2        |
+| Interrupts        | None          |
 | System Timer      | Z180          |
 | Serial Default    | 38400 Baud    |
 | Memory Manager    | N8            |
@@ -953,8 +955,8 @@ This is a variant of the N8 computer.
 
 - PKD: IO=132, SIZE=8X1
 - M6242RTC: IO=160
-- ASCI: IO=64, INTERRUPTS ENABLED
-- ASCI: IO=65, INTERRUPTS ENABLED
+- ASCI: IO=64
+- ASCI: IO=65
 - TMS: MODE=N8PC, IO=152, SCREEN=80X24, KEYBOARD=KBD
 - KBD: ENABLED
 - MD: TYPE=RAM
