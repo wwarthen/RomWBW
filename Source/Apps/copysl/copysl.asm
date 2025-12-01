@@ -11,7 +11,8 @@
 ; ----------------
 ; 0.1 - Initial Version written by Mark Pruden
 ; 0.2 - Added support for /v (verify) option.
-; 0.3 - refresh CP/M disk buffers after completion
+; 0.3 - Refresh CP/M disk buffers after completion
+; 0.4 - Correct slice fit within partition calculation
 ; ----------------
 ;
     .ORG 100H
@@ -273,7 +274,7 @@ exit:
 ; =========================================
 ;
 msg_welcome:
-    .DB  "CopySlice v0.3 (RomWBW) March 2025 - M.Pruden", 13, 10, 0
+    .DB  "CopySlice v0.4 (RomWBW) December 2025 - M.Pruden", 13, 10, 0
 msg_overite_partition:
     .DB  13,10
     .DB  "Warning: Copying to Slice 0 of hd512 media, "
@@ -951,36 +952,36 @@ slicecalc3:
 
     ; add sps once again, to get Required (upper sector) needed
     add     hl, bc
-    JR      NC, slicecalc4
+    jr      nc, slicecalc4
     inc     de
+
 slicecalc4:
-    ; DE : HL has the total Sector requirement
-
-    ; subtract the total Media / Partition Sixe from the Capcity
-    ; we are not interested in the result, just the C Flag
-    ;
-    or      a ; clear cary flag
-    ;
-    ld      c, (ix + off_lbasize +0) ; capacity LSW
-    ld      b, (ix + off_lbasize +1) ; capacity LSW
-    sbc     hl, bc ; Requirement - Capacity LSW
-    ;
-    ex      de, hl ; Requirement MSW
-    ld      c, (ix + off_lbasize +2) ; capacity MSW
-    ld      b, (ix + off_lbasize +3) ; capacity MSW
-    sbc     hl, bc ; Requirement - Capacity MSW
-
-    ; pop Sector Offset
+    ; de:hl has the required number of sectors (on media) for the slice
+    push    de			; save dsk_req (msw)
+    push    hl			; save dsk_req (lsw)
+;
+    ; check dsk_capacity >= cap_required, CF set on overflow
+    ; no need to save actual result
+    or      a                           ; clear carry for sbc
+    ld      l, (ix + off_lbasize + 0)   ; capacity LSW
+    ld      h, (ix + off_lbasize + 1)   ; capacity LSW
+    pop     bc                          ; required lsw
+    sbc     hl, bc                      ; capacity - required (lsw)
+    ld      l, (ix + off_lbasize + 2)   ; capacity MSW
+    ld      h, (ix + off_lbasize + 3)   ; capacity MSW
+    pop     bc                          ; required msw
+    sbc     hl, bc                      ; capacity - required (msw)
+;
+    ; restore starting offset sector
     pop     de
     pop     hl
-
-    ; Require - Capacity - generates Cary if Capity > Require
-    JR      C, slicecalc5 ; C -> Require - Capacity : Require <= Capacity
+;
+    ; require - capacity -> generates borrow if capacity > requirement
+    jr      nc, slicecalc5 		; if we have enough capacity
     or      0FFh ; otherwise signal not enough capacity
-    RET
+    ret
 
 slicecalc5:
-
     ; add lba offset to DEHL to get slice offset, commented code above
     ld      c, (ix + off_lbaoffset+0)
     ld      b, (ix + off_lbaoffset+1)
