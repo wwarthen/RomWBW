@@ -976,7 +976,7 @@ slicecalc4:
     pop     de
     pop     hl
 ;
-    ; require - capacity -> generates borrow if capacity > requirement
+    ; capacity - required -> generates no carry if capacity >= requirement
     jr      nc, slicecalc5 		; if we have enough capacity
     or      0FFh ; otherwise signal not enough capacity
     ret
