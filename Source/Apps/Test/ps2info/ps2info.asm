@@ -12,6 +12,7 @@
 ; WBW 2022-04-02: Fix prtchr register saving/recovery
 ; WBW 2023-10-19: Add support for Duodyne
 ; WBW 2024-06-10: Add support for RC2014
+; WBW 2025-12-04: Add support for S100 MS-DOS Support Board
 ;
 ;=======================================================================
 ;
@@ -29,6 +30,9 @@ iodat_duo	.equ	$4C	; PS/2 controller data port address
 ; RC2014 (EP/Sally)
 iocmd_rc	.equ	$64	; PS/2 controller command port address
 iodat_rc	.equ	$60	; PS/2 controller data port address
+; S100 MS-DOS Support Board
+iocmd_s100	.equ	$64	; PS/2 controller command port address
+iodat_s100	.equ	$60	; PS/2 controller data port address
 
 ;
 cpumhz	.equ	8	; for time delay calculations (not critical)
@@ -94,6 +98,8 @@ setup1:
 	jr	z,setup_duo
 	cp	'4'			; RC2014 EP/Sally
 	jr	z,setup_rc
+	cp	'5'			; S100
+	jr	z,setup_s100
 	cp	'X'
 	jr	z,exit
 	jr	setup
@@ -128,6 +134,14 @@ setup_rc:
 	ld	a,iodat_rc
 	ld	(iodat),a
 	ld	de,str_rc
+	jr	setup2
+;
+setup_s100:
+	ld	a,iocmd_s100
+	ld	(iocmd),a
+	ld	a,iodat_s100
+	ld	(iodat),a
+	ld	de,str_s100
 	jr	setup2
 ;
 setup2:
@@ -1452,18 +1466,20 @@ delay1:
 ; Constants
 ;=======================================================================
 ;
-str_banner		.db	"PS/2 Keyboard/Mouse Information v0.9, 10-Jun-2024",0
+str_banner		.db	"PS/2 Keyboard/Mouse Information v1.0, 4-Dec-2025",0
 str_hwmenu		.db	"PS/2 Controller Port Options:\r\n\r\n"
 			.db	"  1 - Nhyodyne\r\n"
 			.db	"  2 - Rhyophyre\r\n"
 			.db	"  3 - Duodyne\r\n"
 			.db	"  4 - RC2014\r\n"
+			.db	"  5 - S100 MS-DOS Support Board\r\n"
 			.db	"  X - Exit Application\r\n"
 			.db	"\r\nSelection? ",0
 str_mbc			.db	"Nhyodyne",0
 str_rph			.db	"Rhyophyre",0
 str_duo			.db	"Duodyne",0
 str_rc			.db	"RC2014 (Saly)",0
+str_s100		.db	"S100 (MS-DOS Support Board)",0
 str_menu		.db	"PS/2 Testing Options:\r\n\r\n"
 			.db	"  C - Test PS/2 Controller\r\n"
 			.db	"  K - Test PS/2 Keyboard\r\n"
