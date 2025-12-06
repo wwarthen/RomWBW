@@ -8,7 +8,7 @@
 ; (c) 2025 Joao Miguel Duraes
 ; Licensed under the MIT License
 ;
-; Version: 1.0 - 06-Dec-2025
+; Version: 1.1 - 06-Dec-2025
 ;
 ; Assemble with:
 ;   TASM -80 -b vgminfo.asm vgminfo.com
@@ -42,7 +42,11 @@ LF              .equ    0AH                 ; line feed
 
 VGM_IDENT       .equ    00H                 ; "Vgm " identifier
 VGM_VERSION     .equ    08H                 ; Version
+VGM_SN76489_CLK .equ    0CH                 ; SN76489 clock (4 bytes, little-endian)
+VGM_YM2612_CLK  .equ    2CH                 ; YM2612 clock (4 bytes, little-endian)
+VGM_YM2151_CLK  .equ    30H                 ; YM2151 clock (4 bytes, little-endian)
 VGM_DATAOFF     .equ    34H                 ; VGM data offset (relative to 0x34)
+VGM_AY8910_CLK  .equ    74H                 ; AY-3-8910 clock (4 bytes, little-endian)
 
 ;------------------------------------------------------------------------------
 ; VGM Command codes (subset)
@@ -232,13 +236,116 @@ PAD_DONE:
                 RET
 
 ;------------------------------------------------------------------------------
-; Check which chips are used by scanning VGM command stream (first ~100 cmds)
+; Check which chips are used: hybrid approach
+; 1. Check header clocks to see which chip types are present
+; 2. Scan commands to detect multiple instances of same chip type
 ;------------------------------------------------------------------------------
 
 CHECK_CHIPS:    
                 ; Initialize chip flags
                 XOR     A
                 LD      (CHIP_FLAGS), A
+                LD      (CHIP_TYPES), A         ; Types present from header
+                
+                ; Check SN76489 clock (4 bytes at 0x0C)
+                LD      HL, VGMBUF+VGM_SN76489_CLK
+                LD      A, (HL)
+                INC     HL
+                OR      (HL)
+                INC     HL
+                OR      (HL)
+                INC     HL
+                OR      (HL)
+                JR      Z, CHK_YM2612_CLK
+                LD      A, (CHIP_TYPES)
+                OR      01H                     ; bit 0 = SN76489 present
+                LD      (CHIP_TYPES), A
+                
+CHK_YM2612_CLK:
+                ; Check YM2612 clock (4 bytes at 0x2C)
+                LD      HL, VGMBUF+VGM_YM2612_CLK
+                LD      A, (HL)
+                INC     HL
+                OR      (HL)
+                INC     HL
+                OR      (HL)
+                INC     HL
+                OR      (HL)
+                JR      Z, CHK_YM2151_CLK
+                LD      A, (CHIP_TYPES)
+                OR      02H                     ; bit 1 = YM2612 present
+                LD      (CHIP_TYPES), A
+                
+CHK_YM2151_CLK:
+                ; Check YM2151 clock (4 bytes at 0x30)
+                LD      HL, VGMBUF+VGM_YM2151_CLK
+                LD      A, (HL)
+                INC     HL
+                OR      (HL)
+                INC     HL
+                OR      (HL)
+                INC     HL
+                OR      (HL)
+                JR      Z, CHK_AY_CLK
+                LD      A, (CHIP_TYPES)
+                OR      04H                     ; bit 2 = YM2151 present
+                LD      (CHIP_TYPES), A
+                
+CHK_AY_CLK:
+                ; Check AY-3-8910 clock (4 bytes at 0x74, only valid in VGM v1.51+)
+                LD      HL, VGMBUF+VGM_VERSION
+                LD      A, (HL)                 ; Get low byte of version
+                CP      51H                     ; Check if >= 0x51 (v1.51)
+                JR      C, START_CMD_SCAN       ; Skip if < v1.51
+                INC     HL
+                LD      A, (HL)                 ; Get high byte
+                CP      01H                     ; Must be 0x01
+                JR      NZ, START_CMD_SCAN      ; Skip if not v1.xx
+                
+                LD      HL, VGMBUF+VGM_AY8910_CLK
+                LD      A, (HL)
+                INC     HL
+                OR      (HL)
+                INC     HL
+                OR      (HL)
+                INC     HL
+                OR      (HL)
+                JR      Z, START_CMD_SCAN
+                LD      A, (CHIP_TYPES)
+                OR      08H                     ; bit 3 = AY present
+                LD      (CHIP_TYPES), A
+                
+START_CMD_SCAN:
+                ; If chip type is present, scan commands to detect multiples
+                ; Set base flags from types
+                LD      A, (CHIP_TYPES)
+                BIT     0, A
+                JR      Z, NO_SN_BASE
+                LD      A, (CHIP_FLAGS)
+                OR      01H                     ; Set SN #1
+                LD      (CHIP_FLAGS), A
+NO_SN_BASE:
+                LD      A, (CHIP_TYPES)
+                BIT     1, A
+                JR      Z, NO_YM2612_BASE
+                LD      A, (CHIP_FLAGS)
+                OR      04H                     ; Set YM2612 #1
+                LD      (CHIP_FLAGS), A
+NO_YM2612_BASE:
+                LD      A, (CHIP_TYPES)
+                BIT     2, A
+                JR      Z, NO_YM2151_BASE
+                LD      A, (CHIP_FLAGS)
+                OR      10H                     ; Set YM2151 #1
+                LD      (CHIP_FLAGS), A
+NO_YM2151_BASE:
+                LD      A, (CHIP_TYPES)
+                BIT     3, A
+                JR      Z, NO_AY_BASE
+                LD      A, (CHIP_FLAGS)
+                OR      40H                     ; Set AY #1
+                LD      (CHIP_FLAGS), A
+NO_AY_BASE:
                 
                 ; Compute absolute data start within VGMBUF window
                 LD      HL, (VGMBUF+VGM_DATAOFF)
@@ -254,8 +361,8 @@ GOT_OFFSET:     LD      DE, VGMBUF+VGM_DATAOFF
                 SBC     HL, DE              ; HL = offset from VGMBUF base
                 ADD     HL, DE              ; restore HL absolute inside VGMBUF
                 
-                ; Scan up to 100 commands or until EOD
-                LD      C, 100
+                ; Scan up to 255 commands or until EOD
+                LD      C, 255
 SCAN_LOOP:      LD      A, (HL)
                 INC     HL
                 
@@ -486,7 +593,7 @@ CRLF:           LD      A, CR
 ;------------------------------------------------------------------------------
 
 MSG_HEADER:     .DB     CR, LF
-                .DB     "VGM Music Chip Scanner v1.0 - 06-Dec-2025", CR, LF
+                .DB     "VGM Music Chip Scanner v1.1 - 06-Dec-2025", CR, LF
                 .DB     "(c)2025 Joao Miguel Duraes - MIT License", CR, LF
                 .DB     CR, LF
                 .DB     "Filename  Chips Used", CR, LF
@@ -528,6 +635,9 @@ CHIP_FLAGS:     .DB     0                   ; Detected chip flags
                                             ; bit2 YM2612 #1, bit3 YM2612 #2
                                             ; bit4 YM2151 #1, bit5 YM2151 #2
                                             ; bit6 AY #1, bit7 AY #2
+CHIP_TYPES:     .DB     0                   ; Chip types present from header
+                                            ; bit0 SN76489, bit1 YM2612
+                                            ; bit2 YM2151, bit3 AY-3-8910
 
 ; Buffer for VGM header + first data sector (256 bytes)
 VGMBUF:         .FILL   512, 0
