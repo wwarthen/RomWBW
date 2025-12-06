@@ -40,6 +40,8 @@ LF              .equ    0AH                 ; line feed
 ; VGM Header offsets
 ;------------------------------------------------------------------------------
 
+DEBUG_SUM       .equ    1                   ; 1 = build with checksum support
+
 VGM_IDENT       .equ    00H                 ; "Vgm " identifier
 VGM_VERSION     .equ    08H                 ; Version
 VGM_SN76489_CLK .equ    0CH                 ; SN76489 clock (4 bytes, little-endian)
@@ -60,6 +62,9 @@ VGM_YM26123_W   .equ    0A2H                ; YM2612 #2 port 0 write
 VGM_YM26124_W   .equ    0A3H                ; YM2612 #2 port 1 write
 VGM_YM21511_W   .equ    054H                ; YM2151 write
 VGM_YM21512_W   .equ    0A4H                ; YM2151 #2 write
+VGM_OPL2_W      .equ    05AH                ; YM3812 (OPL2) write
+VGM_OPL31_W     .equ    05EH                ; YMF262 (OPL3) port 0 write
+VGM_OPL32_W     .equ    05FH                ; YMF262 (OPL3) port 1 write
 VGM_AY_W        .equ    0A0H                ; AY-3-8910 write
 VGM_ESD         .equ    066H                ; End of sound data
 VGM_WNS         .equ    061H                ; Wait n samples
@@ -73,6 +78,9 @@ VGM_W882        .equ    063H                ; Wait 882 samples
                 .ORG    100H
 
 START:          LD      SP, STACK           ; Setup stack
+                
+                ; Parse command tail for debug flags (e.g. "D" or "/D")
+                CALL    PARSE_DEBUG
                 
                 ; Display header
                 LD      DE, MSG_HEADER
@@ -224,6 +232,27 @@ PRINT_NAME:     LD      A, (HL)
                 LD      A, ' '
                 CALL    PRTCHR
 
+#if DEBUG_SUM
+                ; Compute and optionally print 512-byte checksum over VGMBUF
+                CALL    CALC_SUM512
+                LD      A, (DBG_SUM)
+                OR      A
+                JR      Z, PAD_DONE
+
+                ; Print space + [HHLL] + space between filename and chips
+                LD      A, ' '
+                CALL    PRTCHR
+                LD      A, '['
+                CALL    PRTCHR
+                LD      A, (SUM_HI)
+                CALL    PRTHEX8
+                LD      A, (SUM_LO)
+                CALL    PRTHEX8
+                LD      A, ']'
+                CALL    PRTCHR
+                LD      A, ' '
+                CALL    PRTCHR
+#endif
 
 PAD_DONE:
                 
@@ -316,6 +345,14 @@ CHK_AY_CLK:
                 LD      (CHIP_TYPES), A
                 
 START_CMD_SCAN:
+                ; Clear AY flags if AY is not present in header
+                LD      A, (CHIP_TYPES)
+                BIT     3, A                      ; Check if AY is present
+                JR      NZ, SCAN_CMDS            ; If present, continue
+                LD      A, (CHIP_FLAGS)
+                AND     3FH                       ; Clear bits 6 and 7 (AY flags)
+                LD      (CHIP_FLAGS), A
+SCAN_CMDS:
                 ; If chip type is present, scan commands to detect multiples
                 ; Set base flags from types
                 LD      A, (CHIP_TYPES)
@@ -335,19 +372,14 @@ NO_YM2612_BASE:
                 LD      A, (CHIP_TYPES)
                 BIT     2, A
                 JR      Z, NO_YM2151_BASE
-                LD      A, (CHIP_FLAGS)
-                OR      10H                     ; Set YM2151 #1
-                LD      (CHIP_FLAGS), A
+                ; Do NOT pre-mark YM2151 as used from the header alone.
+                ; YM2151 will only be marked used when a command is seen.
 NO_YM2151_BASE:
-                LD      A, (CHIP_TYPES)
-                BIT     3, A
-                JR      Z, NO_AY_BASE
-                LD      A, (CHIP_FLAGS)
-                OR      40H                     ; Set AY #1
-                LD      (CHIP_FLAGS), A
+                ; Do NOT pre-mark AY as used from the header alone.
+                ; AY will only be marked used when an 0xA0 command is seen.
 NO_AY_BASE:
-                
-                ; Compute absolute data start within VGMBUF window
+
+COMPUTE_DATA_START:
                 LD      HL, (VGMBUF+VGM_DATAOFF)
                 LD      A, H
                 OR      L
@@ -379,10 +411,13 @@ SCAN_LOOP:      LD      A, (HL)
                 
 CHK_PSG2:       CP      VGM_PSG2_W
                 JP      NZ, CHK_YM2612
+                LD      A, (CHIP_TYPES)     ; Only if SN76489 is present
+                BIT     0, A
+                JR      Z, SCAN_NEXT_1
                 LD      A, (CHIP_FLAGS)
                 OR      02H                 ; bit 1 = SN #2
                 LD      (CHIP_FLAGS), A
-                INC     HL
+SCAN_NEXT_1:    INC     HL
                 JP      SCAN_NEXT
                 
 CHK_YM2612:     CP      VGM_YM26121_W
@@ -393,10 +428,13 @@ CHK_YM2612:     CP      VGM_YM26121_W
                 JR      Z, GOT_YM2612_2
                 CP      VGM_YM26124_W
                 JP      NZ, CHK_YM2151
-GOT_YM2612_2:   LD      A, (CHIP_FLAGS)
+GOT_YM2612_2:   LD      A, (CHIP_TYPES)     ; Only if YM2612 is present
+                BIT     1, A
+                JR      Z, SCAN_NEXT_2
+                LD      A, (CHIP_FLAGS)
                 OR      08H                 ; bit 3 = YM2612 #2
                 LD      (CHIP_FLAGS), A
-                INC     HL
+SCAN_NEXT_2:    INC     HL
                 INC     HL                  ; Skip 2 data bytes
                 JP      SCAN_NEXT
 GOT_YM2612_1:   LD      A, (CHIP_FLAGS)
@@ -410,10 +448,13 @@ CHK_YM2151:     CP      VGM_YM21511_W
                 JR      Z, GOT_YM2151_1
                 CP      VGM_YM21512_W
                 JP      NZ, CHK_AY
+                LD      A, (CHIP_TYPES)     ; Only if YM2151 is present
+                BIT     2, A
+                JR      Z, SCAN_NEXT_3
                 LD      A, (CHIP_FLAGS)
                 OR      20H                 ; bit 5 = YM2151 #2
                 LD      (CHIP_FLAGS), A
-                INC     HL
+SCAN_NEXT_3:    INC     HL
                 INC     HL
                 JP      SCAN_NEXT
 GOT_YM2151_1:   LD      A, (CHIP_FLAGS)
@@ -424,21 +465,44 @@ GOT_YM2151_1:   LD      A, (CHIP_FLAGS)
                 JP      SCAN_NEXT
                 
 CHK_AY:         CP      VGM_AY_W
-                JP      NZ, CHK_WAIT
+                JP      NZ, CHK_OPL2
+                LD      A, (CHIP_TYPES)     ; Only if AY is present
+                BIT     3, A
+                JR      Z, SCAN_SKIP_AY     ; Skip if AY not present in header
                 LD      A, (HL)             ; Get register/chip byte
                 BIT     7, A                ; Bit 7 = chip 2?
                 JR      Z, GOT_AY1
                 LD      A, (CHIP_FLAGS)
                 OR      80H                 ; bit 7 = AY #2
                 LD      (CHIP_FLAGS), A
-                INC     HL
-                INC     HL
-                JP      SCAN_NEXT
+                JR      SCAN_SKIP_AY
 GOT_AY1:        LD      A, (CHIP_FLAGS)
                 OR      40H                 ; bit 6 = AY #1
                 LD      (CHIP_FLAGS), A
-                INC     HL
+SCAN_SKIP_AY:    INC     HL
                 INC     HL                  ; Skip 2 data bytes
+                JP      SCAN_NEXT
+                
+CHK_OPL2:       CP      VGM_OPL2_W
+                JP      NZ, CHK_OPL3
+                ; Mark OPL2 present
+                LD      A, (CHIP_TYPES)
+                OR      010H                 ; bit 4 = OPL2
+                LD      (CHIP_TYPES), A
+                INC     HL                   ; skip register
+                INC     HL                   ; skip data
+                JP      SCAN_NEXT
+                
+CHK_OPL3:       CP      VGM_OPL31_W
+                JR      Z, GOT_OPL3
+                CP      VGM_OPL32_W
+                JP      NZ, CHK_WAIT
+GOT_OPL3:       ; Mark OPL3 present
+                LD      A, (CHIP_TYPES)
+                OR      020H                 ; bit 5 = OPL3
+                LD      (CHIP_TYPES), A
+                INC     HL                   ; skip register
+                INC     HL                   ; skip data
                 JP      SCAN_NEXT
                 
 CHK_WAIT:       CP      VGM_WNS
@@ -519,6 +583,28 @@ YM2151_DUAL:    LD      DE, MSG_YM2151X2
                 CALL    PRTSTR
 YM2151_DONE:    INC     B
 NO_YM2151:
+                ; OPL2 (YM3812)
+                LD      A, (CHIP_TYPES)
+                BIT     4, A
+                JR      Z, NO_OPL2
+                LD      A, B
+                OR      A
+                CALL    NZ, PRINT_COMMA
+                LD      DE, MSG_OPL2
+                CALL    PRTSTR
+                INC     B
+NO_OPL2:
+                ; OPL3 (YMF262)
+                LD      A, (CHIP_TYPES)
+                BIT     5, A
+                JR      Z, NO_OPL3
+                LD      A, B
+                OR      A
+                CALL    NZ, PRINT_COMMA
+                LD      DE, MSG_OPL3
+                CALL    PRTSTR
+                INC     B
+NO_OPL3:
                 ; AY-3-8910
                 LD      A, C
                 AND     0C0H                ; bits 6-7
@@ -549,6 +635,118 @@ PRINT_COMMA:    LD      A, ','
                 CALL    PRTCHR
                 LD      A, ' '
                 CALL    PRTCHR
+                RET
+
+
+;------------------------------------------------------------------------------
+; Parse CP/M command tail for debug flag (D or /D) -> sets DBG_SUM
+;------------------------------------------------------------------------------
+
+PARSE_DEBUG:    LD      HL, BUFF            ; CP/M command tail buffer
+                LD      A, (HL)             ; length byte
+                OR      A
+                RET     Z                   ; empty tail, no flags
+
+                LD      B, A                ; B = remaining chars
+                INC     HL                  ; HL -> first character
+
+PD_LOOP:        LD      A, (HL)
+                CP      ' '                 ; skip spaces
+                JR      Z, PD_NEXT
+
+                CP      '/'
+                JR      Z, PD_SLASH
+
+                CP      'D'
+                JR      Z, PD_SET
+                CP      'd'
+                JR      Z, PD_SET
+                JR      PD_NEXT
+
+PD_SLASH:       ; look at next char for D/d
+                INC     HL
+                DJNZ    PD_CHECK2
+                RET
+
+PD_CHECK2:      LD      A, (HL)
+                CP      'D'
+                JR      Z, PD_SET
+                CP      'd'
+                JR      Z, PD_SET
+                JR      PD_NEXT_CONT
+
+PD_NEXT:        INC     HL
+PD_NEXT_CONT:   DJNZ    PD_LOOP
+                RET
+
+PD_SET:         LD      A, 1
+                LD      (DBG_SUM), A
+                RET
+
+
+;------------------------------------------------------------------------------
+; 512-byte checksum over VGMBUF (simple 16-bit sum)
+;------------------------------------------------------------------------------
+
+CALC_SUM512:    PUSH    AF
+                PUSH    BC
+                PUSH    DE
+                PUSH    HL
+
+                LD      HL, VGMBUF
+                LD      DE, 0200H           ; 512 bytes
+                XOR     A
+                LD      (SUM_LO), A
+                LD      (SUM_HI), A
+
+SUM_LOOP:       LD      A, (HL)
+                INC     HL
+                LD      B, A
+                LD      A, (SUM_LO)
+                ADD     A, B
+                LD      (SUM_LO), A
+                LD      A, (SUM_HI)
+                ADC     A, 0
+                LD      (SUM_HI), A
+                DEC     DE
+                LD      A, D
+                OR      E
+                JR      NZ, SUM_LOOP
+
+                POP     HL
+                POP     DE
+                POP     BC
+                POP     AF
+                RET
+
+;------------------------------------------------------------------------------
+; Print A as two hex digits
+;------------------------------------------------------------------------------
+
+PRTHEX8:        PUSH    AF
+                PUSH    BC
+
+                LD      B, A                ; Save original byte in B
+                SRL     A
+                SRL     A
+                SRL     A
+                SRL     A                   ; High nibble
+                CALL    PRTHEX_NIB
+
+                LD      A, B
+                AND     0FH                 ; Low nibble
+                CALL    PRTHEX_NIB
+
+                POP     BC
+                POP     AF
+                RET
+
+PRTHEX_NIB:     CP      0AH
+                JR      C, HEX_DIGIT
+                ADD     A, 'A' - 10
+                JR      PRTHEX_OUT
+HEX_DIGIT:      ADD     A, '0'
+PRTHEX_OUT:     CALL    PRTCHR
                 RET
 
 
@@ -611,6 +809,8 @@ MSG_YM2612:     .DB     "YM2612", 0
 MSG_YM2612X2:   .DB     "2xYM2612", 0
 MSG_YM2151:     .DB     "YM2151", 0
 MSG_YM2151X2:   .DB     "2xYM2151", 0
+MSG_OPL2:       .DB     "YM3812", 0
+MSG_OPL3:       .DB     "YMF262", 0
 MSG_AY8910:     .DB     "AY-3-8910", 0
 MSG_AY8910X2:   .DB     "2xAY-3-8910", 0
 MSG_UNKNOWN:    .DB     "Unknown/None", 0
@@ -638,6 +838,11 @@ CHIP_FLAGS:     .DB     0                   ; Detected chip flags
 CHIP_TYPES:     .DB     0                   ; Chip types present from header
                                             ; bit0 SN76489, bit1 YM2612
                                             ; bit2 YM2151, bit3 AY-3-8910
+                                            ; bit4 OPL2 (YM3812), bit5 OPL3 (YMF262)
+
+SUM_LO:         .DB     0                   ; Low byte of 16-bit checksum
+SUM_HI:         .DB     0                   ; High byte of 16-bit checksum
+DBG_SUM:        .DB     0                   ; 0=disable checksum print, non-zero=enable
 
 ; Buffer for VGM header + first data sector (256 bytes)
 VGMBUF:         .FILL   512, 0

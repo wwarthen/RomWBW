@@ -32,6 +32,8 @@ The program can detect the following audio chips:
   - SN76489 (PSG - Programmable Sound Generator)
   - YM2612 (FM Synthesis chip used in Sega Genesis/Mega Drive)
   - YM2151 (OPM - FM Operator Type-M)
+  - YM3812 (OPL2 - FM synthesis chip)
+  - YMF262 (OPL3 - Enhanced FM synthesis chip)
   - AY-3-8910 (PSG used in many arcade and home computers)
 
 Example Output:
