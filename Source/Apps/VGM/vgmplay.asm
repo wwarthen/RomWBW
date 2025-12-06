@@ -85,23 +85,23 @@ plt_cpuspd	.equ	20		; Non ROMWBW cpu speed default
 #ENDIF
 ;
 #IF (plt_type=RCBUS)
-RSEL            .equ    0A0H		; AYMODE_MSX	; Primary AY-3-8910 Register selection
-RDAT            .equ    0A1H		; AYMODE_MSX	; Primary AY-3-8910 Register data
-RSEL2           .equ    050H		; AYMODE_COLECO	; Secondary AY-3-8910 Register selection
-RDAT2           .equ    051H		; AYMODE_COLECO	; Secondary AY-3-8910 Register data
-PSG1REG         .equ    0FFH		; SNMODE_RC    	; Primary SN76489
-PSG2REG         .equ    0FBH		; SNMODE_RC	; Secondary SN76489
+RSEL        .equ    0A0H		; AYMODE_MSX	; Primary AY-3-8910 Register selection
+RDAT        .equ    0A1H		; AYMODE_MSX	; Primary AY-3-8910 Register data
+RSEL2       .equ    050H		; AYMODE_COLECO	; Secondary AY-3-8910 Register selection
+RDAT2       .equ    051H		; AYMODE_COLECO	; Secondary AY-3-8910 Register data
+PSG1REG     .equ    0FFH		; SNMODE_RC    	; Primary SN76489
+PSG2REG     .equ    0FBH		; SNMODE_RC	; Secondary SN76489
 YM2151_SEL1	.equ	0DEH		; ED BRINDLEY	; Primary YM2151 register selection
 YM2151_DAT1	.equ	0DFH		; ED BRINDLEY 	; Primary YM2151 register data
 YM2151_SEL2	.equ	000H		; UNDEFINED	; Secondary YM2151 register selection
 YM2151_DAT2	.equ	000H		; UNDEFINED	; Secondary YM2151 register data
 ctcbase		.equ	000H		; UNDEFINED	; CTC base address
-YMSEL		.equ	090H		; OPL3/YMF262	; Primary YM2612/OPL3 register select
-YMDAT		.equ	091H		; OPL3/YMF262	; Primary YM2612/OPL3 register data
-YM2SEL		.equ	092H		; OPL3/YMF262	; Secondary YM2612/OPL3 register select
-YM2DAT		.equ	093H		; OPL3/YMF262	; Secondary YM2612/OPL3 register data
+YMSEL		.equ	090H		; Primary YM2612/YM3812/YMF262 register select
+YMDAT		.equ	091H		; Primary YM2612/YM3812/YMF262 register data
+YM2SEL		.equ	092H		; Secondary YM2612/YM3812/YMF262 register select (port 1)
+YM2DAT		.equ	093H		; Secondary YM2612/YM3812/YMF262 register data (port 1)
 plt_cpuspd	.equ	7;372800	; CPUOSC	; Non ROMWBW cpu speed default
-FRAME_DLY       .equ    12				; Frame delay (~ 1/44100)
+FRAME_DLY   .equ    12			; Frame delay (~ 1/44100)
 #ENDIF
 ;
 #IF (plt_type=sbcecb)
