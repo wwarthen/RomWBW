@@ -36,7 +36,7 @@ sbcecb		.equ	3
 MBC		.equ	4
 ;
 plt_romwbw	.equ	1		; Build for ROMWBW?
-plt_type	.equ	sbcecb		; Select build configuration
+plt_type	.equ	RCBUS		; Select build configuration
 debug		.equ	0		; Display port, register, config info
 ;
 ;------------------------------------------------------------------------------
@@ -44,17 +44,17 @@ debug		.equ	0		; Display port, register, config info
 ;------------------------------------------------------------------------------
 
 #IF (plt_type=custom)
-RSEL            .equ    09AH		; Primary AY-3-8910 Register selection
-RDAT            .equ    09BH		; Primary AY-3-8910 Register data
-RSEL2           .equ    88H		; Secondary AY-3-8910 Register selection
-RDAT2           .equ    89H		; Secondary AY-3-8910 Register data
+RSEL            .equ    A0H		; Primary AY-3-8910 Register selection
+RDAT            .equ    A8H		; Primary AY-3-8910 Register data
+RSEL2           .equ    E0H		; Secondary AY-3-8910 Register selection
+RDAT2           .equ    E8H		; Secondary AY-3-8910 Register data
 VGMBASE		.equ	$C0
 YMSEL		.equ	VGMBASE+00H	; Primary YM2162 11000000 a1=0 a0=0
 YMDAT		.equ	VGMBASE+01H	; Primary YM2162 11000001 a1=0 a0=1
 YM2SEL		.equ	VGMBASE+02H	; Secondary YM2162 11000010 a1=1 a0=0
 YM2DAT		.equ	VGMBASE+03H	; Secondary YM2162 11000011 a1=1 a0=1
-PSG1REG         .equ    VGMBASE+04H	; Primary SN76489
-PSG2REG         .equ    VGMBASE+05H	; Secondary SN76489
+PSG1REG         .equ    FFH		; VGMBASE+04H	; Primary SN76489
+PSG2REG         .equ    FBH		; VGMBASE+05H	; Secondary SN76489
 YM2151_SEL1	.equ	VGMBASE+08H	; Primary YM2151 register selection
 YM2151_DAT1	.equ	VGMBASE+09H	; Primary YM2151 register data
 YM2151_SEL2	.equ	VGMBASE+0AH	; Secondary YM2151 register selection
@@ -85,21 +85,21 @@ plt_cpuspd	.equ	20		; Non ROMWBW cpu speed default
 #ENDIF
 ;
 #IF (plt_type=RCBUS)
-RSEL            .equ    0D8H		; AYMODE_RCZ80	; Primary AY-3-8910 Register selection
-RDAT            .equ    0D0H		; AYMODE_RCZ80	; Primary AY-3-8910 Register data
-RSEL2           .equ    000H		; UNDEFINED	; Secondary AY-3-8910 Register selection
-RDAT2           .equ    000H		; UNDEFINED	; Secondary AY-3-8910 Register data
-PSG1REG         .equ    0FFH		; SNMODE_RC   !	; Primary SN76489
+RSEL            .equ    0A0H		; AYMODE_MSX	; Primary AY-3-8910 Register selection
+RDAT            .equ    0A1H		; AYMODE_MSX	; Primary AY-3-8910 Register data
+RSEL2           .equ    050H		; AYMODE_COLECO	; Secondary AY-3-8910 Register selection
+RDAT2           .equ    051H		; AYMODE_COLECO	; Secondary AY-3-8910 Register data
+PSG1REG         .equ    0FFH		; SNMODE_RC    	; Primary SN76489
 PSG2REG         .equ    0FBH		; SNMODE_RC	; Secondary SN76489
-YM2151_SEL1	.equ	0FEH		; ED BRINDLEY	; Primary YM2151 register selection
-YM2151_DAT1	.equ	0FFH		; ED BRINDLEY !	; Primary YM2151 register data
+YM2151_SEL1	.equ	0DEH		; ED BRINDLEY	; Primary YM2151 register selection
+YM2151_DAT1	.equ	0DFH		; ED BRINDLEY 	; Primary YM2151 register data
 YM2151_SEL2	.equ	000H		; UNDEFINED	; Secondary YM2151 register selection
 YM2151_DAT2	.equ	000H		; UNDEFINED	; Secondary YM2151 register data
 ctcbase		.equ	000H		; UNDEFINED	; CTC base address
-YMSEL		.equ	000H		; UNDEFINED	; Primary YM2162 11000000 a1=0 a0=0
-YMDAT		.equ	000H		; UNDEFINED	; Primary YM2162 11000001 a1=0 a0=1
-YM2SEL		.equ	000H		; UNDEFINED	; Secondary YM2162 11000010 a1=1 a0=0
-YM2DAT		.equ	000H		; UNDEFINED	; Secondary YM2162 11000011 a1=1 a0=1
+YMSEL		.equ	090H		; OPL3/YMF262	; Primary YM2612/OPL3 register select
+YMDAT		.equ	091H		; OPL3/YMF262	; Primary YM2612/OPL3 register data
+YM2SEL		.equ	092H		; OPL3/YMF262	; Secondary YM2612/OPL3 register select
+YM2DAT		.equ	093H		; OPL3/YMF262	; Secondary YM2612/OPL3 register data
 plt_cpuspd	.equ	7;372800	; CPUOSC	; Non ROMWBW cpu speed default
 FRAME_DLY       .equ    12				; Frame delay (~ 1/44100)
 #ENDIF
@@ -239,6 +239,9 @@ VGM_W882	.equ	063H			; WAIT 882 SAMPLES (1/50TH SECOND)
 VGM_ESD		.equ	066H			; END OF SOUND DATA
 VGM_YM21511_W	.equ	054H			; YM2151 #1 WRITE VALUE DD
 VGM_YM21512_W	.equ	0A4H			; YM2151 #2 WRITE VALUE DD
+VGM_OPL2_W	.equ	05AH			; YM3812 (OPL2) WRITE VALUE DD
+VGM_OPL31_W	.equ	05EH			; YMF262 (OPL3) PORT 0 WRITE VALUE DD
+VGM_OPL32_W	.equ	05FH			; YMF262 (OPL3) PORT 1 WRITE VALUE DD
 
 ;------------------------------------------------------------------------------
 ; Generic CP/M definitions
@@ -495,7 +498,7 @@ YM2162_1	CP      VGM_YM26121_W
 		JP	NEXT
 ;
 YM2162_2	CP      VGM_YM26122_W
-                JR      NZ,YM2151_1
+                JR      NZ,OPL2_1
 		LD	A,(HL)
 		OUT	(YM2SEL),A
 		INC	HL
@@ -503,6 +506,50 @@ YM2162_2	CP      VGM_YM26122_W
 		OUT	(YM2DAT),A
 		INC	HL
 		SET	4,(IX+0)		; 2nd channel 
+		JP	NEXT
+;
+;	OPL2/OPL3 SECTION
+;
+OPL2_1		CP	VGM_OPL2_W		; 0x5A: Write to YM3812 (OPL2)
+		JR	NZ,OPL3_1
+		LD	A,(HL)			; Get register
+		INC	HL
+		OUT	(YMSEL),A		; Select register (bank 1)
+		NOP			; 3-cycle delay
+		NOP
+		NOP
+		LD	A,(HL)			; Get data
+		INC	HL
+		OUT	(YMDAT),A		; Write data
+		SET	5,(IX+0)		; Mark OPL3 used
+		JP	NEXT
+;
+OPL3_1		CP	VGM_OPL31_W		; 0x5E: Write to YMF262 port 0
+		JR	NZ,OPL3_2
+		LD	A,(HL)			; Get register
+		INC	HL
+		OUT	(YMSEL),A		; Select register (bank 1)
+		NOP			; 3-cycle delay
+		NOP
+		NOP
+		LD	A,(HL)			; Get data
+		INC	HL
+		OUT	(YMDAT),A		; Write data
+		SET	5,(IX+0)		; Mark OPL3 used
+		JP	NEXT
+;
+OPL3_2		CP	VGM_OPL32_W		; 0x5F: Write to YMF262 port 1
+		JR	NZ,YM2151_1
+		LD	A,(HL)			; Get register
+		INC	HL
+		OUT	(YM2SEL),A		; Select register (bank 2)
+		NOP			; 3-cycle delay
+		NOP
+		NOP
+		LD	A,(HL)			; Get data
+		INC	HL
+		OUT	(YM2DAT),A		; Write data
+		SET	5,(IX+0)		; Mark OPL3 used
 		JP	NEXT
 ;
 ;	YM2151 SECTION
@@ -619,6 +666,14 @@ VGMDEVICES:	LD	DE,MSG_PO		; Played on ...
 		SRL	A
 		PUSH	AF
 ;
+		LD	DE,MSG_OPL3		; OPL3/YMF262 Devices
+		CALL	CHKDEV
+;
+		POP	AF
+		SRL	A
+		SRL	A
+		PUSH	AF
+;
 		LD	DE,MSG_YM2151		; YM-2151 Devices
 		CALL	CHKDEV
 ;
@@ -627,9 +682,9 @@ VGMDEVICES:	LD	DE,MSG_PO		; Played on ...
 ;		SRL	A
 ;		PUSH	AF
 ;
-		LD	A,(IX+1)
-		LD	DE,MSG_UNK		; Unknown Device Code detected
-;		CALL	CHKDEV
+	LD	A,(IX+1)
+	LD	DE,MSG_UNK		; Unknown Device Code detected
+	CALL	CHKDEV
 ;
 CHKDEV:		AND	%00000011		; Display 
 		RET	Z			; number of
@@ -783,7 +838,7 @@ SKIP1:		LD	A,(IX+0)
 
 SKIP2:		LD	A,(IX+0)		; mute all channels on ym2612
 		AND	%00110000
-		JP	Z,SKIP3
+		JP	Z,SKIP_OPL3
 
 		s2612reg($22,$00)		; lfo off
 
@@ -1028,10 +1083,56 @@ SKIP2:		LD	A,(IX+0)		; mute all channels on ym2612
 
 #endif
 		
+SKIP_OPL3:
+		LD	A,(IX+0)		; Mute OPL3 if used
+		BIT	5,A
+		JR	Z,SKIP3
+		; Turn off all OPL keys (0xB0-0xB8 on both banks)
+		LD	C,0B0H			; Start at key-on register
+OPL3_KOFF:
+		LD	A,C
+		OUT	(YMSEL),A		; Bank 1 select
+		NOP
+		NOP
+		NOP
+		XOR	A			; Key off (bit 5=0)
+		OUT	(YMDAT),A
+		LD	A,C
+		OUT	(YM2SEL),A		; Bank 2 select
+		NOP
+		NOP
+		NOP
+		XOR	A
+		OUT	(YM2DAT),A
+		INC	C
+		LD	A,C
+		CP	0B9H
+		JR	NZ,OPL3_KOFF
+		; Optionally clear OPL3 registers 0x00-0xFF on both banks
+		LD	BC,0100H		; B=1,C=0
+OPL3_RST:
+		LD	A,C
+		OUT	(YMSEL),A
+		NOP
+		NOP
+		NOP
+		XOR	A
+		OUT	(YMDAT),A
+		LD	A,C
+		OUT	(YM2SEL),A
+		NOP
+		NOP
+		NOP
+		XOR	A
+		OUT	(YM2DAT),A
+		DEC	BC
+		LD	A,B
+		OR	C
+		JP	NZ,OPL3_RST
+
 SKIP3:		LD	A,(IX+0)		; For YM2151 ... Unimplemented
 		AND	%11000000
 		JP	Z,SKIP4
-
 		; MUTE YM2151
 
 		s2151reg($14,$30)		; disable timer %00110000		
@@ -1148,7 +1249,7 @@ PRTIDXDEA3:
 ; Strings and constants.
 ;------------------------------------------------------------------------------
 ;
-MSG_WELC:	.DB	"VGM Player v0.4, 11-Dec-2022"
+MSG_WELC:	.DB	"VGM Player v0.5, 06-Dec-2025 - OPL3 support added"
 ;		.DB	CR,LF, "J.B. Langston/Marco Maccaferri/Ed Brindley/Phil Summers",CR,LF
 		.DB	0
 MSG_BADF:	.DB	"Not a VGM file",CR,LF,0
@@ -1156,11 +1257,12 @@ MSG_PO		.DB	"Played on : ",0
 MSG_YM2612:	.DB	"xYM-2612 ",0
 MSG_SN:		.DB	"xSN76489 ",0
 MSG_AY:		.DB	"xAY-3-8910 ",0
+MSG_OPL3:	.DB	"xOPL3/YMF262 ",0
 MSG_YM2151:	.DB	"xYM-2151 ",0
 MSG_UNK:	.DB	"xUnsupported device encountered", CR, LF, 0
 MSG_EXIT:	.DB	"FINISHED.",CR,LF,0
 MSG_NOFILE:     .DB	"File not found", CR, LF, 0
-MSG_MEM:	.DB	"File to big", CR, LF, 0
+MSG_MEM:	.DB	"File too big", CR, LF, 0
 MSG_TITLE:	.DB	" from: ",0
 MSG_TRACK	.DB	"Playing: ",0
 MSG_CPU		.DB	"[cpu]",0
@@ -1182,8 +1284,8 @@ KEYCHK		.DB	0		; Counter for keypress checks
 ;
 VGM_DEV		.DB	%00000000	; IX+0 Flags for devices
 					; xx...... ym2151 1 & 2
-					; ..x..... ym2612 2 (not supported)
-					; ...x.... ym2612 1
+					; ..x..... opl3/ymf262
+					; ...x.... ym2612
 					; ....xx.. ay-3-8910 1 & 2
 					; ......xx sn76489 1 & 2
 
