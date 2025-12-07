@@ -101,7 +101,7 @@ YMDAT		.equ	091H		; Primary YM2612/YM3812/YMF262 register data
 YM2SEL		.equ	092H		; Secondary YM2612/YM3812/YMF262 register select (port 1)
 YM2DAT		.equ	093H		; Secondary YM2612/YM3812/YMF262 register data (port 1)
 plt_cpuspd	.equ	7;372800	; CPUOSC	; Non ROMWBW cpu speed default
-FRAME_DLY   .equ    12			; Frame delay (~ 1/44100)
+FRAME_DLY   .equ    5			; Frame delay (~ 1/44100) - reduced for 2x speedup
 #ENDIF
 ;
 #IF (plt_type=sbcecb)
@@ -292,11 +292,40 @@ MAINLOOP	CALL    PLAY                	; Play one frame
                 JR      NZ,EXIT
 NO_CHK:
 #IF (delay_type==cpu_loop)
+		; Per-frame fdelay dithering: for the first fdith_lo frames in each
+		; fdith_cycle, use (fdelay0-1); otherwise use fdelay0.
+		LD	A,(fdith_cycle)
+		OR	A
+		JR	Z,fd_nodither
+		LD	B,A			; B = cycle
+		LD	A,(fdith_pos)
+		INC	A
+		CP	B
+		JR	C,fd_pos_ok
+		XOR	A			; wrap to 0
+fd_pos_ok:
+		LD	(fdith_pos),A
+		LD	C,A			; C = pos
+		LD	A,(fdith_lo)
+		CP	C			; A - C
+		JR	Z,fd_use_hi
+		JR	C,fd_use_hi		; if A<=C -> use hi (base)
+		; else pos < lo -> use lo (base-1)
+		LD	A,(fdelay0)
+		DEC	A
+		LD	(fdelay),A
+		JR	fd_set_done
+fd_use_hi:
+		LD	A,(fdelay0)
+		LD	(fdelay),A
+fd_set_done:
+fd_nodither:
+
 vdelay:		.equ	$+1
 		ld	hl,vdelay
-fdelay:		.equ	$+1
-lp1:		LD      B,FRAME_DLY		; 44100 one frame = 0.0000226757 seconds
-		DJNZ    $
+lp1:		LD      A,(fdelay)		; Load CPU-calibrated delay
+		LD	B,A			; Into B register
+		DJNZ    $			; Tight delay loop
 		DEC     HL
 		LD      A,H
 		OR      L
@@ -515,9 +544,10 @@ OPL2_1		CP	VGM_OPL2_W		; 0x5A: Write to YM3812 (OPL2)
 		LD	A,(HL)			; Get register
 		INC	HL
 		OUT	(YMSEL),A		; Select register (bank 1)
-		NOP			; 3-cycle delay
-		NOP
-		NOP
+		PUSH	BC			; OPL timing: wait ~1 microsecond
+		LD	B,3
+		DJNZ	$
+		POP	BC
 		LD	A,(HL)			; Get data
 		INC	HL
 		OUT	(YMDAT),A		; Write data
@@ -529,9 +559,10 @@ OPL3_1		CP	VGM_OPL31_W		; 0x5E: Write to YMF262 port 0
 		LD	A,(HL)			; Get register
 		INC	HL
 		OUT	(YMSEL),A		; Select register (bank 1)
-		NOP			; 3-cycle delay
-		NOP
-		NOP
+		PUSH	BC			; OPL timing: wait ~1 microsecond
+		LD	B,3
+		DJNZ	$
+		POP	BC
 		LD	A,(HL)			; Get data
 		INC	HL
 		OUT	(YMDAT),A		; Write data
@@ -543,9 +574,10 @@ OPL3_2		CP	VGM_OPL32_W		; 0x5F: Write to YMF262 port 1
 		LD	A,(HL)			; Get register
 		INC	HL
 		OUT	(YM2SEL),A		; Select register (bank 2)
-		NOP			; 3-cycle delay
-		NOP
-		NOP
+		PUSH	BC			; OPL timing: wait ~1 microsecond
+		LD	B,3
+		DJNZ	$
+		POP	BC
 		LD	A,(HL)			; Get data
 		INC	HL
 		OUT	(YM2DAT),A		; Write data
@@ -653,29 +685,27 @@ VGMDEVICES:	LD	DE,MSG_PO		; Played on ...
 		LD	DE,MSG_AY		; AY-3-8910 Devices
 		CALL	CHKDEV
 ;
-		POP	AF
-		SRL	A
-		SRL	A
-		PUSH	AF
+	POP	AF
+	SRL	A
+	SRL	A
+	PUSH	AF
 ;
-		LD	DE,MSG_YM2612		; YM-2612 Devices
-		CALL	CHKDEV
+	LD	DE,MSG_YM2612		; YM-2612 (bit 4)
+	CALL	CHKDEV1			; Check single bit
 ;
-		POP	AF
-		SRL	A
-		SRL	A
-		PUSH	AF
+	POP	AF
+	SRL	A			; Shift right 1 bit
+	PUSH	AF
 ;
-		LD	DE,MSG_OPL3		; OPL3/YMF262 Devices
-		CALL	CHKDEV
+	LD	DE,MSG_OPL3		; OPL3/YMF262 (bit 5)
+	CALL	CHKDEV1			; Check single bit
 ;
-		POP	AF
-		SRL	A
-		SRL	A
-		PUSH	AF
+	POP	AF
+	SRL	A			; Shift right 1 bit
+	PUSH	AF
 ;
-		LD	DE,MSG_YM2151		; YM-2151 Devices
-		CALL	CHKDEV
+	LD	DE,MSG_YM2151		; YM-2151 (bits 6-7)
+	CALL	CHKDEV
 ;
 		POP	AF
 ;		SRL	A
@@ -692,6 +722,13 @@ CHKDEV:		AND	%00000011		; Display
 		ADC	A,'0'
 		CALL	PRTCHR			; Skip if not
 		CALL	PRTSTR			; used.
+		RET
+;
+CHKDEV1:	AND	%00000001		; Check single bit device
+		RET	Z			; Return if not used
+		LD	A,'1'			; Display "1x"
+		CALL	PRTCHR
+		CALL	PRTSTR
 		RET
 ;
 ;------------------------------------------------------------------------------
@@ -1249,7 +1286,7 @@ PRTIDXDEA3:
 ; Strings and constants.
 ;------------------------------------------------------------------------------
 ;
-MSG_WELC:	.DB	"VGM Player v0.5, 06-Dec-2025 - OPL3 support added"
+MSG_WELC:	.DB	"VGM Player v0.5.11, 07-Dec-2025 - Timing tuned (88 BPM)"
 ;		.DB	CR,LF, "J.B. Langston/Marco Maccaferri/Ed Brindley/Phil Summers",CR,LF
 		.DB	0
 MSG_BADF:	.DB	"Not a VGM file",CR,LF,0
@@ -1257,7 +1294,7 @@ MSG_PO		.DB	"Played on : ",0
 MSG_YM2612:	.DB	"xYM-2612 ",0
 MSG_SN:		.DB	"xSN76489 ",0
 MSG_AY:		.DB	"xAY-3-8910 ",0
-MSG_OPL3:	.DB	"xOPL3/YMF262 ",0
+MSG_OPL3:	.DB	"xYM-3812 ",0
 MSG_YM2151:	.DB	"xYM-2151 ",0
 MSG_UNK:	.DB	"xUnsupported device encountered", CR, LF, 0
 MSG_EXIT:	.DB	"FINISHED.",CR,LF,0
@@ -1290,6 +1327,11 @@ VGM_DEV		.DB	%00000000	; IX+0 Flags for devices
 					; ......xx sn76489 1 & 2
 
 		.DB	%00000000	; IX+1 Unimplemented device flags & future devices
+fdelay0	.DB	12			; Base CPU-calibrated inner delay from CLKTBL
+fdelay		.DB	12			; Effective per-frame delay (may dither from fdelay0)
+fdith_pos	.DB	0			; Dither position [0..fdith_cycle-1]
+fdith_lo	.DB	0			; Number of frames per cycle using (fdelay0-1)
+fdith_cycle	.DB	0			; Dither cycle length
 ;
 OLDSTACK        .DW     0		; original stack pointer
                 .FILL	40H		; space for stack
@@ -1403,10 +1445,11 @@ setfdelay:
 #IF (plt_romwbw)
 		LD	BC,$F8F0		; GET CPU SPEED
 		RST	08			; FROM HBIOS
-		LD	A,L			; 
+		LD	A,L			; CPU index/code in A
 #ELSE
 		ld	a,plt_cpuspd		; USE STANDALONE CPU SPEED
 #ENDIF
+		PUSH	AF			; save cpu index
 		LD	HL,CLKTBL-1		; CPU SPEED
 		ADD	A,L			; INDEXES 
 		LD	L,A			; INTO
@@ -1415,8 +1458,79 @@ setfdelay:
 		LD	H,A                     ; LOOK IT UP IN THE
 		LD	A,(HL)                  ; CLOCK TABLE
 ;
-		LD	(fdelay),A		; SAVE LOOP COUNTER FOR CPU SPEED
-		RET
+		LD	(fdelay0),A		; store base loop counter
+		LD	(fdelay),A		; set effective to base
+		XOR	A
+		LD	(fdith_pos),A		; reset dither state
+		LD	(fdith_lo),A
+		LD	(fdith_cycle),A
+		POP	AF			; A=cpu index again (unused for now)
+;
+; Auto-dither mapping for fine timing. We adjust effective fdelay by occasionally
+; using (fdelay0-1) frames according to a lo/cycle ratio, tuned per base value.
+; For 7.3728 MHz (HBIOS index resolves to fdelay0=10), we use 7/25 to reach
+; ~88 BPM on OPL2 without overshoot.
+		LD	A,(fdelay0)
+		LD	B,A			; B = base
+		XOR	A
+		LD	(fdith_cycle),A
+		LD	(fdith_lo),A
+		LD	A,B
+		CP	10
+		JR	NZ,fd_ck11
+		LD	A,25			; 7/25 = 0.28 -> avg 9.72 (~+2.8% speed)
+		LD	(fdith_cycle),A
+		LD	A,7
+		LD	(fdith_lo),A
+		JR	sdone
+fd_ck11:
+		CP	11
+		JR	NZ,fd_ck14
+		LD	A,4			; 1/4 = 0.25 -> avg 10.75 (~2.27%)
+		LD	(fdith_cycle),A
+		LD	A,1
+		LD	(fdith_lo),A
+		JR	sdone
+fd_ck14:
+		CP	14
+		JR	NZ,fd_ck15
+		LD	A,3			; 1/3 ≈ 0.333 -> avg 13.667 (~2.38%)
+		LD	(fdith_cycle),A
+		LD	A,1
+		LD	(fdith_lo),A
+		JR	sdone
+fd_ck15:
+		CP	15
+		JR	NZ,fd_ck16
+		LD	A,20			; 7/20 = 0.35 -> avg 14.65 (2.33%)
+		LD	(fdith_cycle),A
+		LD	A,7
+		LD	(fdith_lo),A
+		JR	sdone
+fd_ck16:
+		CP	16
+		JR	NZ,fd_ck17
+		LD	A,8			; 3/8 = 0.375 -> avg 15.625 (~2.34%)
+		LD	(fdith_cycle),A
+		LD	A,3
+		LD	(fdith_lo),A
+		JR	sdone
+fd_ck17:
+		CP	17
+		JR	NZ,fd_ck23
+		LD	A,5			; 2/5 = 0.4 -> avg 16.6 (~2.35%)
+		LD	(fdith_cycle),A
+		LD	A,2
+		LD	(fdith_lo),A
+		JR	sdone
+fd_ck23:
+		CP	23
+		JR	NZ,sdone
+		LD	A,13			; 7/13 ≈ 0.538 -> avg 22.462 (~2.34%)
+		LD	(fdith_cycle),A
+		LD	A,7
+		LD	(fdith_lo),A
+sdone:		RET
 ;
 ;------------------------------------------------------------------------------
 ; Frame delay values for different processor speeds. 
@@ -1433,22 +1547,22 @@ setfdelay:
 ;		 2Mhz  = 500ns   : DJNZ $	= 1 frame delay= 22676ns/13*500ns   =  3.49
 ;		 1Mhz  = 1000ns  : DJNZ $	= 1 frame delay= 22676ns/13*1000ns  =  1.74
 ;
-CLKTBL:		.DB	1  		; 1Mhz		; none of these 
-		.DB	3  		; 2Mhz		; have been
-		.DB	0		; 3Mhz		; validated
-		.DB	6  		; 4Mhz
+CLKTBL:		.DB	1  		; 1Mhz
+		.DB	3  		; 2Mhz
+		.DB	0		; 3Mhz
+		.DB	7  		; 4Mhz (+1)
 		.DB	0		; 5Mhz
-		.DB	10 		; 6Mhz
-		.DB	12 		; 7Mhz 7.3728Mhz
-		.DB	13 		; 8Mhz
+		.DB	9  		; 6Mhz (+1)
+		.DB	10 		; 7Mhz 7.3728Mhz (+1)
+		.DB	11 		; 8Mhz (+1)
 		.DB	0		; 9Mhz
-		.DB	17 		; 10Mhz
+		.DB	15 		; 10Mhz (+1)
 		.DB	0		; 11Mhz
-		.DB	20 		; 12Mhz
+		.DB	17 		; 12Mhz (+1)
 		.DB	0		; 13Mhz
 		.DB	0		; 14Mhz
 		.DB	0		; 15Mhz
-		.DB	27 		; 16Mhz
+		.DB	23 		; 16Mhz (+1)
 		.DB	0		; 17Mhz
 		.DB	0		; 18Mhz
 		.DB	0		; 19Mhz
