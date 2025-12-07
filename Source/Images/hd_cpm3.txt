@@ -61,6 +61,7 @@ d_cpm3/ReadMe.txt 0:
 ../../Binary/Apps/zmconfig.ovr 0:
 ../../Binary/Apps/zmd.com 0:
 ../../Binary/Apps/vgmplay.com 0:
+../../Binary/Apps/vgminfo.com 0:
 #
 ../../Binary/Apps/Test/*.com 2:
 ../../Binary/Apps/Test/*.doc 2:

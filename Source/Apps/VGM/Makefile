@@ -1,4 +1,4 @@
-OBJECTS = vgmplay.com
+OBJECTS = vgmplay.com vgminfo.com
 DEST = ../../../Binary/Apps
 TOOLS = ../../../Tools
 OTHERS = *.LST
@@ -12,6 +12,9 @@ vgmplay.com: $(DEPS)
 
 ym2612.com: 
 	$(TASM) -dWBW ymfmdemo.asm ymfmdemo.com ymfmdemo.lst
+
+vgminfo.com: 
+	$(TASM) -dWBW vgminfo.asm vgminfo.com vgminfo.lst
 
 all::
 	mkdir -p $(DEST)/Tunes

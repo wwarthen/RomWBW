@@ -988,6 +988,7 @@ included within RomWBW may be found within the Binary/Apps directory.
 | TIMER       | Yes      | Yes        |
 | TUNE        | No       | Yes        |
 | VGMPLAY     | No       | Yes        |
+| VGMINFO     | No       | Yes        |
 | WDATE       | No       | Yes        |
 | XM          | Yes      | Yes        |
 | ZMD         | No       | Yes        |
@@ -2637,6 +2638,66 @@ player code is from MYMPLAY 0.4 by Lieves!Tuore and the PT player code
 is (c)2004-2007 S.V.Bulba <vorobey@mail.khstu.ru>.
 
 The source code is provided in the RomWBW distribution.
+
+`\clearpage`{=latex}
+
+## VGMINFO (Video Game Music File Information)
+
+| VGMPLAY             |   |
+| --------------------|---|
+| ROM-based           |No |
+| Disk-based          |Yes|
+
+A utility that scans all .VGM files in the current directory and
+displays a table showing which audio chips each file uses.
+
+Version 1.1 uses a hybrid detection approach:
+
+- Checks VGM header clock values to detect chip types
+- Scans VGM command stream to detect multiple instances of same chip type
+
+#### Syntax
+
+| `VGMINFO`
+
+#### Usage
+
+No command line arguments are needed. The program will automatically scan
+all .VGM files in the current directory.
+
+The program displays a formatted table with two columns:
+
+  - Filename: The name of the VGM file
+  - Chips Used: A comma-separated list of audio chips used in that file
+
+The program can detect the following audio chips:
+
+  - SN76489 (PSG - Programmable Sound Generator)
+  - YM2612 (FM Synthesis chip used in Sega Genesis/Mega Drive)
+  - YM2151 (OPM - FM Operator Type-M)
+  - YM3812 (OPL2 - FM synthesis chip)
+  - YMF262 (OPL3 - Enhanced FM synthesis chip)
+  - AY-3-8910 (PSG used in many arcade and home computers)
+
+#### Notes
+
+- The program reads the VGM file headers and scans up to 255 commands from
+  the VGM data stream for accurate chip detection.
+  
+- Files that don't have a valid VGM header are silently skipped.
+
+- Chip detection uses a hybrid approach:
+  * VGM header clock values (offsets 0x0C, 0x2C, 0x30, 0x74) determine
+    which chip types are present
+  * Command stream scanning detects multiple instances (e.g., "2xSN76489")
+
+- AY-3-8910 clock detection respects VGM version - only checked for v1.51+
+  to avoid false positives from invalid header data in older VGM versions.
+
+#### Etymology
+
+The `VGMINFO` application was written and contributed to RomWBW by
+Joao Miguel Duraes.
 
 `\clearpage`{=latex}
 

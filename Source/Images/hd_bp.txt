@@ -47,6 +47,7 @@ Common/Z3/u15/ZEX.COM 0:
 ../../Binary/Apps/zmconfig.ovr 15:
 ../../Binary/Apps/zmd.com 15:
 ../../Binary/Apps/vgmplay.com 15:
+../../Binary/Apps/vgminfo.com 15:
 #
 ../../Binary/Apps/Test/*.com 2:
 ../../Binary/Apps/Test/*.doc 2:

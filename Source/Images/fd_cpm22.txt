@@ -37,6 +37,7 @@ d_cpm22/ReadMe.txt 0:
 ../../Binary/Apps/zmconfig.ovr 0:
 ../../Binary/Apps/zmd.com 0:
 ../../Binary/Apps/vgmplay.com 0:
+../../Binary/Apps/vgminfo.com 0:
 #
 # Add OS image
 #
