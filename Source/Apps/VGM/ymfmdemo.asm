@@ -19,23 +19,24 @@
 ; Device and system specific definitions
 ;------------------------------------------------------------------------------
 ;
-custom		.equ	0           	        ; System configurations
-sbcecb		.equ	1		
-MBC		.equ	2
+custom		.equ	0           ; System configurations
+P8X180      .equ    1
+RCBUS       .equ    2
+sbcecb		.equ	3		
+MBC			.equ	4
 ;
 plt_romwbw	.equ	1			; Build for ROMWBW?
-plt_type	.equ	sbcecb			; Select build configuration
-plt_cpuspd	.equ	6			; Non ROMWBW cpu speed default
-debug		.equ	0
-
+plt_type	.equ	RCBUS		; Select build configuration
+debug		.equ	0			; Display port, register, config info
 ctc_delay	.equ	0
 ;
-        .org    100H
+;
+.org    100H
 ;
 BDOS	.equ	0005h
 ;
-YMSEL	.equ	$c0
-YMDAT	.equ	$c1
+YMSEL	.equ	$A0
+YMDAT	.equ	$A1
 ctcbase	.equ	$cc
 ;
 ;------------------------------------------------------------------------------

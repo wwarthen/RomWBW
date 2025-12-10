@@ -766,6 +766,8 @@ signon$msg	db	13,10,'ZPM3'
 	endif
 		db	' for HBIOS v'
 		biosver
+		db	13,10
+		db	'** CTRL-V = XMODEM TRIGGER MOD **'
 		db	13,10,13,10,0
 		
 ccp$msg		db	13,10,'BIOS Err on '

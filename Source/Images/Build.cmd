@@ -1,5 +1,5 @@
-:: This script will build all slice images and all aggregate disk
-:: images.
+:: This script will build only hd1k_combo.img and its required dependencies.
+::
 
 @echo off
 setlocal
@@ -8,29 +8,26 @@ SETLOCAL EnableDelayedExpansion
 
 copy hd1k_prefix.dat ..\..\Binary\ || exit /b
 
-:: For each floppy disk image definition (fd_*.txt), invoke PowerShell
-:: to build the image.
+:: Build the floppy disk images that are dependencies of combo.def
 
-for %%f in (fd_*.txt) do (
-  set Image=%%~nf
-  PowerShell -ExecutionPolicy Unrestricted .\BuildImg.ps1 fd144_!Image:fd_=! || exit /b
-)
+PowerShell -ExecutionPolicy Unrestricted .\BuildImg.ps1 fd144_cpm22 || exit /b
+PowerShell -ExecutionPolicy Unrestricted .\BuildImg.ps1 fd144_zsdos || exit /b
+PowerShell -ExecutionPolicy Unrestricted .\BuildImg.ps1 fd144_nzcom || exit /b
+PowerShell -ExecutionPolicy Unrestricted .\BuildImg.ps1 fd144_cpm3 || exit /b
+PowerShell -ExecutionPolicy Unrestricted .\BuildImg.ps1 fd144_zpm3 || exit /b
+PowerShell -ExecutionPolicy Unrestricted .\BuildImg.ps1 fd144_ws4 || exit /b
 
-:: For each hard disk slice image definition (hd_*.txt), invoke
-:: PowerShell to build the slice image.  Note that both hd512 and
-:: hd1k style images are built.
+:: Build only the hard disk slice images required for hd1k_combo.img
+:: (based on combo.def: cpm22, zsdos, nzcom, cpm3, zpm3, ws4)
 
-for %%f in (hd_*.txt) do (
-  set Image=%%~nf
-  PowerShell -ExecutionPolicy Unrestricted .\BuildImg.ps1 hd512_!Image:hd_=! || exit /b
-  PowerShell -ExecutionPolicy Unrestricted .\BuildImg.ps1 hd1k_!Image:hd_=! || exit /b
-)
+PowerShell -ExecutionPolicy Unrestricted .\BuildImg.ps1 hd1k_cpm22 || exit /b
+PowerShell -ExecutionPolicy Unrestricted .\BuildImg.ps1 hd1k_zsdos || exit /b
+PowerShell -ExecutionPolicy Unrestricted .\BuildImg.ps1 hd1k_nzcom || exit /b
+PowerShell -ExecutionPolicy Unrestricted .\BuildImg.ps1 hd1k_cpm3 || exit /b
+PowerShell -ExecutionPolicy Unrestricted .\BuildImg.ps1 hd1k_zpm3 || exit /b
+PowerShell -ExecutionPolicy Unrestricted .\BuildImg.ps1 hd1k_wp || exit /b
 
-:: For each aggregate disk image definition (*.def), invoke PowerShell
-:: to build the disk image.
+:: Build only the hd1k_combo.img aggregate disk image
 
-for %%f in (*.def) do (
-  PowerShell -ExecutionPolicy Unrestricted .\BuildDsk.ps1 hd512_%%~nf || exit /b
-  PowerShell -ExecutionPolicy Unrestricted .\BuildDsk.ps1 hd1k_%%~nf || exit /b
-)
+PowerShell -ExecutionPolicy Unrestricted .\BuildDsk.ps1 hd1k_combo || exit /b
 

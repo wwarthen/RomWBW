@@ -29,79 +29,79 @@
 ; Device and system specific definitions
 ;------------------------------------------------------------------------------
 ;
-custom		.equ	0           	; System configurations
-P8X180          .equ    1
-RCBUS           .equ    2
+custom		.equ	0           ; System configurations
+P8X180      .equ    1
+RCBUS       .equ    2
 sbcecb		.equ	3		
-MBC		.equ	4
+MBC			.equ	4
 ;
-plt_romwbw	.equ	1		; Build for ROMWBW?
+plt_romwbw	.equ	1			; Build for ROMWBW?
 plt_type	.equ	RCBUS		; Select build configuration
-debug		.equ	0		; Display port, register, config info
+debug		.equ	0			; Display port, register, config info
 ;
 ;------------------------------------------------------------------------------
 ; Platform specific definitions. If building for ROMWBW, these may be overridden
 ;------------------------------------------------------------------------------
 
 #IF (plt_type=custom)
-RSEL            .equ    A0H		; Primary AY-3-8910 Register selection
-RDAT            .equ    A8H		; Primary AY-3-8910 Register data
-RSEL2           .equ    E0H		; Secondary AY-3-8910 Register selection
-RDAT2           .equ    E8H		; Secondary AY-3-8910 Register data
-VGMBASE		.equ	$C0
-YMSEL		.equ	VGMBASE+00H	; Primary YM2162 11000000 a1=0 a0=0
-YMDAT		.equ	VGMBASE+01H	; Primary YM2162 11000001 a1=0 a0=1
-YM2SEL		.equ	VGMBASE+02H	; Secondary YM2162 11000010 a1=1 a0=0
-YM2DAT		.equ	VGMBASE+03H	; Secondary YM2162 11000011 a1=1 a0=1
-PSG1REG         .equ    FFH		; VGMBASE+04H	; Primary SN76489
-PSG2REG         .equ    FBH		; VGMBASE+05H	; Secondary SN76489
-YM2151_SEL1	.equ	VGMBASE+08H	; Primary YM2151 register selection
-YM2151_DAT1	.equ	VGMBASE+09H	; Primary YM2151 register data
-YM2151_SEL2	.equ	VGMBASE+0AH	; Secondary YM2151 register selection
-YM2151_DAT2	.equ	VGMBASE+0BH	; Secondary YM2151 register data
-ctcbase		.equ	VGMBASE+0CH	; CTC base address
-plt_cpuspd	.equ	6;000000	; Non ROMWBW cpu speed default
-FRAME_DLY       .equ    10  		; Frame delay (~ 1/44100)
+RSEL            .equ    A0H			; Primary AY-3-8910 Register selection
+RDAT            .equ    A8H			; Primary AY-3-8910 Register data
+RSEL2           .equ    E0H			; Secondary AY-3-8910 Register selection
+RDAT2           .equ    E8H			; Secondary AY-3-8910 Register data
+VGMBASE			.equ	$C0
+YMSEL			.equ	VGMBASE+00H	; Primary YM2162 11000000 a1=0 a0=0
+YMDAT			.equ	VGMBASE+01H	; Primary YM2162 11000001 a1=0 a0=1
+YM2SEL			.equ	VGMBASE+02H	; Secondary YM2162 11000010 a1=1 a0=0
+YM2DAT			.equ	VGMBASE+03H	; Secondary YM2162 11000011 a1=1 a0=1
+PSG1REG         .equ    FFH			; VGMBASE+04H	; Primary SN76489
+PSG2REG         .equ    FBH			; VGMBASE+05H	; Secondary SN76489
+YM2151_SEL1		.equ	VGMBASE+08H	; Primary YM2151 register selection
+YM2151_DAT1		.equ	VGMBASE+09H	; Primary YM2151 register data
+YM2151_SEL2		.equ	VGMBASE+0AH	; Secondary YM2151 register selection
+YM2151_DAT2		.equ	VGMBASE+0BH	; Secondary YM2151 register data
+ctcbase			.equ	VGMBASE+0CH	; CTC base address
+plt_cpuspd		.equ	6;000000	; Non ROMWBW cpu speed default
+FRAME_DLY   	.equ    10  		; Frame delay (~ 1/44100)
 #ENDIF
 ;
 #IF (plt_type=P8X180)
-RSEL            .equ    82H		; Primary AY-3-8910 Register selection
-RDAT            .equ    83H		; Primary AY-3-8910 Register data
-RSEL2           .equ    88H		; Secondary AY-3-8910 Register selection
-RDAT2           .equ    89H		; Secondary AY-3-8910 Register data
-PSG1REG         .equ    84H		; Primary SN76489
-PSG2REG         .equ    8AH		; Secondary SN76489
-YM2151_SEL1	.equ	0B0H		; Primary YM2151 register selection
-YM2151_DAT1	.equ	0B1H		; Primary YM2151 register data
-YM2151_SEL2	.equ	0B2H		; Secondary YM2151 register selection
-YM2151_DAT2	.equ	0B3H		; Secondary YM2151 register data
-ctcbase		.equ	000H		; CTC base address
-YMSEL		.equ	000H		; Primary YM2162 11000000 a1=0 a0=0
-YMDAT		.equ	000H		; Primary YM2162 11000001 a1=0 a0=1
-YM2SEL		.equ	000H		; Secondary YM2162 11000010 a1=1 a0=0
-YM2DAT		.equ	000H		; Secondary YM2162 11000011 a1=1 a0=1
-FRAME_DLY       .equ    48		; Frame delay (~ 1/44100)
-plt_cpuspd	.equ	20		; Non ROMWBW cpu speed default
+RSEL            .equ    82H			; Primary AY-3-8910 Register selection
+RDAT            .equ    83H			; Primary AY-3-8910 Register data
+RSEL2           .equ    88H			; Secondary AY-3-8910 Register selection
+RDAT2           .equ    89H			; Secondary AY-3-8910 Register data
+PSG1REG         .equ    84H			; Primary SN76489
+PSG2REG         .equ    8AH			; Secondary SN76489
+YM2151_SEL1		.equ	0B0H		; Primary YM2151 register selection
+YM2151_DAT1		.equ	0B1H		; Primary YM2151 register data
+YM2151_SEL2		.equ	0B2H		; Secondary YM2151 register selection
+YM2151_DAT2		.equ	0B3H		; Secondary YM2151 register data
+ctcbase			.equ	000H		; CTC base address
+YMSEL			.equ	000H		; Primary YM2162 11000000 a1=0 a0=0
+YMDAT			.equ	000H		; Primary YM2162 11000001 a1=0 a0=1
+YM2SEL			.equ	000H		; Secondary YM2162 11000010 a1=1 a0=0
+YM2DAT			.equ	000H		; Secondary YM2162 11000011 a1=1 a0=1
+FRAME_DLY       .equ    48			; Frame delay (~ 1/44100)
+plt_cpuspd		.equ	20			; Non ROMWBW cpu speed default
 #ENDIF
 ;
 #IF (plt_type=RCBUS)
-RSEL        .equ    0A0H		; AYMODE_MSX	; Primary AY-3-8910 Register selection
-RDAT        .equ    0A1H		; AYMODE_MSX	; Primary AY-3-8910 Register data
-RSEL2       .equ    050H		; AYMODE_COLECO	; Secondary AY-3-8910 Register selection
-RDAT2       .equ    051H		; AYMODE_COLECO	; Secondary AY-3-8910 Register data
-PSG1REG     .equ    0FFH		; SNMODE_RC    	; Primary SN76489
-PSG2REG     .equ    0FBH		; SNMODE_RC	; Secondary SN76489
-YM2151_SEL1	.equ	0DEH		; ED BRINDLEY	; Primary YM2151 register selection
-YM2151_DAT1	.equ	0DFH		; ED BRINDLEY 	; Primary YM2151 register data
-YM2151_SEL2	.equ	000H		; UNDEFINED	; Secondary YM2151 register selection
-YM2151_DAT2	.equ	000H		; UNDEFINED	; Secondary YM2151 register data
-ctcbase		.equ	000H		; UNDEFINED	; CTC base address
-YMSEL		.equ	090H		; Primary YM2612/YM3812/YMF262 register select
-YMDAT		.equ	091H		; Primary YM2612/YM3812/YMF262 register data
-YM2SEL		.equ	092H		; Secondary YM2612/YM3812/YMF262 register select (port 1)
-YM2DAT		.equ	093H		; Secondary YM2612/YM3812/YMF262 register data (port 1)
-plt_cpuspd	.equ	7;372800	; CPUOSC	; Non ROMWBW cpu speed default
-FRAME_DLY   .equ    5			; Frame delay (~ 1/44100) - reduced for 2x speedup
+RSEL       	 	.equ    0A0H		; AYMODE_MSX	; Primary AY-3-8910 Register selection
+RDAT       	 	.equ    0A1H		; AYMODE_MSX	; Primary AY-3-8910 Register data
+RSEL2			.equ    050H		; AYMODE_COLECO	; Secondary AY-3-8910 Register selection
+RDAT2       	.equ    051H		; AYMODE_COLECO	; Secondary AY-3-8910 Register data
+PSG1REG     	.equ    0FFH		; SNMODE_RC    	; Primary SN76489
+PSG2REG     	.equ    0FBH		; SNMODE_RC	; Secondary SN76489
+YM2151_SEL1		.equ	0DEH		; ED BRINDLEY	; Primary YM2151 register selection
+YM2151_DAT1		.equ	0DFH		; ED BRINDLEY 	; Primary YM2151 register data
+YM2151_SEL2		.equ	000H		; UNDEFINED	; Secondary YM2151 register selection
+YM2151_DAT2		.equ	000H		; UNDEFINED	; Secondary YM2151 register data
+ctcbase			.equ	000H		; UNDEFINED	; CTC base address
+YMSEL			.equ	090H		; Primary YM2612/YM3812/YMF262 register select
+YMDAT			.equ	091H		; Primary YM2612/YM3812/YMF262 register data
+YM2SEL			.equ	092H		; Secondary YM2612/YM3812/YMF262 register select (port 1)
+YM2DAT			.equ	093H		; Secondary YM2612/YM3812/YMF262 register data (port 1)
+plt_cpuspd		.equ	7;372800	; CPUOSC	; Non ROMWBW cpu speed default
+FRAME_DLY   	.equ    5			; Frame delay (~ 1/44100) - reduced for 2x speedup
 #ENDIF
 ;
 #IF (plt_type=sbcecb)
