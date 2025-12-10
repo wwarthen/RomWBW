@@ -338,6 +338,10 @@
               <ul class="nav flex-column">
               </ul>
             </li>
+            <li class="nav-item" data-bs-level="2"><a href="#vgminfo-video-game-music-file-information" class="nav-link">VGMINFO (Video Game Music File Information)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
             <li class="nav-item" data-bs-level="2"><a href="#vgmplay-video-game-music-play" class="nav-link">VGMPLAY (Video Game Music Play)</a>
               <ul class="nav flex-column">
               </ul>
@@ -368,7 +372,7 @@
 <p><strong>RomWBW Applications Guide</strong> \
 Version 3.6 \
 MartinR \&amp; Phillip Summers  (<a href="mailto:"></a>) \
-30 Nov 2025</p>
+09 Dec 2025</p>
 <h1 id="summary">Summary</h1>
 <p>RomWBW is supplied with a suite of software applications that enhance
 the use of the system. Some of these applications have been written
@@ -1398,6 +1402,11 @@ included within RomWBW may be found within the Binary/Apps directory.</p>
 </tr>
 <tr>
 <td>VGMPLAY</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+<tr>
+<td>VGMINFO</td>
 <td style="text-align: center;">No</td>
 <td style="text-align: center;">Yes</td>
 </tr>
@@ -3206,6 +3215,81 @@ software was adapted and embedded from pre-existing sources. The YM
 player code is from MYMPLAY 0.4 by Lieves!Tuore and the PT player code
 is (c)2004-2007 S.V.Bulba <a href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#118;&#111;&#114;&#111;&#98;&#101;&#121;&#64;&#109;&#97;&#105;&#108;&#46;&#107;&#104;&#115;&#116;&#117;&#46;&#114;&#117;">&#118;&#111;&#114;&#111;&#98;&#101;&#121;&#64;&#109;&#97;&#105;&#108;&#46;&#107;&#104;&#115;&#116;&#117;&#46;&#114;&#117;</a>.</p>
 <p>The source code is provided in the RomWBW distribution.</p>
+<h2 id="vgminfo-video-game-music-file-information">VGMINFO (Video Game Music File Information)</h2>
+<table>
+<thead>
+<tr>
+<th>VGMPLAY</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROM-based</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Disk-based</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>A utility that scans all .VGM files in the current directory and
+displays a table showing which audio chips each file uses.</p>
+<p>Version 1.1 uses a hybrid detection approach:</p>
+<ul>
+<li>Checks VGM header clock values to detect chip types</li>
+<li>Scans VGM command stream to detect multiple instances of same chip
+  type</li>
+</ul>
+<h4 id="syntax_21">Syntax</h4>
+<p><code>VGMINFO</code></p>
+<h4 id="usage_22">Usage</h4>
+<p>No command line arguments are needed. The program will automatically
+scan all .VGM files in the current directory.</p>
+<p>The program displays a formatted table with two columns:</p>
+<ul>
+<li>Filename: The name of the VGM file</li>
+<li>Chips Used: A comma-separated list of audio chips used in that file</li>
+</ul>
+<p>The program can detect the following audio chips:</p>
+<ul>
+<li>SN76489 (PSG - Programmable Sound Generator)</li>
+<li>YM2612 (FM Synthesis chip used in Sega Genesis/Mega Drive)</li>
+<li>YM2151 (OPM - FM Operator Type-M)</li>
+<li>YM3812 (OPL2 - FM synthesis chip)</li>
+<li>YMF262 (OPL3 - Enhanced FM synthesis chip)</li>
+<li>AY-3-8910 (PSG used in many arcade and home computers)</li>
+</ul>
+<h4 id="notes_22">Notes</h4>
+<ul>
+<li>
+<p>The program reads the VGM file headers and scans up to 255 commands
+  from the VGM data stream for accurate chip detection.</p>
+</li>
+<li>
+<p>Files that don’t have a valid VGM header are silently skipped.</p>
+</li>
+<li>
+<p>Chip detection uses a hybrid approach:</p>
+</li>
+<li>
+<p>VGM header clock values (offsets 0x0C, 0x2C, 0x30, 0x74) determine
+    which chip types are present</p>
+</li>
+<li>
+<p>Command stream scanning detects multiple instances (e.g.,
+    “2xSN76489”)</p>
+</li>
+<li>
+<p>AY-3-8910 clock detection respects VGM version - only checked for
+  v1.51+ to avoid false positives from invalid header data in older VGM
+  versions.</p>
+</li>
+</ul>
+<h4 id="etymology_20">Etymology</h4>
+<p>The <code>VGMINFO</code> application was written and contributed to RomWBW by Joao
+Miguel Duraes.</p>
 <h2 id="vgmplay-video-game-music-play">VGMPLAY (Video Game Music Play)</h2>
 <table>
 <thead>
@@ -3246,10 +3330,10 @@ file that can be played is around 52Kb.</p>
 </ul>
 <p>VGMPLAY supports playback of files with multiple combinations of these
 chips.</p>
-<h4 id="syntax_21">Syntax</h4>
+<h4 id="syntax_22">Syntax</h4>
 <p><code>VGMPLAY</code><em><code>&lt;filename&gt;</code></em></p>
 <p><em><code>&lt;filename&gt;</code></em> is the name of a sound file ending in .VGM</p>
-<h4 id="usage_22">Usage</h4>
+<h4 id="usage_23">Usage</h4>
 <p>VGMPLAY does not automatically detect the hardware platform or sound
 hardware that you are using. This means a version customized for your
 system must be assembled before use. However, the version as distributed
@@ -3259,7 +3343,7 @@ to play after the command. So, for example, <code>VGMPLAY TEDDY</code> will load
 the TEDDY.VGM sound file into memory and begin playing it.</p>
 <p>Playback can be stopped by pressing a key. There may be a delay before
 playback stops.</p>
-<h4 id="notes_22">Notes</h4>
+<h4 id="notes_23">Notes</h4>
 <p>The default build configuration for VGMPLAY is:</p>
 <p>CPU speed: Autodetected</p>
 <table>
@@ -3366,12 +3450,12 @@ usually store a day-of-week value, but it’s useless in this application
 for two reasons: first, the BIOS does not expose it. Second, there is no
 universally-accepted way to interpret it (which day does the week start
 on? Is ‘0’ a valid day of the week?)</p>
-<h4 id="syntax_22">Syntax</h4>
+<h4 id="syntax_23">Syntax</h4>
 <p><code>WDATE</code><br />
 <code>WDATE</code> <em><code>&lt;hr&gt; &lt;min&gt;</code></em><br />
 <code>WDATE</code> <em><code>&lt;hr&gt; &lt;min&gt; &lt;sec&gt;</code></em><br />
 <code>WDATE</code> <em><code>&lt;year&gt; &lt;month&gt; &lt;day&gt; &lt;hr&gt; &lt;min&gt; &lt;sec&gt;</code></em></p>
-<h4 id="usage_23">Usage</h4>
+<h4 id="usage_24">Usage</h4>
 <pre><code>A&gt; wdate
 Saturday 27 May 13:14:39 2023
 </code></pre>
@@ -3391,7 +3475,7 @@ digits. The two-digit year starts at 2000.</p>
 <pre><code>A&gt; wdate /?
 </code></pre>
 <p>Show a summary of the command-line usage.</p>
-<h4 id="notes_23">Notes</h4>
+<h4 id="notes_24">Notes</h4>
 <p>I’ve tested this utility with the DS1302 clock board designed by Ed
 Brindly, and on the interrupt-driven timer built into my Z180 board.
 However, it does not interact with hardware, only BIOS; I would expect
@@ -3404,7 +3488,7 @@ numbers, as RTC chips themselves usually do. wdate works in decimal, so
 that it can check that the user input makes sense. A substantial part of
 the program’s code is taken up by number format conversion and range
 checking.</p>
-<h4 id="etymology_20">Etymology</h4>
+<h4 id="etymology_21">Etymology</h4>
 <p>The <code>WDATE</code> application was written and contributed by Kevin Boone. The
 source code is available on GitHub at
 <a href="https://github.com/kevinboone/wdate-cpm">https://github.com/kevinboone/wdate-cpm</a>.</p>
@@ -3429,7 +3513,7 @@ source code is available on GitHub at
 </table>
 <p>An adaptation of Ward Christensen’s X-Modem protocol for transferring
 files between systems using a serial port.</p>
-<h4 id="syntax_23">Syntax</h4>
+<h4 id="syntax_24">Syntax</h4>
 <p><code>XM S</code><em><code>&lt;filename&gt;</code></em><br />
 <code>XM SK</code><em><code>&lt;filename&gt;</code></em><br />
 <code>XM L</code><em><code>&lt;library&gt; &lt;filename&gt;</code></em><br />
@@ -3448,7 +3532,7 @@ files between systems using a serial port.</p>
 <p>For example, the following command will receive a file using checksums
 on HBIOS character unit 3 and will name the received file <code>MYFILE.TXT</code>.</p>
 <p><code>XM RC3 MYFILE.TXT</code></p>
-<h4 id="usage_24">Usage</h4>
+<h4 id="usage_25">Usage</h4>
 <p>To transfer a file from your host computer to your RomWBW computer, do
 the following:</p>
 <ol>
@@ -3475,7 +3559,7 @@ the following:</p>
 </ol>
 <p>Please refer to the documentation of your host computer’s terminal
 emulation software for specific instructions on how to use XModem.</p>
-<h4 id="notes_24">Notes</h4>
+<h4 id="notes_25">Notes</h4>
 <p>The XModem adaptation that comes with RomWBW will default to using the
 current HBIOS console port for transfers. Note that if you change your
 console port at the OS level (e.g., STAT CON:=UC1:), this does not
@@ -3488,7 +3572,7 @@ flow control can be used.</p>
 that the serial port can be serviced fast enough by either using a baud
 rate that is low enough or ensuring that hardware flow control is fully
 functional (end to end).</p>
-<h4 id="etymology_21">Etymology</h4>
+<h4 id="etymology_22">Etymology</h4>
 <p>The <code>XM</code> application provided in RomWBW is an adaptation of a
 pre-existing XModem application. Based on the source code comments, it
 was originally adapted from Ward Christensen’s MODEM2 by Keith Petersen
@@ -3523,7 +3607,7 @@ driver.</p>
 support for XModem and YModem transfers.</p>
 <p><strong>NOTE</strong>: ZMD does not do ZModem transfers. The Z in ZMD refers to
 Z-System compatibility.</p>
-<h4 id="syntax_24">Syntax</h4>
+<h4 id="syntax_25">Syntax</h4>
 <p><code>ZMD</code> <em>\&lt;mode&gt;\&lt;protocol&gt;\&lt;unit&gt;</em> [<em>\&lt;filename&gt;</em>]</p>
 <p>where <em>\&lt;mode&gt;</em> can be:<br />
 <strong><code>S  -</code></strong> Send file from BBS<br />
@@ -3539,7 +3623,7 @@ Z-System compatibility.</p>
 <strong><code>K  -</code></strong> Ymodem 1024 byte blocks (CRC only)</p>
 <p>and <em>\&lt;unit&gt;</em> can specify a single digit (0-9) that specifies the
 RomWBW Character Unit to use for the file transfer.</p>
-<h4 id="usage_25">Usage</h4>
+<h4 id="usage_26">Usage</h4>
 <p>To transfer a file from your host computer to your RomWBW computer, do
 the following:</p>
 <ol>
@@ -3567,7 +3651,7 @@ the following:</p>
 </ol>
 <p>Please refer to the documentation of your host computer’s terminal
 emulation software for specific instructions on how to use XModem.</p>
-<h4 id="notes_25">Notes</h4>
+<h4 id="notes_26">Notes</h4>
 <p>The ZMD adaptation that comes with RomWBW will default to using the
 current HBIOS console port for transfers. Note that if you change your
 console port at the OS level (e.g., STAT CON:=UC1:), this does not
@@ -3580,7 +3664,7 @@ flow control can be used.</p>
 that the serial port can be serviced fast enough by either using a baud
 rate that is low enough or ensuring that hardware flow control is fully
 functional (end to end).</p>
-<h4 id="etymology_22">Etymology</h4>
+<h4 id="etymology_23">Etymology</h4>
 <p>ZMD v1.50 was produced by Robert Kramer. The RomWBW adaptation just uses
 the RomWBW HBIOS serial API.</p>
 <h2 id="zmp-z-modem-program">ZMP (Z-Modem Program)</h2>
@@ -3606,14 +3690,14 @@ the RomWBW HBIOS serial API.</p>
 your system. It includes X/Y/ZModem file transfer protocols. An actual
 modem is not required, but you must have a port for ZMP to use that is
 independent of the console running <code>ZMP</code>.</p>
-<h4 id="syntax_25">Syntax</h4>
+<h4 id="syntax_26">Syntax</h4>
 <p><code>ZMD</code> <em>[\&lt;unit&gt;]</em></p>
 <p><em>\&lt;unit&gt;</em> can specify a single digit (0-9) indicating the RomWBW
 Character Unit to use for the modem port.</p>
-<h4 id="usage_26">Usage</h4>
+<h4 id="usage_27">Usage</h4>
 <p>Refer to the file <code>ZMP.DOC</code> found on all disk images that include the
 <code>ZMP</code> application.</p>
-<h4 id="notes_26">Notes</h4>
+<h4 id="notes_27">Notes</h4>
 <p><code>ZMP</code> requires access to multiple overlay and configuration files to
 run. It will look for these on the default driver and user area.
 Depending the operating system used, you may be able to set up a search
@@ -3642,7 +3726,7 @@ options within <code>ZMP</code>. Instead, you should configure the HBIOS Charact
 Unit using the RomWBW MODE command before launching <code>ZMP</code>.</p>
 <p><code>ZMP</code> is written in C. As a result, file transfers will be noticeably
 slower than other assembly language file transfer tools.</p>
-<h4 id="etymology_23">Etymology</h4>
+<h4 id="etymology_24">Etymology</h4>
 <p>ZMP was produced by Ron Murray and was based on HMODEM II. Wayne
 Hortensius updated the source to compile with the latest version of
 Hi-Tech C and implemented a few enhancements.</p>
