@@ -52,6 +52,11 @@
 	ld	b,00h		; HBIOS CIN Function
 	rst	08		; do it
 	ld	a,e		; put char in A
+	
+	; [WBW] Check for CTRL-V (0x16) to trigger XMODEM
+	cp	16h		; CTRL-V?
+	jp	z,xmodem_trigger
+	
 	ret			; done
 
 ;	mov a,b ! cpi 6 ! jnc null$input ; can't read from centronics
@@ -229,5 +234,238 @@
 ;pio$init$tbl	db	2,p$zpio$2b,0Fh,07h
 ;		db	3,p$zpio$2a,0CFh,0F8h,07h
 ;		db 0
+
+; [WBW] XMODEM trigger on CTRL-V
+xmodem_trigger:
+	; Print message
+	ld	hl,xm_msg
+	call	print_msg
+	
+	; Find next available FILEnn.TMP filename
+	ld	a,0			; Start at 00
+find_file:
+	ld	(file_num),a		; Save current number
+	
+	; Convert number to ASCII in FCB
+	call	update_fcb_name
+	
+	; Check if file exists using CP/M 3 BDOS func 17
+	; We can't easily call BDOS from here, so use a simpler approach:
+	; Just try to open the file using HBIOS directly
+	; For now, skip the check and always use incrementing number
+	; Store in static counter
+	ld	a,(xm_counter)
+	inc	a
+	cp	100			; Rolled over 100?
+	jr	c,no_wrap
+	xor	a			; Wrap to 0
+no_wrap:
+	ld	(xm_counter),a
+	ld	(file_num),a
+	call	update_fcb_name
+	jr	file_found
+	
+	; File exists, try next number
+	ld	a,(file_num)
+	inc	a
+	cp	100			; Check if we hit 100
+	jr	c,find_file		; Try next if < 100
+	
+	; All filenames used! Print error
+	ld	hl,err_full
+	call	print_msg
+	ld	a,0dh
+	ret
+
+file_found:
+	; Print launching message
+	ld	hl,launch_msg
+	call	print_msg
+	
+	; Print filename (FILEnn.TMP)
+	ld	a,(file_num)
+	ld	b,a
+	ld	c,0
+print_tens:
+	cp	10
+	jr	c,print_tens_done
+	sub	10
+	inc	c
+	jr	print_tens
+print_tens_done:
+	push	af			; Save ones
+	ld	a,c
+	add	a,'0'
+	ld	e,a
+	ld	b,01h
+	rst	08			; Print tens digit
+	pop	af
+	add	a,'0'
+	ld	e,a
+	ld	b,01h
+	rst	08			; Print ones digit
+	
+	; Print newline
+	ld	a,0dh
+	ld	e,a
+	ld	b,01h
+	rst	08
+	ld	a,0ah
+	ld	e,a
+	ld	b,01h
+	rst	08
+	
+	; Build command line at 0080h: " R FILEnn.TMP"
+	ld	hl,0080h
+	ld	(hl),13			; Length of command (without XM)
+	inc	hl
+	
+	; Copy " R FILE"
+	ld	de,xm_cmd_start
+	ld	bc,7			; " R FILE" = 7 chars
+	ldir
+	
+	; Add the two digits  
+	ld	a,(file_num)
+	ld	b,a
+	ld	c,0
+conv_tens2:
+	cp	10
+	jr	c,conv_done2
+	sub	10
+	inc	c
+	jr	conv_tens2
+conv_done2:
+	push	af
+	ld	a,c
+	add	a,'0'
+	ld	(hl),a
+	inc	hl
+	pop	af
+	add	a,'0'
+	ld	(hl),a
+	inc	hl
+	
+	; Copy ".TMP"
+	ld	de,xm_cmd_end
+	ld	bc,4
+	ldir
+	
+	; Build FCB for XM.COM at 005Ch  
+	ld	hl,xm_pgm_fcb
+	ld	de,005Ch
+	ld	bc,36
+	ldir
+	
+	; Set DMA to 0080h (already there by default)
+	; Open XM.COM file
+	ld	de,005Ch
+	ld	c,15		; BDOS Open File
+	call	0005h
+	cp	0FFh
+	jr	z,xm_not_found
+	
+	; Load program at 0100h
+	ld	de,0100h
+	ld	c,26		; Set DMA
+	call	0005h
+	
+	; Read file
+	ld	de,005Ch
+	ld	c,20		; Read sequential
+	call	0005h
+	
+	; Execute XM at 0100h
+	ld	sp,0100h	; Set up fresh stack  
+	call	0100h	; Call XM (will return when done)
+	
+	; Return CR after XM finishes
+	ld	a,0dh
+	ret
+	
+xm_not_found:
+	ld	hl,xm_not_found_msg
+	call	print_msg
+	ld	a,0dh
+	ret
+
+print_msg:
+	ld	a,(hl)
+	or	a
+	ret	z
+	push	hl
+	ld	e,a
+	ld	c,b
+	ld	b,01h
+	rst	08
+	pop	hl
+	inc	hl
+	jr	print_msg
+
+update_fcb_name:
+	; Update FILEnn.TMP in FCB with current file_num
+	ld	a,(file_num)
+	ld	b,a
+	
+	; Convert to decimal: A = number (0-99)
+	; Tens digit
+	ld	c,0			; Tens counter
+conv_tens:
+	cp	10
+	jr	c,conv_done_tens
+	sub	10
+	inc	c
+	jr	conv_tens
+conv_done_tens:
+	; C = tens, A = ones
+	push	af			; Save ones
+	ld	a,c
+	add	a,'0'			; Convert to ASCII
+	ld	(xm_fcb+5),a		; FILE[nn].TMP position 5
+	pop	af
+	add	a,'0'
+	ld	(xm_fcb+6),a		; FILE[nn].TMP position 6
+	ret
+
+xm_msg:
+	db	0dh,0ah
+	db	'[CTRL-V - Starting XMODEM receive]'
+	db	0dh,0ah,0
+
+launch_msg:
+	db	'Receiving: ',0
+
+err_full:
+	db	0dh,0ah
+	db	'ERROR: All FILE00-99.TMP slots used!'
+	db	0dh,0ah,0
+
+xm_not_found_msg:
+	db	0dh,0ah
+	db	'ERROR: XM.COM not found!'
+	db	0dh,0ah,0
+
+file_num:
+	db	0
+
+xm_counter:
+	db	0			; Persistent counter for filename
+
+xm_fcb:
+	db	0			; Drive (default)
+	db	'FILE00  '		; Filename (will be updated)
+	db	'TMP'			; Extension
+	ds	24			; Rest of FCB
+
+xm_cmd_start:
+	db	' R FILE'		; Note: space first, no XM
+xm_cmd_end:
+	db	'.TMP'
+
+xm_pgm_fcb:
+	db	0			; Drive
+	db	'XM      '		; Program name
+	db	'COM'			; Extension
+	ds	24			; Rest of FCB
 
 	end

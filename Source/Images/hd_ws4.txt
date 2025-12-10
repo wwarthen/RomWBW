@@ -1,0 +1,6 @@
+@Label="WS4"
+#
+# Placeholder WS4 hard disk image configuration
+# Add WS4-specific files as needed
+#
+d_ws4/ReadMe.txt 0:
