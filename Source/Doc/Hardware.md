@@ -444,7 +444,7 @@ Z80-based S100 Modular System
 #### Supported Hardware
 
 - FP: LEDIO=5
-- PLDSER: IO=172
+- DLPSER: IO=172
 - SCC MODE=SZ80, IO=160, CHANNEL A
 - SCC MODE=SZ80, IO=160, CHANNEL B
 - SCON: IO=0
@@ -495,7 +495,7 @@ A T35 FPGA Z80 based S100 SBC
 - FP: LEDIO=255
 - DS5RTC: RTCIO=104, IO=104
 - TSER: IO=53
-- PLDSER: IO=172
+- DLPSER: IO=172
 - SCC MODE=SZ80, IO=160, CHANNEL A
 - SCC MODE=SZ80, IO=160, CHANNEL B
 - LPT: MODE=T35, IO=199
@@ -1955,7 +1955,7 @@ as defined by the IEEE-696 specs.
 #### Supported Hardware
 
 - INTRTC: ENABLED
-- PLDSER: IO=172
+- DLPSER: IO=172
 - ASCI: IO=192, INTERRUPTS ENABLED
 - ASCI: IO=193, INTERRUPTS ENABLED
 - SCC MODE=SZ80, IO=160, CHANNEL A
@@ -2435,7 +2435,7 @@ may be discovered by RomWBW in your system.
 | SCC       | Zilog Serial Communications Controller (SCC)           |
 | SSER      | Simple Serial Interface                                |
 | TSER      | Trion FPGA Serial Interface                            |
-| PLDSER    | PLD USB Serial Interface                               |
+| DLPSER    | DLP USB Serial Interface                               |
 | UART      | 16C550 Family Serial Interface                         |
 | USB-FIFO  | FT232H-based ECB USB FIFO                              |
 | Z2U       | Zilog Z280 CPU Built-in Serial Ports                   |
@@ -2455,7 +2455,7 @@ the active platform and configuration.
 #. ACIA: MC68B50 Asynchronous Communications Interface Adapter
 #. SSER: Simple Serial Interface
 #. TSER: Trion FPGA Serial Interface
-#. PLDSER: PLD USB Serial Interface
+#. DLPSER: DLP USB Serial Interface
 #. USB-FIFO: FT232H-based ECB USB FIFO
 
 
