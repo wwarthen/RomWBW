@@ -17,13 +17,15 @@ This `WARP.md` is specific to the VGM-related applications under `Source/Apps/VG
 `Build.cmd`:
 
 - Sets up the tools path (`Tools/tasm32`)
-- Assembles:
-  - `vgmplay.asm` → `vgmplay.com`
-  - `ymfmdemo.asm` → `ymfmdemo.com`
+- Assembles (Windows, using `tasm32`):
   - `aytest.asm` → `aytest.com`
+  - `vgmplay.asm` → `vgmplay.com`
+  - `vgminfo.asm` → `vgminfo.com`
+  - `ymfmdemo.asm` → `ymfmdemo.com`
 - Copies outputs to the binary tree:
-  - `vgmplay.com` → `Binary\Apps\`
-  - All `.vgm` files from `Source\Apps\VGM\Tunes\` → `Binary\Apps\Tunes\`
+  - `vgmplay.com` → `Binary\\Apps\\`
+  - `vgminfo.com` → `Binary\\Apps\\`
+  - All `.vgm` files from `Source\\Apps\\VGM\\Tunes\\` → `Binary\\Apps\\Tunes\\`
 
 Use this when you want to refresh all VGM-related executables and tunes in `Binary/` for image building.
 
