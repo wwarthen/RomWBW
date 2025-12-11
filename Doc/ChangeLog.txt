@@ -36,6 +36,7 @@ Version 3.6
 - P?D: Generate compressed ROM for EaZyZ80 512
 - DDW: Added support for the 'N8PC' platform. Includes support for the M6242 RTC chip
 - JMD: Added VGMINFO application
+- WBW: Created SCSI Driver derived from code from Jay Cotton
 
 Version 3.5.1
 -------------
