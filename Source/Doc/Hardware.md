@@ -2478,6 +2478,7 @@ the active platform and configuration.
 | SD        | SD Card Interface                                      |
 | SYQ       | Iomega SparQ Drive on PPI                              |
 | ESPSD     | S100 ESP32-based SD Card Interface                     |
+| SCSI      | 5380 SCSI Interface                                    |
 
 ## Video
 

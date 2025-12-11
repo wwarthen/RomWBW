@@ -347,6 +347,9 @@ please let me know if I missed you!
 
 * Henk Berends added support for the MSX platform.
 
+* Jay Cotton provided the SCSI transport code upon which the SCSI
+  driver is based.
+
 `\clearpage`{=latex}
 
 ## Related Projects

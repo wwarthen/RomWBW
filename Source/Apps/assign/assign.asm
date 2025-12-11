@@ -40,6 +40,7 @@
 ;                    overflow when the drives are finally added
 ;   2025-07-19 [D?N] Support for native USB drivers
 ;   2025-08-09 [WBW] Support for ESPSD driver
+;   2025-11-10 [WBW] Support for SCSI driver
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -2430,7 +2431,7 @@ devtbl:				; device table
 	.dw	dev04, dev05, dev06, dev07
 	.dw	dev08, dev09, dev10, dev11
 	.dw	dev12, dev13, dev14, dev15
-	.dw	dev16, dev17
+	.dw	dev16, dev17, dev18
 ;
 devunk	.db	"?",0
 dev00	.db	"MD",0
@@ -2450,9 +2451,10 @@ dev13	.db	"CHUSB",0
 dev14	.db	"CHSD",0
 dev15	.db	"USB",0
 dev16	.db	"ESPSD",0
-dev17	.equ	devunk
+dev17	.db	"SCSI",0
+dev18	.equ	devunk
 ;
-devcnt	.equ	18		; 18 device types defined
+devcnt	.equ	19		; 19 device types defined
 ;
 udevram		.db	"RAM",0
 udevrom		.db	"ROM",0
@@ -2470,10 +2472,10 @@ stack	.equ	$		; stack top
 ; Messages
 ;
 indent	.db	"   ",0
-msgban1	.db	"ASSIGN v2.2 for RomWBW CP/M ",0
+msgban1	.db	"ASSIGN v2.3 for RomWBW CP/M ",0
 msg22	.db	"2.2",0
 msg3	.db	"3",0
-msbban2	.db	", 9-Aug-2025",0
+msbban2	.db	",10-Dec-2025",0
 msghb	.db	" (HBIOS Mode)",0
 msgub	.db	" (UBIOS Mode)",0
 msgban3	.db	"Copyright 2025, Wayne Warthen, GNU GPL v3",0
