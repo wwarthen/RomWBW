@@ -2697,7 +2697,8 @@ The program can detect the following audio chips:
 #### Etymology
 
 The `VGMINFO` application was written and contributed to RomWBW by
-Joao Miguel Duraes.
+Joao Miguel Duraes.  An AI LLM was utilized in the creation of this
+application.
 
 `\clearpage`{=latex}
 
