@@ -83,3 +83,6 @@ Author:
 
 Created for RomWBW/CP/M systems
 Based on VGM format specification from vgmrips.net
+
+An AI LLM was utilized in the creation of this
+application.

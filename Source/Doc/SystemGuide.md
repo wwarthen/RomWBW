@@ -1101,6 +1101,7 @@ below enumerates their values.
 | DIODEV_CHSD     | 0x0E   | CH375/376 SD Card                        | ch.asm     |
 | DIODEV_USB      | 0x0F   | CH376 Native USB Device                  | ch376.asm  |
 | DIODEV_ESPSD    | 0x10   | S100 ESP32 SD Card                       | espsd.asm  |
+| DIODEV_SCSI     | 0x11   | 5380 SCSI Interface                      | scsi.asm   |
 
 A fixed set of media types are defined. The currently defined media 
 types identifiers are listed below. Each driver will support one or

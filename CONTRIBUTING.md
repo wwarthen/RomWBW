@@ -18,7 +18,7 @@ RomWBW.  Although input is gladly accepted from almost any channel, the
 GitHub Repository is preferred.
 
 - Use **Issues** to report bugs, request enhancements, or ask usage
-  questions.
+  questions
 - Use **Discussions** to interact with others
 - Use **Pull Requests** to submit content (code, documentation, etc.)
 
@@ -41,7 +41,8 @@ Requests.
 - You are encouraged to comment your submissions to ensure your work is
   properly attributed.
 - When ready, submit a Pull Request to merge your forked branch into the
-  RomWBW master branch.
+  RomWBW master branch.  In the comments, be sure to indicate if an
+  AI LLM was utilized in any way.
 
 ## Coding Style
 
