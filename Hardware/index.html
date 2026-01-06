@@ -218,6 +218,10 @@
             </li>
             <li class="nav-item" data-bs-level="2"><a href="#rcbus-z80" class="nav-link">RCBus Z80</a>
               <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#rc2014-z80-cpu-module" class="nav-link">RC2014 Z80 CPU Module</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
             <li class="nav-item" data-bs-level="3"><a href="#rcbus-z80-cpu-module" class="nav-link">RCBus Z80 CPU Module</a>
               <ul class="nav flex-column">
               </ul>
@@ -400,7 +404,7 @@
 <p><strong>RomWBW Hardware</strong> \
 Version 3.6 \
 Wayne Warthen  (<a href="mailto:wwarthen@gmail.com">wwarthen@gmail.com</a>) \
-13 Dec 2025</p>
+05 Jan 2026</p>
 <h1 id="overview">Overview</h1>
 <h2 id="supported-platforms">Supported Platforms</h2>
 <p>This section contains a summary of the system configuration target for
@@ -424,6 +428,12 @@ including RC26, RC40, RC80, and BP80.</p>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td><a href="#rc2014-z80-cpu-module">RC2014 Z80 CPU Module</a>, 512K RAM/ROM</td>
+<td>RCBus</td>
+<td>RC2014_std.rom</td>
+<td style="text-align: right;">115200</td>
+</tr>
 <tr>
 <td><a href="#rcbus-z80-cpu-module">RCBus Z80 CPU Module</a>, 512K RAM/ROM</td>
 <td>RCBus</td>
@@ -2106,6 +2116,85 @@ additional boards are required.</p>
 </ul>
 <h4 id="notes_6">Notes:</h4>
 <h2 id="rcbus-z80">RCBus Z80</h2>
+<p>The RC2014 ROM is for the official RC2014 Kits by Spencer Owen.</p>
+<ul>
+<li>Creator: Spencer Owen</li>
+<li>Google Groups: <a href="https://groups.google.com/g/rc2014-z80">RC2014-Z80</a></li>
+<li>Github: <a href="https://github.com/RC2014Z80/RC2014">RC2014</a></li>
+</ul>
+<h3 id="rc2014-z80-cpu-module">RC2014 Z80 CPU Module</h3>
+<p>Generic Rom Image.</p>
+<h4 id="rom-image-file-rc2014_stdrom">ROM Image File: RC2014_std.rom</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bus</td>
+<td>RCBus</td>
+</tr>
+<tr>
+<td>Default CPU Speed</td>
+<td>7.372 MHz</td>
+</tr>
+<tr>
+<td>Interrupts</td>
+<td>Mode 1</td>
+</tr>
+<tr>
+<td>System Timer</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Serial Default</td>
+<td>115200 Baud</td>
+</tr>
+<tr>
+<td>Memory Manager</td>
+<td>Z2</td>
+</tr>
+<tr>
+<td>ROM Size</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>RAM Size</td>
+<td>512 KB</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-hardware_17">Supported Hardware</h4>
+<ul>
+<li>FP: LEDIO=0, SWIO=0</li>
+<li>LCD: IO=218, SIZE=20X4</li>
+<li>DSRTC: MODE=STD, IO=192</li>
+<li>UART: IO=128</li>
+<li>UART: IO=136</li>
+<li>UART: IO=160</li>
+<li>UART: IO=168</li>
+<li>SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED</li>
+<li>SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED</li>
+<li>ACIA: IO=128, INTERRUPTS ENABLED</li>
+<li>CH: IO=62</li>
+<li>CH: IO=60</li>
+<li>CHUSB: IO=62</li>
+<li>CHUSB: IO=60</li>
+<li>MD: TYPE=RAM</li>
+<li>MD: TYPE=ROM</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5” HD</li>
+<li>FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5” HD</li>
+<li>IDE: MODE=RC, IO=16, MASTER</li>
+<li>IDE: MODE=RC, IO=16, SLAVE</li>
+<li>PPIDE: IO=32, MASTER</li>
+<li>PPIDE: IO=32, SLAVE</li>
+<li>SD: MODE=PIO, IO=105, UNITS=1</li>
+</ul>
 <h3 id="rcbus-z80-cpu-module">RCBus Z80 CPU Module</h3>
 <p>Generic Rom Image.</p>
 <h4 id="rom-image-file-rcz80_stdrom">ROM Image File: RCZ80_std.rom</h4>
@@ -2151,7 +2240,7 @@ additional boards are required.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_17">Supported Hardware</h4>
+<h4 id="supported-hardware_18">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -2224,7 +2313,7 @@ additional boards are required.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_18">Supported Hardware</h4>
+<h4 id="supported-hardware_19">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -2307,7 +2396,7 @@ single module, thus saving space on the backplane.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_19">Supported Hardware</h4>
+<h4 id="supported-hardware_20">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -2394,7 +2483,7 @@ of the RAM is reserved to act as ROM.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_20">Supported Hardware</h4>
+<h4 id="supported-hardware_21">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -2478,7 +2567,7 @@ layout. The intent to replace the STD config with the RAM config.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_21">Supported Hardware</h4>
+<h4 id="supported-hardware_22">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -2560,7 +2649,7 @@ specifically for ROM-less RomWBW. HBIOS is loaded from disk at boot</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_22">Supported Hardware</h4>
+<h4 id="supported-hardware_23">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -2683,7 +2772,7 @@ to RAM location \$0000, which in turn starts execution of RomWBW.</p>
   decompression program is stored.</p>
 </li>
 </ul>
-<h4 id="supported-hardware_23">Supported Hardware</h4>
+<h4 id="supported-hardware_24">Supported Hardware</h4>
 <ul>
 <li>DSRTC: MODE=STD, IO=192</li>
 <li>SIO MODE=STD, IO=8, CHANNEL A, INTERRUPTS ENABLED</li>
@@ -2746,7 +2835,7 @@ replacing the older K80W rev 1</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_24">Supported Hardware</h4>
+<h4 id="supported-hardware_25">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -2822,7 +2911,7 @@ external memory management)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_25">Supported Hardware</h4>
+<h4 id="supported-hardware_26">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>DSRTC: MODE=STD, IO=12</li>
@@ -2897,7 +2986,7 @@ management)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_26">Supported Hardware</h4>
+<h4 id="supported-hardware_27">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>DSRTC: MODE=STD, IO=12</li>
@@ -2982,7 +3071,7 @@ RomWBW image from CF disk, then start RomWBW from 0x0</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_27">Supported Hardware</h4>
+<h4 id="supported-hardware_28">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>DSRTC: MODE=STD, IO=12</li>
@@ -3057,7 +3146,7 @@ external memory management)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_28">Supported Hardware</h4>
+<h4 id="supported-hardware_29">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -3133,7 +3222,7 @@ management)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_29">Supported Hardware</h4>
+<h4 id="supported-hardware_30">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -3223,7 +3312,7 @@ of the RAM is reserved to act as ROM.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_30">Supported Hardware</h4>
+<h4 id="supported-hardware_31">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -3307,7 +3396,7 @@ layout. The intent to replace the STD config with the RAM config.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_31">Supported Hardware</h4>
+<h4 id="supported-hardware_32">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -3391,7 +3480,7 @@ EPROM for other computers</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_32">Supported Hardware</h4>
+<h4 id="supported-hardware_33">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -3477,7 +3566,7 @@ available from the manufacturer today</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_33">Supported Hardware</h4>
+<h4 id="supported-hardware_34">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -3550,7 +3639,7 @@ Graphics Display Controller</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_34">Supported Hardware</h4>
+<h4 id="supported-hardware_35">Supported Hardware</h4>
 <ul>
 <li>DSRTC: MODE=STD, IO=132</li>
 <li>ASCI: IO=64</li>
@@ -3619,7 +3708,7 @@ slave as defined by the IEEE-696 specs.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_35">Supported Hardware</h4>
+<h4 id="supported-hardware_36">Supported Hardware</h4>
 <ul>
 <li>INTRTC: ENABLED</li>
 <li>DLPSER: IO=172</li>
@@ -3742,7 +3831,7 @@ system.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_36">Supported Hardware</h4>
+<h4 id="supported-hardware_37">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=13, SWIO=0</li>
 <li>DSRTC: MODE=STD, IO=12</li>
@@ -3826,7 +3915,7 @@ RomWBW (and CP/M)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_37">Supported Hardware</h4>
+<h4 id="supported-hardware_38">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>DSRTC: MODE=STD, IO=12</li>
@@ -3904,7 +3993,7 @@ RomWBW (and CP/M)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_38">Supported Hardware</h4>
+<h4 id="supported-hardware_39">Supported Hardware</h4>
 <ul>
 <li>INTRTC: ENABLED</li>
 <li>ASCI: IO=192, INTERRUPTS ENABLED</li>
@@ -3962,7 +4051,7 @@ RomWBW (and CP/M)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_39">Supported Hardware</h4>
+<h4 id="supported-hardware_40">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=160, SWIO=160</li>
 <li>DSRTC: MODE=STD, IO=12</li>
@@ -4040,7 +4129,7 @@ RomWBW (and CP/M)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_40">Supported Hardware</h4>
+<h4 id="supported-hardware_41">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=160, SWIO=160</li>
 <li>DSRTC: MODE=STD, IO=12</li>
@@ -4123,7 +4212,7 @@ RomWBW (and CP/M)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_41">Supported Hardware</h4>
+<h4 id="supported-hardware_42">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0</li>
 <li>LCD: IO=170, SIZE=20X4</li>
@@ -4209,7 +4298,7 @@ presented by John’s Basement on youTube)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_42">Supported Hardware</h4>
+<h4 id="supported-hardware_43">Supported Hardware</h4>
 <ul>
 <li>SIO MODE=Z80R, IO=128, CHANNEL A, INTERRUPTS ENABLED</li>
 <li>SIO MODE=Z80R, IO=128, CHANNEL B, INTERRUPTS ENABLED</li>
@@ -4269,7 +4358,7 @@ compatible with N8VEM SBC and Disk I/O boards.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_43">Supported Hardware</h4>
+<h4 id="supported-hardware_44">Supported Hardware</h4>
 <ul>
 <li>DSRTC: MODE=STD, IO=112</li>
 <li>UART: IO=104</li>
@@ -4346,7 +4435,7 @@ is made using CMOS technology and more power efficient than FDC9266</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_44">Supported Hardware</h4>
+<h4 id="supported-hardware_45">Supported Hardware</h4>
 <ul>
 <li>DSRTC: MODE=STD, IO=112</li>
 <li>UART: IO=104</li>
