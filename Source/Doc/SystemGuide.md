@@ -3150,6 +3150,9 @@ performed.  It includes the Boot Bank ID (L), the Boot Disk Unit (D),
 and the Boot Disk Slice (E).  The returned Status (A) is a standard 
 HBIOS result code.
 
+This information is recorded in the HCB.  HCB_BOOTBID is set to the Boot
+Bank ID (L) and HCB_BOOTVOL is set to the BootDisk Unit/Slice (DE).
+
 #### SYSSET Subfunction 0xF3 -- Set CPU Speed (CPUSPD)
 
 | **Entry Parameters**                   | **Returned Values**                    |
