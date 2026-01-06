@@ -28,6 +28,7 @@
 ; 24. RCEZ80	RCBus eZ80
 ; 25. MSX	MSX Computers
 ; 26. N8PC	MSX-ish Z180 ATX SBC w/ onboard video and sound
+; 27. RC2014	Official RC2014 Z80 Kits
 ;
 ; INCLUDE BUILD VERSION
 ;

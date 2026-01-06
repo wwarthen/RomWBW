@@ -28,6 +28,7 @@ including RC26, RC40, RC80, and BP80.
 
 | **Description**                                             | **Bus** | **ROM Image File**           | **Baud Rate** |
 |-------------------------------------------------------------|---------|------------------------------|--------------:|
+| [RC2014 Z80 CPU Module], 512K RAM/ROM                       | RCBus   | RC2014_std.rom               | 115200        |
 | [RCBus Z80 CPU Module], 512K RAM/ROM                        | RCBus   | RCZ80_std.rom                | 115200        |
 | [RCBus Z80 CPU Module (KIO)], 512K w/KIO                    | RCBus   | RCZ80_kio_std.rom            | 115200        |
 | [RCBus Z180 CPU Module (External)]                          | RCBus   | RCZ180_ext_std.rom           | 115200        |
@@ -972,6 +973,59 @@ This is a variant of the N8 computer.
 `\clearpage`{=latex}
 
 ## RCBus Z80
+
+The RC2014 ROM is for the official RC2014 Kits by Spencer Owen.
+
+* Creator: Spencer Owen
+* Google Groups: [RC2014-Z80](https://groups.google.com/g/rc2014-z80)
+* Github: [RC2014](https://github.com/RC2014Z80/RC2014)
+
+### RC2014 Z80 CPU Module
+
+Generic Rom Image.
+
+#### ROM Image File:  RC2014_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Bus               | RCBus         |
+| Default CPU Speed | 7.372 MHz     |
+| Interrupts        | Mode 1        |
+| System Timer      | None          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z2            |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+#### Supported Hardware
+
+- FP: LEDIO=0, SWIO=0
+- LCD: IO=218, SIZE=20X4
+- DSRTC: MODE=STD, IO=192
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- ACIA: IO=128, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- SD: MODE=PIO, IO=105, UNITS=1
+
+`\clearpage`{=latex}
 
 ### RCBus Z80 CPU Module
 
