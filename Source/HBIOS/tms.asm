@@ -882,41 +882,41 @@ TMS_VRMPRB:
 	XOR	A			; SET RETURN VALUE FOR 64K
 	INC	A
 	EX	AF,AF'
-	LD      A,4
+	LD	A,4
 	; USE 16 BIT I/O ADDRESS FOR EZ80 COMPATIBILITY 
 	; (AVOID NEED FOR EZ80_IO MACRO)
 	LD	BC, (IO_SEGMENT<<8)+TMS_CMDREG
-	OUT     (C),A
+	OUT	(C),A
 	CALL	DLY64			; DELAY
-	LD      A,$8E
-	OUT     (C),A			; R#14 = 4 -> A16 = 1, A15..A14 = 0
+	LD	A,$8E
+	OUT	(C),A			; R#14 = 4 -> A16 = 1, A15..A14 = 0
 	CALL	DLY64			; DELAY
-	XOR     A
-	OUT     (C),A			; A7..A0 = 0
+	XOR	A
+	OUT	(C),A			; A7..A0 = 0
 	CALL	DLY64			; DELAY
-	OR      $40
-	OUT     (C),A			; SET WR, A13..A8 = 0
+	OR	$40
+	OUT	(C),A			; SET WR, A13..A8 = 0
 	CALL	DLY64			; DELAY
-	LD      A,$76
+	LD	A,$76
 	CALL	DLY64			; DELAY
 	LD	C, TMS_DATREG
-	OUT     (C),A			; SET VRAM $10000 = $76
+	OUT	(C),A			; SET VRAM $10000 = $76
 	CALL	DLY64			; DELAY
-	XOR     A
+	XOR	A
 	LD	C, TMS_CMDREG
-	OUT     (C),A			; A7..A0 = 0
+	OUT	(C),A			; A7..A0 = 0
 	CALL	DLY64			; DELAY
 
-	OUT     (C),A			; SET RD, A13..A8 = 0
+	OUT	(C),A			; SET RD, A13..A8 = 0
 	CALL	DLY64			; DELAY
 	LD	C, TMS_DATREG
-	IN      A,(C)			; A = VRAM $10000
+	IN	A,(C)			; A = VRAM $10000
 	CALL	DLY64			; DELAY
-	CP      $76
-	JR      Z,VRAMSIZE_128K		; IF ITS $76, WE HAVE AT LEAST 128K
+	CP	$76
+	JR	Z,VRAMSIZE_128K		; IF ITS $76, WE HAVE AT LEAST 128K
 
 	; OTHERWISE ITS ONLY 64K
-	JR      VRAMSIZE_DONE
+	JR	VRAMSIZE_DONE
 
 VRAMSIZE_128K:
 	; WE HAVE AT LEAST 128K
@@ -932,34 +932,34 @@ VRAMSIZE_128K:
 	OUT	(C), A			; R#45 = $40 (MXC=1, MXD,MXS,DIY,DIX,EQ,MAJ=0)
 	CALL	DLY64			; DELAY
 
-	LD      A,1
-	OUT     (C),A
+	LD	A,1
+	OUT	(C),A
 	CALL	DLY64			; DELAY
-	LD      A,$8E
-	OUT     (C),A			; R#14 = 4 -> A16 = 0, A15..A14 = 1
+	LD	A,$8E
+	OUT	(C),A			; R#14 = 4 -> A16 = 0, A15..A14 = 1
 	CALL	DLY64			; DELAY
-	XOR     A
-	OUT     (C),A			; A7..A0 = 0
+	XOR	A
+	OUT	(C),A			; A7..A0 = 0
 	CALL	DLY64			; DELAY
-	OR      $40
-	OUT     (C),A			; SET WR, A13..A8 = 0
+	OR	$40
+	OUT	(C),A			; SET WR, A13..A8 = 0
 	CALL	DLY64			; DELAY
-	LD      A,$5A
+	LD	A,$5A
 	CALL	DLY64			; DELAY
 	LD	C, TMS_DATREG
-	OUT     (C),A			; SET VRAM $14000 = $76
+	OUT	(C),A			; SET VRAM $14000 = $76
 	CALL	DLY64			; DELAY
-	XOR     A
+	XOR	A
 	LD	C, TMS_CMDREG
-	OUT     (C),A			; A7..A0 = 0
+	OUT	(C),A			; A7..A0 = 0
 	CALL	DLY64			; DELAY
-	OUT     (C),A			; SET RD, A13..A8 = 0
+	OUT	(C),A			; SET RD, A13..A8 = 0
 	CALL	DLY64			; DELAY
 	LD	C, TMS_DATREG
-	IN      A,(C)			; A = VRAM $14000
+	IN	A,(C)			; A = VRAM $14000
 	CALL	DLY64			; DELAY
-	CP      $5A
-	JR      NZ,VRAMSIZE_DONE	; IF ITS $5A, WE HAVE EXAPANSION VRAM
+	CP	$5A
+	JR	NZ,VRAMSIZE_DONE	; IF ITS $5A, WE HAVE EXAPANSION VRAM
 
 	EX	AF, AF'
 	INC	A			; SET RETURN VALUE TO 2 FOR 192K
@@ -974,11 +974,11 @@ VRAMSIZE_DONE:
 	OUT	(C), A		;	 R#45 = $00 (MXC=0, MXD,MXS,DIY,DIX,EQ,MAJ=0)
 	CALL	DLY64			; DELAY
 
-	XOR     A
-	OUT     (C),A
+	XOR	A
+	OUT	(C),A
 	CALL	DLY64			; DELAY
-	LD      A,$8E
-	OUT     (C),A			; R#14 = 0 -> A16..A14 = 0
+	LD	A,$8E
+	OUT	(C),A			; R#14 = 0 -> A16..A14 = 0
 
 	EX	AF, AF'
 	RET
