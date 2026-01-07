@@ -62,6 +62,23 @@ CVDU_FONTID	.EQU	FONTID_8X16
 TERMENABLE	.SET	TRUE		; INCLUDE TERMINAL PSEUDODEVICE DRIVER
 KBDENABLE	.SET	TRUE		; INCLUDE KBD KEYBOARD SUPPORT
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_CVDU	.EQU	$
+;
+	.DW	SIZ_CVDU		; MODULE SIZE
+	.DW	CVDU_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+CVDU_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,CVDU_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,CVDU_INIT		; DO INIT
+	RET				; DONE
+;
 ;======================================================================
 ; CVDU DRIVER - INITIALIZATION
 ;======================================================================
@@ -987,3 +1004,14 @@ CVDU_IDAT:
 	.DB	KBDMODE_PS2	; PS/2 8242 KEYBOARD CONTROLLER
 	.DB	CVDU_KBDST
 	.DB	CVDU_KBDDATA
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_CVDU	.EQU	$
+SIZ_CVDU	.EQU	END_CVDU - ORG_CVDU
+;	
+	MEMECHO	"CVDU occupies "
+	MEMECHO	SIZ_CVDU
+	MEMECHO	" bytes.\n"

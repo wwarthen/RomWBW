@@ -143,6 +143,23 @@ PPA_LBA		.EQU	8		; OFFSET OF LBA (DWORD)
   #DEFINE MG014_MAP
 #ENDIF
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_PPA	.EQU	$
+;
+	.DW	SIZ_PPA			; MODULE SIZE
+	.DW	PPA_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+PPA_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,PPA_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,PPA_INIT		; DO INIT
+	RET				; DONE
+;
 ;=============================================================================
 ; INITIALIZATION ENTRY POINT
 ;=============================================================================
@@ -1437,3 +1454,14 @@ PPA1_CFG:	; DEVICE 1
 #ENDIF
 ;
 	.DB	$FF			; END MARKER
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_PPA	.EQU	$
+SIZ_PPA	.EQU	END_PPA - ORG_PPA
+;	
+	MEMECHO	"PPA occupies "
+	MEMECHO	SIZ_PPA
+	MEMECHO	" bytes.\n"

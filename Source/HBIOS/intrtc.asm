@@ -7,6 +7,23 @@ INTRTC_BUFSIZ	.EQU	6	; SIX BYTE BUFFER (YYMMDDHHMMSS)
 ;
 		DEVECHO	"INTRTC: ENABLED\n"
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_INTRTC	.EQU	$
+;
+	.DW	SIZ_INTRTC		; MODULE SIZE
+	.DW	INTRTC_INITPHASE	; ADR OF INIT PHASE HANDLER
+;
+INTRTC_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,INTRTC_PREINIT	; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,INTRTC_INIT		; DO INIT
+	RET				; DONE
+;
 ; RTC DEVICE INITIALIZATION ENTRY
 ;
 INTRTC_INIT:
@@ -257,3 +274,14 @@ INTRTC_MONTBL:	; DAYS IN MONTH + 1
 		.DB	32	; OCTOBER
 		.DB	31	; NOVEMBER
 		.DB	32	; DECEMBER
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_INTRTC	.EQU	$
+SIZ_INTRTC	.EQU	END_INTRTC - ORG_INTRTC
+;	
+	MEMECHO	"INTRTC occupies "
+	MEMECHO	SIZ_INTRTC
+	MEMECHO	" bytes.\n"

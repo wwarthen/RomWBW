@@ -94,6 +94,23 @@ BQRTC_BUFSIZE	.EQU	6		; 6 BYTE BUFFER (YYMMDDHHMMSS)
 		DEVECHO	"BQRTC: IO="
 		DEVECHO	BQRTC_BASE
 		DEVECHO	"\n"
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_BQRTC	.EQU	$
+;
+	.DW	SIZ_BQRTC		; MODULE SIZE
+	.DW	BQRTC_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+BQRTC_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,BQRTC_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,BQRTC_INIT		; DO INIT
+	RET				; DONE
 
 ; RTC Device Initialization Entry
 
@@ -395,3 +412,14 @@ BQRTC_BUF_DAY:	.DB	0		; Day
 BQRTC_BUF_HOUR:	.DB	0		; Hour
 BQRTC_BUF_MIN:	.DB	0		; Minute
 BQRTC_BUF_SEC:	.DB	0		; Second
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_BQRTC	.EQU	$
+SIZ_BQRTC	.EQU	END_BQRTC - ORG_BQRTC
+;	
+	MEMECHO	"BQRTC occupies "
+	MEMECHO	SIZ_BQRTC
+	MEMECHO	" bytes.\n"

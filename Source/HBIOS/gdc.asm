@@ -67,6 +67,23 @@ GDC_COLS	.EQU	80
 TERMENABLE	.SET	TRUE		; INCLUDE TERMINAL PSEUDODEVICE DRIVER
 KBDENABLE	.SET	TRUE		; INCLUDE KBD KEYBOARD SUPPORT
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_GDC	.EQU	$
+;
+	.DW	SIZ_GDC			; MODULE SIZE
+	.DW	GDC_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+GDC_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,GDC_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,GDC_INIT		; DO INIT
+	RET				; DONE
+;
 ;======================================================================
 ; GDC DRIVER - INITIALIZATION
 ;======================================================================
@@ -355,3 +372,14 @@ GDC_IDAT:
 	.DB	KBDMODE_PS2	; PS/2 8242 KEYBOARD CONTROLLER
 	.DB	GDC_KBDST
 	.DB	GDC_KBDDATA
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_GDC	.EQU	$
+SIZ_GDC	.EQU	END_GDC - ORG_GDC
+;	
+	MEMECHO	"GDC occupies "
+	MEMECHO	SIZ_GDC
+	MEMECHO	" bytes.\n"

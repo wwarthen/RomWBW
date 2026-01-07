@@ -123,6 +123,23 @@ ESPSD_IOBASE		.EQU	2	; IO BASE ADDRESS (BYTE)
 ESPSD_STAT		.EQU	3	; LAST STATUS (BYTE)
 ESPSD_MEDCAP		.EQU	4	; MEDIA CAPACITY (DWORD)
 ESPSD_LBA		.EQU	8	; OFFSET OF LBA (DWORD)
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_ESPSD	.EQU	$
+;
+	.DW	SIZ_ESPSD		; MODULE SIZE
+	.DW	ESPSD_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+ESPSD_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,ESPSD_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,ESPSD_INIT		; DO INIT
+	RET				; DONE
 ;                                       
 ESPSD_CFGSIZ		.EQU	12	; SIZE OF CFG TBL ENTRIES
 ;
@@ -1030,3 +1047,14 @@ ESPSD_CMDVAL	.DB	0		; PENDING COMMAND FOR IO FUCNTIONS
 ESPSD_DSKBUF	.DW	0		; ACTIVE DISK BUFFER
 ;
 ESPSD_DEVNUM	.DB	0		; TEMP DEVICE NUM USED DURING INIT
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_ESPSD	.EQU	$
+SIZ_ESPSD	.EQU	END_ESPSD - ORG_ESPSD
+;	
+	MEMECHO	"ESPSD occupies "
+	MEMECHO	SIZ_ESPSD
+	MEMECHO	" bytes.\n"

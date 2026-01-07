@@ -78,6 +78,23 @@ PKD_PRESCL	.EQU	PKDOSC/100000		; PRESCALER
 	DEVECHO	PKD_ROWS
 	DEVECHO	"\n"
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_PKD	.EQU	$
+;
+	.DW	SIZ_PKD			; MODULE SIZE
+	.DW	PKD_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+PKD_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,PKD_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,PKD_INIT		; DO INIT
+	RET				; DONE
+;
 ;__PKD_PREINIT_____________________________________________________________________________________
 ;
 ;  CONFIGURE PARALLEL PORT AND INITIALIZE 8279
@@ -879,3 +896,14 @@ PKD_MSG_LDR_LOAD	.DB	$38,$5C,$5F,$5E,$80,$80,$80,$00	; "Load... "
 PKD_MSG_LDR_GO		.DB	$3D,$5C,$80,$80,$80,$00,$00,$00	; "Go...   "
 PKD_MSG_MON_RDY		.DB	$40,$39,$73,$3E,$00,$3E,$73,$40	; "-CPU UP-"
 PKD_MSG_MON_BOOT	.DB	$7F,$5C,$5C,$78,$82,$00,$00,$00	; "Boot!   "
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_PKD	.EQU	$
+SIZ_PKD	.EQU	END_PKD - ORG_PKD
+;	
+	MEMECHO	"PKD occupies "
+	MEMECHO	SIZ_PKD
+	MEMECHO	" bytes.\n"

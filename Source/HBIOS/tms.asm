@@ -236,6 +236,23 @@ USBKYBENABLE	.SET	TRUE		; INCLUDE USB KEYBOARD SUPPORT
   #ENDIF
 #ENDIF
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_TMS	.EQU	$
+;
+	.DW	SIZ_TMS			; MODULE SIZE
+	.DW	TMS_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+TMS_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,TMS_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,TMS_INIT		; DO INIT
+	RET				; DONE
+;
 ;======================================================================
 ; TMS DRIVER - INITIALIZATION
 ;======================================================================
@@ -1605,3 +1622,14 @@ TMS_DCNTL	.DB	$00	; SAVE Z180 DCNTL AS NEEDED
 ;	 				 F Bright White		F
 ;===============================================================================
 ;
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_TMS	.EQU	$
+SIZ_TMS	.EQU	END_TMS - ORG_TMS
+;	
+	MEMECHO	"TMS occupies "
+	MEMECHO	SIZ_TMS
+	MEMECHO	" bytes.\n"

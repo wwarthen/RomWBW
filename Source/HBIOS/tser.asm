@@ -14,6 +14,23 @@ TSER_DATA	.EQU	$35
 		DEVECHO	TSER_DATA
 		DEVECHO	"\n"
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_TSER	.EQU	$
+;
+	.DW	SIZ_TSER		; MODULE SIZE
+	.DW	TSER_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+TSER_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,TSER_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,TSER_INIT		; DO INIT
+	RET				; DONE
+;
 ;
 ;
 TSER_PREINIT:
@@ -114,3 +131,14 @@ TSER_DEVICE:
 	LD	L,TSER_DATA		; L := BASE I/O ADDRESS
 	XOR	A			; SIGNAL SUCCESS
 	RET
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_TSER	.EQU	$
+SIZ_TSER	.EQU	END_TSER - ORG_TSER
+;	
+	MEMECHO	"TSER occupies "
+	MEMECHO	SIZ_TSER
+	MEMECHO	" bytes.\n"

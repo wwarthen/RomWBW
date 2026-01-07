@@ -104,6 +104,23 @@ KBDENABLE	.SET	TRUE		; INCLUDE KBD KEYBOARD SUPPORT
 ; SCREEN 2 ROW DEFINES WHERE BUFFER BYTE 0 WILL BE DISPLAYED (R18)
 ; SCREEN 2 RAM ADDRESS IS ALWAYS ZERO (R19/R20)
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_VGA	.EQU	$
+;
+	.DW	SIZ_VGA			; MODULE SIZE
+	.DW	VGA_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+VGA_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,VGA_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,VGA_INIT		; DO INIT
+	RET				; DONE
+;
 ;======================================================================
 ; VGA DRIVER - INITIALIZATION
 ;======================================================================
@@ -1046,3 +1063,14 @@ VGA_IDAT:
 	.DB	KBDMODE_PS2	; PS/2 8242 KEYBOARD CONTROLLER
 	.DB	VGA_KBDST
 	.DB	VGA_KBDDATA
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_VGA	.EQU	$
+SIZ_VGA	.EQU	END_VGA - ORG_VGA
+;	
+	MEMECHO	"VGA occupies "
+	MEMECHO	SIZ_VGA
+	MEMECHO	" bytes.\n"

@@ -40,7 +40,24 @@ M6242RTC_REG_CONTROL3	.EQU	$0F
 		DEVECHO	"M6242RTC: IO="
 		DEVECHO	M6242RTC_BASE
 		DEVECHO	"\n"
-
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_M6242RTC	.EQU	$
+;
+	.DW	SIZ_M6242RTC		; MODULE SIZE
+	.DW	M6242RTC_INITPHASE	; ADR OF INIT PHASE HANDLER
+;
+M6242RTC_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,M6242RTC_PREINIT	; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,M6242RTC_INIT		; DO INIT
+	RET				; DONE
+;
 M6242RTC_INIT:
 	LD	A, (RTC_DISPACT)	; RTC DISPATCHER ALREADY SET?
 	OR	A			; SET FLAGS
@@ -324,3 +341,14 @@ RP5RTC_DT	.DB	01
 RP5RTC_HH	.DB	00
 RP5RTC_MM	.DB	00
 RP5RTC_SS	.DB	00
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_M6242RTC	.EQU	$
+SIZ_M6242RTC	.EQU	END_M6242RTC - ORG_M6242RTC
+;	
+	MEMECHO	"M6242RTC occupies "
+	MEMECHO	SIZ_M6242RTC
+	MEMECHO	" bytes.\n"

@@ -131,6 +131,23 @@ TILE_CTRL_DISP_TILEMEM_F	.EQU	$0200
 SYNC_RETRIES	.EQU	250
 
 TERMENABLE	.SET	TRUE	; INCLUDE TERMINAL PSEUDODEVICE DRIVER
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_XOS	.EQU	$
+;
+	.DW	SIZ_XOS			; MODULE SIZE
+	.DW	XOS_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+XOS_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,XOS_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,XOS_INIT		; DO INIT
+	RET				; DONE
 
 ;======================================================================
 ; XOSERA DRIVER - INITIALIZATION
@@ -1048,3 +1065,14 @@ XOS_IDAT2:
 	.DB	KBDMODE_NONE
 	.DB	0
 	.DB	0
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_XOS	.EQU	$
+SIZ_XOS	.EQU	END_XOS - ORG_XOS
+;	
+	MEMECHO	"XOS occupies "
+	MEMECHO	SIZ_XOS
+	MEMECHO	" bytes.\n"

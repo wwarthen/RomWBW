@@ -88,6 +88,23 @@
 ;
 ;==================================================================================================
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_LPT	.EQU	$
+;
+	.DW	SIZ_LPT			; MODULE SIZE
+	.DW	LPT_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+LPT_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,LPT_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,LPT_INIT		; DO INIT
+	RET				; DONE
+;
 LPT_INIT:
 	LD	B,LPT_CFGCNT		; LOOP CONTROL
 	XOR	A			; ZERO TO ACCUM
@@ -515,3 +532,14 @@ LPT1_CFG:
 #ENDIF
 ;
 LPT_CFGCNT	.EQU	($ - LPT_CFG) / LPT_CFGSIZ
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_LPT	.EQU	$
+SIZ_LPT	.EQU	END_LPT - ORG_LPT
+;	
+	MEMECHO	"LPT occupies "
+	MEMECHO	SIZ_LPT
+	MEMECHO	" bytes.\n"

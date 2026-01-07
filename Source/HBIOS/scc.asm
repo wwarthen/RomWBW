@@ -77,6 +77,23 @@ SCC1B_DAT	.EQU	SCC1BASE + $02
 ;
 #ENDIF
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_SCC	.EQU	$
+;
+	.DW	SIZ_SCC		; MODULE SIZE
+	.DW	SCC_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+SCC_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,SCC_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,SCC_INIT		; DO INIT
+	RET				; DONE
+;
 SCC_PREINIT:
 ;
 ; SETUP THE DISPATCH TABLE ENTRIES
@@ -1074,3 +1091,14 @@ SCC1B_CFG:
 #ENDIF
 ;
 SCC_CFGCNT	.EQU	($ - SCC_CFG) / SCC_CFGSIZ
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_SCC	.EQU	$
+SIZ_SCC	.EQU	END_SCC - ORG_SCC
+;	
+	MEMECHO	"SCC occupies "
+	MEMECHO	SIZ_SCC
+	MEMECHO	" bytes.\n"

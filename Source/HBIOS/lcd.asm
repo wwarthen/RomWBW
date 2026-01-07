@@ -35,6 +35,24 @@ LCD_FUNC_DDADR	.EQU	$80		; SET DDRAM ADDRESS
 	DEVECHO	LCD_ROWS
 	DEVECHO	"\n"
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_LCD	.EQU	$
+;
+	.DW	SIZ_LCD		; MODULE SIZE
+	.DW	LCD_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+LCD_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,LCD_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,LCD_INIT		; DO INIT
+	RET				; DONE
+
+;
 ; HARDWARE RESET PRIOR TO ROMWBW CONSOLE INITIALIZATION
 ;
 LCD_PREINIT:
@@ -528,3 +546,14 @@ LCD_MSG_LDR_LOAD	.DB	"Load...",0
 LCD_MSG_LDR_GO		.DB	"Go...",0
 LCD_MSG_MON_RDY		.DB	"-CPU UP-",0
 LCD_MSG_MON_BOOT	.DB	"Boot!",0
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_LCD	.EQU	$
+SIZ_LCD	.EQU	END_LCD - ORG_LCD
+;	
+	MEMECHO	"LCD occupies "
+	MEMECHO	SIZ_LCD
+	MEMECHO	" bytes.\n"

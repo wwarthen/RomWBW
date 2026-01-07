@@ -38,6 +38,8 @@ Version 3.6
 - JMD: Added VGMINFO application
 - WBW: Created SCSI Driver derived from code from Jay Cotton
 - WBW: Add official RC2014 platform (derived from RCZ80)
+- D?N: Added improved TMS Driver hardware/configuration detection and reporting
+- WBW: Removed driver module INIT lists, replaced with init phase system
 
 Version 3.5.1
 -------------

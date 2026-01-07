@@ -34,6 +34,24 @@ UART0_RBR	.EQU	$C0
 LSR_THRE	.EQU	$20
 LSR_DR		.EQU	$01
 
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_EZ80UART	.EQU	$
+;
+	.DW	SIZ_EZ80UART		; MODULE SIZE
+	.DW	EZ80UART_INITPHASE	; ADR OF INIT PHASE HANDLER
+;
+EZ80UART_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,EZUART_PREINIT	; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,EZUART_INIT		; DO INIT
+	RET				; DONE
+
 EZUART_PREINIT:
 	LD	BC, EZUART_FNTBL
 	LD	DE, EZUART_CFG		
@@ -322,3 +340,14 @@ EZUART_FNTBL:
 #IF (($ - EZUART_FNTBL) != (CIO_FNCNT * 2))
 	.ECHO	"*** INVALID EZUART FUNCTION TABLE ***\n"
 #ENDIF
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_EZ80UART	.EQU	$
+SIZ_EZ80UART	.EQU	END_EZ80UART - ORG_EZ80UART
+;	
+	MEMECHO	"EZ80UART occupies "
+	MEMECHO	SIZ_EZ80UART
+	MEMECHO	" bytes.\n"

@@ -3,6 +3,23 @@
 ; CH376 NATIVE USB DRIVER
 ;==================================================================================================
 ;
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_CHNATIVE	.EQU	$
+;
+	.DW	SIZ_CHNATIVE		; MODULE SIZE
+	.DW	CHNATIVE_INITPHASE	; ADR OF INIT PHASE HANDLER
+;
+CHNATIVE_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,CHNATIVE_PREINIT	; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,CHNATIVE_INIT		; DO INIT
+	RET				; DONE
 
 #DEFINE DEFM	.DB
 #DEFINE DEFB	.DB
@@ -63,3 +80,14 @@ _delay_medium	.EQU	LDELAY
 CHNATIVE_INIT	.EQU	_chnative_init
 CHNATIVE_INITF	.EQU	_chnative_init_force
 
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_CHNATIVE	.EQU	$
+SIZ_CHNATIVE	.EQU	END_CHNATIVE - ORG_CHNATIVE
+;	
+	MEMECHO	"CHNATIVE occupies "
+	MEMECHO	SIZ_CHNATIVE
+	MEMECHO	" bytes.\n"

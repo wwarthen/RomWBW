@@ -39,6 +39,23 @@ KBDENABLE	.SET	TRUE		; INCLUDE KBD KEYBOARD SUPPORT
 		DEVECHO	VRC_KBDDATA
 		DEVECHO	"\n"
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_VRC	.EQU	$
+;
+	.DW	SIZ_VRC		; MODULE SIZE
+	.DW	VRC_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+VRC_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,VRC_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,VRC_INIT		; DO INIT
+	RET				; DONE
+;
 ;======================================================================
 ; VRC DRIVER - INITIALIZATION
 ;======================================================================
@@ -636,3 +653,14 @@ VRC_IDAT:
 	.DB	KBDMODE_VRC	; VGARC KEYBOARD CONTROLLER
 	.DB	VRC_KBDST
 	.DB	VRC_KBDDATA
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_VRC	.EQU	$
+SIZ_VRC	.EQU	END_VRC - ORG_VRC
+;	
+	MEMECHO	"VRC occupies "
+	MEMECHO	SIZ_VRC
+	MEMECHO	" bytes.\n"

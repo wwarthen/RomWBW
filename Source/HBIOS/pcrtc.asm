@@ -37,6 +37,24 @@ PCRTC_NVSIZE		.EQU	$30	; 64 bytes in total is what DS1285 and MC146818 had
 		DEVECHO	PCRTC_BASE
 		DEVECHO	"\n"
 
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_PCRTC	.EQU	$
+;
+	.DW	SIZ_PCRTC		; MODULE SIZE
+	.DW	PCRTC_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+PCRTC_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,PCRTC_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,PCRTC_INIT		; DO INIT
+	RET				; DONE
+;
 PCRTC_INIT:
 	LD	A, (RTC_DISPACT)	; RTC DISPATCHER ALREADY SET?
 	OR	A			; SET FLAGS
@@ -232,7 +250,7 @@ PCRTC_SETTIM:
 	LD	A, PCRTC_REG_CTLB	; Set Ctl Reg B
 	EZ80_IO
 	OUT	(PCRTC_REG), A
-	LD	A, PCRTC_CTLB_VAL|0x80 ; Set the SET bit to stop updates
+	LD	A, PCRTC_CTLB_VAL|$80 ; Set the SET bit to stop updates
 	EZ80_IO
 	OUT	(PCRTC_DAT), A
 
@@ -365,4 +383,14 @@ PCRTC_DT	.DB	$01
 PCRTC_HH	.DB	$00
 PCRTC_MM	.DB	$00
 PCRTC_SS	.DB	$00
-
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_PCRTC	.EQU	$
+SIZ_PCRTC	.EQU	END_PCRTC - ORG_PCRTC
+;	
+	MEMECHO	"PCRTC occupies "
+	MEMECHO	SIZ_PCRTC
+	MEMECHO	" bytes.\n"

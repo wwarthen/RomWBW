@@ -31,6 +31,23 @@ PIO1B_DAT	.EQU	PIO1BASE + $01
 ;
 #ENDIF
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_PIO	.EQU	$
+;
+	.DW	SIZ_PIO			; MODULE SIZE
+	.DW	PIO_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+PIO_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,PIO_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,PIO_INIT		; DO INIT
+	RET				; DONE
+;
 PIO_PREINIT:
 ;
 ; SETUP THE DISPATCH TABLE ENTRIES
@@ -363,3 +380,14 @@ PIO1B_CFG:
 #ENDIF
 ;
 PIO_CFGCNT	.EQU	($ - PIO_CFG) / PIO_CFGSIZ
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_PIO	.EQU	$
+SIZ_PIO	.EQU	END_PIO - ORG_PIO
+;	
+	MEMECHO	"PIO occupies "
+	MEMECHO	SIZ_PIO
+	MEMECHO	" bytes.\n"

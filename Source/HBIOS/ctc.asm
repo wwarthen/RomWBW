@@ -150,6 +150,23 @@ CTCTIVT		.EQU	INT_CTC0A + CTCTIMCH
 ;
 	DEVECHO "\n"
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_CTC	.EQU	$
+;
+	.DW	SIZ_CTC			; MODULE SIZE
+	.DW	CTC_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+CTC_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,CTC_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,CTC_INIT		; DO INIT
+	RET				; DONE
+;
 ;==================================================================================================
 ; CTC PRE-INITIALIZATION
 ;
@@ -303,3 +320,14 @@ CTC_NO:
 ; CTC DRIVER DATA STORAGE
 ;
 CTC_EXIST	.DB	$FF		; SET TO ZERO IF EXISTS
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_CTC	.EQU	$
+SIZ_CTC	.EQU	END_CTC - ORG_CTC
+;	
+	MEMECHO	"CTC occupies "
+	MEMECHO	SIZ_CTC
+	MEMECHO	" bytes.\n"

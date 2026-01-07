@@ -22,6 +22,24 @@ YMDAT		.EQU	VGMBASE+01H		; Primary YM2162 11000001 a1=0 a0=1
 YM2SEL		.EQU	VGMBASE+02H		; Secondary YM2162 11000010 a1=1 a0=0
 YM2DAT		.EQU	VGMBASE+03H		; Secondary YM2162 11000011 a1=1 a0=1
 
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_YM	.EQU	$
+;
+	.DW	SIZ_YM			; MODULE SIZE
+	.DW	YM_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+YM_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,YM2612_PREINIT	; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,YM2612_INIT		; DO INIT
+	RET				; DONE
+
 ;------------------------------------------------------------------------------
 ; Device capabilities and configuration
 ;------------------------------------------------------------------------------
@@ -890,3 +908,14 @@ ym_cfg:		.db	part0, 24/2
 ;
 		.db	$00			; End flag
 #ENDIF
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_YM	.EQU	$
+SIZ_YM	.EQU	END_YM - ORG_YM
+;	
+	MEMECHO	"YM occupies "
+	MEMECHO	SIZ_YM
+	MEMECHO	" bytes.\n"

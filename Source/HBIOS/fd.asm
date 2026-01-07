@@ -124,6 +124,23 @@ FRC_TOGETRES	.EQU	-13H		; ED
 FRC_TOEXEC	.EQU	-14H		; EC
 FRC_TOSEEKWT	.EQU	-15H		; EB
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_FD	.EQU	$
+;
+	.DW	SIZ_FD		; MODULE SIZE
+	.DW	FD_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+FD_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,FD_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,FD_INIT		; DO INIT
+	RET				; DONE
+;
 ; FD DEVICE CONFIGURATION
 ;
 FD_DEVCNT	.EQU	FDCNT		; 2 DEVICES SUPPORTED
@@ -2224,3 +2241,14 @@ FD_DSKBUF	.DW	0
 FD_CURGEOM	.EQU	$		; TWO BYTES BELOW
 FD_CURSPT	.DB	0		; CURRENT SECTORS PER TRACK
 FD_CURHDS	.DB	0		; CURRENT HEADS
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_FD	.EQU	$
+SIZ_FD	.EQU	END_FD - ORG_FD
+;	
+	MEMECHO	"FD occupies "
+	MEMECHO	SIZ_FD
+	MEMECHO	" bytes.\n"

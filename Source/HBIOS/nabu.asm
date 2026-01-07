@@ -45,6 +45,23 @@ NABU_RIN	.EQU	NABU_BASE + 0	; READ FROM SELECTED REGISTER
 	DEVECHO	NABU_BASE
 	DEVECHO	"\n"
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_NABU	.EQU	$
+;
+	.DW	SIZ_NABU		; MODULE SIZE
+	.DW	NABU_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+NABU_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,NABU_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,NABU_INIT		; DO INIT
+	RET				; DONE
+;
 ; HARDWARE RESET PRIOR TO ROMWBW CONSOLE INITIALIZATION
 ;
 NABU_PREINIT:
@@ -87,3 +104,14 @@ NABU_INIT:
 ; DATA STORAGE
 ;
 NABU_CTLVAL	.DB	0		; SHADOW VAL FOR NABU CONTROL REGISTER
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_NABU	.EQU	$
+SIZ_NABU	.EQU	END_NABU - ORG_NABU
+;	
+	MEMECHO	"NABU occupies "
+	MEMECHO	SIZ_NABU
+	MEMECHO	" bytes.\n"

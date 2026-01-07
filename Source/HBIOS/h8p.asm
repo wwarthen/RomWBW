@@ -39,6 +39,23 @@ H8FPIO		.EQU	$F0
 	DEVECHO	H8FPIO
 	DEVECHO	"\n"
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_H8P	.EQU	$
+;
+	.DW	SIZ_H8P		; MODULE SIZE
+	.DW	H8P_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+H8P_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,H8P_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,H8P_INIT		; DO INIT
+	RET				; DONE
+;
 ;__H8P_PREINIT_______________________________________________________________________________________
 ;
 ;  CONFIGURE AND RESET PANEL
@@ -972,3 +989,14 @@ H8P_UPTIME:
 	.DW	0
 H8P_UPTDIG:
 	.DB	0,0,0,0,0,0,0,0,0
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_H8P	.EQU	$
+SIZ_H8P	.EQU	END_H8P - ORG_H8P
+;	
+	MEMECHO	"H8P occupies "
+	MEMECHO	SIZ_H8P
+	MEMECHO	" bytes.\n"

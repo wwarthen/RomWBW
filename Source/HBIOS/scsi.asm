@@ -62,7 +62,24 @@ SCSI_LUN	.EQU	2		; TARGET LUN
 SCSI_STAT	.EQU	3		; LAST STATUS (BYTE)
 SCSI_MEDCAP	.EQU	4		; MEDIA CAPACITY (DWORD)
 SCSI_LBA	.EQU	8		; OFFSET OF LBA (DWORD)
-;                                       
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_SCSI	.EQU	$
+;
+	.DW	SIZ_SCSI		; MODULE SIZE
+	.DW	SCSI_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+SCSI_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,SCSI_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,SCSI_INIT		; DO INIT
+	RET				; DONE
+;
 SCSI_CFGSIZ	.EQU	12		; SIZE OF CFG TBL ENTRIES
 ;
 SCSI_CFGTBL:
@@ -931,3 +948,14 @@ SCSI_S_STAT	.DW	0		; SCSI ENDING STATUS
 SCSI_S_MSG	.DW	0		; SCSI MESSAGE
 ;
 SCSI_CAP_BUF	.FILL	8,0		; SCSI CAPACITY DATA BUFFER
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_SCSI	.EQU	$
+SIZ_SCSI	.EQU	END_SCSI - ORG_SCSI
+;	
+	MEMECHO	"SCSI occupies "
+	MEMECHO	SIZ_SCSI
+	MEMECHO	" bytes.\n"

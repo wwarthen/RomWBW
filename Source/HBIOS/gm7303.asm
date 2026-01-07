@@ -58,6 +58,23 @@ GM7303_FUNC_DDADR	.EQU	$80		; SET DDRAM ADDRESS
 	DEVECHO	GM7303BASE
 	DEVECHO	"\n"
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_GM7303	.EQU	$
+;
+	.DW	SIZ_GM7303		; MODULE SIZE
+	.DW	GM7303_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+GM7303_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,GM7303_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,GM7303_INIT		; DO INIT
+	RET				; DONE
+;
 ; HARDWARE RESET PRIOR TO ROMWBW CONSOLE INITIALIZATION
 ;
 GM7303_PREINIT:
@@ -639,3 +656,14 @@ GM7303_MSG_LDR_LOAD	.DB	"Load...",0
 GM7303_MSG_LDR_GO	.DB	"Go...",0
 GM7303_MSG_MON_RDY	.DB	"-CPU UP-",0
 GM7303_MSG_MON_BOOT	.DB	"Boot!",0
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_GM7303	.EQU	$
+SIZ_GM7303	.EQU	END_GM7303 - ORG_GM7303
+;	
+	MEMECHO	"GM7303 occupies "
+	MEMECHO	SIZ_GM7303
+	MEMECHO	" bytes.\n"

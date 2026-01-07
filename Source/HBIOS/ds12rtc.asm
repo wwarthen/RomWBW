@@ -60,6 +60,23 @@ DS12RTC_NVSIZE	.EQU	$30
 	DEVECHO	DS12RTC_BASE
 	DEVECHO	"\n"
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_DS12RTC	.EQU	$
+;
+	.DW	SIZ_DS12RTC		; MODULE SIZE
+	.DW	DS12RTC_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+DS12RTC_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,DS12RTC_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,DS12RTC_INIT		; DO INIT
+	RET				; DONE
+;
 ; RTC DEVICE PRE-INITIALIZATION ENTRY
 ;
 DS12RTC_PREINIT:
@@ -408,3 +425,14 @@ DS12RTC_UIP:
 ;
 DS12RTC_TIMBUF	.FILL	6,0		; 6 BYTES FOR GETTIM, YYMMDDHHMMSS
 DS12RTC_TIMDEF	.DB	$00,$01,$01,$00,$00,$00	; DEFAULT DATE/TIME
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_DS12RTC	.EQU	$
+SIZ_DS12RTC	.EQU	END_DS12RTC - ORG_DS12RTC
+;	
+	MEMECHO	"DS12RTC occupies "
+	MEMECHO	SIZ_DS12RTC
+	MEMECHO	" bytes.\n"

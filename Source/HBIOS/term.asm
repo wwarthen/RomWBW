@@ -15,6 +15,23 @@
 ;======================================================================
 ;
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_TERM	.EQU	$
+;
+	.DW	SIZ_TERM		; MODULE SIZE
+	.DW	TERM_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+TERM_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,TERM_PREINIT		; DO PREINIT
+	;CP	HB_PHASE_INIT		; INIT PHASE?
+	;JP	Z,TERM_INIT		; DO INIT
+	RET				; DONE
+;
 ;======================================================================
 ; TERMINAL DRIVER - PRE-CONSOLE INITIALIZATION
 ;======================================================================
@@ -134,3 +151,14 @@ TERM_RESET:
 	RET
 ;
 #ENDIF
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_TERM	.EQU	$
+SIZ_TERM	.EQU	END_TERM - ORG_TERM
+;	
+	MEMECHO	"TERM occupies "
+	MEMECHO	SIZ_TERM
+	MEMECHO	" bytes.\n"

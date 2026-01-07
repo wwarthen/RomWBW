@@ -11,6 +11,24 @@
 ;	 HBIOS System calls SYS_GETTIMER, SYS_GETSECS, SYS_SETTIMER, SYS_SETSECS are implemented within HBIOS
 ;
 
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_EZ80TMR	.EQU	$
+;
+	.DW	SIZ_EZ80TMR		; MODULE SIZE
+	.DW	EZ80TMR_INITPHASE	; ADR OF INIT PHASE HANDLER
+;
+EZ80TMR_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,EZ80_TMR_PREINIT	; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,EZ80_TMR_INIT		; DO INIT
+	RET				; DONE
+
 #IF (EZ80TIMER == EZ80TMR_INT)
 EZ80_TMR_INIT:
 	CALL	NEWLINE			; FORMATTING
@@ -86,3 +104,14 @@ SYS_SETSECS:
 EZ80_TMR_INIT:
 	RET
 #ENDIF
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_EZ80TMR	.EQU	$
+SIZ_EZ80TMR	.EQU	END_EZ80TMR - ORG_EZ80TMR
+;	
+	MEMECHO	"EZ80TMR occupies "
+	MEMECHO	SIZ_EZ80TMR
+	MEMECHO	" bytes.\n"

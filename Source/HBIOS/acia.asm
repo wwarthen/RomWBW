@@ -57,6 +57,24 @@ ACIA_ACIA       .EQU    1
 ACIA_RTSON      .EQU    %10111111       ; BIT MASK TO ASSERT RTS
 ACIA_RTSOFF     .EQU    %01000000       ; BIT MASK TO DEASSERT RTS
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_ACIA	.EQU	$
+;
+	.DW	SIZ_ACIA		; MODULE SIZE
+	.DW	ACIA_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+ACIA_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,ACIA_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,ACIA_INIT		; DO INIT
+	RET				; DONE
+
+;
 ;
 ;
 ACIA_PREINIT:
@@ -743,3 +761,14 @@ ACIA1_CFG:
 #ENDIF
 ;
 ACIA_CFGCNT     .EQU    ($ - ACIA_CFG) / ACIA_CFGSIZ
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_ACIA	.EQU	$
+SIZ_ACIA	.EQU	END_ACIA - ORG_ACIA
+;	
+	MEMECHO	"ACIA occupies "
+	MEMECHO	SIZ_ACIA
+	MEMECHO	" bytes.\n"

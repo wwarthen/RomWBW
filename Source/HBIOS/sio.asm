@@ -113,6 +113,23 @@ SIO1B_DAT	.EQU	SIO1BASE + $00
 ;
 #ENDIF
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_SIO	.EQU	$
+;
+	.DW	SIZ_SIO			; MODULE SIZE
+	.DW	SIO_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+SIO_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,SIO_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,SIO_INIT		; DO INIT
+	RET				; DONE
+;
 SIO_PREINIT:
 ;
 ; SETUP THE DISPATCH TABLE ENTRIES
@@ -1320,3 +1337,14 @@ SIO1B_CFG:
 #ENDIF
 ;
 SIO_CFGCNT	.EQU	($ - SIO_CFG) / SIO_CFGSIZ
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_SIO	.EQU	$
+SIZ_SIO	.EQU	END_SIO - ORG_SIO
+;	
+	MEMECHO	"SIO occupies "
+	MEMECHO	SIZ_SIO
+	MEMECHO	" bytes.\n"

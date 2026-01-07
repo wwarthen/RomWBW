@@ -59,6 +59,24 @@ MD_ALRM		.EQU	4
 		DEVECHO	RP5RTC_REG
 		DEVECHO	"\n"
 
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_RP5RTC	.EQU	$
+;
+	.DW	SIZ_RP5RTC		; MODULE SIZE
+	.DW	RP5RTC_INITPHASE	; ADR OF INIT PHASE HANDLER
+;
+RP5RTC_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,RP5RTC_PREINIT	; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,RP5RTC_INIT		; DO INIT
+	RET				; DONE
+;
 RP5RTC_INIT:
 	LD	A, (RTC_DISPACT)	; RTC DISPATCHER ALREADY SET?
 	OR	A			; SET FLAGS
@@ -473,3 +491,14 @@ RP5RTC_HH	.DB	00
 RP5RTC_MM	.DB	00
 RP5RTC_SS	.DB	00
 
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_RP5RTC	.EQU	$
+SIZ_RP5RTC	.EQU	END_RP5RTC - ORG_RP5RTC
+;	
+	MEMECHO	"RP5RTC occupies "
+	MEMECHO	SIZ_RP5RTC
+	MEMECHO	" bytes.\n"

@@ -25,6 +25,25 @@ DLPSERCFG	.EQU	SER_9600_8N1	; DLPSER: SERIAL LINE CONFIG
 DLPSER_PPICTL	.EQU	$AB
 DLPSER_PPICFG	.EQU	%10011000
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_DLPSER	.EQU	$
+;
+	.DW	SIZ_DLPSER		; MODULE SIZE
+	.DW	DLPSER_INITPHASE	; ADR OF INIT PHASE HANDLER
+;
+DLPSER_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,DLPSER_PREINIT	; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,DLPSER_INIT		; DO INIT
+	RET				; DONE
+
+
+;
 DLPSER_PREINIT:
 ;
 ; SETUP THE DISPATCH TABLE ENTRIES
@@ -273,3 +292,14 @@ DLPSER1_CFG:
 ; WORKING VARIABLES
 ;
 DLPSER_DEV		.DB	0		; DEVICE NUM USED DURING INIT
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_DLPSER	.EQU	$
+SIZ_DLPSER	.EQU	END_DLPSER - ORG_DLPSER
+;	
+	MEMECHO	"DLPSER occupies "
+	MEMECHO	SIZ_DLPSER
+	MEMECHO	" bytes.\n"

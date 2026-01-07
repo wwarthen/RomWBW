@@ -47,6 +47,23 @@ PPP_CMDSIOTXFL	.EQU	$56		; SERIAL PORT TRANSMIT BUFFER FLUSH (NOT IMPLEMENTED)
 PPP_CMDRESET	.EQU	$F0		; SOFT RESET PROPELLER
 PPP_CMDVER	.EQU	$F1		; SEND FIRMWARE VERSION
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_PPP	.EQU	$
+;
+	.DW	SIZ_PPP			; MODULE SIZE
+	.DW	PPP_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+PPP_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,PPP_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,PPP_INIT		; DO INIT
+	RET				; DONE
+;
 ; GLOBAL PARPORTPROP INITIALIZATION
 ;
 PPP_INIT:
@@ -1154,3 +1171,14 @@ PPPSD_DSKBUF		.DW	0
 PPPSD_DSKSTAT		.DB	0
 PPPSD_ERRCODE		.DW	0,0
 PPPSD_CSDBUF		.FILL	16,0
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_PPP	.EQU	$
+SIZ_PPP	.EQU	END_PPP - ORG_PPP
+;	
+	MEMECHO	"PPP occupies "
+	MEMECHO	SIZ_PPP
+	MEMECHO	" bytes.\n"

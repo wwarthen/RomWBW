@@ -28,6 +28,23 @@ HDSK_LBA	.EQU	2		; OFFSET OF LBA (DWORD)
 	DEVECHO	HDSK_DEVCNT
 	DEVECHO	"\n"
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_HDSK	.EQU	$
+;
+	.DW	SIZ_HDSK		; MODULE SIZE
+	.DW	HDSK_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+HDSK_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,HDSK_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,HDSK_INIT		; DO INIT
+	RET				; DONE
+;
 HDSK_CFGTBL:
 	; DEVICE 0
 	.DB	0			; DRIVER DEVICE NUMBER
@@ -431,3 +448,14 @@ HDSK_DRV	.DB	0		; 0..7, HDSK DRIVE NUMBER
 HDSK_SEC	.DB	0		; 0..255 SECTOR
 HDSK_TRK	.DW	0		; 0..2047 TRACK
 HDSK_DMA	.DW	0		; ADDRESS FOR SECTOR DATA EXCHANGE
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_HDSK	.EQU	$
+SIZ_HDSK	.EQU	END_HDSK - ORG_HDSK
+;	
+	MEMECHO	"HDSK occupies "
+	MEMECHO	SIZ_HDSK
+	MEMECHO	" bytes.\n"

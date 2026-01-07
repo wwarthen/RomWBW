@@ -12,6 +12,23 @@ SIMRTC_BUFSIZ	.EQU	6	; SIX BYTE BUFFER (YYMMDDHHMMSS)
 	DEVECHO	SIMRTC_IO
 	DEVECHO	"\n"
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_SIMRTC	.EQU	$
+;
+	.DW	SIZ_SIMRTC		; MODULE SIZE
+	.DW	SIMRTC_INITPHASE	; ADR OF INIT PHASE HANDLER
+;
+SIMRTC_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,SIMRTC_PREINIT	; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,SIMRTC_INIT		; DO INIT
+	RET				; DONE
+;
 ; RTC DEVICE INITIALIZATION ENTRY
 ;
 SIMRTC_INIT:
@@ -154,3 +171,16 @@ SIMRTC_DT	.DB	0
 SIMRTC_HH	.DB	0
 SIMRTC_MM	.DB	0
 SIMRTC_SS	.DB	0
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_SIMRTC	.EQU	$
+SIZ_SIMRTC	.EQU	END_SIMRTC - ORG_SIMRTC
+;	
+	MEMECHO	"SIMRTC occupies "
+	MEMECHO	SIZ_SIMRTC
+	MEMECHO	" bytes.\n"
+
+

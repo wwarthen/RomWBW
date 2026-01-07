@@ -50,6 +50,23 @@ SN7_TONECNT		.EQU	3	; COUNT NUMBER OF TONE CHANNELS
 SN7_NOISECNT		.EQU	1	; COUNT NUMBER OF NOISE CHANNELS
 SN7_CHCNT		.EQU	SN7_TONECNT + SN7_NOISECNT
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_SN7	.EQU	$
+;
+	.DW	SIZ_SN7			; MODULE SIZE
+	.DW	SN7_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+SN7_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,SN76489_PREINIT	; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,SN76489_INIT		; DO INIT
+	RET				; DONE
+;
 #INCLUDE "audio.inc"
 ;
 ; BLINDLY RESET THE PSG AS SOON AS WE CAN AFTER BOOT BECAUSE IT
@@ -531,3 +548,14 @@ SN7NOTETBL:
 	.DW	SN7RATIO / 5579         ; 
 	.DW	SN7RATIO / 5661         ; 
 	.DW	SN7RATIO / 5743         ; 
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_SN7	.EQU	$
+SIZ_SN7	.EQU	END_SN7 - ORG_SN7
+;	
+	MEMECHO	"SN7 occupies "
+	MEMECHO	SIZ_SN7
+	MEMECHO	" bytes.\n"

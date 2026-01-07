@@ -49,6 +49,23 @@ KBD_KEYRDY	.EQU	80H	; BIT 7, INDICATES A DECODED KEYCODE IS READY
 KBD_DEFRPT	.EQU	$40		; DEFAULT REPEAT RATE (.5 SEC DELAY, 30CPS)
 KBD_DEFSTATE	.EQU	KBD_NUMLCK	; DEFAULT STATE (NUM LOCK ON)
 KBD_ACK		.EQU	$FA		; CMD ACKNOWLEDGE
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_KBD	.EQU	$
+;
+	.DW	SIZ_KBD			; MODULE SIZE
+	.DW	KBD_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+KBD_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,KBD_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,KBD_INIT		; DO INIT
+	RET				; DONE
 ;__________________________________________________________________________________________________
 ; DATA
 ;__________________________________________________________________________________________________
@@ -939,3 +956,14 @@ KBD_MAPNUMPAD:    ; KEYCODE TRANSLATION FROM NUMPAD RANGE TO STD ASCII/KEYCODES
 ; SLEEP		$FB
 ; WAKE		$FC
 ; BREAK		$FD
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_KBD	.EQU	$
+SIZ_KBD	.EQU	END_KBD - ORG_KBD
+;	
+	MEMECHO	"KBD occupies "
+	MEMECHO	SIZ_KBD
+	MEMECHO	" bytes.\n"

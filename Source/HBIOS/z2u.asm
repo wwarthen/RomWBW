@@ -67,6 +67,23 @@ Z2U_BUFSZ	.EQU	144		; RECEIVE RING BUFFER SIZE
 Z2U_NONE	.EQU	0		; NOT PRESENT
 Z2U_PRESENT	.EQU	1		; PRESENT
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_Z2U	.EQU	$
+;
+	.DW	SIZ_Z2U			; MODULE SIZE
+	.DW	Z2U_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+Z2U_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,Z2U_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,Z2U_INIT		; DO INIT
+	RET				; DONE
+;
 ;
 ;
 Z2U_PREINIT:
@@ -725,3 +742,14 @@ Z2U0_CFG:
 Z2U_CFGSIZ	.EQU	$ - Z2U_CFG	; SIZE OF ONE CFG TABLE ENTRY
 ;
 Z2U_CFGCNT	.EQU	($ - Z2U_CFG) / Z2U_CFGSIZ
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_Z2U	.EQU	$
+SIZ_Z2U	.EQU	END_Z2U - ORG_Z2U
+;	
+	MEMECHO	"Z2U occupies "
+	MEMECHO	SIZ_Z2U
+	MEMECHO	" bytes.\n"

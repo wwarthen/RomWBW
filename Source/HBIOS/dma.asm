@@ -23,7 +23,7 @@ DMA_CTL		.EQU	DMABASE + 3
 DMA_USEHALF	.EQU	FALSE
 	DEVECHO	"DUO"
 #ENDIF
-;S
+;
 	DEVECHO	", IO="
 	DEVECHO	DMA_IO
 	DEVECHO	"\n"
@@ -69,6 +69,23 @@ DMA_FORCE			.EQU	0
   #DEFINE DMAIOHALF \;
   #DEFINE DMAIOFULL \;
 #ENDIF
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_DMA	.EQU	$
+;
+	.DW	SIZ_DMA			; MODULE SIZE
+	.DW	DMA_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+DMA_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,DMA_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,DMA_INIT		; DO INIT
+	RET				; DONE
 ;
 ;==================================================================================================
 ; DMA INITIALIZATION CODE
@@ -360,3 +377,14 @@ DMARegDump:
 	call	NEWLINE
 	ret
 #ENDIF
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_DMA	.EQU	$
+SIZ_DMA	.EQU	END_DMA - ORG_DMA
+;	
+	MEMECHO	"DMA occupies "
+	MEMECHO	SIZ_DMA
+	MEMECHO	" bytes.\n"

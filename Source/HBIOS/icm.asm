@@ -43,6 +43,23 @@ ICM_COLS	.EQU	8		; DISPLAY COLUMNS
 	DEVECHO	ICM_ROWS
 	DEVECHO	"\n"
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_ICM	.EQU	$
+;
+	.DW	SIZ_ICM		; MODULE SIZE
+	.DW	ICM_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+ICM_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,ICM_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,ICM_INIT		; DO INIT
+	RET				; DONE
+;
 ;__ICM_INIT________________________________________________________________________________________
 ;
 ;  CONFIGURE PARALLEL PORT AND CLEAR KEYPAD BUFFER
@@ -542,3 +559,14 @@ ICM_MSG_LDR_LOAD	.DB	$0B,$1D,$7E,$3D,$80,$80,$80,$00	; "Load... "
 ICM_MSG_LDR_GO		.DB	$5F,$1D,$80,$80,$80,$00,$00,$00	; "Go...   "
 ICM_MSG_MON_RDY		.DB	$04,$4B,$6E,$3B,$00,$3B,$6E,$04	; "-CPU UP-"
 ICM_MSG_MON_BOOT	.DB	$7F,$1D,$1D,$0F,$B0,$00,$00,$00	; "Boot!   "
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_ICM	.EQU	$
+SIZ_ICM	.EQU	END_ICM - ORG_ICM
+;	
+	MEMECHO	"ICM occupies "
+	MEMECHO	SIZ_ICM
+	MEMECHO	" bytes.\n"

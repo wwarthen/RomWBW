@@ -31,6 +31,23 @@ NABUKB_BUFSZ	.EQU	16		; RECEIVE RING BUFFER SIZE
 	DEVECHO	NABUKB_IODAT
 	DEVECHO	"\n"
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_NABUKB	.EQU	$
+;
+	.DW	SIZ_NABUKB		; MODULE SIZE
+	.DW	NABUKB_INITPHASE	; ADR OF INIT PHASE HANDLER
+;
+NABUKB_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,NABUKB_PREINIT	; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,NABUKB_INIT		; DO INIT
+	RET				; DONE
+;
 ; INITIALZIZE THE KEYBOARD CONTROLLER.
 ;
 NABUKB_INIT:
@@ -354,3 +371,14 @@ NABUKB_XTBL:
 	.DB	$00		; $FD, N/A
 	.DB	$00		; $FE, N/A
 	.DB	$00		; $FF, N/A
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_NABUKB	.EQU	$
+SIZ_NABUKB	.EQU	END_NABUKB - ORG_NABUKB
+;	
+	MEMECHO	"NABUKB occupies "
+	MEMECHO	SIZ_NABUKB
+	MEMECHO	" bytes.\n"

@@ -7,6 +7,24 @@ EZ80RTC_BUFSIZ	.EQU	6	; SIX BYTE BUFFER (YYMMDDHHMMSS)
 ;
 ; RTC DEVICE INITIALIZATION ENTRY
 
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_EZ80RTC	.EQU	$
+;
+	.DW	SIZ_EZ80RTC		; MODULE SIZE
+	.DW	EZ80RTC_INITPHASE	; ADR OF INIT PHASE HANDLER
+;
+EZ80RTC_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,EZ80RTC_PREINIT	; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,EZ80RTC_INIT		; DO INIT
+	RET				; DONE
+
 EZ80RTC_INIT:
 	; display driver install message
 	; delegate init function to firmware
@@ -171,3 +189,14 @@ EZ80RTC_DT	.DB	01
 EZ80RTC_HH	.DB	00
 EZ80RTC_MM	.DB	00
 EZ80RTC_SS	.DB	00
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_EZ80RTC	.EQU	$
+SIZ_EZ80RTC	.EQU	END_EZ80RTC - ORG_EZ80RTC
+;	
+	MEMECHO	"EZ80RTC occupies "
+	MEMECHO	SIZ_EZ80RTC
+	MEMECHO	" bytes.\n"

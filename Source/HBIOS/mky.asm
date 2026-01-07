@@ -155,6 +155,24 @@ S_INSERT	.EQU	$00	; E0 70 --- E0 F0 70
 S_HOME		.EQU	$00	; E0 6C --- E0 F0 6C
 S_SPACE		.EQU	$29
 
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_MKY	.EQU	$
+;
+	.DW	SIZ_MKY		; MODULE SIZE
+	.DW	MKY_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+MKY_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,MKY_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,MKY_INIT		; DO INIT
+	RET				; DONE
+
 SCANCODE_TBL:
 	.DB	S_7, 		S_6, 		S_5, 		S_4, 		S_3, 		S_2, 		S_1, 		S_0		; 00
 	.DB	S_SEMICOLON, 	S_RBRACKET, 	S_LBRACKET, 	S_BSLASH, 	S_EQUALS, 	S_MINUS, 	S_9, 		S_8		; 01
@@ -1170,3 +1188,14 @@ MKY_MAPEXT: ; PAIRS ARE [SCANCODE,KEYCODE] FOR EXTENDED SCANCODES
 ; SLEEP		$FB
 ; WAKE		$FC
 ; BREAK		$FD
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_MKY	.EQU	$
+SIZ_MKY	.EQU	END_MKY - ORG_MKY
+;	
+	MEMECHO	"MKY occupies "
+	MEMECHO	SIZ_MKY
+	MEMECHO	" bytes.\n"
