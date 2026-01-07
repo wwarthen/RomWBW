@@ -659,7 +659,7 @@
 <p><strong>RomWBW System Guide</strong> \
 Version 3.6 \
 Wayne Warthen  (<a href="mailto:wwarthen@gmail.com">wwarthen@gmail.com</a>) \
-05 Jan 2026</p>
+07 Jan 2026</p>
 <h1 id="overview">Overview</h1>
 <p>The objective of RomWBW is to provide firmware, operating systems, and
 applications targeting the Z80 family of CPUs. The firmware, in the form
@@ -6493,6 +6493,8 @@ result code.</p>
 performed. It includes the Boot Bank ID (L), the Boot Disk Unit (D), and
 the Boot Disk Slice (E). The returned Status (A) is a standard HBIOS
 result code.</p>
+<p>This information is recorded in the HCB. HCB_BOOTBID is set to the Boot
+Bank ID (L) and HCB_BOOTVOL is set to the BootDisk Unit/Slice (DE).</p>
 <h4 id="sysset-subfunction-0xf3-set-cpu-speed-cpuspd">SYSSET Subfunction 0xF3 – Set CPU Speed (CPUSPD)</h4>
 <table>
 <thead>
