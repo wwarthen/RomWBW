@@ -17,17 +17,37 @@ P2_SEG  	.equ	$f2c9	          	; current segment page 2 (MSX-DOS 2)
 CSRSW		.equ	$fca9			; cursor on/off flag
 MNROM		.equ	$fcc1			; main system rom slot
 H_TIMI		.equ	$fd9f			; timer interrupt hook (vdp vsync)
+HB_IDENT	.equ	$fffc			; pointer to HBIOS ident data block
  
 ; ------------------------------------------------------------------------------
 		
 		.ORG	$100
 
+		jp	main
+
+		.db	13,10
+		.db	"MSX ROMWBW LOADER V0.2",13,10
+		.db	26
+		
+main:		call	check_ident		; running from RomWBW?
+		jp	z,0			; z=yes,silently end program
+		
 		; copy loader to page 3 and run it there
 		ld	hl,LSTART
 		ld	de,$c000
 		ld	bc,LSIZE
 		ldir
 		jp	$c000
+
+; Check for RomWBW HBIOS
+check_ident:	ld	hl,(HB_IDENT)
+		ld	a,'W'
+		cp	(hl)
+		ret	nz
+		inc	hl
+		ld	a,~'W'
+		cp	(hl)
+		ret
 
 LSTART:
 		
@@ -224,7 +244,6 @@ _restore2:	ld	a,$01
 		out	($fe),a
 		ld	a,b
 		ret
-		
 		
 ; ---------------------------------------------------------
 ; Handle errors reading rom file
