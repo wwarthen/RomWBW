@@ -8891,6 +8891,15 @@ HB_PRTSUM_END	.EQU	$
 ;   DEVICE DRIVERS
 ;==================================================================================================
 ;
+; *** ORDER OF MODULES INCLUDED BELOW MATTERS!!! ***
+;
+; THE ORDER OF INCLUSION BELOW DICTATES THE ORDER IN WHICH THE INIT
+; HANDLER OF EACH MODULE IS CALLED.  THE ORDER THAT DRIVERS ARE
+; REGISTERED IS AFFECTED BY THIS.
+;
+; EACH MODULE INCLUDED BELOW **MUST** HAVE THE STANDARD MODULE HEADER
+; AND TRAILER.
+;
 HB_DRIVERS_BEG	.EQU	$
 ;
 HB_MODSTART	.EQU	$
@@ -8909,8 +8918,6 @@ HB_MODSTART	.EQU	$
 ;  - EZ80SYSTMP
 ;
 #IF (CPUFAM == CPU_EZ80)
-;;;;	MEMECHO	"EZ80 DRIVERS\n"
-;;;ORG_EZ80DRVS	.EQU	$
   #INCLUDE "ez80cpu.asm"
 #ENDIF
 ;
@@ -8939,7 +8946,6 @@ HB_MODSTART	.EQU	$
 #ENDIF
 ;
 #IF (CPUFAM == CPU_EZ80)
-;;;	MEMECHO	"EZ80 DRIVERS\n"
   #INCLUDE "ez80tmr.asm"
 #ENDIF
 ;
@@ -9232,10 +9238,12 @@ HB_MODSTART	.EQU	$
 ;   TERMINAL MODULES
 ;--------------------------------------------------------------------------------------------------
 ;
-;  - TERM
+; NOTE: TERM MODULE IS ALWAYS INCLUDED!!!  CONDITIONALS IN THE TERM
+; DRIVER SOURCE DETERMINE THE CODE THAT IS ACTUALLY INCLUDED.
 ;
-; TERM IS ALWAYS INCLUDED
-#INCLUDE "term.asm"
+#IF (TRUE)
+  #INCLUDE "term.asm"
+#ENDIF
 ;
 ;--------------------------------------------------------------------------------------------------
 ;   DISK / STORAGE MODULES
