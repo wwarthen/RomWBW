@@ -8,3 +8,5 @@ if exist *.hex del *.hex
 if exist *.rel del *.rel
 if exist *.sym del *.sym
 if exist *.com del *.com
+
+if exist msximg rd /s /q msximg

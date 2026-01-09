@@ -1,0 +1,15 @@
+@Label="MSX System"
+@SysImage="../ZSDOS/zsys_wbw.sys"
+#
+# Add the ReadMe document
+#
+d_msx/Readme.txt 0:
+#
+# Add CP/M 2.2 commands
+#
+d_cpm22/u0/submit.com 0:
+#
+# Add RomWBW utilities
+#
+../../Binary/Apps/fat.com 0:
+../../Binary/Apps/reboot.com 0:

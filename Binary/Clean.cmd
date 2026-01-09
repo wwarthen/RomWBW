@@ -5,6 +5,7 @@ if exist *.bin del *.bin
 if exist *.dat del *.dat
 if exist *.com del *.com
 if exist *.img del *.img
+if exist *.dsk del *.dsk
 if exist *.rom del *.rom
 if exist *.hex del *.hex
 if exist *.upd del *.upd
