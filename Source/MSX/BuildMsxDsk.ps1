@@ -41,10 +41,10 @@ Expand-Archive -Force -Path msximg.zip
 
 # Populate FAT system partition
 
-&"mtools" -c copy -i msximg\msx_sys.dsk -omv d_fat\*.* ::
-&"mtools" -c copy -i msximg\msx_sys.dsk -omv ..\..\Binary\MSX_std.rom ::MSX-STD.ROM
-&"mtools" -c copy -i msximg\msx_sys.dsk -omv ..\..\Binary\msx-ldr.com ::MSX-LDR.COM
-&"mtools" -c copy -i msximg\msx_sys.dsk -omv ..\..\Binary\Apps\reboot.com ::REBOOT.COM
+&"mtools" -c mcopy -i msximg\msx_sys.dsk -omv d_fat\*.* ::
+&"mtools" -c mcopy -i msximg\msx_sys.dsk -omv ..\..\Binary\MSX_std.rom ::MSX-STD.ROM
+&"mtools" -c mcopy -i msximg\msx_sys.dsk -omv ..\..\Binary\msx-ldr.com ::MSX-LDR.COM
+&"mtools" -c mcopy -i msximg\msx_sys.dsk -omv ..\..\Binary\Apps\reboot.com ::REBOOT.COM
 
 $FileList = "msximg\msx_mbr.dat +" + $FileList + "+ msximg\msx_sys.dsk + msximg\msx_data.dsk"
 
