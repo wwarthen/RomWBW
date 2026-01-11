@@ -19,12 +19,8 @@ image.
 Usage
 -----
 
-1. Copy the Source folder into the RomWBW folder.
-2. Download mtools for Windows: https://github.com/YawHuei/mtools_win32 
-3. Copy the mtools executables into the (new) RomWBW\Tools\mtools folder
-4. Run the RomWBW build script for your platform e.g. "build msx std"
-   or "build rcz80 std"
-5. In the Source\MSX folder run "BuildMsxDsk.cmd"
+First run the RomWBW build script for your platform e.g. "build msx std"
+or "build rcz80 std" then in the Source\MSX folder run "BuildMsxDsk.cmd"
 
 If the scripts run successfully the Binary\msx_combo.dsk file is created.
 
@@ -46,7 +42,3 @@ RomWBW this will be the A-drive.
 
 The FAT16 data partition is a formatted empty partition.
 If the MSX system is started from RomWBW this will be the B-drive.
-
-Note
-----
-This is a work in progress and subject to change without notice.
