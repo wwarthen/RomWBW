@@ -8915,7 +8915,7 @@ HB_MODSTART	.EQU	$
 ;  - PCF
 ;  - DMA
 ;  - NABU
-;  - EZ80SYSTMP
+;  - EZ80TMR
 ;
 #IF (CPUFAM == CPU_EZ80)
   #INCLUDE "ez80cpu.asm"
@@ -9019,6 +9019,7 @@ HB_MODSTART	.EQU	$
 ;  - ACIA
 ;  - SSER
 ;  - DLPSER
+;  - SCON
 ;  - UF
 ;
 #IF (ASCIENABLE)
@@ -9063,6 +9064,10 @@ HB_MODSTART	.EQU	$
 ;
 #IF (DLPSERENABLE)
   #INCLUDE "dlpser.asm"
+#ENDIF
+;
+#IF (SCONENABLE)
+  #INCLUDE "scon.asm"
 #ENDIF
 ;
 #IF (UFENABLE)
@@ -9330,15 +9335,9 @@ HB_MODSTART	.EQU	$
 ;   MULTI-FUNCTION MODULES
 ;--------------------------------------------------------------------------------------------------
 ;
-;  - SCON
-;  - PRP
-;  - PPP
-;  - ESP
-;
-;
-#IF (SCONENABLE)
-  #INCLUDE "scon.asm"
-#ENDIF
+;  - PRP (PRPCON, PRPSD)
+;  - PPP (PPPCON, PPPSD)
+;  - ESP (ESPCON, ESPSER)
 ;
 #IF (PRPENABLE)
   #INCLUDE "prp.asm"

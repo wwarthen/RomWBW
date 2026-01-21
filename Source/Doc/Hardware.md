@@ -122,7 +122,7 @@ Others
 | [NABU w/ RomWBW Option Board]^5^                            | NABU     | NABU_std.rom                |        115200 |
 | [S100 Computers Z180 SBC]^4^                                | S100     | SZ180_std.rom               |         57600 |
 | [S100 Computers Z80 CPU]^4^                                 | S100     | SZ80_std.rom                |         19200 |
-| [S100 Computers T35 FPGA Z80 SBC]^4^                        | S100     | SZ80_t35.rom                |          9600 |
+| [S100 Computers T35 FPGA Z80 SBC]^4^                        | S100     | SZ80_t35_std.rom            |          9600 |
 | [UNA Hardware BIOS]^1^                                      | -        | UNA_std.rom                 |             - |
 | [Z80-Retro SBC]^3^                                          | -        | Z80RETRO_std.rom            |         38400 |
 | [Z180 Mark IV SBC]^1^                                       | ECB      | MK4_std.rom                 |         38400 |
@@ -478,7 +478,7 @@ A T35 FPGA Z80 based S100 SBC
 * Creator: John Monahan
 * Website: [S100 Computers FPGA Z80 SBC](http://www.s100computers.com/My%20System%20Pages/FPGA%20Z80%20SBC/FPGA%20Z80%20SBC.htm)
 
-#### ROM Image File:  SZ80_t35.rom
+#### ROM Image File:  SZ80_t35_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -528,7 +528,7 @@ A T35 FPGA Z80 based S100 SBC
   See website for dip switch settings.
 
 - RomWBW is loaded by the S100 monitor from either CF Card or SD Card.
-  The CF/SD Card should be imaged using SZ80_t35_hd1k_combo.img which
+  The CF/SD Card should be imaged using SZ80_t35_std_hd1k_combo.img which
   includes RomWBW.
 
 `\clearpage`{=latex}

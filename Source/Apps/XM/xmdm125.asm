@@ -50,6 +50,10 @@ VYEAR	EQU	86
 NO	EQU	0
 YES	EQU	NOT NO
 ;
+; Add debugging code?
+;
+DEBUG	EQU	NO
+;
 ; Define ASCII characters used
 ;
 BS	EQU	08H	; Backspace character
@@ -2258,7 +2262,14 @@ RCVRPT:	 IF	CONFUN		; Check for function key?
 	CALL	RECV		; Get any character received
 	JC	RCVSTOT		; Timeout
 ;
-RCVRPTB:CPI	SOH		; 'SOH' for a 128-byte block?
+RCVRPTB:
+	IF	DEBUG
+	CALL	ILPRT
+	DB	CR,LF,0
+	CALL	PRTHEXBYTE
+	ENDIF
+
+	CPI	SOH		; 'SOH' for a 128-byte block?
 	JZ	RCVSOH		; Yes
 	CPI	STX		; A 1024-byte block?
 	JZ	RCVSTX		;
@@ -2343,7 +2354,13 @@ DELFILE:LXI	D,FCB		; Point to file
 ;
 ;RCVSTOT:JMP	RCVSERR		; Bump error count, etc.
 ; [WBW] Bypass line flush if error is timeout
-RCVSTOT:JMP	RCVSER1		; Bump error count, etc.
+RCVSTOT:
+	IF	DEBUG
+	CALL	ILPRT
+	DB	'Timeout',CR,LF,0
+	ENDIF
+
+	JMP	RCVSER1		; Bump error count, etc.
 ;
 ; Got SOH or STX - get block number, block number complemented
 ;
@@ -2360,10 +2377,16 @@ RCVHDR:	SHLD	BLKSIZ		; Store block size for later
 	MVI	A,1		; Need something to store at FRSTIM
 	STA	FRSTIM		; Indicate first 'SOH' received
 	CALL	RECV		; Get record
+	IF	DEBUG
+	CALL	PRTHEXBYTE
+	ENDIF
 	JC	RCVSTOT		; Got timeout
 	MOV	D,A		; D=block number
 	MVI	B,1		; Timeout = 1 sec
 	CALL	RECV		; Get complimented record number
+	IF	DEBUG
+	CALL	PRTHEXBYTE
+	ENDIF
 	JC	RCVSTOT		; Timeout
 	CMA			; Calculate the  complement
 	CMP	D		; Good record number?
@@ -2383,6 +2406,9 @@ RCVDATA:MOV	A,D		; Get record number
 ;
 RCVCHR:	MVI	B,1		; 1 sec timeout
 	CALL	RECV		; Get the character
+	IF	DEBUG
+	CALL	PRTHEXBYTE
+	ENDIF
 	JC	RCVSTOT		; Timeout
 	MOV	M,A		; Store the character
 	INX	H		; Point to next character
@@ -2421,15 +2447,30 @@ CHKSNUM:LDA	RCVRNO		; Get received
 ; record, else send a NAK requesting the record be sent again.
 ;
 RCVCRC:	MVI	E,2		; Number of bytes to receive
+	IF	DEBUG
+	CALL	ILPRT
+	DB	CR,LF,0
+	ENDIF
 ;
 RCVCRC2:MVI	B,1		; 1 sececond timeout
 	CALL	RECV		; Get crc byte
+	IF	DEBUG
+	CALL	PRTHEXBYTE
+	ENDIF
 	JC	RCVSTOT		; Timeout
 	DCR	E		; Decrement the number of bytes
 	JNZ	RCVCRC2		; Get both bytes
+	IF	DEBUG
+	CALL	ILPRT
+	DB	CR,LF,0
+	ENDIF
 	CALL	CHKCRC		; Check received CRC against calc'd CRC
 	ORA	A		; Is CRC okay?
 	JZ	CHKSNUM		; Yes, go check record numbers
+	IF	DEBUG
+	CALL	ILPRT
+	DB	'CRC Err',CR,LF,0
+	ENDIF
 	JMP	RCVSERR		; Go check error limit and send NAK
 ;
 ; Previous record repeated, due to the last ACK being garbaged.  ACK it
@@ -4267,6 +4308,51 @@ DKIND:	LDAX	D		; Get the character from the string
 DKIND1:	LDA	KIND		; Get the kind of file back
 	RET			; Finished
 	 ENDIF
+;
+	IF	DEBUG
+;
+; PRINT THE HEX BYTE VALUE IN A
+;
+PRTHEXBYTE:
+	PUSH	PSW
+	PUSH	D
+	CALL	HEXASCII
+	MOV	A,D
+	CALL	CTYPE
+	MOV	A,E
+	CALL	CTYPE
+	POP	D
+	POP	PSW
+	RET
+
+;
+; CONVERT BINARY VALUE IN A TO ASCII HEX CHARACTERS IN DE
+;
+HEXASCII:
+	MOV	D,A
+	CALL	HEXCONV
+	MOV	E,A
+	MOV	A,D
+	RLC
+	RLC
+	RLC
+	RLC
+	CALL	HEXCONV
+	MOV	D,A
+	RET
+;
+; CONVERT LOW NIBBLE OF A TO ASCII HEX
+;
+HEXCONV:
+	ANI	0FH	     ;LOW NIBBLE ONLY
+	ADI	90H
+	DAA
+	ACI	40H
+	DAA
+	RET
+;
+	ENDIF
+;
 ;.....
 ;
 ;-----------------------------------------------------------------------
@@ -4499,15 +4585,19 @@ NIBBL:	ANI	0FH		; Isolate digit
 ; Inline print of message, terminates with a 0
 ;
 ILPRT:	XTHL			; Save HL, get HL=message
+	PUSH	PSW		; Save accum/flags
 ;
-ILPLP:	MOV	A,M		; Get the character
+ILPLP:	
+	MOV	A,M		; Get the character
 	INX	H		; To next character
 	ORA	A		; End of message?
 	JZ	ILPRET		; Yes, return
 	CALL	CTYPE		; Type the message
 	JMP	ILPLP		; Loop
 ;
-ILPRET:	XTHL			; Restore HL
+ILPRET:
+	POP	PSW		; Restore accum/flags
+	XTHL			; Restore HL
 	RET			; Past message
 ;
 ; Exit printing message following call
@@ -4582,6 +4672,14 @@ MOVE:	MOV	A,M		; Get a character
 ;
 CHKCRC:	PUSH	H		; Check 'CRC' bytes of received message
 	LHLD	CRCVAL
+	
+	IF	DEBUG
+	MOV	A,H
+	CALL	PRTHEXBYTE
+	MOV	A,L
+	CALL	PRTHEXBYTE
+	ENDIF
+	
 	MOV	A,H
 	ORA	L
 	POP	H
