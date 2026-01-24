@@ -41,6 +41,28 @@ plt_type	.equ	sbcecb		; Select build configuration
 debug		.equ	0		; Display port, register, config info
 ;
 ;------------------------------------------------------------------------------
+; Configure timing loop
+;------------------------------------------------------------------------------
+;
+cpu_loop:	.equ	0
+ctc_poll:	.equ	1
+ctc_int:	.equ	2			; not implemented
+hbios_tmr:	.equ	3			; use hbios 50hz or 60hz timer to calculate a fdelay value (plt_romwbw must be set)
+;
+delay_type:	.equ	hbios_tmr		; cpu timed loop or utilize ctc
+delay_wait	.equ	0			; funny wait mode for ctc
+;
+D60		.equ	735			; 735x60=44100 Frame delay values for ntsc
+D50		.equ	882			; 882x50=44100 Frame delay values for pal
+
+#IF (delay_type==hbios_tmr)
+#IF (plt_romwbw!=1)
+## Assembly configuration Error
+## Must have plt_romwbw set, for delay_type==hbios_tmr
+#ENDIF
+#ENDIF
+;
+;------------------------------------------------------------------------------
 ; Platform specific definitions. If building for ROMWBW, these may be overridden
 ;------------------------------------------------------------------------------
 ; 
@@ -183,20 +205,6 @@ YMSEL		.equ	VGMBASE+00H	; Primary YM2162 11000000 a1=0 a0=0
 #ENDIF
 ;
 ;------------------------------------------------------------------------------
-; Configure timing loop 
-;------------------------------------------------------------------------------
-;
-cpu_loop:	.equ	0
-ctc_poll:	.equ	1
-ctc_int:	.equ	2			; not implemented
-;
-delay_type:	.equ	cpu_loop		; cpu timed loop or utilize ctc
-delay_wait	.equ	0			; funny wait mode for ctc
-;
-D60		.equ	735			; 735x60=44100 Frame delay values for ntsc
-D50		.equ	882			; 882x50=44100 Frame delay values for pal
-;
-;------------------------------------------------------------------------------
 ; CTC Defaults 
 ;------------------------------------------------------------------------------
 ;
@@ -308,7 +316,11 @@ LF              .equ    0AH                	; line feed
 ;
 		CALL	vgmsetup		; Device setup
 		call	welcome			; Welcome message and build debug info
+#IF (delay_type==hbios_tmr)
+		call	bcpu
+#ENDIF
 		call	vgmreadr		; read in the vgm file
+
 ;
 ;------------------------------------------------------------------------------
 ; Play loop
@@ -326,7 +338,7 @@ MAINLOOP	CALL    PLAY                	; Play one frame
                 OR      A
                 JR      NZ,EXIT
 NO_CHK:
-#IF (delay_type==cpu_loop)
+#IF ((delay_type==cpu_loop) | (delay_type==hbios_tmr))
 vdelay:		.equ	$+1
 		ld	hl,vdelay
 fdelay:		.equ	$+1
@@ -361,7 +373,7 @@ lp3:		in	a,(ctcch3)		; wait for counter to reach zero
 ;
 #IF (delay_type==ctc_int)
 #ENDIF
-;
+
                 JP      MAINLOOP
 ;
 ;------------------------------------------------------------------------------
@@ -431,7 +443,7 @@ HASEXT:         LD      C,OPENF			; Open File
                 LD      (FCBCR), A
                 LD      DE, VGMDATA
                 LD      (VGMPOS), DE
-RLOOP 
+RLOOP
 ;		LD	A,(TOPM)		; CBIOS start
 ;		SUB	10h			; Less BDOS = Top Memory Page
 		LD	A,$D6			; Hardcoded top of memory
@@ -1285,6 +1297,7 @@ MSG_TRACK	.DB	"Playing: ",0
 MSG_CPU		.DB	"[cpu]",0
 MSG_CTCPOLL	.DB	"[ctc polled]",0
 MSG_CTCINT	.DB	"[ctc interrupts]",0
+MSG_HBIOSTMR	.DB	"[hbios timer]",0
 
 MSG_ROMWBW	.DB	" [romwbw] ",0
 
@@ -1312,7 +1325,7 @@ VGM_DEV		.DB	%00000000	; IX+0 Flags for devices
 		.DB	%00000000	; IX+1 Unimplemented device flags & future devices
 ;
 OLDSTACK        .DW     0		; original stack pointer
-                .FILL	40H		; space for stack
+                .FILL	80H		; space for stack
 STACK		.DW	0		; top of stack
 
 ;------------------------------------------------------------------------------
@@ -1364,7 +1377,7 @@ welcome:	LD	DE,MSG_WELC		; Welcome Message
 		CALL	PRTSTR
 #ENDIF
 ;
-		LD	A,delay_type		; display build type
+		LD	A,delay_type		; display delay type
 		LD	DE,MSG_CPU
 		CALL	PRTIDXDEA
 ;
@@ -1374,7 +1387,7 @@ welcome:	LD	DE,MSG_WELC		; Welcome Message
 		call	CRLF
 ;
 #IF (debug)
-#IF (delay_type==cpu_loop)
+#IF ((delay_type==cpu_loop) | (delay_type==hbios_tmr))
 		ld	a,'f'			; Display frame rate delay
 		call	PRTCHR
 		call	PRTDOT
@@ -1407,6 +1420,146 @@ welcome:	LD	DE,MSG_WELC		; Welcome Message
 #ENDIF
 		CALL	CRLF
 		ret
+
+
+#IF (delay_type==hbios_tmr)
+bcpu:
+		CALL	hbios_tmr_enabled
+		JP	z, setfdelay
+
+		LD	DE, MSG_BENCHMARK
+		CALL	PRTSTR
+
+	;	 get current timer tick value
+		LD	BC, $F8D0		; GET TIMER TICKS
+		RST	08			; FROM HBIOS
+		; hl is current timer tick value
+		; c is freq
+		LD	A, L
+		PUSH	AF
+
+		; sync to next timer tick
+		; or timeout if there is no timer
+bc1:
+		LD	BC, $F8D0		; GET TIMER TICKS
+		RST	08			; FROM HBIOS
+
+		POP	AF
+		PUSH	AF
+		CP	L
+		JR	Z, bc1
+
+		POP	AF
+		LD	H, L
+		PUSH	HL			; save current tick value
+
+		LD	B, 0
+		LD	HL, 2000
+bc2:
+		DJNZ	$
+
+		DEC	HL
+		LD	A, H
+		OR	L
+		JR	NZ, bc2
+
+		LD	BC, $F8D0		; GET TIMER TICKS
+		RST	08			; FROM HBIOS
+
+		LD	A, L
+		POP	HL
+		; h is starting timer tick
+		; a is current timer tick
+
+		; calculate a-l
+		SUB	L
+#IF (debug)
+		CALL	CRLF
+		CALL	PRTDOT
+		CALL	PRTDECB
+		CALL	PRTDOT
+#ENDIF
+		; c is TICKFREQ
+		; conversion rates are 50Hz -> 580, 60Hz -> 697
+
+		LD	HL, 580
+		PUSH	AF
+		LD	A, C
+		CP	50
+		JR	Z, bc3
+		LD	HL, 697
+bc3:
+		POP	AF
+		LD	C, A
+		CALL	divide_16_by_8
+
+		LD	A, L
+#IF (debug)
+		CALL	PRTDECB
+#ENDIF
+		CALL	CRLF
+
+		LD	(fdelay), A
+		RET
+
+	; determine if hbios's timer is installed
+	; returns:
+	;   A == 0 & Z if no timer
+	;   A != 0 & NZ if timer
+hbios_tmr_enabled:
+		LD	BC, $F8D0		; GET TIMER TICKS
+		RST	08			; FROM HBIOS
+
+		PUSH	HL			; save current ticks
+
+		; loop for a bit
+		LD	B, 0
+		LD	HL, 500
+tme1:
+		DJNZ	$
+
+		DEC	HL
+		LD	A, H
+		OR	L
+		JR	NZ, tme1
+
+		LD	BC, $F8D0		; GET TIMER TICKS
+		RST	08			; FROM HBIOS
+
+		LD	A, L
+		POP	HL
+
+		; if a == l  then probably no timer
+		SUB	L
+		RET
+
+; c = divisor
+; hl = dividend
+; a <- remainder
+; c <- divisor unchanged
+; hl <- quotient
+divide_16_by_8:
+		XOR 	A
+		LD 	B, 16
+div_loop:
+		ADD	HL, HL
+		RLA
+		JR	C, div_overflow
+		CP	C
+		JR	C, div_zero
+div_overflow:
+		INC	L
+		SUB	C
+div_zero:
+		DJNZ 	div_loop
+		RET
+
+MSG_BENCHMARK:
+		.DB	"Benchmarking CPU ...", 0
+
+#ENDIF
+
+
 ;
 ;------------------------------------------------------------------------------
 ; Probe HBIOS for devices and patch in I/O ports for devices
@@ -1418,8 +1571,8 @@ cfgports:	ret
 ; Setup frame delay value - Loop count for DJNZ $ loop
 ;------------------------------------------------------------------------------
 ;
+#IF ((delay_type==cpu_loop) | (delay_type==hbios_tmr))
 setfdelay:
-#IF (delay_type==cpu_loop)
 #IF (plt_romwbw)
 		LD	BC,$F8F0		; GET CPU SPEED
 		RST	08			; FROM HBIOS
