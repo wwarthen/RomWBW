@@ -162,6 +162,23 @@ DS2d8k		.EQU	%10101011	; 2 DIODES 8K RESISTOR
 ;
 DSRTC_BUFSIZ	.EQU	7		; 7 BYTE BUFFER (YYMMDDHHMMSSWW)
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_DSRTC	.EQU	$
+;
+	.DW	SIZ_DSRTC		; MODULE SIZE
+	.DW	DSRTC_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+DSRTC_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,DSRTC_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,DSRTC_INIT		; DO INIT
+	RET				; DONE
+;
 ; RTC DEVICE PRE-INITIALIZATION ENTRY
 ;
 DSRTC_PREINIT:
@@ -765,3 +782,14 @@ DSRTC_TIMBUF	.FILL	6,0		; 6 BYTES FOR GETTIM
 DSRTC_TIMDEF:	; DEFAULT TIME VALUE TO INIT CLOCK
 		.DB	$00,$01,$01	; 2000-01-01
 		.DB	$00,$00,$00	; 00:00:00
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_DSRTC	.EQU	$
+SIZ_DSRTC	.EQU	END_DSRTC - ORG_DSRTC
+;	
+	MEMECHO	"DSRTC occupies "
+	MEMECHO	SIZ_DSRTC
+	MEMECHO	" bytes.\n"

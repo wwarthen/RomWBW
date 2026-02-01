@@ -18,6 +18,24 @@ FIFO_STATUS     .EQU	(UFBASE+1)	; READ/WRITE STATUS
 FIFO_SEND_IMM   .EQU	(UFBASE+2)	; WRITE PORT TO FORCE BUFFER FLUSH
 FIFO_BUFFER	.EQU	FALSE		; OPTION TO BUFFER OUTPUT FOR 17ms
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_UF	.EQU	$
+;
+	.DW	SIZ_UF			; MODULE SIZE
+	.DW	UF_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+UF_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,UF_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,UF_INIT		; DO INIT
+	RET				; DONE
+
+;
 UF_USB_ACTIVE	.DB	0		; USB CABLE CONNECTED STATUS FLAG
 ;
 ; DEVICE DESCRIPTION TABLE
@@ -187,3 +205,14 @@ UF_FNTBL:
 	.ECHO	"*** INVALID USB-FIFO FUNCTION TABLE ***\n"
 #ENDIF
 ;
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_UF	.EQU	$
+SIZ_UF	.EQU	END_UF - ORG_UF
+;	
+	MEMECHO	"UF occupies "
+	MEMECHO	SIZ_UF
+	MEMECHO	" bytes.\n"

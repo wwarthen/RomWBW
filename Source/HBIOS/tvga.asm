@@ -52,6 +52,23 @@ KBDENABLE	.SET	TRUE		; INCLUDE KBD KEYBOARD SUPPORT
 		DEVECHO	TVGA_KBDDATA
 		DEVECHO	"\n"
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_TVGA	.EQU	$
+;
+	.DW	SIZ_TVGA		; MODULE SIZE
+	.DW	TVGA_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+TVGA_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,TVGA_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,TVGA_INIT		; DO INIT
+	RET				; DONE
+;
 ;======================================================================
 ; TRION VGA DRIVER - INITIALIZATION
 ;======================================================================
@@ -505,3 +522,14 @@ TVGA_IDAT:
 	.DB	KBDMODE_T35	; S100 T35 KEYBOARD CONTROLLER
 	.DB	TVGA_KBDST
 	.DB	TVGA_KBDDATA
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_TVGA	.EQU	$
+SIZ_TVGA	.EQU	END_TVGA - ORG_TVGA
+;	
+	MEMECHO	"TVGA occupies "
+	MEMECHO	SIZ_TVGA
+	MEMECHO	" bytes.\n"

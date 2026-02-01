@@ -35,6 +35,26 @@ PPK_KEYRDY	.EQU	80H	; BIT 7, INDICATES A DECODED KEYCODE IS READY
 PPK_DEFRPT	.EQU	$40		; DEFAULT REPEAT RATE (.5 SEC DELAY, 30CPS)
 PPK_DEFSTATE	.EQU	KBD_NUMLCK	; DEFAULT STATE (NUM LOCK ON)
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_PPK	.EQU	$
+;
+	.DW	SIZ_PPK			; MODULE SIZE
+	.DW	PPK_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+; WARNING: KEYBOARD DRIVERS ARE INITIALIZED BY VDA DRIVERS
+; AND SHOULD NOT BE INITIALIZED BY INITPHASE CALLS.
+;
+PPK_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,PPK_PREINIT		; DO PREINIT
+	;CP	HB_PHASE_INIT		; INIT PHASE?
+	;JP	Z,PPK_INIT		; DO INIT
+	RET				; DONE
+;
 ;__________________________________________________________________________________________________
 ; DATA
 ;__________________________________________________________________________________________________
@@ -903,3 +923,14 @@ PPK_MAPNUMPAD:    ; KEYCODE TRANSLATION FROM NUMPAD RANGE TO STD ASCII/KEYCODES
 ; SLEEP		$FB
 ; WAKE		$FC
 ; BREAK		$FD
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_PPK	.EQU	$
+SIZ_PPK	.EQU	END_PPK - ORG_PPK
+;	
+	MEMECHO	"PPK occupies "
+	MEMECHO	SIZ_PPK
+	MEMECHO	" bytes.\n"

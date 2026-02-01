@@ -56,11 +56,11 @@ AY_ACR		.EQU	N8_ACR
 		DEVECHO	"N8PC"
 #ENDIF
 ;
-#IF (AYMODE == AYMODE_RCZ80)
+#IF (AYMODE == AYMODE_RC2014)
 AY_RSEL		.EQU	$D8
 AY_RDAT		.EQU	$D0
 AY_RIN		.EQU	AY_RSEL+AY_RCSND
-		DEVECHO	"RCZ80"
+		DEVECHO	"RC2014"
 #ENDIF
 ;
 #IF (AYMODE == AYMODE_RCZ180)
@@ -121,6 +121,23 @@ AY_R2CHBP	.EQU	$02
 AY_R3CHBP	.EQU	$03
 AY_R7ENAB	.EQU	$07
 AY_R8AVOL	.EQU	$08
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_AY	.EQU	$
+;
+	.DW	SIZ_AY			; MODULE SIZE
+	.DW	AY_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+AY_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,AY38910_PREINIT	; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,AY38910_INIT		; DO INIT
+	RET				; DONE
 ;
 ;======================================================================
 ;
@@ -183,8 +200,8 @@ AY38910_INIT:
 	PRTS(" MODE=N8PC$")
 #ENDIF
 ;
-#IF (AYMODE == AYMODE_RCZ80)
-	PRTS(" MODE=RCZ80$")
+#IF (AYMODE == AYMODE_RC2014)
+	PRTS(" MODE=RC2014$")
 #ENDIF
 ;
 #IF (AYMODE == AYMODE_RCZ180)
@@ -647,3 +664,14 @@ AY3NOTETBL:
 	.DW	AY_RATIO / 5579		;
 	.DW	AY_RATIO / 5661		;
 	.DW	AY_RATIO / 5743		;
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_AY	.EQU	$
+SIZ_AY	.EQU	END_AY - ORG_AY
+;	
+	MEMECHO	"AY occupies "
+	MEMECHO	SIZ_AY
+	MEMECHO	" bytes.\n"

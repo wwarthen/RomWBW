@@ -79,6 +79,23 @@ CHSD_CFG0	.EQU	0		; DUMMY ENTRY
 CHSD_CFG1	.EQU	0		; DUMMY ENTRY
 #ENDIF
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_CH	.EQU	$
+;
+	.DW	SIZ_CH		; MODULE SIZE
+	.DW	CH_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+CH_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,CH_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,CH_INIT		; DO INIT
+	RET				; DONE
+;
 ; CH DEVICE CONFIGURATION
 ;
 CH_CFGSIZ	.EQU	9		; SIZE OF CFG TBL ENTRIES
@@ -470,3 +487,14 @@ CH_STR_376	.TEXT	"CH376$"
   #INCLUDE "chsd.asm"
 #ENDIF
 ;
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_CH	.EQU	$
+SIZ_CH	.EQU	END_CH - ORG_CH
+;	
+	MEMECHO	"CH occupies "
+	MEMECHO	SIZ_CH
+	MEMECHO	" bytes.\n"

@@ -84,6 +84,26 @@ PCF_LABDLY	.EQU	65000
 ;
 ; DATA PORT REGISTERS
 ;
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_PCF	.EQU	$
+;
+	.DW	SIZ_PCF		; MODULE SIZE
+	.DW	PCF_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+PCF_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,PCF_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,PCF_INIT		; DO INIT
+	RET				; DONE
+;
+;
+;
 PCF_INIT:
 	CALL	NEWLINE				; Formatting
 	PRTS("PCF: IO=0x$")
@@ -494,3 +514,14 @@ PCF_TOFAIL	.DB	"TIMEOUT ERROR$"
 PCF_ARBFAIL 	.DB	"LOST ARBITRATION$"
 PCF_PINFAIL 	.DB	"PIN FAIL$"
 PCF_BBFAIL	.DB	"BUS BUSY$"
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_PCF	.EQU	$
+SIZ_PCF	.EQU	END_PCF - ORG_PCF
+;	
+	MEMECHO	"PCF occupies "
+	MEMECHO	SIZ_PCF
+	MEMECHO	" bytes.\n"

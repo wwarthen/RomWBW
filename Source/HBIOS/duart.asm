@@ -169,6 +169,23 @@ DUART_MR2_STOP2		.EQU	%00001111	; 2 STOP BITS (2.5 IF 5 BITS/CHAR)
 #DEFINE	DUART_INP(RID)	CALL DUART_INP_IMP \ .DB RID
 #DEFINE	DUART_OUTP(RID)	CALL DUART_OUTP_IMP \ .DB RID
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_DUART	.EQU	$
+;
+	.DW	SIZ_DUART		; MODULE SIZE
+	.DW	DUART_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+DUART_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,DUART_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,DUART_INIT		; DO INIT
+	RET				; DONE
+;
 ;
 ;
 DUART_PREINIT:
@@ -879,3 +896,14 @@ DUART1B_CFG:
 #ENDIF
 ;
 DUART_CFGCNT	.EQU    ($ - DUART_CFG) / DUART_CFGSIZ
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_DUART	.EQU	$
+SIZ_DUART	.EQU	END_DUART - ORG_DUART
+;	
+	MEMECHO	"DUART occupies "
+	MEMECHO	SIZ_DUART
+	MEMECHO	" bytes.\n"

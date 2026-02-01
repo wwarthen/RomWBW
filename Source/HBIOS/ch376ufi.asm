@@ -4,6 +4,25 @@
 ;==================================================================================================
 ;
 
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_CHUFI	.EQU	$
+;
+	.DW	SIZ_CHUFI		; MODULE SIZE
+	.DW	CHUFI_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+CHUFI_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,CHUFI_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,CHUFI_INIT		; DO INIT
+	RET				; DONE
+
+
 #include "./ch376-native/ufi-drv.s"
 _ufi_seek	.EQU	_usb_scsi_seek
 
@@ -321,3 +340,14 @@ CH_UFI_GEOM:
 	LD	A, $FF
 	OR	A
 	RET
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_CHUFI	.EQU	$
+SIZ_CHUFI	.EQU	END_CHUFI - ORG_CHUFI
+;	
+	MEMECHO	"CHUFI occupies "
+	MEMECHO	SIZ_CHUFI
+	MEMECHO	" bytes.\n"

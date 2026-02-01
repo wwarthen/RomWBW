@@ -11,6 +11,23 @@
 ;			NO VOLUME ADJUSTMENT DUE TO HARDWARE LIMITATION
 ;======================================================================
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_SP	.EQU	$
+;
+	.DW	SIZ_SP			; MODULE SIZE
+	.DW	SP_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+SP_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,SP_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,SP_INIT		; DO INIT
+	RET				; DONE
+;
 ;	DRIVER FUNCTION TABLE AND INSTANCE DATA
 ;
 SP_FNTBL:
@@ -33,7 +50,7 @@ SP_IDAT	.EQU	0			; NO INSTANCE DATA ASSOCIATED WITH THIS DEVICE
 ;
 SP_TONECNT	.EQU	1		; COUNT NUMBER OF TONE CHANNELS
 SP_NOISECNT	.EQU	0		; COUNT NUMBER OF NOISE CHANNELS
-
+;
 ; FOR OTHER DRIVERS, THE PERIOD VALUE FOR THE TONE IS STORED AT PENDING_PERIOD
 ; FOR THE SPK DRIVER THE ADDRESS IN THE TONE TABLE IS STORED IN PENDING_PERIOD
 ;
@@ -512,3 +529,13 @@ SP_NOTE_B5:
 ;
 SP_NOTCNT	.EQU	($-SP_TUNTBL) / 4
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_SP	.EQU	$
+SIZ_SP	.EQU	END_SP - ORG_SP
+;	
+	MEMECHO	"SP occupies "
+	MEMECHO	SIZ_SP
+	MEMECHO	" bytes.\n"

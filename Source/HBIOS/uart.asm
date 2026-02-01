@@ -84,6 +84,24 @@ UART1_IVT	.EQU	IVT(INT_UART1)
 #DEFINE	UART_INP(RID)	CALL UART_INP_IMP \ .DB RID
 #DEFINE	UART_OUTP(RID)	CALL UART_OUTP_IMP \ .DB RID
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_UART	.EQU	$
+;
+	.DW	SIZ_UART		; MODULE SIZE
+	.DW	UART_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+UART_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,UART_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,UART_INIT		; DO INIT
+	RET				; DONE
+
+;
 ;
 ;
 UART_PREINIT:
@@ -1166,3 +1184,14 @@ UART1_BUF	.FILL	UART_BUFSZ,0	; RECEIVE RING BUFFER
   #ENDIF
 ;
 #ENDIF
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_UART	.EQU	$
+SIZ_UART	.EQU	END_UART - ORG_UART
+;	
+	MEMECHO	"UART occupies "
+	MEMECHO	SIZ_UART
+	MEMECHO	" bytes.\n"

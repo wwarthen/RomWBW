@@ -140,6 +140,23 @@ IMM_LBA		.EQU	8		; OFFSET OF LBA (DWORD)
   #DEFINE MG014_MAP
 #ENDIF
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_IMM	.EQU	$
+;
+	.DW	SIZ_IMM		; MODULE SIZE
+	.DW	IMM_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+IMM_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,IMM_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,IMM_INIT		; DO INIT
+	RET				; DONE
+;
 ;=============================================================================
 ; INITIALIZATION ENTRY POINT
 ;=============================================================================
@@ -1577,3 +1594,14 @@ IMM1_CFG:	; DEVICE 1
 #ENDIF
 ;
 	.DB	$FF			; END MARKER
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_IMM	.EQU	$
+SIZ_IMM	.EQU	END_IMM - ORG_IMM
+;	
+	MEMECHO	"IMM occupies "
+	MEMECHO	SIZ_IMM
+	

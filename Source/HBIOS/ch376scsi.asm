@@ -3,6 +3,23 @@
 ; CH376 NATIVE MASS STORAGE DRIVER
 ;==================================================================================================
 ;
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_CHSCSI	.EQU	$
+;
+	.DW	SIZ_CHSCSI		; MODULE SIZE
+	.DW	CHSCSI_INITPHASE	; ADR OF INIT PHASE HANDLER
+;
+CHSCSI_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,CHSCSI_PREINIT	; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,CHSCSI_INIT		; DO INIT
+	RET				; DONE
 
 #include "./ch376-native/scsi-drv.s"
 
@@ -316,3 +333,14 @@ CH_SCSI_GEOM:
 	LD	D,16 | $80		; HEADS / CYL = 16, SET LBA CAPABILITY BIT
 	LD	E,16			; SECTORS / TRACK = 16
 	RET				; DONE, A STILL HAS CHUSB_CAP STATUS
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_CHSCSI	.EQU	$
+SIZ_CHSCSI	.EQU	END_CHSCSI - ORG_CHSCSI
+;	
+	MEMECHO	"CHSCSI occupies "
+	MEMECHO	SIZ_CHSCSI
+	MEMECHO	" bytes.\n"

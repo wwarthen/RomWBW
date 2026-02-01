@@ -29,6 +29,23 @@ MD_FDBG		.EQU	0		; FLASH DEBUG CODE
 MD_FVBS		.EQU	1		; FLASH VERBOSE OUTPUT
 MD_FVAR		.EQU	1		; FLASH VERIFY AFTER WRITE
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_MD	.EQU	$
+;
+	.DW	SIZ_MD			; MODULE SIZE
+	.DW	MD_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+MD_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,MD_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,MD_INIT		; DO INIT
+	RET				; DONE
+;
 ; DEVICE CONFIG TABLE (RAM DEVICE FIRST TO MAKE IT ALWAYS FIRST DRIVE)
 ;
 MD_CFGTBL:
@@ -1063,3 +1080,18 @@ MD_DSTBNK	.DB	0
 MD_SRC		.DW	0
 MD_DST		.DW	0
 MD_LEN		.DW	0
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_MD	.EQU	$
+SIZ_MD	.EQU	END_MD - ORG_MD
+;
+	MEMECHO	"MD occupies "
+	MEMECHO	SIZ_MD
+	MEMECHO	" bytes.\n"
+
+
+
+

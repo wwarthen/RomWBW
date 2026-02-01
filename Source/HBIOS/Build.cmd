@@ -235,8 +235,9 @@ call Build ZETA2 std || exit /b
 call Build N8 std || exit /b
 call Build N8PC std || exit /b
 call Build MK4 std || exit /b
-call Build RCZ80 std || exit /b
+call Build RC2014 std || exit /b
 call Build RCEZ80 std || exit /b
+call Build RCZ80 std || exit /b
 call Build RCZ80 kio_std || exit /b
 call Build EZZ80 easy_std || exit /b
 call Build EZZ80 tiny_std || exit /b
@@ -271,7 +272,7 @@ call Build EPITX std || exit /b
 :: call Build MON std || exit /b
 call Build NABU std || exit /b
 call Build SZ80 std || exit /b
-call Build SZ80 t35 || exit /b
+call Build SZ80 t35_std || exit /b
 call Build UNA std || exit /b
 call Build MSX std || exit /b
 

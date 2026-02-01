@@ -235,6 +235,23 @@ PPIDE_ACC_8BIT	.EQU	%00000010	; UNIT WANTS 8 BIT I/O (ELSE 16 BIT)
 PPIDE_MED_CF	.EQU	%00000001	; MEDIA IS CF CARD
 PPIDE_MED_LBA	.EQU	%00000010	; MEDIA HAS LBA CAPABILITY
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_PPIDE	.EQU	$
+;
+	.DW	SIZ_PPIDE		; MODULE SIZE
+	.DW	PPIDE_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+PPIDE_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,PPIDE_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,PPIDE_INIT		; DO INIT
+	RET				; DONE
+;
 PPIDE_DEVCNT	.EQU	PPIDECNT * 2
 ;
 PPIDE_CFGTBL:
@@ -2456,3 +2473,14 @@ PPIDE_PKTCMD_SENSE	.DB	$03, $00, $00, $00, $FF, $00, $00, $00, $00, $00, $00, $0
 PPIDE_PKTCMD_RDCAP	.DB	$25, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00	; READ CAPACITY
 PPIDE_PKTCMD_RW10	.DB	$28, $00, $00, $00, $00, $00, $00, $00, $01, $00, $00, $00	; READ/WRITE SECTOR
 PPIDE_PKTCMD_TSTRDY	.DB	$00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00	; TEST UNIT READY
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_PPIDE	.EQU	$
+SIZ_PPIDE	.EQU	END_PPIDE - ORG_PPIDE
+;	
+	MEMECHO	"PPIDE occupies "
+	MEMECHO	SIZ_PPIDE
+	MEMECHO	" bytes.\n"

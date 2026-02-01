@@ -19,6 +19,7 @@ if [ "${ROM_PLATFORM}" == "dist" ] ; then
 	ROM_PLATFORM="N8"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="N8PC"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="MK4"; ROM_CONFIG="std"; bash Build.sh
+	ROM_PLATFORM="RC2014"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="RCEZ80"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="RCZ80"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="RCZ80"; ROM_CONFIG="kio_std"; bash Build.sh
@@ -55,7 +56,7 @@ if [ "${ROM_PLATFORM}" == "dist" ] ; then
 #	ROM_PLATFORM="MON"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="NABU"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="SZ80"; ROM_CONFIG="std"; bash Build.sh
-	ROM_PLATFORM="SZ80"; ROM_CONFIG="t35"; bash Build.sh
+	ROM_PLATFORM="SZ80"; ROM_CONFIG="t35_std"; bash Build.sh
 	ROM_PLATFORM="MSX"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="UNA"; ROM_CONFIG="std"; bash Build.sh
 	exit

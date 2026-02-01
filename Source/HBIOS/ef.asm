@@ -158,6 +158,23 @@ EF_SCREENSIZE	.EQU	EF_DROWS * EF_DLINES
 	DEVECHO	EF_BASE
 	DEVECHO	"\n"
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_EF	.EQU	$
+;
+	.DW	SIZ_EF			; MODULE SIZE
+	.DW	EF_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+EF_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,EF_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,EF_INIT		; DO INIT
+	RET				; DONE
+;
 ;======================================================================
 ; VDU DRIVER - INITIALIZATION
 ;======================================================================
@@ -1087,3 +1104,14 @@ EF_BUF:
 #IF (EF_SIZE = V40X24)
 	.FILL 2*EF_DLINES*EF_DROWS	;512,0
 #ENDIF
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_EF	.EQU	$
+SIZ_EF	.EQU	END_EF - ORG_EF
+;	
+	MEMECHO	"EF occupies "
+	MEMECHO	SIZ_EF
+	MEMECHO	" bytes.\n"

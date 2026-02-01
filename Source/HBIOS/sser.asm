@@ -9,6 +9,23 @@
 		DEVECHO	SSERSTATUS
 		DEVECHO	"\n"
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_SSER	.EQU	$
+;
+	.DW	SIZ_SSER		; MODULE SIZE
+	.DW	SSER_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+SSER_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,SSER_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,SSER_INIT		; DO INIT
+	RET				; DONE
+;
 ;
 ;
 SSER_PREINIT:
@@ -131,7 +148,6 @@ SSER_DEVICE:
 ; $FF, WE ASSUME NOT PRESENT.  THEN READ PORT A DIFFERENT WAY.  IF
 ; PRESENT PORT SHOULD HAVE SAME VALUE.
 ; 
-;
 SSER_DETECT:
 	IN	A,(SSERSTATUS)		; GET DATA PORT VALUE DIRECTLY
 	CP	$FF			; CHECK FOR $FF
@@ -147,3 +163,14 @@ SSER_DETECT1:
 ;
 ;
 SSER_PRESENT	.DB	0		; FLAG FOR HARDWARE PRESENT
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_SSER	.EQU	$
+SIZ_SSER	.EQU	END_SSER - ORG_SSER
+;	
+	MEMECHO	"SSER occupies "
+	MEMECHO	SIZ_SSER
+	MEMECHO	" bytes.\n"

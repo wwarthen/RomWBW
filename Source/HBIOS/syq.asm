@@ -192,6 +192,23 @@ SYQ_TONORM	.EQU	4		; NORMAL TIMEOUT IS 1 SEC (1 / .25)
   #DEFINE MG014_MAP
 #ENDIF
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_SYQ	.EQU	$
+;
+	.DW	SIZ_SYQ		; MODULE SIZE
+	.DW	SYQ_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+SYQ_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,SYQ_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,SYQ_INIT		; DO INIT
+	RET				; DONE
+;
 ;=============================================================================
 ; INITIALIZATION ENTRY POINT
 ;=============================================================================
@@ -1486,3 +1503,14 @@ SYQ1_CFG:	; DEVICE 1
 #ENDIF
 ;
 	.DB	$FF			; END MARKER
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_SYQ	.EQU	$
+SIZ_SYQ	.EQU	END_SYQ - ORG_SYQ
+;	
+	MEMECHO	"SYQ occupies "
+	MEMECHO	SIZ_SYQ
+	MEMECHO	" bytes.\n"

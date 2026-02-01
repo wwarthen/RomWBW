@@ -11,6 +11,23 @@ PRP_IOBASE	.EQU	$A8
 		DEVECHO	PRP_IOBASE
 		DEVECHO	"\n"
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_PRP	.EQU	$
+;
+	.DW	SIZ_PRP			; MODULE SIZE
+	.DW	PRP_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+PRP_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,PRP_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,PRP_INIT		; DO INIT
+	RET				; DONE
+;
 ; GLOBAL PROPIO INITIALIZATION
 ;
 PRP_INIT:
@@ -1091,3 +1108,14 @@ PRPSD_CSDBUF		.FILL	16,0
 PRPSD_CMD		.DB	0
 ;
 PRPSD_TIMEOUT		.DW	$0000	; FIX: MAKE THIS CPU SPEED RELATIVE
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_PRP	.EQU	$
+SIZ_PRP	.EQU	END_PRP - ORG_PRP
+;	
+	MEMECHO	"PRP occupies "
+	MEMECHO	SIZ_PRP
+	MEMECHO	" bytes.\n"

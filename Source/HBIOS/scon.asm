@@ -20,6 +20,23 @@ SCON_ROWS	.EQU	40
 		DEVECHO	SCON_IOBASE
 		DEVECHO	"\n"
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_SCON	.EQU	$
+;
+	.DW	SIZ_SCON		; MODULE SIZE
+	.DW	SCON_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+SCON_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,SCON_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,SCON_INIT		; DO INIT
+	RET				; DONE
+;
 ;
 ;
 SCON_PREINIT:
@@ -181,3 +198,14 @@ SCON_DETECT1:
 ;
 ;
 SCON_UNIT	.DB	$FF		; OUR ASSIGNED UNIT NUMBER
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_SCON	.EQU	$
+SIZ_SCON	.EQU	END_SCON - ORG_SCON
+;	
+	MEMECHO	"SCON occupies "
+	MEMECHO	SIZ_SCON
+	MEMECHO	" bytes.\n"

@@ -58,6 +58,23 @@ ESP_CFG_BSYMSK	.EQU	4		; ESP BUSY MASK
 	DEVECHO	ESP_IOBASE
 	DEVECHO	"\n"
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_ESP	.EQU	$
+;
+	.DW	SIZ_ESP		; MODULE SIZE
+	.DW	ESP_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+ESP_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,ESP_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,ESP_INIT		; DO INIT
+	RET				; DONE
+;
 ; GLOBAL ESP INITIALIZATION
 ;
 ESP_INIT:
@@ -708,3 +725,14 @@ ESPSER1_CFG:
 ;
 ;
 ESPSER_DEVCNT	.DB	0			; ESPSER DEVICES COUNT
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_ESP	.EQU	$
+SIZ_ESP	.EQU	END_ESP - ORG_ESP
+;	
+	MEMECHO	"ESP occupies "
+	MEMECHO	SIZ_ESP
+	MEMECHO	" bytes.\n"

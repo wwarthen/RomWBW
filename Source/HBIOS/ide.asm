@@ -170,6 +170,23 @@ IDE_STNOTRDY	.EQU	-9
 IDE_DRVMASTER	.EQU	%11100000	; LBA, MASTER DEVICE
 IDE_DRVSLAVE	.EQU	%11110000	; LBA, SLAVE DEVICE
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_IDE	.EQU	$
+;
+	.DW	SIZ_IDE		; MODULE SIZE
+	.DW	IDE_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+IDE_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,IDE_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,IDE_INIT		; DO INIT
+	RET				; DONE
+;
 ; IDE DEVICE CONFIGURATION
 ;
 IDE_CFGSIZ	.EQU	19		; SIZE OF CFG TBL ENTRIES
@@ -2279,3 +2296,14 @@ IDE_PKTCMD_SENSE	.DB	$03, $00, $00, $00, $FF, $00, $00, $00, $00, $00, $00, $00	
 IDE_PKTCMD_RDCAP	.DB	$25, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00	; READ CAPACITY
 IDE_PKTCMD_RW10		.DB	$28, $00, $00, $00, $00, $00, $00, $00, $01, $00, $00, $00	; READ/WRITE SECTOR
 IDE_PKTCMD_TSTRDY	.DB	$00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00	; TEST UNIT READY
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_IDE	.EQU	$
+SIZ_IDE	.EQU	END_IDE - ORG_IDE
+;	
+	MEMECHO	"IDE occupies "
+	MEMECHO	SIZ_IDE
+	MEMECHO	" bytes.\n"

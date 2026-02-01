@@ -53,6 +53,23 @@ MMRTC_DATA	.EQU	MMRTC_IO + 1
 	DEVECHO	MMRTC_IO
 	DEVECHO	"\n"
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_MMRTC	.EQU	$
+;
+	.DW	SIZ_MMRTC		; MODULE SIZE
+	.DW	MMRTC_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+MMRTC_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,MMRTC_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,MMRTC_INIT		; DO INIT
+	RET				; DONE
+;
 ; RTC DEVICE PRE-INITIALIZATION ENTRY
 ;
 MMRTC_PREINIT:
@@ -295,3 +312,14 @@ MMRTC_WRREG:
 ; MMRTC_TIMBUF IS DRIVER'S INTERNAL CLOCK DATA BUFFER
 ;
 MMRTC_TIMBUF	.FILL	6,0		; 6 BYTES FOR GETTIM, YYMMDDHHMMSS
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_MMRTC	.EQU	$
+SIZ_MMRTC	.EQU	END_MMRTC - ORG_MMRTC
+;	
+	MEMECHO	"MMRTC occupies "
+	MEMECHO	SIZ_MMRTC
+	MEMECHO	" bytes.\n"

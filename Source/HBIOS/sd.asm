@@ -528,6 +528,23 @@ SD_STCRCERR	.EQU	-8		; CRC ERROR ON RECEIVED DATA PACKET
 SD_STNOMEDIA	.EQU	-9		; NO MEDIA IN CONNECTOR
 SD_STWRTPROT	.EQU	-10		; ATTEMPT TO WRITE TO WRITE PROTECTED MEDIA
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_SD	.EQU	$
+;
+	.DW	SIZ_SD			; MODULE SIZE
+	.DW	SD_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+SD_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,SD_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,SD_INIT		; DO INIT
+	RET				; DONE
+;
 ; IDE DEVICE CONFIGURATION
 ;
 SD_CFGSIZ	.EQU	12		; SIZE OF CFG TBL ENTRIES
@@ -2715,3 +2732,14 @@ MIRTAB	.DB 00H, 80H, 40H, 0C0H, 20H, 0A0H, 60H, 0E0H, 10H, 90H, 50H, 0D0H, 30H, 
 	.DB 0FH, 8FH, 4FH, 0CFH, 2FH, 0AFH, 6FH, 0EFH, 1FH, 9FH, 5FH, 0DFH, 3FH, 0BFH, 7FH, 0FFH
 ;
 #ENDIF
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_SD	.EQU	$
+SIZ_SD	.EQU	END_SD - ORG_SD
+;	
+	MEMECHO	"SD occupies "
+	MEMECHO	SIZ_SD
+	MEMECHO	" bytes.\n"

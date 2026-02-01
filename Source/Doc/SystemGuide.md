@@ -2987,7 +2987,7 @@ HBIOS result code.
 
 This function returns information about the active CPU environment. The 
 Z80 CPU Variant (H) will be one of: 0=Z80, 1=Z180, 2=Z180-K, 3=Z180-N, 
-4=Z280.  The current CPU speed is provided as both CPU Speed MHz (L) and
+4=Z280, 5=eZ80.  The current CPU speed is provided as both CPU Speed MHz (L) and
 CPU Speed KHz (DE).  The raw oscillator speed is provided as Oscillator
 Speed KHz (BC).  The returned Status (A) is a standard HBIOS result 
 code.
@@ -3149,6 +3149,9 @@ This function sets information about the most recent boot operation
 performed.  It includes the Boot Bank ID (L), the Boot Disk Unit (D), 
 and the Boot Disk Slice (E).  The returned Status (A) is a standard 
 HBIOS result code.
+
+This information is recorded in the HCB.  HCB_BOOTBID is set to the Boot
+Bank ID (L) and HCB_BOOTVOL is set to the BootDisk Unit/Slice (DE).
 
 #### SYSSET Subfunction 0xF3 -- Set CPU Speed (CPUSPD)
 

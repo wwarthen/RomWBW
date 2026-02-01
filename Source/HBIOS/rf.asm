@@ -27,6 +27,23 @@ RF_DEV	.EQU	0			; OFFSET OF DEVICE NUMBER (BYTE)
 RF_STAT	.EQU	1			; OFFSET OF STATUS (BYTE)
 RF_LBA	.EQU	2			; OFFSET OF LBA (DWORD)
 RF_IOAD	.EQU	7			; OFFSET OF DEVICE IO ADDRESS
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_RF	.EQU	$
+;
+	.DW	SIZ_RF			; MODULE SIZE
+	.DW	RF_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+RF_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,RF_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,RF_INIT		; DO INIT
+	RET				; DONE
 
 #IF ($RF_DEVCNT > RF_MAXRF)
 	.ECHO	"*** ONLY 4 RAM FLOPPY DEVICES SUPPORTED ***\n"
@@ -356,3 +373,14 @@ RF_IO		.DB	0		; PORT ADDRESS OF ACTIVE DEVICE
 RF_RWFNADR	.DW	0
 ;
 RF_DSKBUF	.DW	0
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_RF	.EQU	$
+SIZ_RF	.EQU	END_RF - ORG_RF
+;	
+	MEMECHO	"RF occupies "
+	MEMECHO	SIZ_RF
+	MEMECHO	" bytes.\n"

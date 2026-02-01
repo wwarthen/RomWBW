@@ -183,6 +183,7 @@ to determine the <plt> component of the configuration filename:
 	N8		MSX-ish Z180 SBC w/ onboard video and sound
 	MK4		Mark IV Z180 based SBC w/ ECB interface
 	UNA		Any Z80/Z180 computer with UNA BIOS
+	RC2014		Official RC2014 Z80 System
 	RCZ80		RCBUS based system with 512K banked RAM/ROM card
 	RCZ180		RCBUS based system with Z180 CPU
 	EZZ80		Easy Z80, Z80 SBC w/ RCBUS and CTC
@@ -342,7 +343,7 @@ the specific platform and configuration for your ROM.  For platform, be
 sure to enter the platform identifier that corresponds to the ROM you
 are creating.  The prompt will look something like this:
 
-    Platform [SBC|MBC|ZETA|ZETA2|RCZ80|EZZ80|UNA|N8|MK4|RCZ180|SCZ180|DYNO|RCZ280|N8PC]:
+    Platform [SBC|MBC|ZETA|ZETA2|RC2014|RCZ80|EZZ80|UNA|N8|MK4|RCZ180|SCZ180|DYNO|RCZ280|N8PC]:
 
 You will subsequently be prompted for the specific configuration that
 you want to build.  It will display the available possibilities based

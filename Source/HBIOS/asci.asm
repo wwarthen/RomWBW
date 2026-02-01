@@ -90,6 +90,23 @@ ASCI1_IVT	.EQU	IVT(INT_SER1)
 ;
 #ENDIF
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_ASCI	.EQU	$
+;
+	.DW	SIZ_ASCI		; MODULE SIZE
+	.DW	ASCI_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+ASCI_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,ASCI_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,ASCI_INIT		; DO INIT
+	RET				; DONE
+;
 ;
 ;
 ASCI_PREINIT:
@@ -899,3 +916,14 @@ ASCI1_CFG:
 #ENDIF
 ;
 ASCI_CFGCNT	.EQU	($ - ASCI_CFG) / ASCI_CFGSIZ
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_ASCI	.EQU	$
+SIZ_ASCI	.EQU	END_ASCI - ORG_ASCI
+;	
+	MEMECHO	"ASCI occupies "
+	MEMECHO	SIZ_ASCI
+	MEMECHO	" bytes.\n"

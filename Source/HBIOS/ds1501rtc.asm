@@ -117,16 +117,35 @@ DS1501RTC_BUFSIZE	.EQU	6		; 6 BYTE BUFFER (YYMMDDHHMMSS)
 	DEVECHO	DS1501NVM_BASE
 	DEVECHO	"\n"
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_DS1501RTC	.EQU	$
+;
+	.DW	SIZ_DS1501RTC		; MODULE SIZE
+	.DW	DS1501RTC_INITPHASE	; ADR OF INIT PHASE HANDLER
+;
+DS1501RTC_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,DS1501RTC_PREINIT	; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,DS1501RTC_INIT	; DO INIT
+	RET				; DONE
+;
 ; RTC Device Initialization Entry
 ;
 DS1501RTC_INIT:
 	CALL	NEWLINE				; Formatting
-	PRTS("DS1501RTC: IO=0x$")
+	PRTS("DS1501RTC: $")
+	PRTS("IO=0x$")
 	LD	A, DS1501RTC_BASE
 	CALL	PRTHEXBYTE
 ;
 	CALL	NEWLINE				; Formatting
-	PRTS("DS1501NVM: IO=0x$")
+	PRTS("DS1501NVM: $")
+	PRTS("IO=0x$")
 	LD	A, DS1501NVM_BASE
 	CALL	PRTHEXBYTE
 ;
@@ -491,3 +510,14 @@ DS1501RTC_BUF_DAY:	.DB	0		; Day
 DS1501RTC_BUF_HOUR:	.DB	0		; Hour
 DS1501RTC_BUF_MIN:	.DB	0		; Minute
 DS1501RTC_BUF_SEC:	.DB	0		; Second
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_DS1501RTC	.EQU	$
+SIZ_DS1501RTC	.EQU	END_DS1501RTC - ORG_DS1501RTC
+;	
+	MEMECHO	"DS1501RTC occupies "
+	MEMECHO	SIZ_DS1501RTC
+	MEMECHO	" bytes.\n"

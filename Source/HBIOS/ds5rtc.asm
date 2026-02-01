@@ -116,6 +116,23 @@ DS5RTC_BUFSIZE	.EQU	6		; 6 BYTE BUFFER (YYMMDDHHMMSS)
 	DEVECHO	DS5RTC_BASE
 	DEVECHO	"\n"
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_DS5RTC	.EQU	$
+;
+	.DW	SIZ_DS5RTC		; MODULE SIZE
+	.DW	DS5RTC_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+DS5RTC_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,DS5RTC_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,DS5RTC_INIT		; DO INIT
+	RET				; DONE
+;
 ; RTC DEVICE INITIALIZATION ENTRY
 ;
 DS5RTC_INIT:
@@ -564,3 +581,14 @@ DS5RTC_TIMBUF	.FILL	6,0		; 6 BYTES FOR GETTIM
 DS5RTC_TIMDEF:	; DEFAULT TIME VALUE TO INIT CLOCK
 		.DB	$00,$01,$01	; 2000-01-01
 		.DB	$00,$00,$00	; 00:00:00
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_DS5RTC	.EQU	$
+SIZ_DS5RTC	.EQU	END_DS5RTC - ORG_DS5RTC
+;	
+	MEMECHO	"DS5RTC occupies "
+	MEMECHO	SIZ_DS5RTC
+	MEMECHO	" bytes.\n"

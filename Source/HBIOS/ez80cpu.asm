@@ -25,6 +25,24 @@
 ; 4. Set Timer Tick Frequency
 ;
 
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_EZ80CPU	.EQU	$
+;
+	.DW	SIZ_EZ80CPU		; MODULE SIZE
+	.DW	EZ80CPU_INITPHASE	; ADR OF INIT PHASE HANDLER
+;
+EZ80CPU_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	JP	Z,EZ80_PREINIT		; DO PREINIT
+	;CP	HB_PHASE_INIT		; INIT PHASE?
+	;JP	Z,EZ80_INIT		; DO INIT
+	RET				; DONE
+
 EZ80_PREINIT:
 	EZ80_TMR_INT_DISABLE()
 
@@ -36,8 +54,7 @@ EZ80_PREINIT:
 	LD	L, RTP
 
 	EZ80_UTIL_VER_EXCH()
-	; TODO: MAP THE FIRMWARE CPU TO HBIOS (eZ80 ONLY HAS ONE CPU TYPE AS OF NOW)
-	LD	A, 5
+	LD	A, CPT_EZ80
 	LD	(HB_CPUTYPE),A
 
 	LD	(EZ80_PLT_VERSION), HL
@@ -330,3 +347,15 @@ _EZ80_EXTN_IY_TO_MB_IY:
 	.DB	$5B, $FD, $77, $02			; LD.LIL	(IY+2), A
 	.DB	$49, $FD, $E1				; POP.L		IY
 	RET
+
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_EZ80CPU	.EQU	$
+SIZ_EZ80CPU	.EQU	END_EZ80CPU - ORG_EZ80CPU
+;	
+	MEMECHO	"EZ80CPU occupies "
+	MEMECHO	SIZ_EZ80CPU
+	MEMECHO	" bytes.\n"

@@ -5,6 +5,26 @@
 ;
 ; This driver is designed to work within the TMS video driver for a CRT solution.
 
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_CHUKB	.EQU	$
+;
+	.DW	SIZ_CHUKB		; MODULE SIZE
+	.DW	CHUKB_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+; WARNING: KEYBOARD DRIVERS ARE INITIALIZED BY VDA DRIVERS
+; AND SHOULD NOT BE INITIALIZED BY INITPHASE CALLS.
+;
+CHUKB_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,CHUKB_PREINIT		; DO PREINIT
+	;CP	HB_PHASE_INIT		; INIT PHASE?
+	;JP	Z,CHUKB_INIT		; DO INIT
+	RET				; DONE
 
 #IF (!CHNATIVEENABLE)
 	.ECHO	"*** TMSMODE: TMSMODE_MSXUKY REQUIRES CHNATIVEENABLE***\n"
@@ -149,3 +169,14 @@ UKY_READ:
 	LD	E, L
 	XOR	A
 	RET
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_CHUKB	.EQU	$
+SIZ_CHUKB	.EQU	END_CHUKB - ORG_CHUKB
+;	
+	MEMECHO	"CHUKB occupies "
+	MEMECHO	SIZ_CHUKB
+	MEMECHO	" bytes.\n"

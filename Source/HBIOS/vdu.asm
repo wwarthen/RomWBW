@@ -89,6 +89,23 @@ VDU_R11		.EQU	DSCANL-1
 		DEVECHO	VDU_PPIA
 		DEVECHO	"\n"
 ;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE HEADER
+;--------------------------------------------------------------------------------------------------
+;
+ORG_VDU	.EQU	$
+;
+	.DW	SIZ_VDU		; MODULE SIZE
+	.DW	VDU_INITPHASE		; ADR OF INIT PHASE HANDLER
+;
+VDU_INITPHASE:
+	; INIT PHASE HANDLER, A=PHASE
+	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
+	;JP	Z,VDU_PREINIT		; DO PREINIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,VDU_INIT		; DO INIT
+	RET				; DONE
+;
 ;======================================================================
 ; VDU DRIVER - INITIALIZATION
 ;======================================================================
@@ -738,3 +755,14 @@ VDU_IDAT:
 	.DB	VDU_PPIB
 	.DB	VDU_PPIC
 	.DB	VDU_PPIX
+;
+;--------------------------------------------------------------------------------------------------
+;   HBIOS MODULE TRAILER
+;--------------------------------------------------------------------------------------------------
+;
+END_VDU	.EQU	$
+SIZ_VDU	.EQU	END_VDU - ORG_VDU
+;	
+	MEMECHO	"VDU occupies "
+	MEMECHO	SIZ_VDU
+	MEMECHO	" bytes.\n"
