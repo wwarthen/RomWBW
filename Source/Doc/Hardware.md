@@ -2616,6 +2616,7 @@ Note:
 | KIO       | Zilog Serial/ Parallel Counter/Timer (Z84C90)          |
 | PPP       | ParPortProp Host Interface Controller                  |
 | PRP       | PropIO Host Interface Controller                       |
+| SCTIM     | SC737 50Hz System Timer                                |
 
 # UNA Hardware BIOS
 

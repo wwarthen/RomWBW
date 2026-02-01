@@ -54,6 +54,8 @@
 ;   2024-09-17 [WBW] Add support for HEATH H8 with Les Bird's MSX Card
 ;   2024-12-12 [WBW] Add options to force standard MSX or RC ports
 ;   2025-05-28 [WBW] Add option to force delay mode
+;   2026-01-24 [WBW] Support RC2014 platform id
+;   2026-01-31 [WBW] Update MUTE funtion to zero all PSG registers
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -668,6 +670,18 @@ CFGSIZ	.EQU	$ - CFGTBL
 	.DB	22,	$41,	$40,	$40,	$FF,	$FF,	$FF	; NABU
 	.DW	HWSTR_NABU
 ;
+	.DB	27,	$D8,	$D0,	$D8,	$FF,	$FF,	$FF	; RCZ80 W/ RC SOUND MODULE (EB)
+	.DW	HWSTR_RCEB
+;
+	.DB	27,	$A0,	$A1,	$A2,	$FF,	$FF,	$FF	; RCZ80 W/ RC SOUND MODULE (MSX)
+	.DW	HWSTR_RCMSX
+;
+	.DB	27,	$D1,	$D0,	$D0,	$FF,	$FF,	$FF	; RCZ80 W/ RC SOUND MODULE (MF)
+	.DW	HWSTR_RCMF
+;
+	.DB	27,	$33,	$32,	$32,	$FF,	$FF,	$FF	; RCZ80 W/ LINC SOUND MODULE
+	.DW	HWSTR_LINC
+;
 	.DB	$FF					; END OF TABLE MARKER
 ;
 ; The following are table entries (like above), but not part of auto
@@ -710,8 +724,8 @@ OCTAVEADJ	.DB	0	; AMOUNT TO ADJUST OCTAVE UP OR DOWN
 
 USEPORTS	.DB	0	; AUDIO CHIP PORT SELECTION MODE
 
-MSGBAN		.DB	"Tune Player for RomWBW v3.13, 28-May-2025",0
-MSGUSE		.DB	"Copyright (C) 2025, Wayne Warthen, GNU GPL v3",13,10
+MSGBAN		.DB	"Tune Player for RomWBW v3.15, 31-Jan-2026",0
+MSGUSE		.DB	"Copyright (C) 2026, Wayne Warthen, GNU GPL v3",13,10
 		.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 		.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
 		.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM] [-msx|-rc] [-delay] [--hbios] [+tn|-tn]",0
@@ -891,10 +905,16 @@ MUTE	ISHBIOS
 	JR	NZ,MUTEVIAHBIOS
 
 	XOR A
-	LD H,A
-	LD L,A
-	LD (AYREGS+AmplA),A
-	LD (AYREGS+AmplB),HL
+	LD B,14
+	LD HL,AYREGS
+MUTE1	LD (HL),A
+	INC HL
+	DJNZ MUTE1
+	;XOR A
+	;LD H,A
+	;LD L,A
+	;LD (AYREGS+AmplA),A
+	;LD (AYREGS+AmplB),HL
 	JP ROUT
 
 MUTEVIAHBIOS:

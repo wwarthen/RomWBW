@@ -317,9 +317,13 @@ SD_INVCS	.EQU	FALSE		; INVERT CS
 ;	shield attached and are the ones also used in other bitbang setups
 ;	directly attached to a PIO. It also works on a straight digital I/O
 ;	port as the config writes will disappear into oblivion harmlessly
-;	
+;
 ;	The Gluino mapping (ie Arduino pin mapping equivalent) is thus
 ;	D10 SS, D11 CIPO, D12 COPI, D13 SCL.
+;
+;	This config also works for Steve Cousins SD Card Boards such as
+;	SC611 and SC734.  These cards do not require DDR manipulation,
+;	but the DDR writes are benign at this point.
 ;
 ;	For speed reasons MISO/MOSI are mapped to the top and bottom bits.
 ;	RomWBW doesn't yet use this fact but the optimized Fuzix routines do.

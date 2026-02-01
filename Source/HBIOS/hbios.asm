@@ -8934,6 +8934,10 @@ HB_MODSTART	.EQU	$
   #INCLUDE "ctc.asm"
 #ENDIF
 ;
+#IF (SCTIMENABLE)
+  #INCLUDE "sctim.asm"
+#ENDIF
+;
 #IF (PCFENABLE)
   #INCLUDE "pcf.asm"
 #ENDIF
