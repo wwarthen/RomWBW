@@ -27,7 +27,7 @@ $ErrorAction = 'Stop'
 # UNA BIOS is simply imbedded, it is not built here.
 #
 
-$PlatformListZ80 = "SBC", "MBC", "ZETA", "ZETA2", "RC2014", "RCZ80", "EZZ80", "Z80RETRO", "DUO", "UNA", "HEATH", "MON", "NABU", "SZ80", "RCEZ80", "MSX"
+$PlatformListZ80 = "SBC", "MBC", "ZETA", "ZETA2", "RC2014", "RCZ80", "SC720", "EZZ80", "Z80RETRO", "DUO", "UNA", "HEATH", "MON", "NABU", "SZ80", "RCEZ80", "MSX"
 $PlatformListZ180 = "N8", "MK4", "RCZ180", "SCZ180", "DYNO", "RPH", "SZ180", "EPITX", "GMZ180","N8PC"
 $PlatformListZ280 = "RCZ280"
 
@@ -83,6 +83,13 @@ if ($PlatformListZ280 -contains $Platform) {$CPUType = "280"}
 #
 
 if ($ROMName -eq "") {$ROMName = "${Platform}_${Config}"}
+
+# For some platforms we want a specific 8.3-style base name for legacy tooling.
+# Only override the default when ROMName was not explicitly supplied.
+if (($Platform -eq "SC720") -and ($Config -eq "std") -and ($ROMName -eq "SC720_std")) {
+    $ROMName = "sc720std"
+}
+
 while ($ROMName -eq "")
 {
 	$CP = (Read-Host -prompt "ROM Name [${Config}]").Trim()

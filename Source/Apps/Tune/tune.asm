@@ -54,6 +54,8 @@
 ;   2024-09-17 [WBW] Add support for HEATH H8 with Les Bird's MSX Card
 ;   2024-12-12 [WBW] Add options to force standard MSX or RC ports
 ;   2025-05-28 [WBW] Add option to force delay mode
+;   2026-02-03 [MIG] Add RCZ80 Coleco (50H/51H/52H) auto-detect and -coleco option
+;                    using rc2014-ym2149 MSX/Coleco read-back port (base+2)
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -78,6 +80,7 @@ TYPMYM		.EQU	3		; FILTYP value for MYM sound file
 PORTS_AUTO	.EQU	0		; AUTO select audio chip ports
 PORTS_MSX	.EQU	1		; force MSX audio chip ports
 PORTS_RC	.EQU	2		; force RCBUS audio chip ports
+PORTS_COLECO	.EQU	3		; force Coleco-style AY ports (50H/51H)
 ;
 ; HIGH SPEED CPU CONTROL
 ;
@@ -131,14 +134,17 @@ CONTINUE:
 
 	LD	A, (HBIOSMD)
 	OR	A
-	JR	NZ, TSTTIMER		; skip hardware check if using hbios
+	JP	NZ, TSTTIMER		; skip hardware check if using hbios
 
 	LD	A, (USEPORTS)		; get ports option
 	LD	HL,MSXPORTS		; assume MSX
 	CP	PORTS_MSX		; use MSX?
 	JR	Z,FORCE
-	LD	HL,RCPORTS		; asssume RC
+	LD	HL,RCPORTS		; assume RC
 	CP	PORTS_RC		; use RC?
+	JR	Z,FORCE
+	LD	HL,COLECOPORTS		; assume Coleco AY ports
+	CP	PORTS_COLECO		; use Coleco?
 	JR	Z,FORCE
 	JR	AUTOSEL			; otherwise do auto select
 
@@ -581,10 +587,8 @@ ERR2:	; without the string
 	CALL	CRLF		; print newline
 	JP	0		; fast exit
 ;
-; CONFIG TABLE, ENTRY ORDER MATCHES HBIOS PLATFORM ID
-;
 CFGTBL:	;	PLT	RSEL	RDAT	RIN	Z180	ACR	ACRVAL
-	;	DESC
+;	; DESC
 	.DB	$01,	$9A,	$9B,	$9A,	$FF,	$9C,	$FF	; SBC W/ SCG
 	.DW	HWSTR_SCG
 ;
@@ -607,6 +611,9 @@ CFGSIZ	.EQU	$ - CFGTBL
 ;
 	.DB	$07,	$33,	$32,	$32,	$FF,	$FF,	$FF	; RCZ80 W/ LINC SOUND MODULE
 	.DW	HWSTR_LINC
+;
+	.DB	$07,	$50,	$51,	$52,	$FF,	$FF,	$FF	; RCZ80/SC720 W/ RC SOUND MODULE (COLECO)
+	.DW	HWSTR_COLECO
 ;
 	.DB	$08,	$68,	$60,	$68,	$C0,	$FF,	$FF	; RCZ180 W/ RC SOUND MODULE (EB)
 	.DW	HWSTR_RCEB
@@ -681,6 +688,10 @@ RCPORTS:
 	.DB	$FF,	$D8,	$D0,	$FF,	$FF,	$FF,	$FF	; GENERIC RC
 	.DW	HWSTR_RC
 ;
+COLECOPORTS:
+	.DB	$FF,	$50,	$51,	$52,	$FF,	$FF,	$FF	; GENERIC COLECO AY PORTS (50H/51H, READ AT 52H)
+	.DW	HWSTR_COLECO
+;
 CFG:		; ACTIVE CONFIG VALUES (FROM SELECTED CFGTBL ENTRY)
 PLT		.DB	0	; RomWBW HBIOS platform id
 PORTS:
@@ -710,11 +721,11 @@ OCTAVEADJ	.DB	0	; AMOUNT TO ADJUST OCTAVE UP OR DOWN
 
 USEPORTS	.DB	0	; AUDIO CHIP PORT SELECTION MODE
 
-MSGBAN		.DB	"Tune Player for RomWBW v3.13, 28-May-2025",0
+MSGBAN		.DB	"Tune Player for RomWBW v3.14, 03-Feb-2026",0
 MSGUSE		.DB	"Copyright (C) 2025, Wayne Warthen, GNU GPL v3",13,10
 		.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 		.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
-		.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM] [-msx|-rc] [-delay] [--hbios] [+tn|-tn]",0
+		.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM] [-msx|-rc|-coleco] [-delay] [--hbios] [+tn|-tn]",0
 MSGBIO		.DB	"Incompatible BIOS or version, "
 		.DB	"HBIOS v", '0' + RMJ, ".", '0' + RMN, " required",0
 MSGPLT		.DB	"Hardware error, system not supported!",0
@@ -740,6 +751,7 @@ HWSTR_NABU	.DB	"NABU Onboard Sound",0
 HWSTR_HEATH	.DB	"HEATH H8 MSX Module",0
 HWSTR_MSX	.DB	"MSX Standard Ports (A0H/A1H)",0
 HWSTR_RC	.DB	"RCBus Standard Ports (D8H/D0H)",0
+HWSTR_COLECO	.DB	"RCBus Coleco AY Ports (50H/51H)",0
 
 MSGUNSUP	.db	"MYM files not supported with HBIOS yet!\r\n", 0
 
@@ -844,12 +856,6 @@ Volume	.EQU 28
 CHP	.EQU 29
 
 ;Entry and other points
-;START initialize playing of module at MDLADDR
-;START+3 initialization with module address in HL
-;START+5 play one quark
-;START+8 mute
-;START+10 setup and status flags
-;START+11 current position value (byte) (optional)
 
 START
 	LD HL,MDLADDR

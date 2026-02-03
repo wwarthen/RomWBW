@@ -33,16 +33,20 @@ custom		.equ	0           ; System configurations
 P8X180      .equ    1
 RCBUS       .equ    2
 sbcecb		.equ	3		
-MBC		.equ	4
-RCBUSMSX	.equ	5		; Ports configured as per MSX
+MBC			.equ	4
+RCBUSMSX	.equ	5			; Ports configured as per MSXs
+SC720		.equ	6			; Special build for the SC720 with YM2149 on Coleco ports
 ;
 plt_romwbw	.equ	1			; Build for ROMWBW?
-plt_type	.equ	RCBUS		; Select build configuration
-debug		.equ	0			; Display port, register, config info
+plt_type	.equ	SC720		; Select build configuration
+debug		.equ	1			; Display port, register, config info
 ;
 ;------------------------------------------------------------------------------
 ;------------------------------------------------------------------------------
 ; Configure timing loop
+;
+cpu_loop:	.equ	0
+ctc_poll:	.equ	1
 ;------------------------------------------------------------------------------
 ctc_int:	.equ	2			; not implemented
 hbios_tmr:	.equ	3			; use hbios 50hz or 60hz timer to calculate a fdelay value (plt_romwbw must be set)
@@ -180,7 +184,7 @@ YMSEL		.equ	000H		; UNDEFINED	; Primary YM2162 11000000 a1=0 a0=0
 
 #IF (plt_type=RCBUSMSX)
 VGMBASE		.equ	$C0
-
+;
 ctcbase		.equ	VGMBASE+0CH	; CTC base address
 FRAME_DLY       .equ    10  		; Frame delay (~ 1/44100)
 plt_cpuspd	.equ	6;000000	; Non ROMWBW cpu speed default
@@ -200,6 +204,28 @@ YM2DAT		.equ	VGMBASE+03H	; Secondary YM2162 11000011 a1=1 a0=1
 YM2SEL		.equ	VGMBASE+02H	; Secondary YM2162 11000010 a1=1 a0=0
 YMDAT		.equ	VGMBASE+01H	; Primary YM2162 11000001 a1=0 a0=1
 YMSEL		.equ	VGMBASE+00H	; Primary YM2162 11000000 a1=0 a0=0
+#ENDIF
+;
+#IF (plt_type=SC720)
+ctcbase		.equ	000H		; UNDEFINED	; CTC base address
+FRAME_DLY       .equ    12				; Frame delay (~ 1/44100)
+plt_cpuspd	.equ	7;372800	; CPUOSC	; Non ROMWBW cpu speed default
+PSG1REG         .equ    0FFH		; SNMODE_RC   !	; Primary SN76489
+PSG2REG         .equ    0FBH		; SNMODE_RC	; Secondary SN76489
+RDAT            .equ    051H		; AYMODE_SC720	; Primary AY-3-8910 Register data
+RDAT2           .equ    051H		; UNDEFINED	; Secondary AY-3-8910 Register data
+RSEL            .equ    050H		; AYMODE_SC720	; Primary AY-3-8910 Register selection
+RSEL2           .equ    050H		; UNDEFINED	; Secondary AY-3-8910 Register selection
+YM2151_DAT1	.equ	0FFH		; ED BRINDLEY !	; Primary YM2151 register data
+YM2151_DAT2	.equ	000H		; UNDEFINED	; Secondary YM2151 register data
+YM2151_SEL1	.equ	0FEH		; ED BRINDLEY	; Primary YM2151 register selection
+YM2151_SEL2	.equ	000H		; UNDEFINED	; Secondary YM2151 register selection
+YM2413_DAT1	.equ	7DH		; YM2413 Data Register
+YM2413_SEL1	.equ	7CH		; YM2413 Address Register
+YM2DAT		.equ	000H		; UNDEFINED	; Secondary YM2162 11000011 a1=1 a0=1
+YM2SEL		.equ	000H		; UNDEFINED	; Secondary YM2162 11000010 a1=1 a0=0
+YMDAT		.equ	000H		; UNDEFINED	; Primary YM2162 11000001 a1=0 a0=1
+YMSEL		.equ	000H		; UNDEFINED	; Primary YM2162 11000000 a1=0 a0=0
 #ENDIF
 ;
 ;------------------------------------------------------------------------------
@@ -270,15 +296,15 @@ RTCIO		.equ	070H
 ; VGM Codes - see vgmrips.net/wiki/VGM_Specification
 ;------------------------------------------------------------------------------
 
-VGM_GG_W	.equ	04FH			; GAME GEAR PSG STEREO. WRITE DD TO PORT 0X06
-VGM_PSG1_W	.equ	050H			; PSG (SN76489/SN76496) #1 WRITE VALUE DD
-VGM_PSG2_W	.equ	030H			; PSG (SN76489/SN76496) #2 WRITE VALUE DD
+VGM_GG_W	.equ		04FH			; GAME GEAR PSG STEREO. WRITE DD TO PORT 0X06
+VGM_PSG1_W	.equ		050H			; PSG (SN76489/SN76496) #1 WRITE VALUE DD
+VGM_PSG2_W	.equ		030H			; PSG (SN76489/SN76496) #2 WRITE VALUE DD
 VGM_YM26121_W	.equ	052H			; YM2612 #1 WRITE VALUE DD
 VGM_YM26122_W	.equ	053H			; YM2612 #2 WRITE VALUE DD
-VGM_WNS		.equ	061H			; WAIT N SAMPLES
-VGM_W735	.equ	062H			; WAIT 735 SAMPLES (1/60TH SECOND)
-VGM_W882	.equ	063H			; WAIT 882 SAMPLES (1/50TH SECOND)
-VGM_ESD		.equ	066H			; END OF SOUND DATA
+VGM_WNS		.equ		061H			; WAIT N SAMPLES
+VGM_W735	.equ		062H			; WAIT 735 SAMPLES (1/60TH SECOND)
+VGM_W882	.equ		063H			; WAIT 882 SAMPLES (1/50TH SECOND)
+VGM_ESD		.equ		066H			; END OF SOUND DATA
 VGM_YM21511_W	.equ	054H			; YM2151 #1 WRITE VALUE DD
 VGM_YM21512_W	.equ	0A4H			; YM2151 #2 WRITE VALUE DD
 VGM_OPL2_W	.equ	05AH			; YM3812 (OPL2) WRITE VALUE DD
@@ -291,12 +317,12 @@ VGM_YM2413	.equ	051H			; YM2413, write value dd to register aa
 ; Generic CP/M definitions
 ;------------------------------------------------------------------------------
 
-BOOT            .equ    0000H               	; boot location
+BOOT            .equ    0000H               ; boot location
 BDOS            .equ    0005H              	; bdos entry point
 FCB             .equ    005CH              	; file control block
 FCBCR           .equ    FCB + 20H          	; fcb current record
 BUFF            .equ    0080H              	; DMA buffer
-TOPM		.equ	0002H			; Top of memory
+TOPM			.equ	0002H				; Top of memory
 	
 PRINTF          .equ    9                  	; BDOS print string function
 OPENF           .equ    15                 	; BDOS open file function
@@ -1415,7 +1441,7 @@ PRTIDXDEA3:
 ; Strings and constants.
 ;------------------------------------------------------------------------------
 ;
-MSG_WELC:	.DB	"VGM Player v0.5.11, 07-Dec-2025 - Timing tuned (88 BPM)"
+MSG_WELC:	.DB	"VGM Player v0.5.12, 20-01-2026 - Timing tuned (88 BPM)"
 ;		.DB	CR,LF, "J.B. Langston/Marco Maccaferri/Ed Brindley/Phil Summers",CR,LF
 		.DB	0
 MSG_BADF:	.DB	"Not a VGM file",CR,LF,0
@@ -1445,6 +1471,7 @@ MSG_RCBUS	.DB	" [RCBus] ",0
 MSG_SBCECB	.DB	" [sbc] ",0
 MSG_MBC		.DB	" [mbc] ",0
 MSG_RCBUSMSX	.DB	" [RCBus-MSX] ",0
+MSG_SC720		.DB " [SC720] ",0
 ;
 ;------------------------------------------------------------------------------
 ; Variables
@@ -1524,7 +1551,7 @@ welcome:	LD	DE,MSG_WELC		; Welcome Message
 		LD	DE,MSG_CPU
 		CALL	PRTIDXDEA
 ;
-		LD	A,plt_type		; display system type
+		LD	A,plt_type			; display system type
 		LD	DE,MSG_CUSTOM
 		CALL	PRTIDXDEA
 		call	CRLF
@@ -1721,10 +1748,10 @@ setfdelay:
 		RST	08			; FROM HBIOS
 		LD	A,L			; CPU index/code in A
 #ELSE
-		ld	a,plt_cpuspd		; USE STANDALONE CPU SPEED
+		ld	a,plt_cpuspd	; USE STANDALONE CPU SPEED
 #ENDIF
-		PUSH	AF			; save cpu index
-		LD	HL,CLKTBL-1		; CPU SPEED
+		PUSH	AF		; save cpu index
+		LD	HL,CLKTBL-1	; CPU SPEED
 		ADD	A,L			; INDEXES 
 		LD	L,A			; INTO
 		ADC	A,H			; TABLE
