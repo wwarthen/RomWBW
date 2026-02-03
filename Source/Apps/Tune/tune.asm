@@ -54,8 +54,8 @@
 ;   2024-09-17 [WBW] Add support for HEATH H8 with Les Bird's MSX Card
 ;   2024-12-12 [WBW] Add options to force standard MSX or RC ports
 ;   2025-05-28 [WBW] Add option to force delay mode
-;   2026-02-03 [MIG] Add RCZ80 Coleco (50H/51H/52H) auto-detect using
-;                    rc2014-ym2149 MSX/Coleco read-back port (base+2),
+;   2026-02-03 [JMD] Add RCZ80 Coleco (50H/51H/52H) and MSX (A0H/A1H) auto-detect 
+;                    using rc2014-ym2149 MSX/Coleco read-back port (base+2),
 ;                    add -coleco CLI/ports mode and bump Tune to v3.14
 ;_______________________________________________________________________________
 ;
