@@ -49,7 +49,7 @@ while ($true)
 }
 
 #
-# Establish the platform configuration to build.  It may have been passed in on the commandline.  Validate
+# Establish the platform configuration to build.  It may have been passed in on the command line.  Validate
 # $Config and loop requesting a new value as long as it is not valid.  The file system is scanned to determine
 # if the requested ConfigFile exists.  Config files must be named <platform>_<config>.asm where <platform> is
 # the platform name established above and <config> is the value of $Config determined here.
