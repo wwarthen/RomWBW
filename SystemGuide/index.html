@@ -659,7 +659,7 @@
 <p><strong>RomWBW System Guide</strong> \
 Version 3.6 \
 Wayne Warthen  (<a href="mailto:wwarthen@gmail.com">wwarthen@gmail.com</a>) \
-21 Jan 2026</p>
+06 Feb 2026</p>
 <h1 id="overview">Overview</h1>
 <p>The objective of RomWBW is to provide firmware, operating systems, and
 applications targeting the Z80 family of CPUs. The firmware, in the form
@@ -6189,9 +6189,10 @@ result code.</p>
 </table>
 <p>This function returns information about the active CPU environment. The
 Z80 CPU Variant (H) will be one of: 0=Z80, 1=Z180, 2=Z180-K, 3=Z180-N,
-4=Z280. The current CPU speed is provided as both CPU Speed MHz (L) and
-CPU Speed KHz (DE). The raw oscillator speed is provided as Oscillator
-Speed KHz (BC). The returned Status (A) is a standard HBIOS result code.</p>
+4=Z280, 5=eZ80. The current CPU speed is provided as both CPU Speed MHz
+(L) and CPU Speed KHz (DE). The raw oscillator speed is provided as
+Oscillator Speed KHz (BC). The returned Status (A) is a standard HBIOS
+result code.</p>
 <h4 id="sysget-subfunction-0xf1-get-memory-information-meminfo">SYSGET Subfunction 0xF1 – Get Memory Information (MEMINFO)</h4>
 <table>
 <thead>
