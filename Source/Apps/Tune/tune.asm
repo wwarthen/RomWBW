@@ -54,9 +54,11 @@
 ;   2024-09-17 [WBW] Add support for HEATH H8 with Les Bird's MSX Card
 ;   2024-12-12 [WBW] Add options to force standard MSX or RC ports
 ;   2025-05-28 [WBW] Add option to force delay mode
-;   2026-02-03 [JMD] Add RCZ80 Coleco (50H/51H/52H) and MSX (A0H/A1H) auto-detect 
+;   2026-01-24 [WBW] Support RC2014 platform id
+;   2026-01-31 [WBW] Update MUTE funtion to zero all PSG registers
+;   2026-02-03 [JMD] Add RCZ80 Coleco (50H/51H/52H) and MSX (A0H/A1H) auto-detect
 ;                    using rc2014-ym2149 MSX/Coleco read-back port (base+2),
-;                    add -coleco CLI/ports mode and bump Tune to v3.14
+;                    add -coleco CLI/ports mode
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -628,6 +630,9 @@ CFGSIZ	.EQU	$ - CFGTBL
 	.DB	$08,	$33,	$32,	$32,	$C0,	$FF,	$FF	; RCZ180 W/ LINC SOUND MODULE
 	.DW	HWSTR_LINC
 ;
+	.DB	$08,	$50,	$51,	$52,	$FF,	$FF,	$FF	; RCZ180 W/ RC SOUND MODULE (COLECO)
+	.DW	HWSTR_COLECO
+;
 	.DB	$09,	$D8,	$D0,	$D8,	$FF,	$FF,	$FF	; EZZ80 W/ RC SOUND MODULE (EB)
 	.DW	HWSTR_RCEB
 ;
@@ -639,6 +644,9 @@ CFGSIZ	.EQU	$ - CFGTBL
 ;
 	.DB	$09,	$33,	$32,	$32,	$FF,	$FF,	$FF	; EZZ80 W/ LINC SOUND MODULE
 	.DW	HWSTR_LINC
+;
+	.DB	$09,	$50,	$51,	$52,	$FF,	$FF,	$FF	; EZZ80 W/ RC SOUND MODULE (COLECO)
+	.DW	HWSTR_COLECO
 ;
 	.DB	$0A,	$68,	$60,	$68,	$C0,	$FF,	$FF	; SCZ180 W/ RC SOUND MODULE (EB)
 	.DW	HWSTR_RCEB
@@ -652,6 +660,9 @@ CFGSIZ	.EQU	$ - CFGTBL
 	.DB	$0A,	$33,	$32,	$32,	$C0,	$FF,	$FF	; SCZ180 W/ LINC SOUND MODULE
 	.DW	HWSTR_LINC
 ;
+	.DB	$0A,	$50,	$51,	$52,	$FF,	$FF,	$FF	; SCZ80 W/ RC SOUND MODULE (COLECO)
+	.DW	HWSTR_COLECO
+;
 	.DB	$0B,	$D8,	$D0,	$D8,	$FF,	$FF,	$FF	; RCZ280 W/ RC SOUND MODULE (EB)
 	.DW	HWSTR_RCEB
 ;
@@ -664,6 +675,9 @@ CFGSIZ	.EQU	$ - CFGTBL
 	.DB	$0B,	$33,	$32,	$32,	$FF,	$FF,	$FF	; RCZ280 W/ LINC SOUND MODULE
 	.DW	HWSTR_LINC
 ;
+	.DB	$0B,	$50,	$51,	$52,	$FF,	$FF,	$FF	; RCZ280 W/ RC SOUND MODULE (COLECO)
+	.DW	HWSTR_COLECO
+;
 	.DB	13,	$A0,	$A1,	$A0,	$FF,	$A2,	$FE	; MBC
 	.DW	HWSTR_MBC
 ;
@@ -675,6 +689,18 @@ CFGSIZ	.EQU	$ - CFGTBL
 ;
 	.DB	22,	$41,	$40,	$40,	$FF,	$FF,	$FF	; NABU
 	.DW	HWSTR_NABU
+;
+	.DB	27,	$D8,	$D0,	$D8,	$FF,	$FF,	$FF	; RC2014 W/ RC SOUND MODULE (EB)
+	.DW	HWSTR_RCEB
+;
+	.DB	27,	$A0,	$A1,	$A2,	$FF,	$FF,	$FF	; RC2014 W/ RC SOUND MODULE (MSX)
+	.DW	HWSTR_RCMSX
+;
+	.DB	27,	$D1,	$D0,	$D0,	$FF,	$FF,	$FF	; RC2014 W/ RC SOUND MODULE (MF)
+	.DW	HWSTR_RCMF
+;
+	.DB	27,	$50,	$51,	$52,	$FF,	$FF,	$FF	; RC2014 W/ RC SOUND MODULE (COLECO)
+	.DW	HWSTR_COLECO
 ;
 	.DB	$FF					; END OF TABLE MARKER
 ;
@@ -722,8 +748,8 @@ OCTAVEADJ	.DB	0	; AMOUNT TO ADJUST OCTAVE UP OR DOWN
 
 USEPORTS	.DB	0	; AUDIO CHIP PORT SELECTION MODE
 
-MSGBAN		.DB	"Tune Player for RomWBW v3.14, 03-Feb-2026",0
-MSGUSE		.DB	"Copyright (C) 2025, Wayne Warthen, GNU GPL v3",13,10
+MSGBAN		.DB	"Tune Player for RomWBW v3.16, 5-fEB-2026",0
+MSGUSE		.DB	"Copyright (C) 2026, Wayne Warthen, GNU GPL v3",13,10
 		.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 		.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
 		.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM] [-msx|-rc|-coleco] [-delay] [--hbios] [+tn|-tn]",0
@@ -898,10 +924,16 @@ MUTE	ISHBIOS
 	JR	NZ,MUTEVIAHBIOS
 
 	XOR A
-	LD H,A
-	LD L,A
-	LD (AYREGS+AmplA),A
-	LD (AYREGS+AmplB),HL
+	LD B,14
+	LD HL,AYREGS
+MUTE1	LD (HL),A
+	INC HL
+	DJNZ MUTE1
+	;XOR A
+	;LD H,A
+	;LD L,A
+	;LD (AYREGS+AmplA),A
+	;LD (AYREGS+AmplB),HL
 	JP ROUT
 
 MUTEVIAHBIOS:

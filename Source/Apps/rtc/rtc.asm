@@ -35,6 +35,8 @@
 ;
 ;[2024/09/02] v1.10  Support Genesis STD Z180
 ;
+;[2026/01/24] v1.11  Support RC2014
+;
 ; Constants
 ;
 mask_data	.EQU	%10000000	; RTC data line
@@ -54,8 +56,8 @@ PORT_RCZ280	.EQU	$C0		; RTC port for RCZ280
 PORT_MBC	.EQU	$70		; RTC port for MBC
 PORT_RPH	.EQU	$84		; RTC port for RHYOPHYRE
 PORT_DUO	.EQU	$94		; RTC port for DUODYNE
-PORT_STDZ180 .EQU $84         ; RTC Port for STD Bus Z180 board
-
+PORT_STDZ180	.EQU	$84		; RTC Port for STD Bus Z180 board
+PORT_RC2014	.EQU	$C0		; RTC port for RC2014
 
 BDOS		.EQU	5		; BDOS invocation vector
 FCB		.EQU	05CH		; Start of command line
@@ -1151,6 +1153,11 @@ HINIT:
 	CP	21		; STD Z180
 	JP	Z,RTC_INIT2
 ;
+	LD	C,PORT_RC2014
+	LD	DE,PLT_RC2014
+	CP	27		; RC2014
+	JP	Z,RTC_INIT2
+;
 
 ; Unknown platform
 	LD	DE,PLTERR	; BIOS error message
@@ -1778,7 +1785,8 @@ PLT_RCZ280	.TEXT	", RCBus Z280 RTC Module Latch Port 0xC0\r\n$"
 PLT_MBC		.TEXT	", MBC RTC Latch Port 0x70\r\n$"
 PLT_RPH		.TEXT	", RHYOPHYRE RTC Latch Port 0x84\r\n$"
 PLT_DUO		.TEXT	", DUODYNE RTC Latch Port 0x70\r\n$"
-PLT_STDZ180 .TEXT ", STD Z180 RTC Module latch port 0x84\r\n$"
+PLT_STDZ180	.TEXT	", STD Z180 RTC Module latch port 0x84\r\n$"
+PLT_RC2014	.TEXT	", RC2014 Z80 RTC Module Latch Port 0xC0\r\n$"
 
 ;
 ; Generic FOR-NEXT loop algorithm

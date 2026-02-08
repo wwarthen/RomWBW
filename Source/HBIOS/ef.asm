@@ -3,6 +3,8 @@
 ;
 ;	PARTS WRITTEN BY: ALAN COX
 ;	REVISED/ENHANCED BY LASZLO SZOLNOKI -- 01/2024
+;
+;	https://github.com/lgszolnoki/EF9345-VideoCard
 ;======================================================================
 ; TODO:
 ;	- 40X24 IMPLEMENTATION
