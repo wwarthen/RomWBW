@@ -79,6 +79,18 @@ prtslcfin:
 ; Print list of All Slices for a given Unit
 ;
 prtslc2:
+	; check that the device is capable of having slices
+	; this avoids waiting on floppy drives that have no
+	; media in them when making the following DIOMEDIA call
+	push	bc			; save unit num
+	ld	b,BF_DIODEVICE		; get device information
+	rst	08			; do it
+	ld	a,c			; attributes to accum
+	pop	bc			; recover unit num
+	ret	nz			; handle error
+	bit	5,a			; high capacity?
+	ret	z			; abort if not
+;
 	; get the media infor
 	ld	b,BF_DIOMEDIA		; get media information
 	ld	e,1			; with media discovery
@@ -87,7 +99,7 @@ prtslc2:
 	;
 	ld	a,MID_HD		; hard disk
 	cp	e			; is it  hard disk
-	ret	nz			; if not noting to do
+	ret	nz			; if not nothing to do
 	;
 	; setup the loop
 	ld	b,64			; arbitrary (?) number of slices to check.
