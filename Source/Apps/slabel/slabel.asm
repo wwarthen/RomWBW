@@ -47,6 +47,7 @@
 ;   2024-12-14 [MAP] Initial 0.9 alpha with basic working functionality
 ;   2025-04-21 [MAP] Initial v1.0 release for distribution, fixing all issues
 ;   2025-07-12 [MR]  Minor tweak to partially tidy up output formatting
+;   2026-02-08 [WBW] Avoid waiting on floppy drives with no media
 ;______________________________________________________________________________
 ;
 ; Include Files
@@ -194,6 +195,18 @@ prtslc1:
 ; Print list of All Slices for a given Unit
 ;
 prtslc2:
+	; check that the device is capable of having slices
+	; this avoids waiting on floppy drives that have no
+	; media in them when making the following DIOMEDIA call
+	push	bc			; save unit num
+	ld	b,BF_DIODEVICE		; get device information
+	rst	08			; do it
+	ld	a,c			; attributes to accum
+	pop	bc			; recover unit num
+	ret	nz			; handle error
+	bit	5,a			; high capacity?
+	ret	z			; abort if not
+;
 	; get the media infor
 	ld	b,BF_DIOMEDIA		; get media information
 	ld	e,1			; with media discovery
@@ -700,7 +713,7 @@ diskwrite:
 ;===============================================================================
 ;
 str_banner	.db	"\r\n"
-		.db	"Slice Label, v1.1, July 2025 - M.Pruden",0
+		.db	"Slice Label, v1.2, February 2026 - M.Pruden",0
 ;
 str_err_una	.db	"  ERROR: UNA not supported by application",0
 str_err_inv	.db	"  ERROR: Invalid BIOS (signature missing)",0
