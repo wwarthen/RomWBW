@@ -121,6 +121,7 @@ Id		.EQU	1	; 5) Insert official identificator
 ;
 	PRTCRLF
 	PRTSTRDE(MSGBAN)		; Print to banner message
+	CALL	CRLF			; newline after banner
 
 	CALL	CLI_ABRT_IF_OPT_FIRST
 	CALL	CLI_PORTS
@@ -837,7 +838,6 @@ PRTPLAYINFO:
 	; TS file: print TS info now so header order matches non-TS
 	; (info -> blank line -> Song name/by -> blank line -> Playing...)
 	;
-	CALL	CRLF			; blank line after banner
 	LD	DE,MSGTSDET
 	CALL	PRTSTR
 	CALL	CRLF
@@ -861,7 +861,6 @@ PRTPI_TSHB:
 	LD	(INFOLINE),A
 	RET
 PRTPI_NPT3:
-	CALL	CRLF			; formatting (blank line after banner)
 	LD	A,(HBIOSMD)
 	OR	A
 	JR	Z,PRTPI_HW
@@ -1753,7 +1752,7 @@ OCTAVEADJ	.DB	0	; AMOUNT TO ADJUST OCTAVE UP OR DOWN
 
 USEPORTS	.DB	0	; AUDIO CHIP PORT SELECTION MODE
 
-MSGBAN		.DB	"Tune Player for RomWBW v3.16, 5-fEB-2026",0
+MSGBAN		.DB	"Tune Player for RomWBW v3.2, 17-Feb-2026",0
 MSGUSE		.DB	"Copyright (C) 2026, Wayne Warthen, GNU GPL v3",13,10
 		.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 		.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
