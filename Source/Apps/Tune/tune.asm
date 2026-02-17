@@ -74,6 +74,11 @@
 #include	"cpm.inc"
 #include	"tune.inc"
 ;
+; Local hbios.inc is minimal; define additional equates we need here.
+BF_SYSGET_SNDCNT	.EQU	$50		; SYSGET subfunction: sound unit count
+BC_SYSGET_SNDCNT	.EQU	(BF_SYSGET * 256) + BF_SYSGET_SNDCNT
+BF_SNDQ_DEV		.EQU	4		; query: return device type and IO ports
+;
 HEAPEND		.EQU	$C000		; End of heap storage
 ;
 TYPPT2		.EQU	1		; FILTYP value for PT2 sound file
@@ -122,6 +127,15 @@ Id		.EQU	1	; 5) Insert official identificator
 	CALL	CLI_HAVE_HBIOS_SWITCH
 	CALL	CLI_HAVE_DELAY_SWITCH
 	CALL	CLI_OCTAVE_ADJST
+	;
+	; If no filename is provided, exit immediately with usage.
+	; Some environments leave the FCB filename field as NULs instead of spaces.
+	LD	A,(FCB+1)
+	OR	A
+	JP	Z,ERRCMD
+	CP	' '
+	JP	Z,ERRCMD
+	;
 	JP	CONTINUE
 
 CONTINUE:
@@ -158,6 +172,12 @@ FORCE:
 	JR	MAT			; Continue
 
 AUTOSEL:
+	; Prefer HBIOS sound enumeration for auto selection. This avoids
+	; relying on PSG register readback behavior for detection.
+	CALL	HB_SND_AUTOCFG
+	JR	NZ,AUTOSEL_FBK
+	JR	MAT			; success: CFG populated, skip config table scan
+AUTOSEL_FBK:
 	LD	HL,CFGTBL		; Point to start of config table
 CFGSEL:
 	LD	A,$FF			; End of table marker
@@ -175,43 +195,39 @@ CFGSEL:
 	JR	NZ,CFGSEL		; If no match keep trying
 ;
 	; Activate card if applicable
-	CALL	SLOWIO			; Slow down I/O now
+	LD	B,0			; ensure 8-bit port addressing via BC
 	LD	A,(ACR)			; Get ACR port address (if any)
 	LD	C,A			; Copy to C for I/O later
 	INC	A			; $FF -> $00 & set flags
 	JR	Z,PROBE			; If no ACR, skip ahead
+	CALL	SLOWIO			; Slow down I/O for the activation write
 	LD	A,(ACRVAL)		; Value to activate card
 	OUT	(C),A			; Write value to ACR
+	CALL	NORMIO			; Restore I/O speed
 ;
 PROBE:
 	; Test for hardware (sound chip detection)
-	LD	DE,(PORTS)		; D := RDAT, E := RSEL
-	LD	C,E			; Port = RSEL
-	LD	A,2			; Register 2
-	OUT	(C),A			; Select register 2
-	LD	C,D			; Port = RDAT
-	LD	A,$AA			; Value = $AA
-	OUT	(C),A			; Write $AA to register 2
-	LD	A,(RIN)			; Port = RIN
-	LD	C,A			; ... to C
-	IN	A,(C)			; Read back value in register 2
-	CP	$AA			; Value as written?
-	PUSH	AF			; Save AF
-	CALL	NORMIO			; Back to normal I/O speeds
-	POP	AF			; Recover AF
+	; Use PROBE_AY to avoid false positives from floating-bus echo behavior.
+	LD	HL,(PORTS)		; HL = RDAT:RSEL
+	LD	A,(RIN)			; A = RIN
+	CALL	PROBE_AY
 	JR	Z,MAT			; Hardware matched!
-	JR	CFGSEL			; And keep trying
+	JR	CFGSEL			; Keep trying
 ;
 MAT:
 	; Hardware matched!
-	CALL	CRLF			; Formatting
-	LD	DE,(DESC)		; Load hardware description pointer
-	CALL	PRTSTR			; Print description
+	;
+	; NOTE: Do not print hardware/mode info here anymore.
+	; We defer printing until after the file is loaded so we can
+	; suppress the single-chip description for TurboSound files.
+	;
 ;
-
 TSTTIMER:
+	;
+	; Probe timer and set WMOD, but do not print anything here.
+	; Output is deferred until after file load.
+	;
 	CALL	PROBETIMER
-	CALL	PRTSTR			; Print it
 ;
 	; Get CPU speed & type from RomWBW HBIOS and compute quark delay factor
 	LD	B,$F8			; HBIOS SYSGET function 0xF8
@@ -286,9 +302,13 @@ _LD0	LD	C,15			; CPM Open File function
 	LD	HL,MDLADDR		; Assume load address
 	LD	(DMA),HL		; ... for PTx files
 	CP	TYPMYM			; MYM file?
-	JR	NZ,_LD			; If not, all set
+	JR	NZ,_LDCLR		; If not, all set
 	LD	HL,rows			; Otherwise, load address
 	LD	(DMA),HL		; ... for MYM files
+;
+_LDCLR	XOR	A			; reset load byte counter
+	LD	(LOADBYTES),A
+	LD	(LOADBYTES+1),A
 ;
 _LD	LD	HL,(DMA)		; Get load address
 	PUSH	HL			; Save it
@@ -307,25 +327,25 @@ _LD	LD	HL,(DMA)		; Get load address
 	CALL	BDOS			; Read next 128 bytes
 	OR	A			; Set flags to check EOF
 	JR	NZ,_LDX			; Non-zero is EOF
-	JR	Z,_LD			; Load loop
+	; successful read, count bytes loaded (128 at a time)
+	LD	HL,(LOADBYTES)
+	LD	DE,128
+	ADD	HL,DE
+	LD	(LOADBYTES),HL
+	JR	_LD			; Load loop
 ;
 _LDX	LD	C,16			; CPM Close File function
 	LD	DE,FCB			; FCB
 	CALL	BDOS			; Do it
 ;
-	; Play loop
-;	CALL	CRLF2			; Formatting
-;	LD	DE,MSGPLY		; Playing message
-;	CALL	PRTSTR			; Print message
-	;CALL	CRLF2			; Formatting
-	;CALL	SLOWCPU
+	; Post-load: print hardware / TurboSound info
+	CALL	PRTPLAYINFO
+	;
 	LD	A,(FILTYP)		; Get file type
-	CP	TYPPT2			; PT2?
-	JR	Z,GOPT2			; If so, do it
 	CP	TYPPT3			; PT3?
 	JR	Z,GOPT3			; If so, do it
 	CP	TYPMYM			; MYM?
-	JR	Z,gomym			; If so, do it
+	JP	Z,gomym			; If so, do it
 	JP	ERRNAM			; This should never happen
 
 GOPT2	LD	A,2			; SETUP value to PT2 sound files
@@ -345,7 +365,14 @@ GOPTX
 	SBC	HL,DE			; Adjust for file type
 	LD	(QDLY),HL		; Save updated quark delay factor
 
+	LD	A,(INFOLINE)		; spacing before song metadata
+	OR	A
+	JR	Z,GOPTXSP1
 	CALL	CRLF2
+	JR	GOPTXSP2
+GOPTXSP1:
+	CALL	CRLF
+GOPTXSP2:
 	LD	DE, MSGSONGNAME         ; Print song name message
 	CALL	PRTSTR
 	LD	DE, MDLADDR + $1E       ; Print 32 character long song name from module
@@ -364,19 +391,45 @@ GOPTX2	LD	A,(DE)
 	INC	DE
 	DJNZ	GOPTX2
 	CALL	CRLF2			; Formatting
+;
+	; TurboSound-packed PT3 init
+	LD	A,(TSFLAG)
+	OR	A
+	JR	Z,PTXINITN
+	ISHBIOS
+	JR	Z,PTXINITT		; TurboSound requires direct I/O
+	ERRWITHMSG(MSGTSHB)
+PTXINITT:
+	CALL	TS_PORTS_SETUP		; probe and configure both chips
+	CALL	TS_ADJTIM		; adjust delay timing for TS
+	CALL	TS_INIT			; init both PT3 instances
+	JR	PTXSTART
+PTXINITN:
+	CALL	START			; Do initialization
+;
+PTXSTART:
 	LD	DE,MSGPLY		; Playing message
 	CALL	PRTSTR			; Print message
-	CALL	START			; Do initialization
-PTXLP	CALL	START+5			; Play one quark
+;
+PTXLP:	LD	A,(TSFLAG)
+	OR	A
+	JR	Z,PTXLP_NORM
+	CALL	TS_PLAYQUARK		; Play one quark on both chips
+	LD	A,(TSSET1)
+	BIT	7,A
+	JR	Z,PTXLP_KEY
+	LD	A,(TSSET2)
+	BIT	7,A
+	JR	NZ,EXIT			; done when both instances indicate loop point passed
+	JR	PTXLP_KEY
+PTXLP_NORM:
+	CALL	START+5			; Play one quark
 	LD	A,(START+10)		; Get setup byte
 	BIT	7,A			; Check bit 7 (loop point passed)
 	JR	NZ,EXIT			; Bail out when done playing
+PTXLP_KEY:
 	CALL	GETKEY			; Check for keypress
 	JR	NZ,EXIT			; Abort on keypress
-	;LD	A,13			; Back to
-	;CALL	PRTCHR			; ... start of line
-	;LD	A,(CurPos)		; Get current position
-	;CALL	PRTHEX			; ... and display it
 	CALL	WAITQ			; Wait one quark period
 	JR	PTXLP			; Loop for next quark
 ;
@@ -408,7 +461,13 @@ waitvb	call	WAITQ
 	;call	PRTDOT
 	jr	mymlp
 ;
-EXIT	CALL	START+8			; Mute audio
+EXIT	LD	A,(TSFLAG)
+	OR	A
+	JR	Z,EXITN
+	CALL	TS_MUTE			; Mute both chips
+	JR	EXITX
+EXITN	CALL	START+8			; Mute audio
+EXITX
 	;CALL	NORMCPU
 	;CALL	CRLF2			; Formatting
 	LD	DE,MSGEND		; Completion message
@@ -429,6 +488,935 @@ GETKEY	LD	C,6		; BDOS direct I/O
 	CALL	BDOS		; Call BDOS
 	OR	A		; Set flags, Z set if no key
 	RET			; Done
+;
+; Print the wait mode suffix based on WMOD
+;   WMOD == 0  -> delay mode
+;   WMOD != 0  -> timer mode
+;
+PRTWMOD:
+	LD	A,(WMOD)
+	OR	A
+	JR	Z,PRTWMOD_DLY
+	LD	DE,MSGTIM
+	JR	PRTWMOD_P
+PRTWMOD_DLY:
+	LD	DE,MSGDLY
+PRTWMOD_P:
+	JP	PRTSTR
+;
+; Enumerate HBIOS sound devices to detect which PSG port sets exist.
+; Returns A=mask, Z if any recognized ports were found.
+; Mask bits:
+;   bit0: MSX (A0/A1/A2)
+;   bit1: COLECO (50/51/52)
+;   bit2: RC/EB (D8/D0/D8)
+;   bit3: RC/MF (D1/D0/D0)
+;
+HB_SND_GETMASK:
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	;
+	LD	BC,BC_SYSGET_SNDCNT
+	RST	08
+	LD	A,E
+	OR	A
+	JP	Z,HBGM_NONE
+	LD	(HBGM_CNT),A
+	XOR	A
+	LD	(HBGM_IDX),A
+	XOR	A
+	LD	(HBGM_MASK),A
+HBGM_LP:
+	LD	A,(HBGM_IDX)
+	LD	C,A			; sound unit number
+	LD	B,BF_SNDQUERY
+	LD	E,BF_SNDQ_DEV		; request device type + ports
+	RST	08
+	OR	A
+	JR	NZ,HBGM_NXT
+	;
+	; For AY, query-dev returns ports in DE: D=RSEL, E=RDAT
+	; We use RSEL as the base identifier for known mappings.
+	LD	A,D			; RSEL
+	CP	$A0
+	JR	NZ,HBGM_C50
+	LD	A,(HBGM_MASK)
+	OR	1
+	LD	(HBGM_MASK),A
+	JR	HBGM_NXT
+HBGM_C50:
+	CP	$50
+	JR	NZ,HBGM_CD8
+	LD	A,(HBGM_MASK)
+	OR	2
+	LD	(HBGM_MASK),A
+	JR	HBGM_NXT
+HBGM_CD8:
+	CP	$D8
+	JR	NZ,HBGM_CD1
+	LD	A,(HBGM_MASK)
+	OR	4
+	LD	(HBGM_MASK),A
+	JR	HBGM_NXT
+HBGM_CD1:
+	CP	$D1
+	JR	NZ,HBGM_NXT
+	LD	A,(HBGM_MASK)
+	OR	8
+	LD	(HBGM_MASK),A
+	JR	NZ,HBGM_NXT
+HBGM_NXT:
+	LD	A,(HBGM_IDX)
+	INC	A
+	LD	(HBGM_IDX),A
+	LD	B,A
+	LD	A,(HBGM_CNT)
+	CP	B
+	JR	NZ,HBGM_LP
+	LD	A,(HBGM_MASK)
+	OR	A
+	JR	Z,HBGM_NONE
+	;
+	POP	HL
+	POP	DE
+	POP	BC
+	LD	A,(HBGM_MASK)
+	OR	A			; set flags
+	RET
+HBGM_NONE:
+	POP	HL
+	POP	DE
+	POP	BC
+	XOR	A
+	OR	A			; Z set
+	RET
+HBGM_CNT	.DB	0
+HBGM_IDX	.DB	0
+HBGM_MASK	.DB	0
+;
+; Configure PSG ports from HBIOS sound enumeration.
+; Preference order when multiple are present: Coleco, then MSX, then RC/EB, then RC/MF.
+; Returns Z on success, NZ on failure.
+;
+HB_SND_AUTOCFG:
+	PUSH	AF
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	CALL	HB_SND_GETMASK
+	JP	Z,HBSA_FAIL
+	LD	B,A			; B = mask (preserve before A is modified below)
+	;
+	; Ensure SLOWIO/NORMIO helpers are inert during probing
+	LD	A,$FF
+	LD	(Z180),A
+	LD	(ACR),A
+	LD	(ACRVAL),A
+	;
+	; HBIOS enumeration is the primary source, but on some systems a second
+	; AY can exist without being enumerated. If HBIOS reports MSX only,
+	; do a robust direct probe for Coleco ($50/$51, read at $52) and prefer
+	; it when present.
+	;
+	BIT	1,B			; already know Coleco?
+	JR	NZ,HBSA_PREF
+	BIT	0,B			; only try probe if MSX exists
+	JR	Z,HBSA_PREF
+	PUSH	BC
+	LD	HL,$5150		; RDAT=51, RSEL=50
+	LD	A,$52			; readback
+	CALL	PROBE_AY
+	POP	BC
+	JR	NZ,HBSA_PREF
+	SET	1,B			; found Coleco
+HBSA_PREF:
+	;
+	; Choose preferred ports when multiple are present:
+	; Coleco, then MSX, then RC/EB, then RC/MF.
+	;
+	BIT	1,B
+	JR	NZ,HBSA_DO_COLECO
+	BIT	0,B
+	JR	NZ,HBSA_DO_MSX
+	BIT	2,B
+	JR	NZ,HBSA_DO_RCEB
+	BIT	3,B
+	JR	NZ,HBSA_DO_RCMF
+	JR	HBSA_FAIL
+	;
+	; Record current platform id in active config
+	;
+HBSA_SETPLT:
+	LD	A,(CURPLT)
+	LD	(PLT),A
+	RET
+HBSA_DO_MSX:
+	CALL	HBSA_SETPLT
+HBSA_CONT:
+	LD	A,$A0
+	LD	(RSEL),A
+	LD	A,$A1
+	LD	(RDAT),A
+	LD	A,$A2
+	LD	(RIN),A
+	LD	A,(CURPLT)
+	CP	27
+	JR	Z,HBSA_MSX_RC2014
+	LD	HL,HWSTR_MSX
+	JR	HBSA_DESC
+HBSA_MSX_RC2014:
+	LD	HL,HWSTR_RCMSX
+	JR	HBSA_DESC
+HBSA_DO_COLECO:
+	LD	A,$50
+	LD	(RSEL),A
+	LD	A,$51
+	LD	(RDAT),A
+	LD	A,$52
+	LD	(RIN),A
+	LD	HL,HWSTR_COLECO
+	JR	HBSA_DESC
+HBSA_DO_RCEB:
+	LD	A,$D8
+	LD	(RSEL),A
+	LD	A,$D0
+	LD	(RDAT),A
+	LD	A,$D8
+	LD	(RIN),A
+	LD	HL,HWSTR_RCEB
+	JR	HBSA_DESC
+HBSA_DO_RCMF:
+	LD	A,$D1
+	LD	(RSEL),A
+	LD	A,$D0
+	LD	(RDAT),A
+	LD	A,$D0
+	LD	(RIN),A
+	LD	HL,HWSTR_RCMF
+HBSA_DESC:
+	LD	(DESC),HL
+	POP	HL
+	POP	DE
+	POP	BC
+	POP	AF
+	XOR	A
+	RET
+HBSA_FAIL:
+	POP	HL
+	POP	DE
+	POP	BC
+	POP	AF
+	OR	$FF
+	RET
+;
+; Configure two distinct PSGs for TurboSound using HBIOS enumeration.
+; Returns Z on success, NZ if fewer than two recognized PSG port sets found.
+;
+HB_SND_GET2:
+	CALL	HB_SND_GETMASK
+	JP	Z,HBS2_FAIL
+	LD	B,A			; B = mask
+	;
+	; Prefer COLECO + MSX
+	BIT	1,B
+	JR	Z,HBS2_TRY_MSXRC
+	BIT	0,B
+	JR	Z,HBS2_TRY_MSXRC
+	LD	HL,$5150
+	LD	(TS_PORTS1),HL
+	LD	DE,TSSTR_COLECO
+	LD	(TS_DESC1),DE
+	LD	HL,$A1A0
+	LD	(TS_PORTS2),HL
+	LD	DE,TSSTR_MSX
+	LD	(TS_DESC2),DE
+	XOR	A
+	RET
+HBS2_TRY_MSXRC:
+	; MSX + RC/EB
+	BIT	0,B
+	JR	Z,HBS2_TRY_COLECORC
+	BIT	2,B
+	JR	Z,HBS2_TRY_MSXMF
+	LD	HL,$A1A0
+	LD	(TS_PORTS1),HL
+	LD	DE,TSSTR_MSX
+	LD	(TS_DESC1),DE
+	LD	HL,$D0D8
+	LD	(TS_PORTS2),HL
+	LD	DE,TSSTR_RC
+	LD	(TS_DESC2),DE
+	XOR	A
+	RET
+HBS2_TRY_MSXMF:
+	; MSX + RC/MF
+	BIT	0,B
+	JR	Z,HBS2_TRY_COLECORC
+	BIT	3,B
+	JR	Z,HBS2_TRY_COLECORC
+	LD	HL,$A1A0
+	LD	(TS_PORTS1),HL
+	LD	DE,TSSTR_MSX
+	LD	(TS_DESC1),DE
+	LD	HL,$D0D1
+	; NOTE: TSSTR_RC represents generic RC ports; MF uses D1/D0 too.
+	LD	HL,$D0D1
+	LD	(TS_PORTS2),HL
+	LD	DE,TSSTR_RC
+	LD	(TS_DESC2),DE
+	XOR	A
+	RET
+HBS2_TRY_COLECORC:
+	; COLECO + RC/EB
+	BIT	1,B
+	JR	Z,HBS2_TRY_COLECOMF
+	BIT	2,B
+	JR	Z,HBS2_TRY_COLECOMF
+	LD	HL,$5150
+	LD	(TS_PORTS1),HL
+	LD	DE,TSSTR_COLECO
+	LD	(TS_DESC1),DE
+	LD	HL,$D0D8
+	LD	(TS_PORTS2),HL
+	LD	DE,TSSTR_RC
+	LD	(TS_DESC2),DE
+	XOR	A
+	RET
+HBS2_TRY_COLECOMF:
+	; COLECO + RC/MF
+	BIT	1,B
+	JR	Z,HBS2_TRY_RCTWO
+	BIT	3,B
+	JR	Z,HBS2_TRY_RCTWO
+	LD	HL,$5150
+	LD	(TS_PORTS1),HL
+	LD	DE,TSSTR_COLECO
+	LD	(TS_DESC1),DE
+	LD	HL,$D0D1
+	LD	(TS_PORTS2),HL
+	LD	DE,TSSTR_RC
+	LD	(TS_DESC2),DE
+	XOR	A
+	RET
+HBS2_TRY_RCTWO:
+	; RC/EB + RC/MF
+	BIT	2,B
+	JR	Z,HBS2_FAIL
+	BIT	3,B
+	JR	Z,HBS2_FAIL
+	LD	HL,$D0D8
+	LD	(TS_PORTS1),HL
+	LD	DE,TSSTR_RC
+	LD	(TS_DESC1),DE
+	LD	HL,$D0D1
+	LD	(TS_PORTS2),HL
+	LD	DE,TSSTR_RC
+	LD	(TS_DESC2),DE
+	XOR	A
+	RET
+HBS2_FAIL:
+	OR	$FF
+	RET
+;
+; Print post-load playback info.
+; For TurboSound files we suppress the single-chip hardware description.
+; Sets INFOLINE non-zero if a mode line was printed and should be followed by CRLF2.
+;
+PRTPLAYINFO:
+	XOR	A
+	LD	(INFOLINE),A
+	LD	A,(FILTYP)
+	CP	TYPPT3
+	JR	NZ,PRTPI_NPT3
+	CALL	TS_DETECT		; sets TSFLAG/TS_OFF2/TS_LEN2 if detected
+	LD	A,(TSFLAG)
+	OR	A
+	JR	Z,PRTPI_NPT3
+	;
+	; TS file: print TS info now so header order matches non-TS
+	; (info -> blank line -> Song name/by -> blank line -> Playing...)
+	;
+	CALL	CRLF			; blank line after banner
+	LD	DE,MSGTSDET
+	CALL	PRTSTR
+	CALL	CRLF
+	LD	A,(HBIOSMD)
+	OR	A
+	JR	NZ,PRTPI_TSHB
+	;
+	; direct I/O: select ports and print the two-chip ports line
+	CALL	TS_PORTS_SETUP
+	CALL	PRT_TSPORTS_LINE
+	CALL	PRTWMOD
+	LD	A,$FF
+	LD	(INFOLINE),A
+	RET
+PRTPI_TSHB:
+	; HBIOS: still show mode line (TS will error out later)
+	LD	DE,MSGHBIOS
+	CALL	PRTSTR
+	CALL	PRTWMOD
+	LD	A,$FF
+	LD	(INFOLINE),A
+	RET
+PRTPI_NPT3:
+	CALL	CRLF			; formatting (blank line after banner)
+	LD	A,(HBIOSMD)
+	OR	A
+	JR	Z,PRTPI_HW
+	LD	DE,MSGHBIOS
+	CALL	PRTSTR
+	CALL	PRTWMOD
+	LD	A,$FF
+	LD	(INFOLINE),A
+	RET
+PRTPI_HW:
+	LD	DE,(DESC)
+	CALL	PRTSTR
+	CALL	PRTWMOD
+	LD	A,$FF
+	LD	(INFOLINE),A
+	RET
+;
+; Print the TurboSound ports line using TS_DESC1/TS_DESC2.
+;
+PRT_TSPORTS_LINE:
+	LD	DE,MSGTSPRE
+	CALL	PRTSTR
+	LD	DE,(TS_DESC1)
+	CALL	PRTSTR
+	LD	DE,MSGTSAND
+	CALL	PRTSTR
+	LD	DE,(TS_DESC2)
+	CALL	PRTSTR
+	LD	DE,MSGTSPST
+	JP	PRTSTR
+;
+;===============================================================================
+; TurboSound-packed PT3 support ("PT3! <off> PT3! <len> 02 TS" footer)
+;===============================================================================
+;
+PT3SIG0	.EQU	'P'
+PT3SIG1	.EQU	'T'
+PT3SIG2	.EQU	'3'
+PT3SIG3	.EQU	'!'
+TSSIG0	.EQU	'T'
+TSSIG1	.EQU	'S'
+;
+; Scan loaded (padded) PT3 data for the TurboSound footer.
+; Sets TSFLAG non-zero and records TS_OFF2/TS_LEN2 if found.
+;
+TS_DETECT:
+	XOR	A
+	LD	(TSFLAG),A
+	LD	HL,(LOADBYTES)
+	LD	DE,16
+	OR	A
+	SBC	HL,DE
+	RET	C
+	LD	B,H
+	LD	C,L			; BC = bytes_to_scan
+	LD	IX,MDLADDR
+TS_DLP:
+	LD	A,(IX+0)
+	CP	PT3SIG0
+	JR	NZ,TS_DNXT
+	LD	A,(IX+1)
+	CP	PT3SIG1
+	JR	NZ,TS_DNXT
+	LD	A,(IX+2)
+	CP	PT3SIG2
+	JR	NZ,TS_DNXT
+	LD	A,(IX+3)
+	CP	PT3SIG3
+	JR	NZ,TS_DNXT
+	; check second PT3! at +6
+	LD	A,(IX+6)
+	CP	PT3SIG0
+	JR	NZ,TS_DNXT
+	LD	A,(IX+7)
+	CP	PT3SIG1
+	JR	NZ,TS_DNXT
+	LD	A,(IX+8)
+	CP	PT3SIG2
+	JR	NZ,TS_DNXT
+	LD	A,(IX+9)
+	CP	PT3SIG3
+	JR	NZ,TS_DNXT
+	; check TS at +14
+	LD	A,(IX+14)
+	CP	TSSIG0
+	JR	NZ,TS_DNXT
+	LD	A,(IX+15)
+	CP	TSSIG1
+	JR	NZ,TS_DNXT
+	; record module2 offset and length
+	LD	E,(IX+4)
+	LD	D,(IX+5)
+	LD	(TS_OFF2),DE
+	LD	E,(IX+10)
+	LD	D,(IX+11)
+	LD	(TS_LEN2),DE
+	LD	A,$FF
+	LD	(TSFLAG),A
+	RET
+TS_DNXT:
+	INC	IX
+	DEC	BC
+	LD	A,B
+	OR	C
+	JR	NZ,TS_DLP
+	RET
+;
+; Probe for the two AY cards we expect for TurboSound playback.
+; Current implementation uses MSX-style ports (A0/A1/A2) and
+; Coleco-style ports (50/51/52).
+;
+TS_PORTS_SETUP:
+	;
+	; Prefer HBIOS enumeration to find two distinct PSG port sets.
+	;
+	CALL	HB_SND_GET2
+	RET	Z
+	;
+	; Fallback: use current PORTS as chip #1 and pick a different known port set
+	; without relying on readback.
+	;
+	LD	HL,(PORTS)		; HL = chip1 ports (RDAT:RSEL)
+	LD	(TS_PORTS1),HL
+	CALL	TS_DESC_FROM_HL
+	LD	(TS_DESC1),DE
+	;
+	; Choose chip2 by excluding chip1
+	LD	HL,(TS_PORTS1)
+	LD	DE,$5150
+	OR	A
+	SBC	HL,DE
+	JR	Z,TS_FBK2_MSX
+	LD	HL,$5150
+	LD	(TS_PORTS2),HL
+	LD	DE,TSSTR_COLECO
+	LD	(TS_DESC2),DE
+	RET
+TS_FBK2_MSX:
+	LD	HL,$A1A0
+	LD	(TS_PORTS2),HL
+	LD	DE,TSSTR_MSX
+	LD	(TS_DESC2),DE
+	RET
+;
+; Map a ports word in HL (RDAT:RSEL) to a description pointer in DE.
+;
+TS_DESC_FROM_HL:
+	PUSH	HL
+	LD	DE,TSSTR_MSX
+	LD	HL,(TS_PORTS1)		; dummy load to avoid assembler warnings
+	POP	HL
+	LD	DE,TSSTR_MSX
+	LD	BC,$A1A0
+	OR	A
+	SBC	HL,BC
+	RET	Z
+	LD	DE,TSSTR_COLECO
+	ADD	HL,BC			; restore HL
+	LD	BC,$5150
+	OR	A
+	SBC	HL,BC
+	RET	Z
+	LD	DE,TSSTR_RC
+	ADD	HL,BC			; restore HL
+	LD	BC,$D0D8
+	OR	A
+	SBC	HL,BC
+	RET	Z
+	LD	DE,TSSTR_RC
+	RET
+;
+TS_PROBE_MSX:
+	LD	HL,$A1A0
+	PUSH	HL
+	LD	A,$A2
+	CALL	PROBE_AY
+	POP	HL
+	RET	Z
+	; fallback: some boards read back on RSEL
+	PUSH	HL
+	LD	A,$A0
+	CALL	PROBE_AY
+	POP	HL
+	RET
+TS_PROBE_COLECO:
+	LD	HL,$5150
+	PUSH	HL
+	LD	A,$52
+	CALL	PROBE_AY
+	POP	HL
+	RET	Z
+	PUSH	HL
+	LD	A,$50
+	CALL	PROBE_AY
+	POP	HL
+	RET
+TS_PROBE_RC:
+	LD	HL,$D0D8
+	PUSH	HL
+	LD	A,$D8
+	CALL	PROBE_AY
+	POP	HL
+	RET
+;
+; Generic probe for an AY on ports (HL=RDAT:RSEL, A=RIN)
+; Returns Z on success, NZ on failure.
+;
+PROBE_AY:
+	; Probe for an AY/YM PSG on the given ports.
+	;
+	; IMPORTANT: Avoid false positives when no device is present.
+	; Many systems will read back the last value on the data bus ("floating bus"),
+	; which can make naive write-then-read probes succeed.
+	;
+	; Strategy:
+	; - Write two registers with distinct values.
+	; - "Poison" the bus by writing a different value to RSEL before each read.
+	; - Read back *only* from the intended read port:
+	;     - If RIN == RDAT, read from RDAT (2-port designs).
+	;     - Otherwise, read from RIN (dedicated readback at base+2).
+	;
+	DI
+	PUSH	AF			; save RIN in A
+	CALL	SLOWIO
+	POP	AF
+	LD	E,L			; E := RSEL
+	LD	D,H			; D := RDAT
+	LD	L,A			; L := RIN
+	LD	B,0			; ensure 8-bit port addressing via BC
+	;
+	; Write R2 = 55h
+	LD	C,E
+	LD	A,2
+	OUT	(C),A
+	LD	C,D
+	LD	A,$55
+	OUT	(C),A
+	;
+	; Write R3 = AAh
+	LD	C,E
+	LD	A,3
+	OUT	(C),A
+	LD	C,D
+	LD	A,$AA
+	OUT	(C),A
+	;
+	; Decide read port: H := (RIN == RDAT) ? RDAT : RIN
+	LD	A,L
+	CP	D
+	JR	Z,PRBAY_RDAT
+	LD	H,L
+	JR	PRBAY_RSEL2
+PRBAY_RDAT:
+	LD	H,D
+	;
+	; Read R2, expect 55h
+PRBAY_RSEL2:
+	LD	C,E
+	LD	A,0			; poison bus (and selection)
+	OUT	(C),A
+	LD	A,2
+	OUT	(C),A
+	LD	C,H
+	IN	A,(C)
+	CP	$55
+	JR	NZ,PRBAY_FAIL
+	;
+	; Read R3, expect AAh
+	LD	C,E
+	LD	A,0			; poison bus
+	OUT	(C),A
+	LD	A,3
+	OUT	(C),A
+	LD	C,H
+	IN	A,(C)
+	CP	$AA
+	JR	NZ,PRBAY_FAIL
+	;
+	CALL	NORMIO
+	EI
+	XOR	A			; success, Z set
+	RET
+PRBAY_FAIL:
+	CALL	NORMIO
+	EI
+	OR	$FF			; failure, NZ set
+	RET
+;
+; Initialize both packed PT3 modules as independent instances.
+;
+TS_INIT:
+	; save a pristine template of the player state
+	LD	HL,TS_CTXTMPL_VARS
+	LD	(CTX_VPTR),HL
+	LD	HL,TS_CTXTMPL_PATCH
+	LD	(CTX_PPTR),HL
+	CALL	CTX_SAVE
+	; init instance 1 @ MDLADDR on chip 1
+	CALL	TS_SETPORTS1
+	CALL	TS_LOAD_TMPL
+	LD	HL,MDLADDR
+	CALL	INIT
+	CALL	TS_SAVE_CTX1
+	LD	A,(SETUP)
+	LD	(TSSET1),A
+	; init instance 2 @ MDLADDR+TS_OFF2 on chip 2
+	CALL	TS_SETPORTS2
+	CALL	TS_LOAD_TMPL
+	LD	HL,MDLADDR
+	LD	DE,(TS_OFF2)
+	ADD	HL,DE
+	CALL	INIT
+	CALL	TS_SAVE_CTX2
+	LD	A,(SETUP)
+	LD	(TSSET2),A
+	RET
+;
+; Play one quark on both instances.
+;
+TS_PLAYQUARK:
+	CALL	TS_LOAD_CTX1
+	CALL	TS_SETPORTS1
+	CALL	PLAY
+	LD	A,(SETUP)
+	LD	(TSSET1),A
+	CALL	TS_SAVE_CTX1
+	CALL	TS_LOAD_CTX2
+	CALL	TS_SETPORTS2
+	CALL	PLAY
+	LD	A,(SETUP)
+	LD	(TSSET2),A
+	CALL	TS_SAVE_CTX2
+	RET
+;
+; Mute both chips.
+;
+TS_MUTE:
+	CALL	TS_LOAD_CTX1
+	CALL	TS_SETPORTS1
+	CALL	MUTE
+	CALL	TS_SAVE_CTX1
+	CALL	TS_LOAD_CTX2
+	CALL	TS_SETPORTS2
+	CALL	MUTE
+	CALL	TS_SAVE_CTX2
+	RET
+;
+; Adjust timing in delay mode to compensate for extra TS work.
+; In timer mode, the timer gate already keeps playback on tempo.
+;
+TS_ADJTIM:
+	LD	A,(WMOD)		; timer mode?
+	OR	A
+	RET	NZ			; if timer mode, no adjustment
+	;
+	; Tune delay for TS (empirically): QDLY := QDLY * 97 / 128
+	; This is 3/4 (96/128) plus 1/128.
+	;
+	LD	HL,(QDLY)		; base delay count
+	LD	B,H
+	LD	C,L			; BC = base
+	;
+	; DE = base/4
+	LD	H,B
+	LD	L,C
+	SRL	H
+	RR	L
+	SRL	H
+	RR	L
+	EX	DE,HL
+	;
+	; HL = 3/4 base
+	LD	H,B
+	LD	L,C
+	OR	A			; clear carry
+	SBC	HL,DE
+	;
+	; HL = 3/4 base + base/128
+	PUSH	HL			; save 3/4 base
+	LD	H,B
+	LD	L,C
+	LD	A,7
+TS_ADJ2:
+	SRL	H
+	RR	L
+	DEC	A
+	JR	NZ,TS_ADJ2		; HL = base/128
+	POP	DE
+	ADD	HL,DE
+	LD	(QDLY),HL
+	RET
+TS_SETPORTS1:
+	LD	HL,(TS_PORTS1)
+	LD	(PORTS),HL
+	RET
+TS_SETPORTS2:
+	LD	HL,(TS_PORTS2)
+	LD	(PORTS),HL
+	RET
+;
+; Context save/restore helpers
+;
+TS_LOAD_TMPL:
+	LD	HL,TS_CTXTMPL_VARS
+	LD	(CTX_VPTR),HL
+	LD	HL,TS_CTXTMPL_PATCH
+	LD	(CTX_PPTR),HL
+	JP	CTX_LOAD
+TS_SAVE_CTX1:
+	LD	HL,TS_CTX1_VARS
+	LD	(CTX_VPTR),HL
+	LD	HL,TS_CTX1_PATCH
+	LD	(CTX_PPTR),HL
+	JP	CTX_SAVE
+TS_LOAD_CTX1:
+	LD	HL,TS_CTX1_VARS
+	LD	(CTX_VPTR),HL
+	LD	HL,TS_CTX1_PATCH
+	LD	(CTX_PPTR),HL
+	JP	CTX_LOAD
+TS_SAVE_CTX2:
+	LD	HL,TS_CTX2_VARS
+	LD	(CTX_VPTR),HL
+	LD	HL,TS_CTX2_PATCH
+	LD	(CTX_PPTR),HL
+	JP	CTX_SAVE
+TS_LOAD_CTX2:
+	LD	HL,TS_CTX2_VARS
+	LD	(CTX_VPTR),HL
+	LD	HL,TS_CTX2_PATCH
+	LD	(CTX_PPTR),HL
+	JP	CTX_LOAD
+;
+; Save/restore the Bulba player state (heap vars + self-modified bytes).
+;
+PTX_PATCHSZ	.EQU	52
+;
+PTX_PATCHTBL:
+	; addr, len
+	.DW	SETUP				; setup byte (loop status bit 7)
+	.DB	1
+	.DW	PTDECOD+1
+	.DB	2
+	.DW	PsCalc
+	.DB	2
+	.DW	PDSP_+1
+	.DB	2
+	.DW	PSP_+1
+	.DB	2
+	.DW	CSP_+1
+	.DB	2
+	.DW	L3
+	.DB	1
+	.DW	M2
+	.DB	1
+	.DW	OrnCP
+	.DB	1
+	.DW	OrnLD
+	.DB	1
+	.DW	SamClc2
+	.DB	1
+	.DW	SamCP
+	.DB	1
+	.DW	SamLD
+	.DB	1
+	.DW	SamCnv
+	.DB	2
+	.DW	PrNote+1
+	.DB	1
+	.DW	PrSlide+1
+	.DB	2
+	.DW	Version
+	.DB	1
+	.DW	LoStep
+	.DB	1
+	.DW	OrnPtrs
+	.DB	2
+	.DW	MDADDR2
+	.DB	2
+	.DW	SamPtrs
+	.DB	2
+	.DW	MDADDR1
+	.DB	2
+	.DW	AdInPtA
+	.DB	2
+	.DW	CrPsPtr
+	.DB	2
+	.DW	LPosPtr
+	.DB	2
+	.DW	PatsPtr
+	.DB	2
+	.DW	MODADDR
+	.DB	2
+	.DW	AdInPtB
+	.DB	2
+	.DW	AdInPtC
+	.DB	2
+	.DW	Delay
+	.DB	1
+	.DW	AddToEn
+	.DB	1
+	.DW	Env_Del
+	.DB	1
+	.DW	ESldAdd
+	.DB	2
+	.DW	$FFFF
+	.DB	0
+;
+CTX_SAVE:
+	LD	HL,VARS
+	LD	DE,(CTX_VPTR)
+	LD	BC,PTX_CTXSIZ
+	LDIR
+	LD	IX,PTX_PATCHTBL
+	LD	DE,(CTX_PPTR)
+CTX_SLP:
+	LD	L,(IX+0)
+	LD	H,(IX+1)
+	LD	A,H
+	CP	$FF
+	JR	NZ,CTX_SHAVE
+	LD	A,L
+	CP	$FF
+	RET	Z
+CTX_SHAVE:
+	LD	C,(IX+2)
+	LD	B,0
+	LDIR
+	LD	BC,3
+	ADD	IX,BC
+	JR	CTX_SLP
+;
+CTX_LOAD:
+	LD	HL,(CTX_VPTR)
+	LD	DE,VARS
+	LD	BC,PTX_CTXSIZ
+	LDIR
+	LD	IX,PTX_PATCHTBL
+	LD	HL,(CTX_PPTR)
+CTX_LLP:
+	LD	E,(IX+0)
+	LD	D,(IX+1)
+	LD	A,D
+	CP	$FF
+	JR	NZ,CTX_LHAVE
+	LD	A,E
+	CP	$FF
+	RET	Z
+CTX_LHAVE:
+	LD	C,(IX+2)
+	LD	B,0
+	LDIR
+	LD	BC,3
+	ADD	IX,BC
+	JR	CTX_LLP
 ;
 ; Identify active BIOS.  RomWBW HBIOS=1, UNA UBIOS=2, else 0
 ;
@@ -739,6 +1727,23 @@ CMRSAV		.DB	0	; for saving original Z180 CMR value
 ;
 DMA		.DW	0	; Working DMA
 FILTYP		.DB	0	; Sound file type (TYPPT2, TYPPT3, TYPMYM)
+LOADBYTES	.DW	0	; bytes loaded (padded to 128-byte CP/M records)
+;
+; TurboSound PT3 (packed dual-module) state
+TSFLAG		.DB	0	; non-zero if a TS footer was detected
+TSSET1		.DB	0	; SETUP byte snapshot (instance 1)
+TSSET2		.DB	0	; SETUP byte snapshot (instance 2)
+TS_OFF2		.DW	0	; module #2 offset from start of file
+TS_LEN2		.DW	0	; module #2 length
+TS_PORTS1	.DW	0	; chip 1 ports (RDAT:RSEL)
+TS_PORTS2	.DW	0	; chip 2 ports (RDAT:RSEL)
+TS_DESC1	.DW	0	; chip 1 port description string
+TS_DESC2	.DW	0	; chip 2 port description string
+INFOLINE	.DB	0	; non-zero if a hardware/mode line was printed
+;
+; Context save/restore pointers
+CTX_VPTR	.DW	0
+CTX_PPTR	.DW	0
 ;
 TMP		.DB	0	; work around use of undocumented Z80
 
@@ -760,6 +1765,13 @@ MSGHW		.DB	"Hardware error, sound chip not detected!",0
 MSGNAM		.DB	"Sound filename invalid (must be .PT2, .PT3, or .MYM)",0
 MSGFIL		.DB	"Sound file not found!",0
 MSGSIZ		.DB	"Sound file too large to load!",0
+MSGTSHB		.DB	"TurboSound PT3 not supported with --HBIOS",0
+MSGTSHW		.DB	"TurboSound PT3 requires two AY cards at A0H/A1H and 50H/51H (readback at +2)",0
+MSGTSDET		.DB	"TurboSound (2x AY-3-8910) file detected",0
+MSGTSPRE	.DB	"Playing on ",0
+MSGTSAND	.DB	" and ",0
+MSGTSPST	.DB	" Ports",0
+MSGHBIOS	.DB	"HBIOS sound driver",0
 MSGTIM		.DB	", timer mode",0
 MSGDLY		.DB	", delay mode",0
 MSGPLY		.DB	"Playing...",0
@@ -779,6 +1791,12 @@ HWSTR_HEATH	.DB	"HEATH H8 MSX Module",0
 HWSTR_MSX	.DB	"MSX Standard Ports (A0H/A1H)",0
 HWSTR_RC	.DB	"RCBus Standard Ports (D8H/D0H)",0
 HWSTR_COLECO	.DB	"RCBus Coleco AY Ports (50H/51H)",0
+;
+; Short port descriptions for TurboSound output
+;
+TSSTR_MSX	.DB	"MSX Standard (A0H/A1H)",0
+TSSTR_COLECO	.DB	"Coleco AY (50H/51H)",0
+TSSTR_RC	.DB	"RCBus Standard (D8H/D0H)",0
 
 MSGUNSUP	.db	"MYM files not supported with HBIOS yet!\r\n", 0
 
@@ -2766,6 +3784,18 @@ Ampl	.EQU	AYREGS+AmplC
 VAR0END	.EQU	VT_+16 ;INIT zeroes from VARS to VAR0END-1
 
 VARSEND .EQU	$
+;
+; Reserve context buffers for TurboSound-packed PT3 playback.
+; We only need to save/restore the dynamic state region, not the full tables.
+; Dynamic region ends at VAR0END (= VT_+16).
+;
+PTX_CTXSIZ .EQU	VAR0END - VARS
+TS_CTXTMPL_VARS	.DS	PTX_CTXSIZ
+TS_CTXTMPL_PATCH	.DS	PTX_PATCHSZ
+TS_CTX1_VARS	.DS	PTX_CTXSIZ
+TS_CTX1_PATCH	.DS	PTX_PATCHSZ
+TS_CTX2_VARS	.DS	PTX_CTXSIZ
+TS_CTX2_PATCH	.DS	PTX_PATCHSZ
 
 MDLADDR .EQU	$
 ;
