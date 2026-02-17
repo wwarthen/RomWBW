@@ -55,10 +55,12 @@
 ;   2024-12-12 [WBW] Add options to force standard MSX or RC ports
 ;   2025-05-28 [WBW] Add option to force delay mode
 ;   2026-01-24 [WBW] Support RC2014 platform id
-;   2026-01-31 [WBW] Update MUTE funtion to zero all PSG registers
+;   2026-01-31 [WBW] Update MUTE function to zero all PSG registers
 ;   2026-02-03 [JMD] Add RCZ80 Coleco (50H/51H/52H) and MSX (A0H/A1H) auto-detect
 ;                    using rc2014-ym2149 MSX/Coleco read-back port (base+2),
 ;                    add -coleco CLI/ports mode
+;	2026-02-17 [JMD] Add support for playing TurboSound files when the system has
+;					 two sound cards (in Coleco and MSX addressing mode)
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -79,15 +81,15 @@ BF_SYSGET_SNDCNT	.EQU	$50		; SYSGET subfunction: sound unit count
 BC_SYSGET_SNDCNT	.EQU	(BF_SYSGET * 256) + BF_SYSGET_SNDCNT
 BF_SNDQ_DEV		.EQU	4		; query: return device type and IO ports
 ;
-HEAPEND		.EQU	$C000		; End of heap storage
+HEAPEND			.EQU	$C000	; End of heap storage
 ;
-TYPPT2		.EQU	1		; FILTYP value for PT2 sound file
-TYPPT3		.EQU	2		; FILTYP value for PT3 sound file
-TYPMYM		.EQU	3		; FILTYP value for MYM sound file
+TYPPT2			.EQU	1		; FILTYP value for PT2 sound file
+TYPPT3			.EQU	2		; FILTYP value for PT3 sound file
+TYPMYM			.EQU	3		; FILTYP value for MYM sound file
 ;
-PORTS_AUTO	.EQU	0		; AUTO select audio chip ports
-PORTS_MSX	.EQU	1		; force MSX audio chip ports
-PORTS_RC	.EQU	2		; force RCBUS audio chip ports
+PORTS_AUTO		.EQU	0		; AUTO select audio chip ports
+PORTS_MSX		.EQU	1		; force MSX audio chip ports
+PORTS_RC		.EQU	2		; force RCBUS audio chip ports
 PORTS_COLECO	.EQU	3		; force Coleco-style AY ports (50H/51H)
 ;
 ; HIGH SPEED CPU CONTROL
@@ -112,10 +114,10 @@ _WBW		.SET	1
 #ENDIF
 
 CurPosCounter	.EQU	0	; 2) Current position counter at (START+11)
-ACBBAC		.EQU	0	; 3) Allow channels allocation bits at (START+10)
-LoopChecker	.EQU	1	; 4) Allow loop checking and disabling
-Id		.EQU	1	; 5) Insert official identificator
-#DEFINE Release "1"		; Release number
+ACBBAC			.EQU	0	; 3) Allow channels allocation bits at (START+10)
+LoopChecker		.EQU	1	; 4) Allow loop checking and disabling
+Id				.EQU	1	; 5) Insert official identificator
+#DEFINE Release "1"			; Release number
 
 	.ORG	$0100
 ;
@@ -142,42 +144,42 @@ Id		.EQU	1	; 5) Insert official identificator
 CONTINUE:
 	; Check BIOS and version
 	CALL	IDBIO			; Identify hardware BIOS
-	CP	1			; RomWBW HBIOS?
-	JP	NZ, ERRBIO		; If not, handle BIOS error
+	CP	1					; RomWBW HBIOS?
+	JP	NZ, ERRBIO			; If not, handle BIOS error
 	LD	A, RMJ << 4 | RMN	; Expected HBIOS ver
-	CP	D			; Compare with result above
-	JP	NZ, ERRBIO		; Handle BIOS error
-	LD	A, L			; Platform id to A
-	LD	(CURPLT),A		; Save as current platform id
+	CP	D					; Compare with result above
+	JP	NZ, ERRBIO			; Handle BIOS error
+	LD	A, L				; Platform id to A
+	LD	(CURPLT),A			; Save as current platform id
 
 	LD	A, (HBIOSMD)
 	OR	A
 	JP	NZ, TSTTIMER		; skip hardware check if using hbios
 
 	LD	A, (USEPORTS)		; get ports option
-	LD	HL,MSXPORTS		; assume MSX
-	CP	PORTS_MSX		; use MSX?
+	LD	HL,MSXPORTS			; assume MSX
+	CP	PORTS_MSX			; use MSX?
 	JR	Z,FORCE
-	LD	HL,RCPORTS		; assume RC
-	CP	PORTS_RC		; use RC?
+	LD	HL,RCPORTS			; assume RC
+	CP	PORTS_RC			; use RC?
 	JR	Z,FORCE
 	LD	HL,COLECOPORTS		; assume Coleco AY ports
 	CP	PORTS_COLECO		; use Coleco?
 	JR	Z,FORCE
-	JR	AUTOSEL			; otherwise do auto select
+	JR	AUTOSEL				; otherwise do auto select
 
 FORCE:
 	LD	BC,CFGSIZ		; Size of one entry
 	LD	DE,CFG			; Active config structure
 	LDIR				; Update active config structure
-	JR	MAT			; Continue
+	JR	MAT				; Continue
 
 AUTOSEL:
 	; Prefer HBIOS sound enumeration for auto selection. This avoids
 	; relying on PSG register readback behavior for detection.
 	CALL	HB_SND_AUTOCFG
 	JR	NZ,AUTOSEL_FBK
-	JR	MAT			; success: CFG populated, skip config table scan
+	JR	MAT				; success: CFG populated, skip config table scan
 AUTOSEL_FBK:
 	LD	HL,CFGTBL		; Point to start of config table
 CFGSEL:
@@ -190,21 +192,21 @@ CFGSEL:
 	LDIR				; Update active config structure
 ;
 	LD	A,(CURPLT)		; Get current running platform id
-	LD	E,A			; Put in E
+	LD	E,A				; Put in E
 	LD	A,(PLT)			; Get platform id of loaded config
-	CP	E			; Equal?
+	CP	E				; Equal?
 	JR	NZ,CFGSEL		; If no match keep trying
 ;
 	; Activate card if applicable
 	LD	B,0			; ensure 8-bit port addressing via BC
-	LD	A,(ACR)			; Get ACR port address (if any)
+	LD	A,(ACR)		; Get ACR port address (if any)
 	LD	C,A			; Copy to C for I/O later
 	INC	A			; $FF -> $00 & set flags
-	JR	Z,PROBE			; If no ACR, skip ahead
-	CALL	SLOWIO			; Slow down I/O for the activation write
-	LD	A,(ACRVAL)		; Value to activate card
-	OUT	(C),A			; Write value to ACR
-	CALL	NORMIO			; Restore I/O speed
+	JR	Z,PROBE		; If no ACR, skip ahead
+	CALL	SLOWIO	; Slow down I/O for the activation write
+	LD	A,(ACRVAL)	; Value to activate card
+	OUT	(C),A		; Write value to ACR
+	CALL	NORMIO	; Restore I/O speed
 ;
 PROBE:
 	; Test for hardware (sound chip detection)
@@ -233,26 +235,26 @@ TSTTIMER:
 	; Get CPU speed & type from RomWBW HBIOS and compute quark delay factor
 	LD	B,$F8			; HBIOS SYSGET function 0xF8
 	LD	C,$F0			; CPUINFO subfunction 0xF0
-	RST	08			; Do it, DE := CPU speed in KHz
-	SRL	D			; Divide by 2
-	RR	E			; ... for delay factor
+	RST	08				; Do it, DE := CPU speed in KHz
+	SRL	D				; Divide by 2
+	RR	E				; ... for delay factor
 	EX	DE,HL			; Move result to HL
 	LD	(QDLY),HL		; Save result as quark delay factor
 ;
 	; Clear heap storage
-	LD	HL,HEAP			; Point to heap start
-	XOR	A			; A := zero
-	LD	(HEAP),A		; Clear first byte of heap
-	LD	DE,HEAP+1		; Set dest to next byte
+	LD	HL,HEAP				; Point to heap start
+	XOR	A					; A := zero
+	LD	(HEAP),A			; Clear first byte of heap
+	LD	DE,HEAP+1			; Set dest to next byte
 	LD	BC,HEAPEND-HEAP-1	; Size of heap except first byte
-	LDIR				; Propagate zero to rest of heap
+	LDIR					; Propagate zero to rest of heap
 ;
 	; Check sound filename (must be *.PT2, *.PT3, or *.MYM)
 	LD	A,(FCB+1)		; Get first char of filename
-	CP	' '			; Compare to blank
+	CP	' '				; Compare to blank
 	JP	Z,ERRCMD		; If so, missing filename
 	LD	A,(FCB+9)		; If the filetype
-	CP	' '			; is blanks
+	CP	' '				; is blanks
 	JR	NZ,HASEXT		; then assume
 	LD	A,'P'			; type PT3.
 	LD	(FCB+9),A
@@ -262,29 +264,29 @@ TSTTIMER:
 	LD	(FCB+11),A		; and the
 	LD	C,TYPPT3		; file type
 	JR	_SET
-HASEXT	LD	A,(FCB+9)		; Extension char 1
-	CP	'P'			; Check for 'P'
+HASEXT	LD	A,(FCB+9)	; Extension char 1
+	CP	'P'				; Check for 'P'
 	JP	NZ,CHKMYM		; If not, check for MYM extension
 	LD	A,(FCB+10)		; Extension char 2
-	CP	'T'			; Check for 'T'
+	CP	'T'				; Check for 'T'
 	JP	NZ,ERRNAM		; If not, bad file extension
 	LD	A,(FCB+11)		; Extension char 3
 	LD	C,TYPPT2		; Assume PT2 file type
-	CP	'2'			; Check for '2'
+	CP	'2'				; Check for '2'
 	JR	Z,_SET			; If so, commit file type value
 	LD	C,TYPPT3		; Assume PT3 file type
-	CP	'3'			; Check for '3'
+	CP	'3'				; Check for '3'
 	JR	Z,_SET			; If so, commit file type value
 	JP	ERRNAM			; Anything else is a bad file extension
-CHKMYM	LD	A,(FCB+9)		; Extension char 1
-	CP	'M'			; Check for 'M'
+CHKMYM	LD	A,(FCB+9)	; Extension char 1
+	CP	'M'				; Check for 'M'
 	JP	NZ,ERRNAM		; If not, bad file extension
 	LD	A,(FCB+10)		; Extension char 2
-	CP	'Y'			; Check for 'Y'
+	CP	'Y'				; Check for 'Y'
 	JP	NZ,ERRNAM		; If not, bad file extension
 	LD	A,(FCB+11)		; Extension char 3
 	LD	C,TYPMYM		; Assume MYM file type
-	CP	'M'			; Check for 'M'
+	CP	'M'				; Check for 'M'
 	JR	Z,_SET			; If so, commit file type value
 	JP	ERRNAM			; Anything else is a bad file extension
 _SET	LD	A,C			; Get file type value
@@ -350,23 +352,23 @@ _LDX	LD	C,16			; CPM Close File function
 	JP	ERRNAM			; This should never happen
 
 GOPT2	LD	A,2			; SETUP value to PT2 sound files
-	LD	(START+10),A		; Save it
+	LD	(START+10),A	; Save it
 	; Avg TS / quark for PT2 files has *not* been measured!!!
 	LD	DE,185			; Avg TS / quark = 7400, so 185 delay loops
 	JR	GOPTX			; Play PTx file
 
 GOPT3	LD	A,0			; SETUP value to PT3 sound files
-	LD	(START+10),A		; Save it
+	LD	(START+10),A	; Save it
 	LD	DE,185			; Avg TS / quark = 7400, so 185 delay loops
 	JR	GOPTX			; Play PTx file
 
 GOPTX
 	LD	HL,(QDLY)		; Get basic quark delay
-	OR	A			; Clear carry
+	OR	A				; Clear carry
 	SBC	HL,DE			; Adjust for file type
 	LD	(QDLY),HL		; Save updated quark delay factor
 
-	LD	A,(INFOLINE)		; spacing before song metadata
+	LD	A,(INFOLINE)	; spacing before song metadata
 	OR	A
 	JR	Z,GOPTXSP1
 	CALL	CRLF2
@@ -398,10 +400,10 @@ GOPTX2	LD	A,(DE)
 	OR	A
 	JR	Z,PTXINITN
 	ISHBIOS
-	JR	Z,PTXINITT		; TurboSound requires direct I/O
+	JR	Z,PTXINITT			; TurboSound requires direct I/O
 	ERRWITHMSG(MSGTSHB)
 PTXINITT:
-	CALL	TS_PORTS_SETUP		; probe and configure both chips
+	CALL	TS_PORTS_SETUP	; probe and configure both chips
 	CALL	TS_ADJTIM		; adjust delay timing for TS
 	CALL	TS_INIT			; init both PT3 instances
 	JR	PTXSTART
@@ -409,51 +411,51 @@ PTXINITN:
 	CALL	START			; Do initialization
 ;
 PTXSTART:
-	LD	DE,MSGPLY		; Playing message
+	LD	DE,MSGPLY			; Playing message
 	CALL	PRTSTR			; Print message
 ;
 PTXLP:	LD	A,(TSFLAG)
 	OR	A
 	JR	Z,PTXLP_NORM
-	CALL	TS_PLAYQUARK		; Play one quark on both chips
+	CALL	TS_PLAYQUARK	; Play one quark on both chips
 	LD	A,(TSSET1)
 	BIT	7,A
 	JR	Z,PTXLP_KEY
 	LD	A,(TSSET2)
 	BIT	7,A
-	JR	NZ,EXIT			; done when both instances indicate loop point passed
+	JR	NZ,EXIT				; done when both instances indicate loop point passed
 	JR	PTXLP_KEY
 PTXLP_NORM:
-	CALL	START+5			; Play one quark
-	LD	A,(START+10)		; Get setup byte
-	BIT	7,A			; Check bit 7 (loop point passed)
+	CALL	START+5		; Play one quark
+	LD	A,(START+10)	; Get setup byte
+	BIT	7,A				; Check bit 7 (loop point passed)
 	JR	NZ,EXIT			; Bail out when done playing
 PTXLP_KEY:
-	CALL	GETKEY			; Check for keypress
+	CALL	GETKEY		; Check for keypress
 	JR	NZ,EXIT			; Abort on keypress
-	CALL	WAITQ			; Wait one quark period
+	CALL	WAITQ		; Wait one quark period
 	JR	PTXLP			; Loop for next quark
 ;
 gomym
 	CALL	CRLF2			; Formatting
-	LD	DE,MSGPLY		; Playing message
+	LD	DE,MSGPLY			; Playing message
 	CALL	PRTSTR			; Print message
-	ld	hl,(QDLY)		; Get basic quark delay
-	or	a			; Clear carry
-	ld	de,125			; Avg TS / quark = ~5000, so 125 delay loops
-	sbc	hl,de			; Adjust for file type
-	ld	(QDLY),hl		; Save updated quark delay factor
+	ld	hl,(QDLY)			; Get basic quark delay
+	or	a					; Clear carry
+	ld	de,125				; Avg TS / quark = ~5000, so 125 delay loops
+	sbc	hl,de				; Adjust for file type
+	ld	(QDLY),hl			; Save updated quark delay factor
 	;ld	bc,(rows)
 	;call	PRTHEXWORD
 	call	mymini			; Initialize player
-        call    extract         	; Unpack the first fragment
+        call    extract 	; Unpack the first fragment
 mymlp	call	extract
-	jr	nc,EXIT			; CF clear at end of tune
+	jr	nc,EXIT				; CF clear at end of tune
 waitvb	call	WAITQ
 	call	upsg			; Update PSG registers
-	call	GETKEY			; Check for keypess
-	jr	nz,EXIT			; Bail out if so
-	ld      a,(played)      	; Wait until VBI has played a fragment
+	call	GETKEY			; Check for keypress
+	jr	nz,EXIT				; Bail out if so
+	ld      a,(played)		; Wait until VBI has played a fragment
         or      a
         jr      nz,waitvb
         ld      (psource),iy
@@ -467,14 +469,14 @@ EXIT	LD	A,(TSFLAG)
 	JR	Z,EXITN
 	CALL	TS_MUTE			; Mute both chips
 	JR	EXITX
-EXITN	CALL	START+8			; Mute audio
+EXITN	CALL	START+8		; Mute audio
 EXITX
 	;CALL	NORMCPU
 	;CALL	CRLF2			; Formatting
-	LD	DE,MSGEND		; Completion message
+	LD	DE,MSGEND			; Completion message
 	CALL	PRTSTR			; Print message
 	CALL	CRLF			; Formatting
-	JP	0			; Exit the easy way
+	JP	0					; Exit the easy way
 
 #include "timing.inc"
 #include "strings.inc"
@@ -486,9 +488,9 @@ EXITX
 ;
 GETKEY	LD	C,6		; BDOS direct I/O
 	LD	E,$FF		; Get character if available
-	CALL	BDOS		; Call BDOS
-	OR	A		; Set flags, Z set if no key
-	RET			; Done
+	CALL	BDOS	; Call BDOS
+	OR	A			; Set flags, Z set if no key
+	RET				; Done
 ;
 ; Print the wait mode suffix based on WMOD
 ;   WMOD == 0  -> delay mode
@@ -530,7 +532,7 @@ HB_SND_GETMASK:
 	LD	(HBGM_MASK),A
 HBGM_LP:
 	LD	A,(HBGM_IDX)
-	LD	C,A			; sound unit number
+	LD	C,A					; sound unit number
 	LD	B,BF_SNDQUERY
 	LD	E,BF_SNDQ_DEV		; request device type + ports
 	RST	08
@@ -620,9 +622,9 @@ HB_SND_AUTOCFG:
 	; do a robust direct probe for Coleco ($50/$51, read at $52) and prefer
 	; it when present.
 	;
-	BIT	1,B			; already know Coleco?
+	BIT	1,B				; already know Coleco?
 	JR	NZ,HBSA_PREF
-	BIT	0,B			; only try probe if MSX exists
+	BIT	0,B				; only try probe if MSX exists
 	JR	Z,HBSA_PREF
 	PUSH	BC
 	LD	HL,$5150		; RDAT=51, RSEL=50
@@ -630,7 +632,8 @@ HB_SND_AUTOCFG:
 	CALL	PROBE_AY
 	POP	BC
 	JR	NZ,HBSA_PREF
-	SET	1,B			; found Coleco
+	SET	1,B				; found Coleco
+;
 HBSA_PREF:
 	;
 	; Choose preferred ports when multiple are present:
@@ -827,6 +830,7 @@ HBS2_FAIL:
 PRTPLAYINFO:
 	XOR	A
 	LD	(INFOLINE),A
+	CALL	CRLF			; spacing after banner
 	LD	A,(FILTYP)
 	CP	TYPPT3
 	JR	NZ,PRTPI_NPT3
@@ -854,6 +858,8 @@ PRTPLAYINFO:
 	RET
 PRTPI_TSHB:
 	; HBIOS: still show mode line (TS will error out later)
+	LD	DE,MSGTSPRE
+	CALL	PRTSTR
 	LD	DE,MSGHBIOS
 	CALL	PRTSTR
 	CALL	PRTWMOD
@@ -871,6 +877,8 @@ PRTPI_NPT3:
 	LD	(INFOLINE),A
 	RET
 PRTPI_HW:
+	LD	DE,MSGTSPRE
+	CALL	PRTSTR
 	LD	DE,(DESC)
 	CALL	PRTSTR
 	CALL	PRTWMOD
@@ -1552,8 +1560,9 @@ ERRHW:	; Hardware error, sound chip not detected
 	JR	ERR
 ;
 ERRCMD:	; Command error, display usage info
+	CALL	CRLF			; blank line after banner
 	LD	DE,MSGUSE
-	JR	ERR
+	JR	ERR1
 ;
 ERRNAM:	; Missing or invalid filename parameter
 	LD	DE,MSGNAM
@@ -1754,11 +1763,11 @@ USEPORTS	.DB	0	; AUDIO CHIP PORT SELECTION MODE
 
 MSGBAN		.DB	"Tune Player for RomWBW v3.2, 17-Feb-2026",0
 MSGUSE		.DB	"Copyright (C) 2026, Wayne Warthen, GNU GPL v3",13,10
-		.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
-		.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
-		.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM] [-msx|-rc|-coleco] [-delay] [--hbios] [+tn|-tn]",0
+			.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
+			.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
+			.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM] [-msx|-rc|-coleco] [-delay] [--hbios] [+tn|-tn]",0
 MSGBIO		.DB	"Incompatible BIOS or version, "
-		.DB	"HBIOS v", '0' + RMJ, ".", '0' + RMN, " required",0
+			.DB	"HBIOS v", '0' + RMJ, ".", '0' + RMN, " required",0
 MSGPLT		.DB	"Hardware error, system not supported!",0
 MSGHW		.DB	"Hardware error, sound chip not detected!",0
 MSGNAM		.DB	"Sound filename invalid (must be .PT2, .PT3, or .MYM)",0
@@ -1766,7 +1775,7 @@ MSGFIL		.DB	"Sound file not found!",0
 MSGSIZ		.DB	"Sound file too large to load!",0
 MSGTSHB		.DB	"TurboSound PT3 not supported with --HBIOS",0
 MSGTSHW		.DB	"TurboSound PT3 requires two AY cards at A0H/A1H and 50H/51H (readback at +2)",0
-MSGTSDET		.DB	"TurboSound (2x AY-3-8910) file detected",0
+MSGTSDET	.DB	"TurboSound (2x AY-3-8910) file detected",0
 MSGTSPRE	.DB	"Playing on ",0
 MSGTSAND	.DB	" and ",0
 MSGTSPST	.DB	" Ports",0
@@ -1777,27 +1786,27 @@ MSGPLY		.DB	"Playing...",0
 MSGEND		.DB	" Done",0
 MSGERR		.DB	"App Error", 0
 ;
-HWSTR_SCG	.DB	"SCG ECB Board",0
-HWSTR_N8	.DB	"N8 Onboard Sound",0
-HWSTR_RCEB	.DB	"RCBus Sound Module (EB)",0
-HWSTR_RCMSX	.DB	"RCBus Sound Module (MSX)",0
-HWSTR_RCMF	.DB	"RCBus Sound Module (MF)",0
-HWSTR_LINC	.DB	"Z50 LiNC Sound Module",0
-HWSTR_MBC	.DB	"NHYODYNE Sound Module",0
-HWSTR_DUO	.DB	"DUODYNE Sound Module",0
-HWSTR_NABU	.DB	"NABU Onboard Sound",0
-HWSTR_HEATH	.DB	"HEATH H8 MSX Module",0
-HWSTR_MSX	.DB	"MSX Standard Ports (A0H/A1H)",0
-HWSTR_RC	.DB	"RCBus Standard Ports (D8H/D0H)",0
+HWSTR_SCG		.DB	"SCG ECB Board",0
+HWSTR_N8		.DB	"N8 Onboard Sound",0
+HWSTR_RCEB		.DB	"RCBus Sound Module (EB)",0
+HWSTR_RCMSX		.DB	"RCBus Sound Module (MSX)",0
+HWSTR_RCMF		.DB	"RCBus Sound Module (MF)",0
+HWSTR_LINC		.DB	"Z50 LiNC Sound Module",0
+HWSTR_MBC		.DB	"NHYODYNE Sound Module",0
+HWSTR_DUO		.DB	"DUODYNE Sound Module",0
+HWSTR_NABU		.DB	"NABU Onboard Sound",0
+HWSTR_HEATH		.DB	"HEATH H8 MSX Module",0
+HWSTR_MSX		.DB	"MSX Standard Ports (A0H/A1H)",0
+HWSTR_RC		.DB	"RCBus Standard Ports (D8H/D0H)",0
 HWSTR_COLECO	.DB	"RCBus Coleco AY Ports (50H/51H)",0
 ;
 ; Short port descriptions for TurboSound output
 ;
-TSSTR_MSX	.DB	"MSX Standard (A0H/A1H)",0
+TSSTR_MSX		.DB	"MSX Standard (A0H/A1H)",0
+TSSTR_RC		.DB	"RCBus Standard (D8H/D0H)",0
 TSSTR_COLECO	.DB	"Coleco AY (50H/51H)",0
-TSSTR_RC	.DB	"RCBus Standard (D8H/D0H)",0
 
-MSGUNSUP	.db	"MYM files not supported with HBIOS yet!\r\n", 0
+MSGUNSUP		.DB	"MYM files not supported with HBIOS yet!\r\n", 0
 
 MSGSONGNAME     .DB     "Song name: ", 0
 MSGARTIST       .DB     "by:        ", 0
