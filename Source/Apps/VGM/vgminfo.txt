@@ -63,6 +63,27 @@ Notes:
 
 - Files without a valid VGM signature are skipped.
 
+KNOWN BUGS / LIMITATIONS:
+-------------------------
+
+IMPORTANT: VERBOSE TEXT OUTPUT IS CURRENTLY TRUNCATED
+
+- Some textual information contained within a VGM file (GD3 tags such as Title,
+  Game, System, Author, Date, Creator) may be truncated in -v/-d output.
+
+Why:
+- VGMINFO uses fixed-size in-memory buffers and conservative bounds checks to
+  keep the program stable on CP/M systems.
+- As a result, long GD3 strings and/or very large GD3 blocks may be cut short
+  rather than risking reading past buffers.
+
+This will be improved in a future release.
+
+TODO:
+-----
+
+- Display total number of files processed at the end of the run.
+
 Building:
 ---------
 

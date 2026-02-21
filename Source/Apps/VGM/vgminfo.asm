@@ -5,7 +5,7 @@
 ; Scans all .VGM files in current directory and displays chip information
 ; in a formatted table
 ;
-; (c) 2026 Joao Miguel Duraes
+; (c)2026 Joao Miguel Duraes
 ; Licensed under the MIT License
 ;
 ; Version: 1.2 - 20-Feb-2026
@@ -44,7 +44,7 @@ LF              .equ    0AH                 ; line feed
 DEBUG_SUM       .equ    1                   ; 1 = build with checksum support
 
 ; Increment BUILD_NUM on every source change so we can confirm which binary is running.
-BUILD_NUM       .equ    0021H               ; debug build number (hex)
+BUILD_NUM       .equ    0022H               ; debug build number (hex)
 
 ; Run modes
 MODE_SIMPLE     .equ    0                   ; v1.1-style table output
@@ -52,12 +52,12 @@ MODE_VERBOSE    .equ    1                   ; long output
 MODE_DEBUG      .equ    2                   ; long output + debug instrumentation
 
 ; Number of spaces to indent detail lines (used for technical and GD3 lines)
-DETAIL_INDENT   .equ    1
+DETAIL_INDENT    .equ    1
 
-VGM_IDENT       .equ    00H                 ; "Vgm " identifier
+VGM_IDENT        .equ    00H                 ; "Vgm " identifier
 VGM_EOFREL       .equ    04H                 ; EOF offset (relative to 0x04)
-VGM_VERSION     .equ    08H                 ; Version
-VGM_SN76489_CLK .equ    0CH                 ; SN76489 clock (4 bytes, little-endian)
+VGM_VERSION      .equ    08H                 ; Version
+VGM_SN76489_CLK  .equ    0CH                 ; SN76489 clock (4 bytes, little-endian)
 VGM_GD3REL       .equ    14H                 ; GD3 offset (relative to 0x14)
 VGM_TOTALSMP     .equ    18H                 ; Total samples
 VGM_LOOPREL      .equ    1CH                 ; Loop offset (relative to 0x1C)
@@ -1767,11 +1767,11 @@ CVG_LOOP:
                 LDIR
                 LD      (LISTPTR), DE
 
-                ; increment count (cap at 64)
+                ; increment count (cap at 255)
                 LD      A, (FILECOUNT)
                 INC     A
                 LD      (FILECOUNT), A
-                CP      64
+                CP      0FFH
                 JR      C, CVG_NEXT
                 LD      A, 1
                 LD      (DBG_COLLECT_EARLY), A
@@ -2296,7 +2296,7 @@ TARGETEXT:       .DB     'V','G','M'
 ; Collected file list
 FILECOUNT:       .DB     0
 LISTPTR:         .DW     0
-FILELIST:        .FILL   (64*11), 0
+FILELIST:        .FILL   (255*11), 0
 
 SUM_LO:         .DB     0                   ; Low byte of 16-bit checksum
 SUM_HI:         .DB     0                   ; High byte of 16-bit checksum
