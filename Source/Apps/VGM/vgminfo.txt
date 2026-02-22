@@ -1,88 +1,106 @@
-VGM File Info Scanner for CP/M
+VGMINFO - VGM File Info Scanner for CP/M
 ===============================
 
-A utility that scans all .VGM files in the current directory and
-displays a table showing which audio chips each file uses.
-
-Version 1.1 uses a hybrid detection approach:
-- Checks VGM header clock values to detect chip types
-- Scans VGM command stream to detect multiple instances of same chip type
+VGMINFO scans .VGM files and reports:
+- VGM version
+- Chips actually used (by scanning the VGM command stream)
+- Technical header fields (file size, data start offset, GD3 tag offset)
+- GD3 tag fields (Title/Game/System/Author/Date/Creator) when present
 
 Usage:
 ------
 
-Simply run the program from a directory containing VGM files:
+  VGMINFO [options] [filename]
 
-    VGMINFO
+Options:
+  -h  Help (this text)
+  -v  Verbose (long output)
+  -d  Debug (verbose + debug output)
 
-No command line arguments are needed. The program will automatically scan
-all .VGM files in the current directory.
+filename:
+  Base name only; .VGM assumed
+  Example: VGMINFO -v GONESHRT
 
 Output:
 -------
 
-The program displays a formatted table with two columns:
-  - Filename: The name of the VGM file
-  - Chips Used: A comma-separated list of audio chips used in that file
+Default mode (no options):
+- Prints a v1.1-style table: one line per file with detected chips.
+
+Verbose mode (-v):
+- Prints a short block per file:
+    Filename(.VGM): <name>
+     Version: <ver>
+     Chips Used: <chips>
+     Size: <hex> (<decimal bytes>) Data:<hex> GD3:<hex>
+     (followed by any GD3 tag lines found)
+
+Debug mode (-d):
+- Same as -v, plus:
+  - "DBG:" progress lines
+  - Clock lines derived from the VGM header:
+      Clk1: SN=... YM2612=... YM2151=...
+      Clk2: OPL2=... OPL3=... AY=...
+  - Optional mismatch diagnostics if directory enumeration fails
 
 Supported Chips:
 ----------------
 
-The program can detect the following audio chips:
-  - SN76489 (PSG - Programmable Sound Generator)
-  - YM2612 (FM Synthesis chip used in Sega Genesis/Mega Drive)
-  - YM2151 (OPM - FM Operator Type-M)
-  - YM3812 (OPL2 - FM synthesis chip)
-  - YMF262 (OPL3 - Enhanced FM synthesis chip)
-  - AY-3-8910 (PSG used in many arcade and home computers)
+The program can (at present) detect the following audio chips:
 
-Example Output:
----------------
-
-VGM Music Chip Scanner v1.1
-
-Filename  Chips Used
-========  =====================
-BGM       2xAY-3-8910
-ENDING    AY-3-8910
-INCHINA   YM2612
-SHIRAKAW  SN76489, YM2612
-STARTDEM  2xSN76489, AY-3-8910
-WONDER01  2xSN76489
-========  =====================
+- SN76489 (PSG)
+- YM2612 (OPN2)
+- YM2151 (OPM)
+- YM3812 (OPL2)
+- YMF262 (OPL3)
+- AY-3-8910 (PSG)
 
 Notes:
 ------
 
-- The program reads the VGM file headers and scans up to 255 commands from
-  the VGM data stream for accurate chip detection.
-  
-- Files that don't have a valid VGM header are silently skipped.
+- Chip detection is based on scanning the VGM command stream (up to 255 commands
+  or until end-of-data). This avoids false positives from header fields.
 
-- Chip detection uses a hybrid approach:
-  * VGM header clock values (offsets 0x0C, 0x2C, 0x30, 0x74) determine
-    which chip types are present
-  * Command stream scanning detects multiple instances (e.g., "2xSN76489")
+- Files without a valid VGM signature are skipped.
 
-- AY-3-8910 clock detection respects VGM version - only checked for v1.51+
-  to avoid false positives from invalid header data in older VGM versions.
+KNOWN BUGS / LIMITATIONS:
+-------------------------
+
+IMPORTANT: VERBOSE TEXT OUTPUT IS CURRENTLY TRUNCATED
+
+- Some textual information contained within a VGM file (GD3 tags such as Title,
+  Game, System, Author, Date, Creator) may be truncated in -v/-d output.
+
+Why:
+- VGMINFO uses fixed-size in-memory buffers and conservative bounds checks to
+  keep the program stable on CP/M systems.
+- As a result, long GD3 strings and/or very large GD3 blocks may be cut short
+  rather than risking reading past buffers.
+
+This will be improved in a future release.
+
+TODO:
+-----
+
+- Display total number of files processed at the end of the run.
 
 Building:
 ---------
 
 To rebuild from source:
 
-    build_vgminfo.cmd
+  build_vgminfo.cmd
 
 Or manually with TASM:
 
-    tasm -t80 -b -g3 -fFF vgminfo.asm vgminfo.com
+  tasm -t80 -b -g3 -fFF vgminfo.asm vgminfo.com vgminfo.lst
 
 Author:
 -------
 
-Created for RomWBW/CP/M systems
-Based on VGM format specification from vgmrips.net
+VGMINFO v1.2 b0020 - 21-Feb-2026
+(C)2026 Joao Miguel Duraes, on a rainy and cold UK February evening
+MIT License
 
-An AI LLM was utilized in the creation of this
-application.
+Created for RomWBW/CP/M systems. 
+AI LLM assistance goodness was used in the making of this tool.
