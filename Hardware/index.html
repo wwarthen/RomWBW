@@ -238,7 +238,7 @@
               <ul class="nav flex-column">
               </ul>
             </li>
-            <li class="nav-item" data-bs-level="3"><a href="#zrc-z80-cpu-module-ram" class="nav-link">ZRC Z80 CPU Module (RAM)</a>
+            <li class="nav-item" data-bs-level="3"><a href="#zrc-z80-cpu-module_1" class="nav-link">ZRC Z80 CPU Module</a>
               <ul class="nav flex-column">
               </ul>
             </li>
@@ -286,7 +286,7 @@
               <ul class="nav flex-column">
               </ul>
             </li>
-            <li class="nav-item" data-bs-level="3"><a href="#zzrcc-z280-cpu-module-ram" class="nav-link">ZZRCC Z280 CPU Module (RAM)</a>
+            <li class="nav-item" data-bs-level="3"><a href="#zzrcc-z280-cpu-module_1" class="nav-link">ZZRCC Z280 CPU Module</a>
               <ul class="nav flex-column">
               </ul>
             </li>
@@ -404,7 +404,7 @@
 <p><strong>RomWBW Hardware</strong> \
 Version 3.6 \
 Wayne Warthen  (<a href="mailto:wwarthen@gmail.com">wwarthen@gmail.com</a>) \
-06 Feb 2026</p>
+14 Mar 2026</p>
 <h1 id="overview">Overview</h1>
 <h2 id="supported-platforms">Supported Platforms</h2>
 <p>This section contains a summary of the system configuration target for
@@ -574,12 +574,6 @@ external bank switching.</p>
 <td style="text-align: right;">115200</td>
 </tr>
 <tr>
-<td><a href="#zrc-z80-cpu-module-ram">ZRC Z80 CPU Module (RAM)</a></td>
-<td>RCBus</td>
-<td>RCZ80_zrc_ram_std.rom</td>
-<td style="text-align: right;">115200</td>
-</tr>
-<tr>
 <td><a href="#zrc512-z80-cpu-module">ZRC512 Z80 CPU Module</a></td>
 <td>RCBus</td>
 <td>RCZ80_zrc512_std.rom</td>
@@ -595,12 +589,6 @@ external bank switching.</p>
 <td><a href="#zzrcc-z280-cpu-module">ZZRCC Z280 CPU Module</a></td>
 <td>RCBus</td>
 <td>RCZ280_zzrcc_std.rom</td>
-<td style="text-align: right;">115200</td>
-</tr>
-<tr>
-<td><a href="#zzrcc-z280-cpu-module-ram">ZZRCC Z280 CPU Module (RAM)</a></td>
-<td>RCBus</td>
-<td>RCZ280_zzrcc_ram_std.rom</td>
 <td style="text-align: right;">115200</td>
 </tr>
 <tr>
@@ -2430,9 +2418,6 @@ RAM and fast serial upload enable a diskless CP/M SBC. However, just in
 case that idea didn’t work out, ZRC has an optional compact flash
 interface. The targeted software for ZRC is ROMWBW. ZRC physically
 contains no ROM and 2MB of RAM.</p>
-<p>In the STD configuration the first 512KB of RAM is loaded with a ROM
-image from disk storage and then handled like ROM. Essentially, an area
-of the RAM is reserved to act as ROM.</p>
 <ul>
 <li>Creator: Bill Shen</li>
 <li>Retrobrew Wiki: <a href="https://www.retrobrewcomputers.org/doku.php?id=builderpages:plasmo:zrc">ZRC, Z80 RAM CPLD for
@@ -2440,91 +2425,15 @@ of the RAM is reserved to act as ROM.</p>
 <li>Google Groups: <a href="https://groups.google.com/g/retro-comp/c/L3W7TaDnX5A/m/ZxOgl8EIAQAJ">ZRC, Z80/RAM/CPLD, minimal CP/M-ready, Z80
   SBC</a></li>
 </ul>
-<h4 id="rom-image-file-rcz80_zrc_stdrom">ROM Image File: RCZ80_zrc_std.rom</h4>
-<table>
-<thead>
-<tr>
-<th></th>
-<th></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Bus</td>
-<td>RCBus</td>
-</tr>
-<tr>
-<td>Default CPU Speed</td>
-<td>14.745 MHz</td>
-</tr>
-<tr>
-<td>Interrupts</td>
-<td>Mode 1</td>
-</tr>
-<tr>
-<td>System Timer</td>
-<td>None</td>
-</tr>
-<tr>
-<td>Serial Default</td>
-<td>115200 Baud</td>
-</tr>
-<tr>
-<td>Memory Manager</td>
-<td>ZRC</td>
-</tr>
-<tr>
-<td>ROM Size</td>
-<td>512 KB</td>
-</tr>
-<tr>
-<td>RAM Size</td>
-<td>1536 KB</td>
-</tr>
-</tbody>
-</table>
-<h4 id="supported-hardware_21">Supported Hardware</h4>
-<ul>
-<li>FP: LEDIO=0, SWIO=0</li>
-<li>LCD: IO=218, SIZE=20X4</li>
-<li>DSRTC: MODE=STD, IO=192</li>
-<li>UART: IO=128</li>
-<li>UART: IO=136</li>
-<li>UART: IO=160</li>
-<li>UART: IO=168</li>
-<li>SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED</li>
-<li>SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED</li>
-<li>SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED</li>
-<li>SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED</li>
-<li>ACIA: IO=128, INTERRUPTS ENABLED</li>
-<li>VRC: IO=0, KBD MODE=VRC, KBD IO=244</li>
-<li>KBD: ENABLED</li>
-<li>CH: IO=62</li>
-<li>CH: IO=60</li>
-<li>CHUSB: IO=62</li>
-<li>CHUSB: IO=60</li>
-<li>MD: TYPE=RAM</li>
-<li>MD: TYPE=ROM</li>
-<li>FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5” HD</li>
-<li>FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5” HD</li>
-<li>IDE: MODE=RC, IO=16, MASTER</li>
-<li>IDE: MODE=RC, IO=16, SLAVE</li>
-<li>PPIDE: IO=32, MASTER</li>
-<li>PPIDE: IO=32, SLAVE</li>
-<li>SD: MODE=PIO, IO=105, UNITS=1</li>
-</ul>
-<h3 id="zrc-z80-cpu-module-ram">ZRC Z80 CPU Module (RAM)</h3>
-<p>This profile differs (from STD) only in how the system boots, and how
-RAM is configured. Boot occurs directly to RAM, loading HBIOS directly
-from disk storage rather than via a pseudo ROM image copied into RAM.</p>
+<h3 id="zrc-z80-cpu-module_1">ZRC Z80 CPU Module</h3>
+<p>Boot occurs directly to RAM, loading HBIOS directly from disk storage
+rather than via a pseudo ROM image copied into RAM.</p>
 <p>A RAM disk is configured preloaded with files that would normally be on
 the ROM disk. There is no ROM disk in this configuration.</p>
-<p>The RAM config is the newer approach and provides a more efficient bank
-layout. The intent to replace the STD config with the RAM config.</p>
 <ul>
 <li>Creator: Bill Shen</li>
 </ul>
-<h4 id="rom-image-file-rcz80_zrc_ram_stdrom">ROM Image File: RCZ80_zrc_ram_std.rom</h4>
+<h4 id="rom-image-file-rcz80_zrc_stdrom">ROM Image File: RCZ80_zrc_std.rom</h4>
 <table>
 <thead>
 <tr>
@@ -2567,7 +2476,7 @@ layout. The intent to replace the STD config with the RAM config.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_22">Supported Hardware</h4>
+<h4 id="supported-hardware_21">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -2649,7 +2558,7 @@ specifically for ROM-less RomWBW. HBIOS is loaded from disk at boot</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_23">Supported Hardware</h4>
+<h4 id="supported-hardware_22">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -2772,7 +2681,7 @@ to RAM location \$0000, which in turn starts execution of RomWBW.</p>
   decompression program is stored.</p>
 </li>
 </ul>
-<h4 id="supported-hardware_24">Supported Hardware</h4>
+<h4 id="supported-hardware_23">Supported Hardware</h4>
 <ul>
 <li>DSRTC: MODE=STD, IO=192</li>
 <li>SIO MODE=STD, IO=8, CHANNEL A, INTERRUPTS ENABLED</li>
@@ -2835,7 +2744,7 @@ replacing the older K80W rev 1</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_25">Supported Hardware</h4>
+<h4 id="supported-hardware_24">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -2911,7 +2820,7 @@ external memory management)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_26">Supported Hardware</h4>
+<h4 id="supported-hardware_25">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>DSRTC: MODE=STD, IO=12</li>
@@ -2986,7 +2895,7 @@ management)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_27">Supported Hardware</h4>
+<h4 id="supported-hardware_26">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>DSRTC: MODE=STD, IO=12</li>
@@ -3071,7 +2980,7 @@ RomWBW image from CF disk, then start RomWBW from 0x0</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_28">Supported Hardware</h4>
+<h4 id="supported-hardware_27">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>DSRTC: MODE=STD, IO=12</li>
@@ -3146,7 +3055,7 @@ external memory management)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_29">Supported Hardware</h4>
+<h4 id="supported-hardware_28">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -3222,7 +3131,7 @@ management)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_30">Supported Hardware</h4>
+<h4 id="supported-hardware_29">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -3257,9 +3166,6 @@ bootstrap from CF disk. Because Z280 has a native serial-bootstrap
 capability, the CPLD is even simpler than that of ZRCC. ZZRCC is Z280
 operating in Z80-compatible mode. It is designed for RC2014 bus ZZRCC
 actually contains no ROM and 512KB of RAM.</p>
-<p>In the STD configuration the first 256KB of RAM is loaded with a ROM
-image from disk storage and then handled like ROM. Essentially, an area
-of the RAM is reserved to act as ROM.</p>
 <ul>
 <li>Creator: Bill Shen</li>
 <li>Retrobrew Wiki: <a href="https://www.retrobrewcomputers.org/doku.php?id=builderpages:plasmo:zzrcc">ZZRCC, a SBC for RC2014 based on
@@ -3269,91 +3175,15 @@ of the RAM is reserved to act as ROM.</p>
 <li>Google Groups: <a href="https://groups.google.com/g/retro-comp/c/mBIWW18WXTE/m/E_sehx5fAwAJ">Help porting ROMWBW to
   ZZRCC</a></li>
 </ul>
-<h4 id="rom-image-file-rcz280_zzrcc_stdrom">ROM Image File: RCZ280_zzrcc_std.rom</h4>
-<table>
-<thead>
-<tr>
-<th></th>
-<th></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Bus</td>
-<td>RCBus</td>
-</tr>
-<tr>
-<td>Default CPU Speed</td>
-<td>14.745 MHz</td>
-</tr>
-<tr>
-<td>Interrupts</td>
-<td>Mode 3</td>
-</tr>
-<tr>
-<td>System Timer</td>
-<td>Z280</td>
-</tr>
-<tr>
-<td>Serial Default</td>
-<td>115200 Baud</td>
-</tr>
-<tr>
-<td>Memory Manager</td>
-<td>Z280</td>
-</tr>
-<tr>
-<td>ROM Size</td>
-<td>256 KB</td>
-</tr>
-<tr>
-<td>RAM Size</td>
-<td>256 KB</td>
-</tr>
-</tbody>
-</table>
-<h4 id="supported-hardware_31">Supported Hardware</h4>
-<ul>
-<li>FP: LEDIO=0, SWIO=0</li>
-<li>LCD: IO=218, SIZE=20X4</li>
-<li>DSRTC: MODE=STD, IO=192</li>
-<li>INTRTC: ENABLED</li>
-<li>Z2U: IO=16, INTERRUPTS ENABLED</li>
-<li>UART: IO=128</li>
-<li>UART: IO=136</li>
-<li>UART: IO=160</li>
-<li>UART: IO=168</li>
-<li>SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED</li>
-<li>SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED</li>
-<li>SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED</li>
-<li>SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED</li>
-<li>VRC: IO=0, KBD MODE=VRC, KBD IO=244</li>
-<li>KBD: ENABLED</li>
-<li>CH: IO=62</li>
-<li>CH: IO=60</li>
-<li>CHUSB: IO=62</li>
-<li>CHUSB: IO=60</li>
-<li>MD: TYPE=RAM</li>
-<li>MD: TYPE=ROM</li>
-<li>FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5” HD</li>
-<li>FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5” HD</li>
-<li>IDE: MODE=RC, IO=16, MASTER</li>
-<li>IDE: MODE=RC, IO=16, SLAVE</li>
-<li>PPIDE: IO=32, MASTER</li>
-<li>PPIDE: IO=32, SLAVE</li>
-</ul>
-<h3 id="zzrcc-z280-cpu-module-ram">ZZRCC Z280 CPU Module (RAM)</h3>
-<p>This profile differs (from STD) only in how the system boots, and how
-RAM is configured. Boot occurs directly to RAM, loading HBIOS directly
-from disk storage rather than via a pseudo ROM image copied into RAM.</p>
+<h3 id="zzrcc-z280-cpu-module_1">ZZRCC Z280 CPU Module</h3>
+<p>Boot occurs directly to RAM, loading HBIOS directly from disk storage
+rather than via a pseudo ROM image copied into RAM.</p>
 <p>A RAM disk is configured preloaded with files that would normally be on
 the ROM disk. There is no ROM disk in this configuration.</p>
-<p>The RAM config is the newer approach and provides a more efficient bank
-layout. The intent to replace the STD config with the RAM config.</p>
 <ul>
 <li>Creator: Bill Shen</li>
 </ul>
-<h4 id="rom-image-file-rcz280_zzrcc_ram_stdrom">ROM Image File: RCZ280_zzrcc_ram_std.rom</h4>
+<h4 id="rom-image-file-rcz280_zzrcc_stdrom">ROM Image File: RCZ280_zzrcc_std.rom</h4>
 <table>
 <thead>
 <tr>
@@ -3396,7 +3226,7 @@ layout. The intent to replace the STD config with the RAM config.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_32">Supported Hardware</h4>
+<h4 id="supported-hardware_30">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -3480,7 +3310,7 @@ EPROM for other computers</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_33">Supported Hardware</h4>
+<h4 id="supported-hardware_31">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -3566,7 +3396,7 @@ available from the manufacturer today</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_34">Supported Hardware</h4>
+<h4 id="supported-hardware_32">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>LCD: IO=218, SIZE=20X4</li>
@@ -3639,7 +3469,7 @@ Graphics Display Controller</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_35">Supported Hardware</h4>
+<h4 id="supported-hardware_33">Supported Hardware</h4>
 <ul>
 <li>DSRTC: MODE=STD, IO=132</li>
 <li>ASCI: IO=64</li>
@@ -3708,7 +3538,7 @@ slave as defined by the IEEE-696 specs.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_36">Supported Hardware</h4>
+<h4 id="supported-hardware_34">Supported Hardware</h4>
 <ul>
 <li>INTRTC: ENABLED</li>
 <li>DLPSER: IO=172</li>
@@ -3831,7 +3661,7 @@ system.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_37">Supported Hardware</h4>
+<h4 id="supported-hardware_35">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=13, SWIO=0</li>
 <li>DSRTC: MODE=STD, IO=12</li>
@@ -3915,7 +3745,7 @@ RomWBW (and CP/M)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_38">Supported Hardware</h4>
+<h4 id="supported-hardware_36">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0, SWIO=0</li>
 <li>DSRTC: MODE=STD, IO=12</li>
@@ -3993,7 +3823,7 @@ RomWBW (and CP/M)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_39">Supported Hardware</h4>
+<h4 id="supported-hardware_37">Supported Hardware</h4>
 <ul>
 <li>INTRTC: ENABLED</li>
 <li>ASCI: IO=192, INTERRUPTS ENABLED</li>
@@ -4051,7 +3881,7 @@ RomWBW (and CP/M)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_40">Supported Hardware</h4>
+<h4 id="supported-hardware_38">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=160, SWIO=160</li>
 <li>DSRTC: MODE=STD, IO=12</li>
@@ -4129,7 +3959,7 @@ RomWBW (and CP/M)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_41">Supported Hardware</h4>
+<h4 id="supported-hardware_39">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=160, SWIO=160</li>
 <li>DSRTC: MODE=STD, IO=12</li>
@@ -4212,7 +4042,7 @@ RomWBW (and CP/M)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_42">Supported Hardware</h4>
+<h4 id="supported-hardware_40">Supported Hardware</h4>
 <ul>
 <li>FP: LEDIO=0</li>
 <li>LCD: IO=170, SIZE=20X4</li>
@@ -4298,7 +4128,7 @@ presented by John’s Basement on youTube)</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_43">Supported Hardware</h4>
+<h4 id="supported-hardware_41">Supported Hardware</h4>
 <ul>
 <li>SIO MODE=Z80R, IO=128, CHANNEL A, INTERRUPTS ENABLED</li>
 <li>SIO MODE=Z80R, IO=128, CHANNEL B, INTERRUPTS ENABLED</li>
@@ -4358,7 +4188,7 @@ compatible with N8VEM SBC and Disk I/O boards.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_44">Supported Hardware</h4>
+<h4 id="supported-hardware_42">Supported Hardware</h4>
 <ul>
 <li>DSRTC: MODE=STD, IO=112</li>
 <li>UART: IO=104</li>
@@ -4435,7 +4265,7 @@ is made using CMOS technology and more power efficient than FDC9266</p>
 </tr>
 </tbody>
 </table>
-<h4 id="supported-hardware_45">Supported Hardware</h4>
+<h4 id="supported-hardware_43">Supported Hardware</h4>
 <ul>
 <li>DSRTC: MODE=STD, IO=112</li>
 <li>UART: IO=104</li>
