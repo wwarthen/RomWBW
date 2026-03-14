@@ -78,11 +78,9 @@ Bill Shen
 | [EaZy80-512 Z80 CPU Module]                                 | RCBus   | RCZ80_ez512_std.rom          | 115200        |
 | [K80W Z80 CPU Module]                                       | RCBus   | RCZ80_k80w_std.rom           | 115200        |
 | [ZRC Z80 CPU Module]                                        | RCBus   | RCZ80_zrc_std.rom            | 115200        |
-| [ZRC Z80 CPU Module (RAM)]                                  | RCBus   | RCZ80_zrc_ram_std.rom        | 115200        |
 | [ZRC512 Z80 CPU Module]                                     | RCBus   | RCZ80_zrc512_std.rom         | 115200        |
 | [Z1RCC Z180 CPU Module]                                     | RCBus   | RCZ180_z1rcc_std.rom         | 115200        |
 | [ZZRCC Z280 CPU Module]                                     | RCBus   | RCZ280_zzrcc_std.rom         | 115200        |
-| [ZZRCC Z280 CPU Module (RAM)]                               | RCBus   | RCZ280_zzrcc_ram_std.rom     | 115200        |
 | [ZZ80MB Z280 SBC]                                           | RCBus   | RCZ280_zz80mb_std.rom        | 115200        |
 
 Sergey Kiselev
@@ -1181,73 +1179,21 @@ serial upload enable a diskless CP/M SBC. However, just in case that idea didn't
 out, ZRC has an optional compact flash interface. The targeted software for ZRC is ROMWBW.
 ZRC physically contains no ROM and 2MB of RAM.  
 
-In the STD configuration the first 512KB of RAM is loaded with a ROM image from disk 
-storage and then handled like ROM. Essentially, an area of the RAM is reserved to act as ROM.
-
 * Creator: Bill Shen
 * Retrobrew Wiki: [ZRC, Z80 RAM CPLD for ROMWBW](https://www.retrobrewcomputers.org/doku.php?id=builderpages:plasmo:zrc)
 * Google Groups: [ZRC, Z80/RAM/CPLD, minimal CP/M-ready, Z80 SBC](https://groups.google.com/g/retro-comp/c/L3W7TaDnX5A/m/ZxOgl8EIAQAJ)
 
-#### ROM Image File:  RCZ80_zrc_std.rom
+### ZRC Z80 CPU Module
 
-|                   |               |
-|-------------------|---------------|
-| Bus               | RCBus         |
-| Default CPU Speed | 14.745 MHz    |
-| Interrupts        | Mode 1        |
-| System Timer      | None          |
-| Serial Default    | 115200 Baud   |
-| Memory Manager    | ZRC           |
-| ROM Size          | 512 KB        |
-| RAM Size          | 1536 KB       |
-
-#### Supported Hardware
-
-- FP: LEDIO=0, SWIO=0
-- LCD: IO=218, SIZE=20X4
-- DSRTC: MODE=STD, IO=192
-- UART: IO=128
-- UART: IO=136
-- UART: IO=160
-- UART: IO=168
-- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
-- ACIA: IO=128, INTERRUPTS ENABLED
-- VRC: IO=0, KBD MODE=VRC, KBD IO=244
-- KBD: ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
-- MD: TYPE=RAM
-- MD: TYPE=ROM
-- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
-- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
-- IDE: MODE=RC, IO=16, MASTER
-- IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
-- SD: MODE=PIO, IO=105, UNITS=1
-
-`\clearpage`{=latex}
-
-### ZRC Z80 CPU Module (RAM)
-
-This profile differs (from STD) only in how the system boots, and how RAM is configured.
 Boot occurs directly to RAM, loading HBIOS directly from disk storage rather than via
 a pseudo ROM image copied into RAM.
 
 A RAM disk is configured preloaded with files that would normally be on the ROM disk.
 There is no ROM disk in this configuration.
 
-The RAM config is the newer approach and provides a more efficient bank layout. 
-The intent to replace the STD config with the RAM config.
-
 * Creator: Bill Shen
 
-#### ROM Image File:  RCZ80_zrc_ram_std.rom
+#### ROM Image File:  RCZ80_zrc_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -1731,74 +1677,22 @@ Because Z280 has a native serial-bootstrap capability, the CPLD is even simpler 
 of ZRCC. ZZRCC is Z280 operating in Z80-compatible mode. It is designed for RC2014 bus
 ZZRCC actually contains no ROM and 512KB of RAM.  
 
-In the STD configuration the first 256KB of RAM is loaded with a ROM image from disk 
-storage and then handled like ROM. Essentially, an area of the RAM is reserved to act as ROM.
-
 * Creator: Bill Shen
 * Retrobrew Wiki: [ZZRCC, a SBC for RC2014 based on Z280](https://www.retrobrewcomputers.org/doku.php?id=builderpages:plasmo:zzrcc)
 * Google Groups: [ZZRCC, Z280 SBC replacing ZZ80RC and ZZ80CF](https://groups.google.com/g/retro-comp/c/lt1t3JEoiCM/m/NYeZdrFuAAAJ)
 * Google Groups: [Help porting ROMWBW to ZZRCC](https://groups.google.com/g/retro-comp/c/mBIWW18WXTE/m/E_sehx5fAwAJ)
 
-#### ROM Image File:  RCZ280_zzrcc_std.rom
+### ZZRCC Z280 CPU Module
 
-|                   |               |
-|-------------------|---------------|
-| Bus               | RCBus         |
-| Default CPU Speed | 14.745 MHz    |
-| Interrupts        | Mode 3        |
-| System Timer      | Z280          |
-| Serial Default    | 115200 Baud   |
-| Memory Manager    | Z280          |
-| ROM Size          | 256 KB        |
-| RAM Size          | 256 KB        |
-
-#### Supported Hardware
-
-- FP: LEDIO=0, SWIO=0
-- LCD: IO=218, SIZE=20X4
-- DSRTC: MODE=STD, IO=192
-- INTRTC: ENABLED
-- Z2U: IO=16, INTERRUPTS ENABLED
-- UART: IO=128
-- UART: IO=136
-- UART: IO=160
-- UART: IO=168
-- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
-- VRC: IO=0, KBD MODE=VRC, KBD IO=244
-- KBD: ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
-- MD: TYPE=RAM
-- MD: TYPE=ROM
-- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
-- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
-- IDE: MODE=RC, IO=16, MASTER
-- IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
-
-`\clearpage`{=latex}
-
-### ZZRCC Z280 CPU Module (RAM)
-
-This profile differs (from STD) only in how the system boots, and how RAM is configured.
 Boot occurs directly to RAM, loading HBIOS directly from disk storage rather than via
 a pseudo ROM image copied into RAM.
 
 A RAM disk is configured preloaded with files that would normally be on the ROM disk.
 There is no ROM disk in this configuration.
 
-The RAM config is the newer approach and provides a more efficient bank layout.
-The intent to replace the STD config with the RAM config.
-
 * Creator: Bill Shen
 
-#### ROM Image File:  RCZ280_zzrcc_ram_std.rom
+#### ROM Image File:  RCZ280_zzrcc_std.rom
 
 |                   |               |
 |-------------------|---------------|

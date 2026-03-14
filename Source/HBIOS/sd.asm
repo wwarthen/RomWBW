@@ -316,7 +316,10 @@ SD_INVCS	.EQU	FALSE		; INVERT CS
 ;	These mappings work for the RCbus Gluino card with an Arduino
 ;	shield attached and are the ones also used in other bitbang setups
 ;	directly attached to a PIO. It also works on a straight digital I/O
-;	port as the config writes will disappear into oblivion harmlessly
+;	port as the config writes will disappear into oblivion harmlessly.
+;	Ultimately, this mode should probably be split into SDMODE_ZPIO (for
+;	Zilog PIO (like the Gluino) and SDMODE_GPIO for straight bitbang
+;	interfaces such as SC611 and SC734.
 ;
 ;	The Gluino mapping (ie Arduino pin mapping equivalent) is thus
 ;	D10 SS, D11 CIPO, D12 COPI, D13 SCL.
@@ -399,7 +402,7 @@ SD_INVCS	.EQU	FALSE		; INVERT CS
 SD_DEVMAX	.EQU	1		; NUMBER OF PHYSICAL UNITS (SOCKETS)
 SD_OPRREG	.EQU	$42		; 82C55 PORT C, LOW 3 ARE \CS MUX
 SD_OPRDEF	.EQU	%11111111	; QUIESCENT STATE (ROM ENABLED)
-SD_CS0		.EQU	%11111000	; SPI CHANNEL 0 (4 INPUTS, ROM EN, CHAN 0)
+SD_CS0		.EQU	%11111001	; SPI CHANNEL 0 (4 INPUTS, ROM EN, CHAN 1)
 SD_CNTR		.EQU	Z180_CNTR
 SD_TRDR		.EQU	Z180_TRDR
 SD_IOBASE	.EQU	SD_OPRREG	; IOBASE
