@@ -44,6 +44,16 @@ jobs:
           echo "Title: $TITLE"
           echo "TITLE=$TITLE" >>$GITHUB_ENV
 
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$TAG" RomWBW-$TAG-Package.zip \
+            --draft --prerelease \
+            --title="${{env.TITLE}} $TAG" \
+            --generate-notes
+
       - name: Attach Package Archive
         uses: wwarthen/actions/packages/automatic-releases@built-packages
         with:
@@ -68,60 +78,3 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: Source/Doc/site
-      
-#      - name: Upload Package Archive
-#        uses: AButler/upload-release-assets@v2.0.2
-#        with:
-#          repo-token: ${{secrets.github_token}}
-#          files: |
-#            RomWBW-${{env.PKGLBL}}-Package.zip
-
-
-#      - name: Post SnapShot
-#        uses: docker://antonyurchenko/git-release:latest
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#          RELEASE_NAME_PREFIX: "${{env.TITLE}} "
-#          CHANGELOG_FILE: "none"
-#        with:
-#          args: |
-#            RomWBW-SnapShot-Package.zip
-            
-#      - name: Post SnapShot
-#        uses: cb80/pubrel@latest
-#        with:
-#          replace: true
-#          files: |
-#            RomWBW-SnapShot-Package.zip
-
-#      - name: Post SnapShot
-#        uses: wwarthen/actions/packages/automatic-releases@built-packages
-#        with:
-#          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-#          prerelease: true
-#          title: "RomWBW Development SnapShot ${{env.GITHUB_REF_SLUG}}"
-#          files: |
-#            RomWBW-SnapShot-Package.zip
-
-#      - name: Remove Older Releases
-#        uses: wwarthen/delete-release-action@v1.2
-#        with:
-#          release-drop: true
-#          release-keep-count: 0
-#          release-drop-tag: true
-#          pre-release-drop: false
-#          pre-release-keep-count: 0
-#          pre-release-drop-tag: true
-#          draft-drop: true
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-#      - name: Remove Older Releases
-#        uses: s00d/delete-older-releases@0.2.1
-#        with:
-#          keep_latest: 1
-##          delete_tag_pattern: beta # defaults to ""
-#          delete_type: 'release'
-#          delete_branch: 'main'
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
