@@ -54,16 +54,6 @@ jobs:
             --title="${{env.TITLE}} $TAG" \
             --generate-notes
 
-      - name: Attach Package Archive
-        uses: wwarthen/actions/packages/automatic-releases@built-packages
-        with:
-          repo_token: "${{secrets.GITHUB_TOKEN}}"
-          draft: true
-          prerelease: true
-          title: "${{env.TITLE}} ${{github.ref_name}}"
-          files: |
-            RomWBW-${{github.ref_name}}-Package.zip
-
       - name: Build Docs
         run: |
           export TZ='America/Los_Angeles'
