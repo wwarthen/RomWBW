@@ -21,11 +21,10 @@ jobs:
           sudo apt-get install srecord
           make transpile-c-code
           make distlog --trace
-          rm -rf .git*
-      
+
       - name: Create Package Archive
         run: |
-          zip -r RomWBW-${{github.ref_name}}-Package.zip .
+          zip -r RomWBW-${{github.ref_name}}-Package.zip . --exclude .git\*
 
       - name: Set Title
         run: |
