@@ -6,11 +6,16 @@ on:
       - '**'
 
 jobs:
-  build:
 
+  # Build new release
+  build:
     runs-on: ubuntu-latest
 
     steps:
+
+      - name: Dump GitHub Context
+        run: echo "${{toJSON(github)}}"    
+
       - name: Checkout
         uses: actions/checkout@v6
 
@@ -43,17 +48,42 @@ jobs:
           echo "Title: $TITLE"
           echo "TITLE=$TITLE" >>$GITHUB_ENV
 
-      - name: Create release
+      - name: Create Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{github.ref_name}}
         run: |
           gh release create "$TAG" RomWBW-$TAG-Package.zip \
             --draft --prerelease \
             --title="${{env.TITLE}} $TAG" \
             --generate-notes
 
-      - name: Build Docs
+  # Generate and deploy GitHub pages
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    
+    # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+    # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+    concurrency:
+      group: "pages"
+      cancel-in-progress: false
+
+    steps:
+
+      - name: Dump GitHub Context
+        run: echo "${{toJSON(github)}}"    
+
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Generate Docs
         run: |
           export TZ='America/Los_Angeles'
           sudo apt-get install gpp pandoc
@@ -61,9 +91,13 @@ jobs:
           make -C Source/Doc deploy_mkdocs
           mkdocs build -f Source/Doc/mkdocs.yml
 
-      - name: Deploy Docs
-        uses: peaceiris/actions-gh-pages@v4
-#       if: github.ref == 'refs/heads/master'
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: Source/Doc/site
+          path: 'Source/Doc/site'
+
+      - name: Deploy GitHub Pages
+        uses: actions/deploy-pages@v4
