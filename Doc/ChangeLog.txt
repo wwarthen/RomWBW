@@ -25,7 +25,7 @@ Version 3.6
 - WBW: Added support for S100 ESP32 SD Interface
 - MAP: User guide. Reorder sections around disk formatting
 - R?M: Randy Merkel provided ZSDOS Programmer's Manual as translated by Wayne Hortensius
-- WBW: Updated Cowgol disk image with latest COWFIX.COM from Ladislau Szilagyi
+- WBW: Updated Cowgol disk image with latest COWFIX.COM from Ladislau Szilagyi
 - WBW: Preliminary support for S100 Computers Z80 CPU
 - HJB: Added MSX platform
 - M?R: Update Timer app with "zero" option
