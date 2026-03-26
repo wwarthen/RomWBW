@@ -3523,7 +3523,7 @@ FCB_PRO	.DB	'?'			; DRIVE CODE, 0 = CURRENT DRIVE
 STR_BANNER	.DB	"CBIOS v", BIOSVER, " [", PLTSTR, "]$"
 STR_INITRAMDISK	.DB	"Formatting RAMDISK...$"
 STR_LDR2	.DB	"\r\n"
-STR_LDR		.DB	"\r\n	$"
+STR_LDR		.DB	"\r\n  $"
 STR_DPHINIT	.DB	"Configuring Drives...$"
 STR_HEAPOVF	.DB	" *** Insufficient HBIOS Heap Memory ***$"
 STR_INVMED	.DB	" *** Invalid Device ID ***$"
