@@ -243,7 +243,6 @@ call Build EZZ80 easy_std || exit /b
 call Build EZZ80 tiny_std || exit /b
 call Build RCZ80 skz_std || exit /b
 call Build RCZ80 zrc_std || exit /b
-call Build RCZ80 zrc_ram_std || exit /b
 call Build RCZ80 zrc512_std || exit /b
 call Build RCZ80 ez512_std || exit /b
 call Build RCZ80 k80w_std || exit /b
@@ -254,7 +253,6 @@ call Build RCZ280 ext_std || exit /b
 call Build RCZ280 nat_std || exit /b
 call Build RCZ280 zz80mb_std || exit /b
 call Build RCZ280 zzrcc_std || exit /b
-call Build RCZ280 zzrcc_ram_std || exit /b
 call Build SCZ180 sc126_std || exit /b
 call Build SCZ180 sc130_std || exit /b
 call Build SCZ180 sc131_std || exit /b

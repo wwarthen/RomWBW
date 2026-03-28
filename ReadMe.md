@@ -7,7 +7,7 @@
 **RomWBW Introduction** \
 Version 3.6 \
 Wayne Warthen  ([wwarthen@gmail.com](mailto:wwarthen@gmail.com)) \
-30 Jan 2026
+20 Mar 2026
 
 # Overview
 
@@ -20,7 +20,7 @@ these developer communities:
 
 - [RetroBrew Computers](https://www.retrobrewcomputers.org)
   (<https://www.retrobrewcomputers.org>)
-- [RC2014](https://rc2014.co.uk) (<https://rc2014.co.uk>),  
+- [RC2014](https://rc2014.co.uk) (<https://rc2014.co.uk>),\
   [RC2014-Z80](https://groups.google.com/g/rc2014-z80)
   (<https://groups.google.com/g/rc2014-z80>)
 - [Retro Computing](https://groups.google.com/g/retro-comp)
@@ -427,7 +427,7 @@ accordance with the intentions and/or licensing of their creators.
 If anyone feels their work is being used outside of its intended
 licensing, please notify:
 
-> Wayne Warthen  
+> Wayne Warthen\
 > <wwarthen@gmail.com>
 
 RomWBW is an aggregate work. It is composed of many individual,

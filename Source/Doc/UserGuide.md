@@ -63,16 +63,28 @@ downloading it to a working directory on your modern computer
 (Windows/Linux/Mac) use any zip tool to extract the contents of the
 archive.
 
-The Binary directory of the distribution contains the pre-built ROM images.  
-Refer to $doc_hardware$ to identify the correct ROM image for your system.
+A complete list of the currently supported platforms is found at the
+beginning of $doc_hardware$.  You must refer to this document to
+identify your hardware and the associated ROM Image.
 
-A complete list of the currently supported platforms is found in
-$doc_hardware$. You must burn the correct ROM image that matches your hardware
+The Binary directory of the distribution contains the pre-built ROM
+images.  There are many files in the Binary directory, but you
+should be able to locate the ROM Image you identified in 
+$doc_hardware$.  This file which should end in ".rom" must be
+written to your ROM chip.
 
 Once you have a running RomWBW system, you can generally update your ROM
 to a newer version in-situ with the included ROM Flashing tool (Will 
 Sowerbutts' FLASH application) as described in the [Upgrading] chapter
 of this document.
+
+### Disk Loaded ROM Images
+
+Some hardware platforms do not have suffieient ROM capacity for RomWBW.  These
+platforms have their own ROM which can load the RomWBW ROM Image from disk.  The
+platforms that work this way are annotated in $doc_hardware$.  For these
+platforms, you will write a special disk image to the boot disk of your
+system.  The disk image is listed in the "ROM Image File" column.
 
 ## System Startup
 

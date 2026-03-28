@@ -62,70 +62,70 @@ external bank switching.
 
 Andrew Lynch
 
-| **Description**                                             | **Bus** | **ROM Image File**           | **Baud Rate** |
-|-------------------------------------------------------------|---------|------------------------------|--------------:|
-| [RetroBrew Z80 SBC V2]                                      | ECB     | SBC_std.rom                  | 38400         |
-| [RetroBrew Z80 SimH]                                        | -       | SBC_simh.rom                 | 38400         |
-| [Duodyne Z80 System]                                        | Duo     | DUO_std.rom                  | 38400         |
-| [Nhyodyne Z80 MBC]                                          | MBC     | MBC_std.rom                  | 38400         |
-| [Rhyophyre Z180 SBC]                                        | -       | RPH_std.rom                  | 38400         |
-| [N8 Z180 SBC] (date >= 2312)                                | ECB     | N8_std.rom                   | 38400         |
+| **Description**                                             | **Bus** | **ROM Image File**                   | **Baud Rate** |
+|-------------------------------------------------------------|---------|--------------------------------------|--------------:|
+| [RetroBrew Z80 SBC V2]                                      | ECB     | SBC_std.rom                          | 38400         |
+| [RetroBrew Z80 SimH]                                        | -       | SBC_simh_std.rom                     | 38400         |
+| [Duodyne Z80 System]                                        | Duo     | DUO_std.rom                          | 38400         |
+| [Nhyodyne Z80 MBC]                                          | MBC     | MBC_std.rom                          | 38400         |
+| [Rhyophyre Z180 SBC]                                        | -       | RPH_std.rom                          | 38400         |
+| [N8 Z180 SBC] (date >= 2312)                                | ECB     | N8_std.rom                           | 38400         |
 
 Bill Shen
 
-| **Description**                                             | **Bus** | **ROM Image File**           | **Baud Rate** |
-|-------------------------------------------------------------|---------|------------------------------|--------------:|
-| [EaZy80-512 Z80 CPU Module]                                 | RCBus   | RCZ80_ez512_std.rom          | 115200        |
-| [K80W Z80 CPU Module]                                       | RCBus   | RCZ80_k80w_std.rom           | 115200        |
-| [ZRC Z80 CPU Module]                                        | RCBus   | RCZ80_zrc_std.rom            | 115200        |
-| [ZRC Z80 CPU Module (RAM)]                                  | RCBus   | RCZ80_zrc_ram_std.rom        | 115200        |
-| [ZRC512 Z80 CPU Module]                                     | RCBus   | RCZ80_zrc512_std.rom         | 115200        |
-| [Z1RCC Z180 CPU Module]                                     | RCBus   | RCZ180_z1rcc_std.rom         | 115200        |
-| [ZZRCC Z280 CPU Module]                                     | RCBus   | RCZ280_zzrcc_std.rom         | 115200        |
-| [ZZRCC Z280 CPU Module (RAM)]                               | RCBus   | RCZ280_zzrcc_ram_std.rom     | 115200        |
-| [ZZ80MB Z280 SBC]                                           | RCBus   | RCZ280_zz80mb_std.rom        | 115200        |
+| **Description**                           | **Bus** | **ROM Image File**                   | **Baud Rate** |
+|-------------------------------------------|---------|--------------------------------------|--------------:|
+| [EaZy80-512 Z80 CPU Module]               | RCBus   | RCZ80_ez512_std_hd1k_combo.img^\*^   | 115200        |
+| [K80W Z80 CPU Module]                     | RCBus   | RCZ80_k80w_std.rom                   | 115200        |
+| [ZRC Z80 CPU Module]                      | RCBus   | RCZ80_zrc_std_hd1k_combo.img^\*^     | 115200        |
+| [ZRC512 Z80 CPU Module]                   | RCBus   | RCZ80_zrc512_std_hd1k_combo.img^\*^  | 115200        |
+| [Z1RCC Z180 CPU Module]                   | RCBus   | RCZ180_z1rcc_std_hd1k_combo.img^\*^  | 115200        |
+| [ZZRCC Z280 CPU Module]                   | RCBus   | RCZ280_zzrcc_std_hd1k_combo.img^\*^  | 115200        |
+| [ZZ80MB Z280 SBC]                         | RCBus   | RCZ280_zz80mb_std.rom                | 115200        |
 
 Sergey Kiselev
 
-| **Description**                                             | **Bus** | **ROM Image File**           | **Baud Rate** |
-|-------------------------------------------------------------|---------|------------------------------|--------------:|
-| [Easy Z80 SBC]                                              | RCBus   | EZZ80_easy_std.rom           | 115200        |
-| [Tiny Z80 SBC]                                              | RCBus   | EZZ80_tiny_std.rom           | 115200        |
-| [Z80-512K CPU/RAM/ROM Module]                               | RCBus   | RCZ80_skz_std.rom            | 115200        |
-| [Zeta Z80 SBC]   , ParPortProp                              | -       | ZETA_std.rom                 | 38400         |
-| [Zeta V2 Z80 SBC]   , ParPortProp                           | -       | ZETA2_std.rom                | 38400         |
+| **Description**                                             | **Bus** | **ROM Image File**                   | **Baud Rate** |
+|-------------------------------------------------------------|---------|--------------------------------------|--------------:|
+| [Easy Z80 SBC]                                              | RCBus   | EZZ80_easy_std.rom                   | 115200        |
+| [Tiny Z80 SBC]                                              | RCBus   | EZZ80_tiny_std.rom                   | 115200        |
+| [Z80-512K CPU/RAM/ROM Module]                               | RCBus   | RCZ80_skz_std.rom                    | 115200        |
+| [Zeta Z80 SBC]   , ParPortProp                              | -       | ZETA_std.rom                         | 38400         |
+| [Zeta V2 Z80 SBC]   , ParPortProp                           | -       | ZETA2_std.rom                        | 38400         |
 
 `\clearpage`{=latex}
 
 Stephen Cousins
 
-| **Description**                                             | **Bus** | **ROM Image File**           | **Baud Rate** |
-|-------------------------------------------------------------|---------|------------------------------|--------------:|
-| [SC126 Z180 SBC]                                            | BP80    | SCZ180_sc126_std.rom         | 115200        |
-| [SC130 Z180 SBC]                                            | RCBus   | SCZ180_sc130_std.rom         | 115200        |
-| [SC131 Z180 Pocket Comp]                                    | -       | SCZ180_sc131_std.rom         | 115200        |
-| [SC140 Z180 CPU Module]                                     | Z50     | SCZ180_sc140_std.rom         | 115200        |
-| [SC503 Z180 CPU Module]                                     | Z50     | SCZ180_sc503_std.rom         | 115200        |
-| [SC700 Z180 CPU Module]                                     | RCBus   | SCZ180_sc700_std.rom         | 115200        |
+| **Description**                                             | **Bus** | **ROM Image File**                   | **Baud Rate** |
+|-------------------------------------------------------------|---------|--------------------------------------|--------------:|
+| [SC126 Z180 SBC]                                            | BP80    | SCZ180_sc126_std.rom                 | 115200        |
+| [SC130 Z180 SBC]                                            | RCBus   | SCZ180_sc130_std.rom                 | 115200        |
+| [SC131 Z180 Pocket Comp]                                    | -       | SCZ180_sc131_std.rom                 | 115200        |
+| [SC140 Z180 CPU Module]                                     | Z50     | SCZ180_sc140_std.rom                 | 115200        |
+| [SC503 Z180 CPU Module]                                     | Z50     | SCZ180_sc503_std.rom                 | 115200        |
+| [SC700 Z180 CPU Module]                                     | RCBus   | SCZ180_sc700_std.rom                 | 115200        |
 
 Others
 
-| **Description**                                             | **Bus**  | **ROM Image File**          | **Baud Rate** |
-|-------------------------------------------------------------|----------|-----------------------------|--------------:|
-| [Dyno Z180 SBC]^2^                                          | Dyno     | DYNO_std.rom                |         38400 |
-| [EP Mini-ITX Z180]^6^                                       | UEXT     | EPITX_std.rom               |        115200 |
-| [eZ80 for RCBus Module]^8^, 512K RAM/ROM                    | RCBus    | RCEZ80_std.rom              |        115200 |
-| [Genesis Z180 System]^7^                                    | STD      | GMZ180_std.rom              |        115200 |
-| [Heath H8 Z80 System]^5^                                    | H8       | HEATH_std.rom               |        115200 |
-| [MSX]^9^                                                    | MSX      | MSX_std.rom                 |        115200 |
-| [N8 PC]^10^                                                 | ISA      | N8PC_std.rom                |         38400 |
-| [NABU w/ RomWBW Option Board]^5^                            | NABU     | NABU_std.rom                |        115200 |
-| [S100 Computers Z180 SBC]^4^                                | S100     | SZ180_std.rom               |         57600 |
-| [S100 Computers Z80 CPU]^4^                                 | S100     | SZ80_std.rom                |         19200 |
-| [S100 Computers T35 FPGA Z80 SBC]^4^                        | S100     | SZ80_t35_std.rom            |          9600 |
-| [UNA Hardware BIOS]^1^                                      | -        | UNA_std.rom                 |             - |
-| [Z80-Retro SBC]^3^                                          | -        | Z80RETRO_std.rom            |         38400 |
-| [Z180 Mark IV SBC]^1^                                       | ECB      | MK4_std.rom                 |         38400 |
+| **Description**                                             | **Bus** | **ROM Image File**                   | **Baud Rate** |
+|-------------------------------------------------------------|---------|--------------------------------------|--------------:|
+| [Dyno Z180 SBC]^2^                                          | Dyno    | DYNO_std.rom                         |         38400 |
+| [EP Mini-ITX Z180]^6^                                       | UEXT    | EPITX_std.rom                        |        115200 |
+| [eZ80 for RCBus Module]^8^, 512K RAM/ROM                    | RCBus   | RCEZ80_std.rom                       |        115200 |
+| [Genesis Z180 System]^7^                                    | STD     | GMZ180_std.rom                       |        115200 |
+| [Heath H8 Z80 System]^5^                                    | H8      | HEATH_std.rom                        |        115200 |
+| [MSX]^9^                                                    | MSX     | MSX_std.rom                          |        115200 |
+| [N8 PC]^10^                                                 | ISA     | N8PC_std.rom                         |         38400 |
+| [NABU w/ RomWBW Option Board]^5^                            | NABU    | NABU_std.rom                         |        115200 |
+| [S100 Computers Z180 SBC]^4^                                | S100    | SZ180_std.rom                        |         57600 |
+| [S100 Computers Z80 CPU]^4^                                 | S100    | SZ80_std_hd1k_combo.img^\*^          |         19200 |
+| [S100 Computers T35 FPGA Z80 SBC]^4^                        | S100    | SZ80_t35_std_hd1k_combo.img^\*^      |          9600 |
+| [UNA Hardware BIOS]^1^                                      | -       | UNA_std.rom                          |             - |
+| [Z80-Retro SBC]^3^                                          | -       | Z80RETRO_std.rom                     |         38400 |
+| [Z180 Mark IV SBC]^1^                                       | ECB     | MK4_std.rom                          |         38400 |
+
+| ^\*^ROM image is loaded from disk. See the Installation section of $doc_user$.
 
 | ^1^Designed by John Coffman
 | ^2^Designed by Steve Garcia
@@ -208,8 +208,10 @@ like an SBC, but with modularity and an expandable backplane.
 #### Supported Hardware
 
 - FP: LEDIO=66, SWIO=66
-- DSRTC: MODE=STD, IO=148
+- CTC: IO=96, TIMER MODE=COUNTER, DIVISOR=18432, HI=256, LO=72, INTERRUPTS ENABLED
 - PCF: IO=86
+- DMA: MODE=DUO, IO=64
+- SPK: IO=148 MASK=4
 - UART: IO=88
 - UART: IO=168
 - UART: IO=112
@@ -217,19 +219,17 @@ like an SBC, but with modularity and an expandable backplane.
 - SIO MODE=ZP, IO=96, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=ZP, IO=96, CHANNEL B, INTERRUPTS ENABLED
 - LPT: MODE=SPP, IO=72
-- DMA: MODE=DUO, IO=64
-- CH: IO=78
-- CHUSB: IO=78
-- CHSD: IO=78
+- DSRTC: MODE=STD, IO=148
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=DUO, IO=128, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=DUO, IO=128, DRIVE 1, TYPE=3.5" HD
-- PPIDE: IO=136, MASTER
-- PPIDE: IO=136, SLAVE
+- PPIDE: MODE=STD, IO=136, MASTER
+- PPIDE: MODE=STD, IO=136, SLAVE
 - SD: MODE=MT, IO=140, UNITS=1
-- SPK: IO=148
-- CTC: IO=96, TIMER MODE=COUNTER, DIVISOR=18432, HI=256, LO=72, INTERRUPTS ENABLED
+- CH: IO=78
+- CHUSB: IO=78
+- CHSD: IO=78
 
 `\clearpage`{=latex}
 
@@ -256,15 +256,15 @@ The Dyno Computer is a Zilog Z180-based computer initially designed to run Wayne
 
 #### Supported Hardware
 
-- BQRTC: IO=80
 - ASCI: IO=192, INTERRUPTS ENABLED
 - ASCI: IO=193, INTERRUPTS ENABLED
+- BQRTC: IO=80
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=DYNO, IO=132, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=DYNO, IO=132, DRIVE 1, TYPE=3.5" HD
-- PPIDE: IO=76, MASTER
-- PPIDE: IO=76, SLAVE
+- PPIDE: MODE=STD, IO=76, MASTER
+- PPIDE: MODE=STD, IO=76, SLAVE
 
 `\clearpage`{=latex}
 
@@ -293,11 +293,11 @@ This is the same core Z180 CPU/RAM/ROM design taken the other direction, of expa
 
 #### Supported Hardware
 
-- INTRTC: ENABLED
 - ASCI: IO=192, INTERRUPTS ENABLED
 - ASCI: IO=193, INTERRUPTS ENABLED
 - UART: IO=160
 - UART: IO=168
+- INTRTC: ENABLED
 - TMS: MODE=MSX, IO=152, SCREEN=40X24, KEYBOARD=NONE
 - MD: TYPE=RAM
 - MD: TYPE=ROM
@@ -338,31 +338,29 @@ mode 2 interrupt configuration
 #### Supported Hardware
 
 - FP: LEDIO=0, SWIO=0
+- CTC: IO=136, TIMER MODE=COUNTER, DIVISOR=18432, HI=256, LO=72, INTERRUPTS ENABLED
 - LCD: IO=218, SIZE=20X4
-- DSRTC: MODE=STD, IO=192
-- INTRTC: ENABLED
 - UART: IO=128
 - UART: IO=136
 - UART: IO=160
 - UART: IO=168
 - SIO MODE=STD, IO=128, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=STD, IO=128, CHANNEL B, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
+- DSRTC: MODE=STD, IO=192
+- INTRTC: ENABLED
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
 - IDE: MODE=RC, IO=16, MASTER
 - IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
+- PPIDE: MODE=STD, IO=32, MASTER
+- PPIDE: MODE=STD, IO=32, SLAVE
 - SD: MODE=PIO, IO=105, UNITS=1
-- CTC: IO=136, TIMER MODE=COUNTER, DIVISOR=18432, HI=256, LO=72, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
 
 `\clearpage`{=latex}
 
@@ -392,31 +390,29 @@ of the SIO ports, for ease of use with modern computers.
 #### Supported Hardware
 
 - FP: LEDIO=0, SWIO=0
+- CTC: IO=16, TIMER MODE=COUNTER, DIVISOR=18432, HI=256, LO=72, INTERRUPTS ENABLED
 - LCD: IO=218, SIZE=20X4
-- DSRTC: MODE=STD, IO=192
-- INTRTC: ENABLED
 - UART: IO=128
 - UART: IO=136
 - UART: IO=160
 - UART: IO=168
 - SIO MODE=STD, IO=24, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=STD, IO=24, CHANNEL B, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
+- DSRTC: MODE=STD, IO=192
+- INTRTC: ENABLED
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
 - IDE: MODE=RC, IO=144, MASTER
 - IDE: MODE=RC, IO=144, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
+- PPIDE: MODE=STD, IO=32, MASTER
+- PPIDE: MODE=STD, IO=32, SLAVE
 - SD: MODE=PIO, IO=105, UNITS=1
-- CTC: IO=16, TIMER MODE=COUNTER, DIVISOR=18432, HI=256, LO=72, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
 
 `\clearpage`{=latex}
 
@@ -445,17 +441,20 @@ Z80-based S100 Modular System
 #### Supported Hardware
 
 - FP: LEDIO=5
-- DLPSER: IO=172
 - SCC MODE=SZ80, IO=160, CHANNEL A
 - SCC MODE=SZ80, IO=160, CHANNEL B
+- DLPSER: IO=233
+- DLPSER: IO=172
 - SCON: IO=0
-- ESPSD: IO=128, PRIMARY
-- ESPSD: IO=128, SECONDARY
+- MMRTC: IO=164
+- DS12RTC: IO=112
 - MD: TYPE=RAM
 - PPIDE: MODE=S100A, IO=48, MASTER
 - PPIDE: MODE=S100A, IO=48, SLAVE
 - PPIDE: MODE=S100B, IO=48, MASTER
 - PPIDE: MODE=S100B, IO=48, SLAVE
+- ESPSD: IO=128, PRIMARY
+- ESPSD: IO=128, SECONDARY
 
 #### Notes:
 
@@ -494,17 +493,16 @@ A T35 FPGA Z80 based S100 SBC
 #### Supported Hardware
 
 - FP: LEDIO=255
-- DS5RTC: RTCIO=104, IO=104
 - TSER: IO=53
-- DLPSER: IO=172
 - SCC MODE=SZ80, IO=160, CHANNEL A
 - SCC MODE=SZ80, IO=160, CHANNEL B
+- DLPSER: IO=172
+- DLPSER: IO=255
+- SCON: IO=0
 - LPT: MODE=T35, IO=199
+- DS5RTC: RTCIO=104, IO=104
 - TVGA: IO=192, KBD MODE=T35, KBD IO=3
 - KBD: ENABLED
-- SCON: IO=0
-- ESPSD: IO=128, PRIMARY
-- ESPSD: IO=128, SECONDARY
 - MD: TYPE=RAM
 - PPIDE: MODE=STD, IO=48, MASTER
 - PPIDE: MODE=STD, IO=48, SLAVE
@@ -513,7 +511,8 @@ A T35 FPGA Z80 based S100 SBC
 - PPIDE: MODE=S100B, IO=56, MASTER
 - PPIDE: MODE=S100B, IO=56, SLAVE
 - SD: MODE=T35, IO=108, UNITS=2
-
+- ESPSD: IO=128, PRIMARY
+- ESPSD: IO=128, SECONDARY
 
 #### Notes:
 
@@ -557,10 +556,10 @@ This was inspired on Pulsar Little Big board and some designs of Stephen Cousins
 #### Supported Hardware
 
 - GM7303: IO=48
-- DSRTC: MODE=STD, IO=132
-- INTRTC: ENABLED
 - ASCI: IO=192, INTERRUPTS ENABLED
 - ASCI: IO=193, INTERRUPTS ENABLED
+- DSRTC: MODE=STD, IO=132
+- INTRTC: ENABLED
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - IDE: MODE=GIDE, IO=32, MASTER
@@ -592,19 +591,19 @@ Turn your H8 into a RomWBW CP/M computer
 #### Supported Hardware
 
 - H8P: IO=240
-- INTRTC: ENABLED
+- AY38910: MODE=MSX, IO=160, CLOCK=1789772 HZ
 - UART: IO=232
 - UART: IO=224
 - UART: IO=216
 - UART: IO=208
+- INTRTC: ENABLED
 - TMS: MODE=MSX, IO=152, SCREEN=80X24, KEYBOARD=NONE
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
-- AY38910: MODE=MSX, IO=160, CLOCK=1789772 HZ
+- PPIDE: MODE=STD, IO=32, MASTER
+- PPIDE: MODE=STD, IO=32, SLAVE
 
 `\clearpage`{=latex}
 
@@ -631,7 +630,6 @@ It also has an interface to the RetroBrew bus (ECB) for access to additional per
 
 #### Supported Hardware
 
-- DSRTC: MODE=STD, IO=138
 - ASCI: IO=64, INTERRUPTS ENABLED
 - ASCI: IO=65, INTERRUPTS ENABLED
 - UART: IO=24
@@ -640,12 +638,10 @@ It also has an interface to the RetroBrew bus (ECB) for access to additional per
 - UART: IO=200
 - UART: IO=208
 - UART: IO=216
-- VGA: IO=224, KBD MODE=PS/2, KBD IO=224
+- DSRTC: MODE=STD, IO=138
 - CVDU: MODE=ECB, IO=224, KBD MODE=PS/2, KBD IO=226
+- VGA: IO=224, KBD MODE=PS/2, KBD IO=224
 - KBD: ENABLED
-- PRP: IO=168
-- PRPCON: ENABLED
-- PRPSD: ENABLED
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=DIDE, IO=42, DRIVE 0, TYPE=3.5" HD
@@ -653,6 +649,9 @@ It also has an interface to the RetroBrew bus (ECB) for access to additional per
 - IDE: MODE=MK4, IO=128, MASTER
 - IDE: MODE=MK4, IO=128, SLAVE
 - SD: MODE=MK4, IO=137, UNITS=1
+- PRP: IO=168
+- PRPCON: ENABLED
+- PRPSD: ENABLED
 
 `\clearpage`{=latex}
 
@@ -677,9 +676,10 @@ The default configuration is for a European MSX 2 (PAL) with international keybo
 
 #### Supported Hardware
 
-- RP5C01: IO=180
+- AY38910: MODE=MSX, IO=160, CLOCK=1789772 HZ
 - UART: IO=128
 - UART: IO=136
+- RP5C01: IO=180
 - TMS: MODE=MSXMKY, IO=152, SCREEN=80X24, KEYBOARD=MKY, INTERRUPTS ENABLED
 - MKY: IO=168
 - MD: TYPE=RAM
@@ -687,7 +687,6 @@ The default configuration is for a European MSX 2 (PAL) with international keybo
 - IDE: MODE=RC, IO=16, SLAVE
 - PPIDE: MODE=MSX_BEER, IO=48, MASTER
 - PPIDE: MODE=MSX_BEER, NO SLAVE
-- AY38910: MODE=MSX, IO=160, CLOCK=1789772 HZ
 
 #### Notes:
 
@@ -722,15 +721,15 @@ by changing one jumper on the Option Card
 #### Supported Hardware
 
 - NABU: IO=64
-- INTRTC: ENABLED
+- AY38910: MODE=NABU, IO=65, CLOCK=1789772 HZ
 - UART: IO=72
+- INTRTC: ENABLED
 - TMS: MODE=NABU, IO=160, SCREEN=80X24, KEYBOARD=NABU, INTERRUPTS ENABLED
 - NABUKB: IO=144
 - MD: TYPE=RAM
 - MD: TYPE=ROM
-- PPIDE: IO=96, MASTER
-- PPIDE: IO=96, SLAVE
-- AY38910: MODE=NABU, IO=65, CLOCK=1789772 HZ
+- PPIDE: MODE=STD, IO=96, MASTER
+- PPIDE: MODE=STD, IO=96, SLAVE
 
 #### Notes:
 
@@ -770,32 +769,29 @@ and Z80 ROM. These are sufficient to build a working system of minimum capabilit
 
 #### Supported Hardware
 
+- CTC: IO=176
 - PKD: IO=96, SIZE=8X1
-- DSRTC: MODE=STD, IO=112
+- SPK: IO=112 MASK=4
 - UART: IO=104
 - UART: IO=128
 - UART: IO=136
 - SIO MODE=ZP, IO=176, CHANNEL A
 - SIO MODE=ZP, IO=176, CHANNEL B
-- PIO: IO=184, CHANNEL A
-- PIO: IO=184, CHANNEL B
-- PIO: IO=188, CHANNEL A
-- PIO: IO=188, CHANNEL B
 - LPT: MODE=SPP, IO=232
+- DSRTC: MODE=STD, IO=112
 - CVDU: MODE=MBC, IO=224, KBD MODE=PS/2, KBD IO=226
 - TMS: MODE=MBC, IO=152, SCREEN=80X24, KEYBOARD=KBD
 - KBD: ENABLED
-- ESP: IO=156
-- ESPCON: ENABLED
-- ESPSER: DEVICE=0
-- ESPSER: DEVICE=1
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=MBC, IO=48, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=MBC, IO=48, DRIVE 1, TYPE=3.5" HD
-- PPIDE: IO=96, MASTER
-- PPIDE: IO=96, SLAVE
-- SPK: IO=112
+- PPIDE: MODE=STD, IO=96, MASTER
+- PPIDE: MODE=STD, IO=96, SLAVE
+- ESP: IO=156
+- ESPCON: ENABLED
+- ESPSER: DEVICE=0
+- ESPSER: DEVICE=1
 
 `\clearpage`{=latex}
 
@@ -831,27 +827,27 @@ of developments based on the Euro Card Bus (ECB) standard.
 
 #### Supported Hardware
 
+- UART: IO=104
+- UART: IO=128
+- UART: IO=24
+- UART: IO=192
+- UART: IO=200
+- UART: IO=208
+- UART: IO=216
 - DSRTC: MODE=STD, IO=112
-- UART: MODE=SBC, IO=104
-- UART: MODE=CAS, IO=128
-- UART: MODE=MFP, IO=104
-- UART: MODE=4UART, IO=192
-- UART: MODE=4UART, IO=200
-- UART: MODE=4UART, IO=208
-- UART: MODE=4UART, IO=216
-- VGA: IO=224, KBD MODE=PS/2, KBD IO=224
 - CVDU: MODE=ECB, IO=224, KBD MODE=PS/2, KBD IO=226
-- CVDU occupies 905 bytes.
+- VGA: IO=224, KBD MODE=PS/2, KBD IO=224
 - KBD: ENABLED
-- PRP: IO=168
-- PRPCON: ENABLED
-- PRPSD: ENABLED
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=DIO, IO=54, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=DIO, IO=54, DRIVE 1, TYPE=3.5" HD
-- PPIDE: IO=96, MASTER
-- PPIDE: IO=96, SLAVE
+- PPIDE: MODE=STD, IO=96, MASTER
+- PPIDE: MODE=STD, IO=96, SLAVE
+- PRP: IO=168
+- PRPCON: ENABLED
+- PRPSD: ENABLED
+
 
 `\clearpage`{=latex}
 
@@ -859,7 +855,7 @@ of developments based on the Euro Card Bus (ECB) standard.
 
 Image for Altair Z80 SimH emulator
 
-#### ROM Image File:  SBC_simh.rom
+#### ROM Image File:  SBC_simh_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -874,11 +870,12 @@ Image for Altair Z80 SimH emulator
 
 #### Supported Hardware
 
-- SIMRTC: IO=254
 - SSER: IO=109
+- SIMRTC: IO=254
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - HDSK: IO=253, DEVICE COUNT=2
+
 
 #### Notes:
 
@@ -914,9 +911,10 @@ This configuration is for the N8-2312 and latter (4314) revisions
 
 #### Supported Hardware
 
-- DSRTC: MODE=STD, IO=136
+- AY38910: MODE=N8, IO=156, CLOCK=1789772 HZ
 - ASCI: IO=64, INTERRUPTS ENABLED
 - ASCI: IO=65, INTERRUPTS ENABLED
+- DSRTC: MODE=STD, IO=136
 - TMS: MODE=N8, IO=152, SCREEN=40X24, KEYBOARD=PPK
 - PPK: ENABLED
 - MD: TYPE=RAM
@@ -924,7 +922,6 @@ This configuration is for the N8-2312 and latter (4314) revisions
 - FD: MODE=N8, IO=140, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=N8, IO=140, DRIVE 1, TYPE=3.5" HD
 - SD: MODE=CSIO, IO=136, UNITS=1
-- AY38910: MODE=N8, IO=156, CLOCK=1789772 HZ
 
 #### Notes:
 
@@ -954,10 +951,12 @@ This is a variant of the N8 computer.
 
 #### Supported Hardware
 
+- FP: SWIO=136
 - PKD: IO=132, SIZE=8X1
-- M6242RTC: IO=160
+- AY38910: MODE=N8PC, IO=160, CLOCK=3579545 HZ
 - ASCI: IO=64
 - ASCI: IO=65
+- M6242RTC: IO=176
 - TMS: MODE=N8PC, IO=152, SCREEN=80X24, KEYBOARD=KBD
 - KBD: ENABLED
 - MD: TYPE=RAM
@@ -966,7 +965,6 @@ This is a variant of the N8 computer.
 - FD: MODE=N8, IO=140, DRIVE 1, TYPE=3.5" HD
 - PPIDE: MODE=STD, IO=132, MASTER
 - PPIDE: MODE=STD, IO=132, SLAVE
-- AY38910: MODE=N8, IO=156, CLOCK=3579545 HZ
 
 #### Notes:
 
@@ -1001,7 +999,7 @@ Generic Rom Image.
 
 - FP: LEDIO=0, SWIO=0
 - LCD: IO=218, SIZE=20X4
-- DSRTC: MODE=STD, IO=192
+- AY38910: MODE=RC2014, IO=216, CLOCK=1789772 HZ
 - UART: IO=128
 - UART: IO=136
 - UART: IO=160
@@ -1011,19 +1009,18 @@ Generic Rom Image.
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
 - ACIA: IO=128, INTERRUPTS ENABLED
+- DSRTC: MODE=STD, IO=192
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: MODE=STD, IO=32, MASTER
+- PPIDE: MODE=STD, IO=32, SLAVE
+- SD: MODE=PIO, IO=105, UNITS=1
 - CH: IO=62
 - CH: IO=60
 - CHUSB: IO=62
 - CHUSB: IO=60
-- MD: TYPE=RAM
-- MD: TYPE=ROM
-- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
-- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
-- IDE: MODE=RC, IO=16, MASTER
-- IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
-- SD: MODE=PIO, IO=105, UNITS=1
 
 `\clearpage`{=latex}
 
@@ -1048,7 +1045,6 @@ Generic Rom Image.
 
 - FP: LEDIO=0, SWIO=0
 - LCD: IO=218, SIZE=20X4
-- DSRTC: MODE=STD, IO=192
 - UART: IO=128
 - UART: IO=136
 - UART: IO=160
@@ -1058,19 +1054,20 @@ Generic Rom Image.
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
 - ACIA: IO=128, INTERRUPTS ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
+- DSRTC: MODE=STD, IO=192
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
 - IDE: MODE=RC, IO=16, MASTER
 - IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
+- PPIDE: MODE=STD, IO=32, MASTER
+- PPIDE: MODE=STD, IO=32, SLAVE
 - SD: MODE=PIO, IO=105, UNITS=1
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
 
 `\clearpage`{=latex}
 
@@ -1094,30 +1091,30 @@ Generic Rom Image. SIO Serial baud rate managed by CTC
 #### Supported Hardware
 
 - FP: LEDIO=0, SWIO=0
+- KIO: IO=128
+- CTC: IO=132, TIMER MODE=TIMER/16, DIVISOR=9216, HI=256, LO=36, INTERRUPTS ENABLED
 - LCD: IO=218, SIZE=20X4
-- DSRTC: MODE=STD, IO=192
-- INTRTC: ENABLED
 - UART: IO=128
 - UART: IO=136
 - UART: IO=160
 - UART: IO=168
 - SIO MODE=STD, IO=136, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=STD, IO=136, CHANNEL B, INTERRUPTS ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
+- DSRTC: MODE=STD, IO=192
+- INTRTC: ENABLED
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
 - IDE: MODE=RC, IO=16, MASTER
 - IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
+- PPIDE: MODE=STD, IO=32, MASTER
+- PPIDE: MODE=STD, IO=32, SLAVE
 - SD: MODE=PIO, IO=105, UNITS=1
-- KIO: IO=128
-- CTC: IO=132, TIMER MODE=TIMER/16, DIVISOR=9216, HI=256, LO=36, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
 
 `\clearpage`{=latex}
 
@@ -1148,7 +1145,6 @@ functionality of CPU, RAM, and ROM on a single module, thus saving space on the 
 
 - FP: LEDIO=0, SWIO=0
 - LCD: IO=218, SIZE=20X4
-- DSRTC: MODE=STD, IO=192
 - UART: IO=128
 - UART: IO=136
 - UART: IO=160
@@ -1158,19 +1154,20 @@ functionality of CPU, RAM, and ROM on a single module, thus saving space on the 
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
 - ACIA: IO=128, INTERRUPTS ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
+- DSRTC: MODE=STD, IO=192
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
 - IDE: MODE=RC, IO=16, MASTER
 - IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
+- PPIDE: MODE=STD, IO=32, MASTER
+- PPIDE: MODE=STD, IO=32, SLAVE
 - SD: MODE=PIO, IO=105, UNITS=1
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
 
 `\clearpage`{=latex}
 
@@ -1181,73 +1178,21 @@ serial upload enable a diskless CP/M SBC. However, just in case that idea didn't
 out, ZRC has an optional compact flash interface. The targeted software for ZRC is ROMWBW.
 ZRC physically contains no ROM and 2MB of RAM.  
 
-In the STD configuration the first 512KB of RAM is loaded with a ROM image from disk 
-storage and then handled like ROM. Essentially, an area of the RAM is reserved to act as ROM.
-
 * Creator: Bill Shen
 * Retrobrew Wiki: [ZRC, Z80 RAM CPLD for ROMWBW](https://www.retrobrewcomputers.org/doku.php?id=builderpages:plasmo:zrc)
 * Google Groups: [ZRC, Z80/RAM/CPLD, minimal CP/M-ready, Z80 SBC](https://groups.google.com/g/retro-comp/c/L3W7TaDnX5A/m/ZxOgl8EIAQAJ)
 
-#### ROM Image File:  RCZ80_zrc_std.rom
+### ZRC Z80 CPU Module
 
-|                   |               |
-|-------------------|---------------|
-| Bus               | RCBus         |
-| Default CPU Speed | 14.745 MHz    |
-| Interrupts        | Mode 1        |
-| System Timer      | None          |
-| Serial Default    | 115200 Baud   |
-| Memory Manager    | ZRC           |
-| ROM Size          | 512 KB        |
-| RAM Size          | 1536 KB       |
-
-#### Supported Hardware
-
-- FP: LEDIO=0, SWIO=0
-- LCD: IO=218, SIZE=20X4
-- DSRTC: MODE=STD, IO=192
-- UART: IO=128
-- UART: IO=136
-- UART: IO=160
-- UART: IO=168
-- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
-- ACIA: IO=128, INTERRUPTS ENABLED
-- VRC: IO=0, KBD MODE=VRC, KBD IO=244
-- KBD: ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
-- MD: TYPE=RAM
-- MD: TYPE=ROM
-- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
-- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
-- IDE: MODE=RC, IO=16, MASTER
-- IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
-- SD: MODE=PIO, IO=105, UNITS=1
-
-`\clearpage`{=latex}
-
-### ZRC Z80 CPU Module (RAM)
-
-This profile differs (from STD) only in how the system boots, and how RAM is configured.
 Boot occurs directly to RAM, loading HBIOS directly from disk storage rather than via
 a pseudo ROM image copied into RAM.
 
 A RAM disk is configured preloaded with files that would normally be on the ROM disk.
 There is no ROM disk in this configuration.
 
-The RAM config is the newer approach and provides a more efficient bank layout. 
-The intent to replace the STD config with the RAM config.
-
 * Creator: Bill Shen
 
-#### ROM Image File:  RCZ80_zrc_ram_std.rom
+#### ROM Image File:  RCZ80_zrc_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -1264,7 +1209,6 @@ The intent to replace the STD config with the RAM config.
 
 - FP: LEDIO=0, SWIO=0
 - LCD: IO=218, SIZE=20X4
-- DSRTC: MODE=STD, IO=192
 - UART: IO=128
 - UART: IO=136
 - UART: IO=160
@@ -1274,20 +1218,21 @@ The intent to replace the STD config with the RAM config.
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
 - ACIA: IO=128, INTERRUPTS ENABLED
+- DSRTC: MODE=STD, IO=192
 - VRC: IO=0, KBD MODE=VRC, KBD IO=244
 - KBD: ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
 - MD: TYPE=RAM
 - FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
 - IDE: MODE=RC, IO=16, MASTER
 - IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
+- PPIDE: MODE=STD, IO=32, MASTER
+- PPIDE: MODE=STD, IO=32, SLAVE
 - SD: MODE=PIO, IO=105, UNITS=1
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
 
 `\clearpage`{=latex}
 
@@ -1317,7 +1262,6 @@ It is designed specifically for ROM-less RomWBW. HBIOS is loaded from disk at bo
 
 - FP: LEDIO=0, SWIO=0
 - LCD: IO=218, SIZE=20X4
-- DSRTC: MODE=STD, IO=192
 - UART: IO=128
 - UART: IO=136
 - UART: IO=160
@@ -1327,20 +1271,21 @@ It is designed specifically for ROM-less RomWBW. HBIOS is loaded from disk at bo
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
 - ACIA: IO=128, INTERRUPTS ENABLED
+- DSRTC: MODE=STD, IO=192
 - VRC: IO=0, KBD MODE=VRC, KBD IO=244
 - KBD: ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
 - MD: TYPE=RAM
 - FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
 - IDE: MODE=RC, IO=16, MASTER
 - IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
+- PPIDE: MODE=STD, IO=32, MASTER
+- PPIDE: MODE=STD, IO=32, SLAVE
 - SD: MODE=PIO, IO=105, UNITS=1
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
 
 `\clearpage`{=latex}
 
@@ -1409,14 +1354,12 @@ The 64K ROM Layout:
 
 #### Supported Hardware
 
-- DSRTC: MODE=STD, IO=192
+- KIO: IO=0
+- CTC: IO=4
 - SIO MODE=STD, IO=8, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=STD, IO=8, CHANNEL B, INTERRUPTS ENABLED
 - MD: TYPE=RAM
-- MD occupies 409 bytes.
 - SD: MODE=EZ512, IO=2, UNITS=1
-- KIO: IO=0
-- CTC: IO=4
 
 `\clearpage`{=latex}
 
@@ -1444,31 +1387,27 @@ It is designed to run RomWBW. The current version is rev 2.1 replacing the older
 #### Supported Hardware
 
 - FP: LEDIO=0, SWIO=0
+- KIO: IO=128
+- CTC: IO=132
 - LCD: IO=218, SIZE=20X4
-- DSRTC: MODE=K80W, IO=192
-- UART: IO=128
-- UART: IO=136
-- UART: IO=160
-- UART: IO=168
 - SIO MODE=STD, IO=136, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=STD, IO=136, CHANNEL B, INTERRUPTS ENABLED
+- DSRTC: MODE=K80W, IO=192
 - VRC: IO=0, KBD MODE=VRC, KBD IO=244
 - KBD: ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
 - IDE: MODE=RC, IO=16, MASTER
 - IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
+- PPIDE: MODE=STD, IO=32, MASTER
+- PPIDE: MODE=STD, IO=32, SLAVE
 - SD: MODE=EZ512, IO=130, UNITS=1
-- KIO: IO=128
-- CTC: IO=132
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
 
 `\clearpage`{=latex}
 
@@ -1494,8 +1433,6 @@ Generic Rom Image. For use with Z2 bank switched memory board (Z2 external memor
 #### Supported Hardware
 
 - FP: LEDIO=0, SWIO=0
-- DSRTC: MODE=STD, IO=12
-- INTRTC: ENABLED
 - ASCI: IO=192, INTERRUPTS ENABLED
 - ASCI: IO=193, INTERRUPTS ENABLED
 - UART: IO=128
@@ -1506,19 +1443,21 @@ Generic Rom Image. For use with Z2 bank switched memory board (Z2 external memor
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
 - IDE: MODE=RC, IO=16, MASTER
 - IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
+- PPIDE: MODE=STD, IO=32, MASTER
+- PPIDE: MODE=STD, IO=32, SLAVE
 - SD: MODE=PIO, IO=105, UNITS=1
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
 
 `\clearpage`{=latex}
 
@@ -1542,8 +1481,6 @@ Generic Rom Image. For use with linear memory board (Z180 native memory manageme
 #### Supported Hardware
 
 - FP: LEDIO=0, SWIO=0
-- DSRTC: MODE=STD, IO=12
-- INTRTC: ENABLED
 - ASCI: IO=192, INTERRUPTS ENABLED
 - ASCI: IO=193, INTERRUPTS ENABLED
 - UART: IO=128
@@ -1554,19 +1491,21 @@ Generic Rom Image. For use with linear memory board (Z180 native memory manageme
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
 - IDE: MODE=RC, IO=16, MASTER
 - IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
+- PPIDE: MODE=STD, IO=32, MASTER
+- PPIDE: MODE=STD, IO=32, SLAVE
 - SD: MODE=PIO, IO=105, UNITS=1
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
 
 `\clearpage`{=latex}
 
@@ -1598,8 +1537,6 @@ runs the loader to bring in the 480K RomWBW image from CF disk, then start RomWB
 #### Supported Hardware
 
 - FP: LEDIO=0, SWIO=0
-- DSRTC: MODE=STD, IO=12
-- INTRTC: ENABLED
 - ASCI: IO=192, INTERRUPTS ENABLED
 - ASCI: IO=193, INTERRUPTS ENABLED
 - UART: IO=128
@@ -1610,18 +1547,20 @@ runs the loader to bring in the 480K RomWBW image from CF disk, then start RomWB
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
 - MD: TYPE=RAM
 - FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
 - IDE: MODE=RC, IO=16, MASTER
 - IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
+- PPIDE: MODE=STD, IO=32, MASTER
+- PPIDE: MODE=STD, IO=32, SLAVE
 - SD: MODE=PIO, IO=105, UNITS=1
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
 
 `\clearpage`{=latex}
 
@@ -1647,9 +1586,6 @@ Generic Rom Image. For use with Z2 bank switched memory board (Z2 external memor
 #### Supported Hardware
 
 - FP: LEDIO=0, SWIO=0
-- LCD: IO=218, SIZE=20X4
-- DSRTC: MODE=STD, IO=192
-- INTRTC: ENABLED
 - Z2U: IO=16
 - UART: IO=128
 - UART: IO=136
@@ -1659,20 +1595,21 @@ Generic Rom Image. For use with Z2 bank switched memory board (Z2 external memor
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
-- ACIA: IO=128, INTERRUPTS ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
+- DSRTC: MODE=STD, IO=192
+- INTRTC: ENABLED
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
 - IDE: MODE=RC, IO=16, MASTER
 - IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
+- PPIDE: MODE=STD, IO=32, MASTER
+- PPIDE: MODE=STD, IO=32, SLAVE
 - SD: MODE=PIO, IO=105, UNITS=1
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
 
 `\clearpage`{=latex}
 
@@ -1696,9 +1633,6 @@ Generic Rom Image. For use with linear memory board (Z280 native memory manageme
 #### Supported Hardware
 
 - FP: LEDIO=0, SWIO=0
-- LCD: IO=218, SIZE=20X4
-- DSRTC: MODE=STD, IO=192
-- INTRTC: ENABLED
 - Z2U: IO=16, INTERRUPTS ENABLED
 - UART: IO=128
 - UART: IO=136
@@ -1708,19 +1642,21 @@ Generic Rom Image. For use with linear memory board (Z280 native memory manageme
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
+- DSRTC: MODE=STD, IO=192
+- INTRTC: ENABLED
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
 - IDE: MODE=RC, IO=16, MASTER
 - IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
+- PPIDE: MODE=STD, IO=32, MASTER
+- PPIDE: MODE=STD, IO=32, SLAVE
 - SD: MODE=PIO, IO=105, UNITS=1
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
 
 `\clearpage`{=latex}
 
@@ -1731,74 +1667,22 @@ Because Z280 has a native serial-bootstrap capability, the CPLD is even simpler 
 of ZRCC. ZZRCC is Z280 operating in Z80-compatible mode. It is designed for RC2014 bus
 ZZRCC actually contains no ROM and 512KB of RAM.  
 
-In the STD configuration the first 256KB of RAM is loaded with a ROM image from disk 
-storage and then handled like ROM. Essentially, an area of the RAM is reserved to act as ROM.
-
 * Creator: Bill Shen
 * Retrobrew Wiki: [ZZRCC, a SBC for RC2014 based on Z280](https://www.retrobrewcomputers.org/doku.php?id=builderpages:plasmo:zzrcc)
 * Google Groups: [ZZRCC, Z280 SBC replacing ZZ80RC and ZZ80CF](https://groups.google.com/g/retro-comp/c/lt1t3JEoiCM/m/NYeZdrFuAAAJ)
 * Google Groups: [Help porting ROMWBW to ZZRCC](https://groups.google.com/g/retro-comp/c/mBIWW18WXTE/m/E_sehx5fAwAJ)
 
-#### ROM Image File:  RCZ280_zzrcc_std.rom
+### ZZRCC Z280 CPU Module
 
-|                   |               |
-|-------------------|---------------|
-| Bus               | RCBus         |
-| Default CPU Speed | 14.745 MHz    |
-| Interrupts        | Mode 3        |
-| System Timer      | Z280          |
-| Serial Default    | 115200 Baud   |
-| Memory Manager    | Z280          |
-| ROM Size          | 256 KB        |
-| RAM Size          | 256 KB        |
-
-#### Supported Hardware
-
-- FP: LEDIO=0, SWIO=0
-- LCD: IO=218, SIZE=20X4
-- DSRTC: MODE=STD, IO=192
-- INTRTC: ENABLED
-- Z2U: IO=16, INTERRUPTS ENABLED
-- UART: IO=128
-- UART: IO=136
-- UART: IO=160
-- UART: IO=168
-- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
-- VRC: IO=0, KBD MODE=VRC, KBD IO=244
-- KBD: ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
-- MD: TYPE=RAM
-- MD: TYPE=ROM
-- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
-- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
-- IDE: MODE=RC, IO=16, MASTER
-- IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
-
-`\clearpage`{=latex}
-
-### ZZRCC Z280 CPU Module (RAM)
-
-This profile differs (from STD) only in how the system boots, and how RAM is configured.
 Boot occurs directly to RAM, loading HBIOS directly from disk storage rather than via
 a pseudo ROM image copied into RAM.
 
 A RAM disk is configured preloaded with files that would normally be on the ROM disk.
 There is no ROM disk in this configuration.
 
-The RAM config is the newer approach and provides a more efficient bank layout.
-The intent to replace the STD config with the RAM config.
-
 * Creator: Bill Shen
 
-#### ROM Image File:  RCZ280_zzrcc_ram_std.rom
+#### ROM Image File:  RCZ280_zzrcc_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -1814,9 +1698,6 @@ The intent to replace the STD config with the RAM config.
 #### Supported Hardware
 
 - FP: LEDIO=0, SWIO=0
-- LCD: IO=218, SIZE=20X4
-- DSRTC: MODE=STD, IO=192
-- INTRTC: ENABLED
 - Z2U: IO=16, INTERRUPTS ENABLED
 - UART: IO=128
 - UART: IO=136
@@ -1826,19 +1707,22 @@ The intent to replace the STD config with the RAM config.
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- DSRTC: MODE=STD, IO=192
+- INTRTC: ENABLED
 - VRC: IO=0, KBD MODE=VRC, KBD IO=244
 - KBD: ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
 - MD: TYPE=RAM
 - FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
 - IDE: MODE=RC, IO=16, MASTER
 - IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
+- PPIDE: MODE=STD, IO=32, MASTER
+- PPIDE: MODE=STD, IO=32, SLAVE
+- SD: MODE=PIO, IO=105, UNITS=1
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
 
 `\clearpage`{=latex}
 
@@ -1868,9 +1752,6 @@ and program an EPROM. This feature can be used to program EPROM for other comput
 #### Supported Hardware
 
 - FP: LEDIO=0, SWIO=0
-- LCD: IO=218, SIZE=20X4
-- DSRTC: MODE=STD, IO=192
-- INTRTC: ENABLED
 - Z2U: IO=16, INTERRUPTS ENABLED
 - UART: IO=128
 - UART: IO=136
@@ -1880,20 +1761,23 @@ and program an EPROM. This feature can be used to program EPROM for other comput
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- DSRTC: MODE=STD, IO=192
+- INTRTC: ENABLED
 - VRC: IO=0, KBD MODE=VRC, KBD IO=244
 - KBD: ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
 - IDE: MODE=RC, IO=16, MASTER
 - IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
+- PPIDE: MODE=STD, IO=32, MASTER
+- PPIDE: MODE=STD, IO=32, SLAVE
+- SD: MODE=PIO, IO=105, UNITS=1
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
 
 `\clearpage`{=latex}
 
@@ -1925,22 +1809,18 @@ first released by Zilog about 20 years ago, and still available from the manufac
 
 - FP: LEDIO=0, SWIO=0
 - LCD: IO=218, SIZE=20X4
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
 - IDE: MODE=RC, IO=16, MASTER
 - IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
-- EZ80: CPU DRIVER
-- EZ80: SYS TIMER DRIVER
-- EZ80: RTC DRIVER
-- EZ80: UART DRIVER
+- PPIDE: MODE=STD, IO=32, MASTER
+- PPIDE: MODE=STD, IO=32, SLAVE
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
 
 `\clearpage`{=latex}
 
@@ -1968,15 +1848,15 @@ Graphics Display Controller
 
 #### Supported Hardware
 
-- DSRTC: MODE=STD, IO=132
 - ASCI: IO=64
 - ASCI: IO=65
+- DSRTC: MODE=STD, IO=132
 - GDC: MODE=RPH, DISPLAY=EGA, IO=144
 - KBD: ENABLED
 - MD: TYPE=RAM
 - MD: TYPE=ROM
-- PPIDE: IO=136, MASTER
-- PPIDE: IO=136, SLAVE
+- PPIDE: MODE=STD, IO=136, MASTER
+- PPIDE: MODE=STD, IO=136, SLAVE
 
 `\clearpage`{=latex}
 
@@ -2008,15 +1888,17 @@ as defined by the IEEE-696 specs.
 
 #### Supported Hardware
 
-- INTRTC: ENABLED
-- DLPSER: IO=172
+- FP: LEDIO=5
 - ASCI: IO=192, INTERRUPTS ENABLED
 - ASCI: IO=193, INTERRUPTS ENABLED
 - SCC MODE=SZ80, IO=160, CHANNEL A
 - SCC MODE=SZ80, IO=160, CHANNEL B
+- DLPSER: IO=172
+- DLPSER: IO=255
 - SCON: IO=0
-- ESPSD: IO=128, PRIMARY
-- ESPSD: IO=128, SECONDARY
+- MMRTC: IO=164
+- DS12RTC: IO=112
+- INTRTC: ENABLED
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - PPIDE: MODE=S100A, IO=48, MASTER
@@ -2024,6 +1906,8 @@ as defined by the IEEE-696 specs.
 - PPIDE: MODE=S100B, IO=48, MASTER
 - PPIDE: MODE=S100B, IO=48, SLAVE
 - SD: MODE=SC, IO=12, UNITS=1
+- ESPSD: IO=128, PRIMARY
+- ESPSD: IO=128, SECONDARY
 
 #### Notes:
 
@@ -2074,7 +1958,6 @@ SC126 is a Z180 Motherboard.
 #### Supported Hardware
 
 - FP: LEDIO=13, SWIO=0
-- DSRTC: MODE=STD, IO=12
 - ASCI: IO=192, INTERRUPTS ENABLED
 - ASCI: IO=193, INTERRUPTS ENABLED
 - UART: IO=128
@@ -2085,19 +1968,20 @@ SC126 is a Z180 Motherboard.
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
+- DSRTC: MODE=STD, IO=12
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
 - IDE: MODE=RC, IO=16, MASTER
 - IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
+- PPIDE: MODE=STD, IO=32, MASTER
+- PPIDE: MODE=STD, IO=32, SLAVE
 - SD: MODE=SC, IO=12, UNITS=1
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
 
 #### Notes:
 
@@ -2129,8 +2013,6 @@ SC130 is an entry-level Z180 Motherboard designed primarily to run RomWBW (and C
 #### Supported Hardware
 
 - FP: LEDIO=0, SWIO=0
-- DSRTC: MODE=STD, IO=12
-- INTRTC: ENABLED
 - ASCI: IO=192, INTERRUPTS ENABLED
 - ASCI: IO=193, INTERRUPTS ENABLED
 - UART: IO=128
@@ -2141,19 +2023,21 @@ SC130 is an entry-level Z180 Motherboard designed primarily to run RomWBW (and C
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
 - IDE: MODE=RC, IO=16, MASTER
 - IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
+- PPIDE: MODE=STD, IO=32, MASTER
+- PPIDE: MODE=STD, IO=32, SLAVE
 - SD: MODE=SC, IO=12, UNITS=1
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
 
 `\clearpage`{=latex}
 
@@ -2178,9 +2062,9 @@ SC131 is a pocket-sized Z180 RomWBW CP/M computer.
 
 #### Supported Hardware
 
-- INTRTC: ENABLED
 - ASCI: IO=192, INTERRUPTS ENABLED
 - ASCI: IO=193, INTERRUPTS ENABLED
+- INTRTC: ENABLED
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - SD: MODE=SC, IO=12, UNITS=1
@@ -2209,30 +2093,18 @@ SC140 is a Z180 SBC / Z50Bus Card card.
 #### Supported Hardware
 
 - FP: LEDIO=160, SWIO=160
-- DSRTC: MODE=STD, IO=12
-- INTRTC: ENABLED
 - ASCI: IO=192, INTERRUPTS ENABLED
 - ASCI: IO=193, INTERRUPTS ENABLED
-- UART: IO=128
-- UART: IO=136
-- UART: IO=160
-- UART: IO=168
 - SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
 - MD: TYPE=RAM
 - MD: TYPE=ROM
-- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
-- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
 - IDE: MODE=RC, IO=144, MASTER
 - IDE: MODE=RC, IO=144, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
 - SD: MODE=SC, IO=12, UNITS=1
 
 `\clearpage`{=latex}
@@ -2259,30 +2131,18 @@ SC503 is a Z180 Processor card designed for Z50Bus.
 #### Supported Hardware
 
 - FP: LEDIO=160, SWIO=160
-- DSRTC: MODE=STD, IO=12
-- INTRTC: ENABLED
 - ASCI: IO=192, INTERRUPTS ENABLED
 - ASCI: IO=193, INTERRUPTS ENABLED
-- UART: IO=128
-- UART: IO=136
-- UART: IO=160
-- UART: IO=168
 - SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
 - MD: TYPE=RAM
 - MD: TYPE=ROM
-- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
-- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
 - IDE: MODE=RC, IO=144, MASTER
 - IDE: MODE=RC, IO=144, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
 - SD: MODE=SC, IO=12, UNITS=1
 
 `\clearpage`{=latex}
@@ -2312,9 +2172,6 @@ Z180 CPU (eg. SC722) with 1MB linear memory (eg. SC721)
 #### Supported Hardware
 
 - FP: LEDIO=0
-- LCD: IO=170, SIZE=20X4
-- DSRTC: MODE=STD, IO=12
-- INTRTC: ENABLED
 - ASCI: IO=192, INTERRUPTS ENABLED
 - ASCI: IO=193, INTERRUPTS ENABLED
 - UART: IO=128
@@ -2325,19 +2182,21 @@ Z180 CPU (eg. SC722) with 1MB linear memory (eg. SC721)
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
 - IDE: MODE=RC, IO=16, MASTER
 - IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
+- PPIDE: MODE=STD, IO=32, MASTER
+- PPIDE: MODE=STD, IO=32, SLAVE
 - SD: MODE=SC, IO=12, UNITS=1
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
 
 `\clearpage`{=latex}
 
@@ -2369,6 +2228,7 @@ John Winans presented by John's Basement on youTube)
 
 #### Supported Hardware
 
+- CTC: IO=64
 - SIO MODE=Z80R, IO=128, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=Z80R, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - MD: TYPE=RAM
@@ -2400,14 +2260,14 @@ and N8VEM project. Zeta SBC is software compatible with N8VEM SBC and Disk I/O b
 
 #### Supported Hardware
 
-- DSRTC: MODE=STD, IO=112
 - UART: IO=104
-- PPP: IO=96
-- PPPCON: ENABLED
-- PPPSD: ENABLED
+- DSRTC: MODE=STD, IO=112
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=DIO, IO=54, DRIVE 0, TYPE=3.5" HD
+- PPP: IO=96
+- PPPCON: ENABLED
+- PPPSD: ENABLED
 
 #### Notes:
 

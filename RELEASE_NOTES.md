@@ -12,9 +12,9 @@ release of RomWBW.
   boot disk media by doing one of the following:
   
   - Write a new disk image (typically hd1k_combo.img) onto your
-    disk media (will overwrite existing data/files).
-  - Update the boot tracks of the bootable OS images as described in
-    the RomWBW User Guid.
+    disk media (may overwrite existing data/files).
+  - Update the boot tracks and RomWBW applications on the bootable OS
+    images as described in the RomWBW User Guide.
 
 ## Version 3.6
 
@@ -26,9 +26,16 @@ release of RomWBW.
 
 ### New Features
 
+- Slice inventory function in boot loader lists the available slices
+  and descriptions. (Mark Pruden)
+- Native USB driver supporting hard disk, floppy, and keyboard for
+  specific platforms.  (Dean Netherton)
+- See ChangeLog.txt for complete list of updates
+
 ### New Hardware Support
 
-- Support for MSX systems.
+- Support for MSX systems. (H.J.Berends)
+- Support for S100 Z80 CPU.
 
 ## Version 3.5.1
 

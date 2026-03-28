@@ -6,13 +6,18 @@ on:
       - '**'
 
 jobs:
-  build:
 
+  # Build new release
+  build:
     runs-on: ubuntu-latest
 
     steps:
+
+      - name: Dump GitHub Context
+        run: echo "${{toJSON(github)}}"    
+
       - name: Checkout
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v6
 
       - name: Build
         run: |
@@ -21,11 +26,10 @@ jobs:
           sudo apt-get install srecord
           make transpile-c-code
           make distlog --trace
-          rm -rf .git*
-      
+
       - name: Create Package Archive
         run: |
-          zip -r RomWBW-${{github.ref_name}}-Package.zip .
+          zip -r RomWBW-${{github.ref_name}}-Package.zip . --exclude .git\*
 
       - name: Set Title
         run: |
@@ -44,17 +48,42 @@ jobs:
           echo "Title: $TITLE"
           echo "TITLE=$TITLE" >>$GITHUB_ENV
 
-      - name: Attach Package Archive
-        uses: wwarthen/actions/packages/automatic-releases@built-packages
-        with:
-          repo_token: "${{secrets.GITHUB_TOKEN}}"
-          draft: true
-          prerelease: true
-          title: "${{env.TITLE}} ${{github.ref_name}}"
-          files: |
-            RomWBW-${{github.ref_name}}-Package.zip
+      - name: Create Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{github.ref_name}}
+        run: |
+          gh release create "$TAG" RomWBW-$TAG-Package.zip \
+            --draft --prerelease \
+            --title="${{env.TITLE}} $TAG" \
+            --generate-notes
 
-      - name: Build Docs
+  # Generate and deploy GitHub pages
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    
+    # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+    # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+    concurrency:
+      group: "pages"
+      cancel-in-progress: false
+
+    steps:
+
+      - name: Dump GitHub Context
+        run: echo "${{toJSON(github)}}"    
+
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Generate Docs
         run: |
           export TZ='America/Los_Angeles'
           sudo apt-get install gpp pandoc
@@ -62,66 +91,13 @@ jobs:
           make -C Source/Doc deploy_mkdocs
           mkdocs build -f Source/Doc/mkdocs.yml
 
-      - name: Deploy Docs
-        uses: peaceiris/actions-gh-pages@v4
-#       if: github.ref == 'refs/heads/master'
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: Source/Doc/site
-      
-#      - name: Upload Package Archive
-#        uses: AButler/upload-release-assets@v2.0.2
-#        with:
-#          repo-token: ${{secrets.github_token}}
-#          files: |
-#            RomWBW-${{env.PKGLBL}}-Package.zip
+          path: 'Source/Doc/site'
 
-
-#      - name: Post SnapShot
-#        uses: docker://antonyurchenko/git-release:latest
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#          RELEASE_NAME_PREFIX: "${{env.TITLE}} "
-#          CHANGELOG_FILE: "none"
-#        with:
-#          args: |
-#            RomWBW-SnapShot-Package.zip
-            
-#      - name: Post SnapShot
-#        uses: cb80/pubrel@latest
-#        with:
-#          replace: true
-#          files: |
-#            RomWBW-SnapShot-Package.zip
-
-#      - name: Post SnapShot
-#        uses: wwarthen/actions/packages/automatic-releases@built-packages
-#        with:
-#          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-#          prerelease: true
-#          title: "RomWBW Development SnapShot ${{env.GITHUB_REF_SLUG}}"
-#          files: |
-#            RomWBW-SnapShot-Package.zip
-
-#      - name: Remove Older Releases
-#        uses: wwarthen/delete-release-action@v1.2
-#        with:
-#          release-drop: true
-#          release-keep-count: 0
-#          release-drop-tag: true
-#          pre-release-drop: false
-#          pre-release-keep-count: 0
-#          pre-release-drop-tag: true
-#          draft-drop: true
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-#      - name: Remove Older Releases
-#        uses: s00d/delete-older-releases@0.2.1
-#        with:
-#          keep_latest: 1
-##          delete_tag_pattern: beta # defaults to ""
-#          delete_type: 'release'
-#          delete_branch: 'main'
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Deploy GitHub Pages
+        uses: actions/deploy-pages@v4
