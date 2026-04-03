@@ -553,34 +553,19 @@ EXITX
 	LD	DE,MSGLOOP			; Single-file loop restart
 	JR	EXITX2
 EXITXALL:
-	LD	A,(SKIPREQ)
-	OR	A
-	JR	NZ,EXITXALL_SKIP
 	LD	A,(PLIDX)
 	INC	A
 	LD	B,A
 	LD	A,(PLCNT)
 	CP	B
-	JR	NZ,EXITX2
+	JR	Z,EXITXALL_LAST
+	LD	DE,MSGNEXT			; another queued track remains
+	JR	EXITX2
+EXITXALL_LAST:
 	LD	A,(LOOPMD)
 	OR	A
-	JR	Z,EXITX2			; last track without loop -> Done
-	LD	DE,MSGLOOP			; wrap playlist to start
-	JR	EXITX2
-EXITXALL_SKIP:
-	LD	A,(PLIDX)
-	INC	A
-	LD	B,A
-	LD	A,(PLCNT)
-	CP	B
-	JR	NZ,EXITX1			; skip to next queued track
-	LD	A,(LOOPMD)
-	OR	A
-	JR	Z,EXITX2			; no next track and no loop -> Done
-	LD	DE,MSGLOOP			; skip at end with loop wraps to start
-	JR	EXITX2
-EXITX1:
-	LD	DE,MSGSKIP			; next track exists, show Skipping
+	JR	Z,EXITX2			; no loop at end -> Done
+	LD	DE,MSGLOOP			; playlist wrap in loop mode
 EXITX2:
 	CALL	PRTSTR			; Print message
 	CALL	CRLF			; Formatting
@@ -2151,7 +2136,7 @@ CLIBUF		.FILL	129,0		; NUL-TERMINATED COPY OF COMMAND TAIL
 
 USEPORTS	.DB	0	; AUDIO CHIP PORT SELECTION MODE
 
-MSGBAN		.DB	"Tune Player for RomWBW v3.2b018, 03-Apr-2026",0
+MSGBAN		.DB	"Tune Player for RomWBW v3.2b019, 03-Apr-2026",0
 MSGUSE		.DB	"Copyright (C) 2026, Wayne Warthen, GNU GPL v3",13,10
 			.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 			.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
@@ -2186,6 +2171,7 @@ MSGPLREM	.DB	"Remaining playlist:",0
 MSGPLNONE	.DB	" (none)",0
 MSGCURINF	.DB	"Current track:",0
 MSGPLY		.DB	"Playing...",0
+MSGNEXT		.DB	" Next track",0
 MSGSKIP		.DB	" Skipping",0
 MSGLOOP		.DB	" Looping from start",0
 MSGEND		.DB	" Done",0
