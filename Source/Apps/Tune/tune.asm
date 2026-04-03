@@ -416,24 +416,7 @@ GOPTX
 GOPTXSP1:
 	CALL	CRLF
 GOPTXSP2:
-	LD	DE, MSGSONGNAME         ; Print song name message
-	CALL	PRTSTR
-	LD	DE, MDLADDR + $1E       ; Print 32 character long song name from module
-	LD	B, $20
-GOPTX1	LD	A,(DE)
-	CALL	PRTCHR
-	INC	DE
-	DJNZ	GOPTX1
-	CALL	CRLF
-	LD	DE, MSGARTIST           ; Print "by" message
-	CALL	PRTSTR
-	LD	DE, MDLADDR + $42       ; Print 32 character long composer/artist from module
-	LD	B,  $20
-GOPTX2	LD	A,(DE)
-	CALL	PRTCHR
-	INC	DE
-	DJNZ	GOPTX2
-	CALL	CRLF2			; Formatting
+	CALL	PRTSONGMETA		; Print song metadata block
 ;
 	; TurboSound-packed PT3 init
 	LD	A,(TSFLAG)
@@ -451,6 +434,11 @@ PTXINITN:
 	CALL	START			; Do initialization
 ;
 PTXSTART:
+	LD	A,(ALLMD)
+	OR	A
+	JR	Z,PTXSTART0
+	CALL	FLUSHKEYS
+PTXSTART0:
 	LD	DE,MSGPLY			; Playing message
 	CALL	PRTSTR			; Print message
 ;
@@ -478,11 +466,16 @@ PTXLP_KEY:
 	OR	A
 	JR	Z,PTXLP_ABRT		; non-playlist mode: any key aborts
 	LD	A,E
+	CP	'?'
+	JR	Z,PTXLP_SHOWQ
 	CP	27			; ESC quits playlist
 	JR	Z,PTXLP_ABRT
 	LD	A,$FF
 	LD	(SKIPREQ),A
 	JR	EXIT			; any other key skips to next queued track
+PTXLP_SHOWQ:
+	CALL	SHOWPLSTATUS
+	JR	PTXLP
 PTXLP_ABRT:
 	LD	A,$FF
 	LD	(STOPREQ),A
@@ -532,13 +525,23 @@ EXITN	CALL	START+8		; Mute audio
 EXITX
 	;CALL	NORMCPU
 	;CALL	CRLF2			; Formatting
+	LD	DE,MSGEND			; Default completion message
 	LD	A,(SKIPREQ)
 	OR	A
-	JR	Z,EXITX1
-	LD	DE,MSGSKIP			; Skip message
-	JR	EXITX2
-EXITX1:
-	LD	DE,MSGEND			; Completion message
+	JR	Z,EXITX2
+	LD	A,(ALLMD)
+	OR	A
+	JR	Z,EXITX2
+	LD	A,(STOPREQ)
+	OR	A
+	JR	NZ,EXITX2
+	LD	A,(PLIDX)
+	INC	A
+	LD	B,A
+	LD	A,(PLCNT)
+	CP	B
+	JR	Z,EXITX2			; no next track, show Done
+	LD	DE,MSGSKIP			; next track exists, show Skipping
 EXITX2:
 	CALL	PRTSTR			; Print message
 	CALL	CRLF			; Formatting
@@ -567,6 +570,24 @@ GETKEY	LD	C,6		; BDOS direct I/O
 	CALL	BDOS	; Call BDOS
 	OR	A			; Set flags, Z set if no key
 	RET				; Done
+;
+; Drain any pending console keypresses (used to clear command-enter residue).
+;
+FLUSHKEYS:
+	PUSH	AF
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+FLUSHKEYS1:
+	CALL	GETKEY
+	JR	Z,FLUSHKEYS2
+	JR	FLUSHKEYS1
+FLUSHKEYS2:
+	POP	HL
+	POP	DE
+	POP	BC
+	POP	AF
+	RET
 ;
 ; Print the wait mode suffix based on WMOD
 ;   WMOD == 0  -> delay mode
@@ -2017,7 +2038,7 @@ CLIBUF		.FILL	129,0		; NUL-TERMINATED COPY OF COMMAND TAIL
 
 USEPORTS	.DB	0	; AUDIO CHIP PORT SELECTION MODE
 
-MSGBAN		.DB	"Tune Player for RomWBW v3.2b008, 03-Apr-2026",0
+MSGBAN		.DB	"Tune Player for RomWBW v3.2b014, 03-Apr-2026",0
 MSGUSE		.DB	"Copyright (C) 2026, Wayne Warthen, GNU GPL v3",13,10
 			.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 			.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
@@ -2048,6 +2069,9 @@ MSGHBIOS	.DB	"HBIOS sound driver",0
 MSGTIM		.DB	", timer mode",0
 MSGDLY		.DB	", delay mode",0
 MSGPLMODE	.DB	"Playlist Mode: Esc=quit, any key=skip to next track",0
+MSGPLREM	.DB	"Remaining playlist:",0
+MSGPLNONE	.DB	" (none)",0
+MSGCURINF	.DB	"Current track:",0
 MSGPLY		.DB	"Playing...",0
 MSGSKIP		.DB	" Skipping",0
 MSGEND		.DB	" Done",0
@@ -3982,6 +4006,104 @@ notrig:	ld      hl,(psource)
 endint:	call	NORMIO
 	ei
 	ret			; And done
+;
+; Print song metadata from currently loaded module.
+;
+PRTSONGMETA:
+	LD	DE, MSGSONGNAME
+	CALL	PRTSTR
+	LD	DE, MDLADDR + $1E
+	LD	B, $20
+PRTSM1:
+	LD	A,(DE)
+	CALL	PRTCHR
+	INC	DE
+	DJNZ	PRTSM1
+	CALL	CRLF
+	LD	DE, MSGARTIST
+	CALL	PRTSTR
+	LD	DE, MDLADDR + $42
+	LD	B, $20
+PRTSM2:
+	LD	A,(DE)
+	CALL	PRTCHR
+	INC	DE
+	DJNZ	PRTSM2
+	CALL	CRLF2
+	RET
+;
+; In playlist mode, print remaining queued tracks and refresh current track info.
+;
+SHOWPLSTATUS:
+	LD	A,(PLCNT)
+	CP	PLMAX+1
+	JR	C,SHOWPLSTATUS0
+	LD	A,PLMAX
+SHOWPLSTATUS0:
+	LD	B,A			; B = total entries (clamped)
+	LD	A,(PLIDX)
+	INC	A
+	LD	C,A			; C = next queued index
+	LD	A,C
+	CP	B
+	RET	NC			; no remaining entries -> ignore '?'
+	CALL	CRLF
+	LD	DE,MSGPLREM
+	CALL	PRTSTR
+	CALL	CRLF
+	LD	A,B
+	SUB	C
+	LD	D,A			; D = remaining entries to print
+SHOWPLSTATUS1:
+	PUSH	BC
+	PUSH	DE
+	LD	A,C
+	CALL	PLAYLIST_PTR_FROM_A
+	INC	HL			; skip drive byte
+	CALL	PRTPLENTRY
+	POP	DE
+	POP	BC
+	INC	C
+	DEC	D
+	JR	NZ,SHOWPLSTATUS1
+	CALL	CRLF
+	LD	DE,MSGCURINF
+	CALL	PRTSTR
+	CALL	CRLF
+	CALL	PRTSONGMETA
+	LD	DE,MSGPLY
+	CALL	PRTSTR
+	RET
+;
+; Print one 8.3 entry from HL (11 chars: name[8]+ext[3]).
+;
+PRTPLENTRY:
+	LD	A,'-'
+	CALL	PRTCHR
+	LD	A,' '
+	CALL	PRTCHR
+	LD	B,8
+PRTPLENTRY1:
+	LD	A,(HL)
+	INC	HL
+	CP	' '
+	JR	Z,PRTPLENTRY2
+	CALL	PRTCHR
+PRTPLENTRY2:
+	DJNZ	PRTPLENTRY1
+	LD	A,'.'
+	CALL	PRTCHR
+	LD	B,3
+PRTPLENTRY3:
+	LD	A,(HL)
+	INC	HL
+	CP	' '
+	JR	Z,PRTPLENTRY4
+	CALL	PRTCHR
+PRTPLENTRY4:
+	DJNZ	PRTPLENTRY3
+	CALL	CRLF
+	RET
 ;
 
 ; *** Program data
