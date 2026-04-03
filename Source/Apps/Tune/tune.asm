@@ -80,6 +80,7 @@
 BF_SYSGET_SNDCNT	.EQU	$50		; SYSGET subfunction: sound unit count
 BC_SYSGET_SNDCNT	.EQU	(BF_SYSGET * 256) + BF_SYSGET_SNDCNT
 BF_SNDQ_DEV		.EQU	4		; query: return device type and IO ports
+PLMAX			.EQU	64		; max files in internal playlist
 ;
 HEAPEND			.EQU	$C000	; End of heap storage
 ;
@@ -124,12 +125,22 @@ Id				.EQU	1	; 5) Insert official identificator
 	PRTCRLF
 	PRTSTRDE(MSGBAN)		; Print to banner message
 	CALL	CRLF			; newline after banner
+	CALL	CLI_PREP
+	CALL	CLI_SHOW_HELP
+	CALL	CLI_HAVE_ALL_SWITCH
 
 	CALL	CLI_ABRT_IF_OPT_FIRST
 	CALL	CLI_PORTS
 	CALL	CLI_HAVE_HBIOS_SWITCH
 	CALL	CLI_HAVE_DELAY_SWITCH
 	CALL	CLI_OCTAVE_ADJST
+	;
+	LD	A,(ALLMD)
+	OR	A
+	JR	NZ,CONTINUE
+	LD	A,(CLIBUF)
+	OR	A
+	JP	Z,ERRCMD
 	;
 	; If no filename is provided, exit immediately with usage.
 	; Some environments leave the FCB filename field as NULs instead of spaces.
@@ -240,6 +251,7 @@ TSTTIMER:
 	RR	E				; ... for delay factor
 	EX	DE,HL			; Move result to HL
 	LD	(QDLY),HL		; Save result as quark delay factor
+	LD	(QDLY0),HL		; Save pristine base quark delay
 ;
 	; Clear heap storage
 	LD	HL,HEAP				; Point to heap start
@@ -249,6 +261,34 @@ TSTTIMER:
 	LD	BC,HEAPEND-HEAP-1	; Size of heap except first byte
 	LDIR					; Propagate zero to rest of heap
 ;
+	; If -all is selected, enumerate *.PT3 files once into a playlist.
+	LD	A,(ALLMD)
+	OR	A
+	JR	Z,PLAYNEXT
+	CALL	PLAYLIST_INIT
+	CALL	PLAYLIST_ENUM_PT3
+	LD	A,(PLCNT)
+	OR	A
+	JP	Z,ERRALL
+	LD	DE,MSGPLMODE
+	CALL	PRTSTR
+	CALL	CRLF
+;
+PLAYNEXT:
+	XOR	A
+	LD	(STOPREQ),A
+	LD	(SKIPREQ),A
+	LD	HL,(QDLY0)
+	LD	(QDLY),HL
+	LD	A,(ALLMD)
+	OR	A
+	JR	Z,PLAYNEXT_SINGLE
+	CALL	PLAYLIST_LOAD_FCB
+	LD	A,TYPPT3
+	LD	(FILTYP),A
+	JR	_LD0
+;
+PLAYNEXT_SINGLE:
 	; Check sound filename (must be *.PT2, *.PT3, or *.MYM)
 	LD	A,(FCB+1)		; Get first char of filename
 	CP	' '				; Compare to blank
@@ -432,7 +472,22 @@ PTXLP_NORM:
 	JR	NZ,EXIT			; Bail out when done playing
 PTXLP_KEY:
 	CALL	GETKEY		; Check for keypress
-	JR	NZ,EXIT			; Abort on keypress
+	JR	Z,PTXLP_KEY1
+	LD	E,A			; save pressed key
+	LD	A,(ALLMD)
+	OR	A
+	JR	Z,PTXLP_ABRT		; non-playlist mode: any key aborts
+	LD	A,E
+	CP	27			; ESC quits playlist
+	JR	Z,PTXLP_ABRT
+	LD	A,$FF
+	LD	(SKIPREQ),A
+	JR	EXIT			; any other key skips to next queued track
+PTXLP_ABRT:
+	LD	A,$FF
+	LD	(STOPREQ),A
+	JR	EXIT
+PTXLP_KEY1:
 	CALL	WAITQ		; Wait one quark period
 	JR	PTXLP			; Loop for next quark
 ;
@@ -454,7 +509,11 @@ mymlp	call	extract
 waitvb	call	WAITQ
 	call	upsg			; Update PSG registers
 	call	GETKEY			; Check for keypress
-	jr	nz,EXIT				; Bail out if so
+	jr	z,waitvb1
+	ld	a,$FF
+	ld	(STOPREQ),a
+	jr	EXIT				; Bail out if so
+waitvb1
 	ld      a,(played)		; Wait until VBI has played a fragment
         or      a
         jr      nz,waitvb
@@ -473,9 +532,26 @@ EXITN	CALL	START+8		; Mute audio
 EXITX
 	;CALL	NORMCPU
 	;CALL	CRLF2			; Formatting
+	LD	A,(SKIPREQ)
+	OR	A
+	JR	Z,EXITX1
+	LD	DE,MSGSKIP			; Skip message
+	JR	EXITX2
+EXITX1:
 	LD	DE,MSGEND			; Completion message
+EXITX2:
 	CALL	PRTSTR			; Print message
 	CALL	CRLF			; Formatting
+	LD	A,(ALLMD)
+	OR	A
+	JR	Z,EXITP
+	LD	A,(STOPREQ)
+	OR	A
+	JR	NZ,EXITP
+	CALL	PLAYLIST_ADVANCE
+	JR	Z,EXITP
+	JP	PLAYNEXT
+EXITP:
 	JP	0					; Exit the easy way
 
 #include "timing.inc"
@@ -506,6 +582,139 @@ PRTWMOD_DLY:
 	LD	DE,MSGDLY
 PRTWMOD_P:
 	JP	PRTSTR
+;
+; Playlist support for -all mode
+;
+PLAYLIST_INIT:
+	XOR	A
+	LD	(PLCNT),A
+	LD	(PLIDX),A
+	LD	(STOPREQ),A
+	RET
+;
+PLAYLIST_ENUM_PT3:
+	; CLEAR SEARCH FCB
+	LD	HL,PLSRCHFCB
+	XOR	A
+	LD	(HL),A
+	LD	DE,PLSRCHFCB+1
+	LD	BC,35
+	LDIR
+	; BUILD PATTERN ????????.PT3
+	LD	HL,PLSRCHFCB+1
+	LD	B,8
+	LD	A,'?'
+PLAYLIST_ENUM_PT30:
+	LD	(HL),A
+	INC	HL
+	DJNZ	PLAYLIST_ENUM_PT30
+	LD	(HL),'P'
+	INC	HL
+	LD	(HL),'T'
+	INC	HL
+	LD	(HL),'3'
+	; DMA FOR DIR SEARCH RESULTS
+	LD	DE,PLSRCHBUF
+	LD	C,26
+	CALL	BDOS
+	; SEARCH FIRST
+	LD	DE,PLSRCHFCB
+	LD	C,17
+	CALL	BDOS
+	CP	$FF
+	RET	Z
+	CALL	PLAYLIST_ENUM_ADD
+PLAYLIST_ENUM_PT31:
+	LD	DE,PLSRCHFCB
+	LD	C,18
+	CALL	BDOS
+	CP	$FF
+	RET	Z
+	CALL	PLAYLIST_ENUM_ADD
+	JR	PLAYLIST_ENUM_PT31
+;
+PLAYLIST_ENUM_ADD:
+	PUSH	AF
+	LD	A,(PLCNT)
+	CP	PLMAX
+	JR	NC,PLAYLIST_ENUM_ADDX
+	CALL	PLAYLIST_PTR_FROM_A	; HL = DEST ENTRY (12 BYTES)
+	EX	DE,HL			; DE = DEST
+	POP	AF			; A = DIR ENTRY INDEX (0..3)
+	; HL = SOURCE DIR ENTRY + 1 (FILENAME+EXT)
+	LD	L,A
+	LD	H,0
+	ADD	HL,HL			; *2
+	ADD	HL,HL			; *4
+	ADD	HL,HL			; *8
+	ADD	HL,HL			; *16
+	ADD	HL,HL			; *32
+	LD	BC,PLSRCHBUF+1
+	ADD	HL,BC
+	; BUILD FCB ENTRY: DRIVE=0 + 11 BYTES NAME/EXT
+	XOR	A
+	LD	(DE),A
+	INC	DE
+	LD	B,11
+PLAYLIST_ENUM_LP:
+	LD	A,(HL)
+	LD	(DE),A
+	INC	HL
+	INC	DE
+	DJNZ	PLAYLIST_ENUM_LP
+	LD	A,(PLCNT)
+	INC	A
+	LD	(PLCNT),A
+	RET
+PLAYLIST_ENUM_ADDX:
+	POP	AF
+	RET
+;
+PLAYLIST_LOAD_FCB:
+	LD	A,(PLIDX)
+	CALL	PLAYLIST_PTR_FROM_A	; HL = SOURCE ENTRY
+	LD	DE,FCB
+	LD	B,12
+PLAYLIST_LOAD_FCB1:
+	LD	A,(HL)
+	LD	(DE),A
+	INC	HL
+	INC	DE
+	DJNZ	PLAYLIST_LOAD_FCB1
+	XOR	A
+	LD	HL,FCB+12
+	LD	B,24
+PLAYLIST_LOAD_FCB2:
+	LD	(HL),A
+	INC	HL
+	DJNZ	PLAYLIST_LOAD_FCB2
+	RET
+;
+PLAYLIST_ADVANCE:
+	LD	A,(PLIDX)
+	INC	A
+	LD	(PLIDX),A
+	LD	B,A
+	LD	A,(PLCNT)
+	CP	B
+	RET	Z			; NO MORE ENTRIES
+	OR	$FF			; MORE ENTRIES AVAILABLE
+	RET
+;
+PLAYLIST_PTR_FROM_A:
+	; RETURN HL = PLAYLIST + (A * 12)
+	LD	L,A
+	LD	H,0
+	ADD	HL,HL			; 2A
+	LD	E,L
+	LD	D,H			; DE = 2A
+	ADD	HL,HL			; 4A
+	ADD	HL,HL			; 8A
+	ADD	HL,DE			; 10A
+	ADD	HL,DE			; 12A
+	LD	DE,PLAYLIST
+	ADD	HL,DE
+	RET
 ;
 ; Enumerate HBIOS sound devices to detect which PSG port sets exist.
 ; Returns A=mask, Z if any recognized ports were found.
@@ -928,36 +1137,64 @@ TS_DETECT:
 TS_DLP:
 	LD	A,(IX+0)
 	CP	PT3SIG0
-	JR	NZ,TS_DNXT
+	JP	NZ,TS_DNXT
 	LD	A,(IX+1)
 	CP	PT3SIG1
-	JR	NZ,TS_DNXT
+	JP	NZ,TS_DNXT
 	LD	A,(IX+2)
 	CP	PT3SIG2
-	JR	NZ,TS_DNXT
+	JP	NZ,TS_DNXT
 	LD	A,(IX+3)
 	CP	PT3SIG3
-	JR	NZ,TS_DNXT
+	JP	NZ,TS_DNXT
 	; check second PT3! at +6
 	LD	A,(IX+6)
 	CP	PT3SIG0
-	JR	NZ,TS_DNXT
+	JP	NZ,TS_DNXT
 	LD	A,(IX+7)
 	CP	PT3SIG1
-	JR	NZ,TS_DNXT
+	JP	NZ,TS_DNXT
 	LD	A,(IX+8)
 	CP	PT3SIG2
-	JR	NZ,TS_DNXT
+	JP	NZ,TS_DNXT
 	LD	A,(IX+9)
 	CP	PT3SIG3
-	JR	NZ,TS_DNXT
-	; check TS at +14
+	JP	NZ,TS_DNXT
+	; check marker "02TS" at +12
+	LD	A,(IX+12)
+	CP	'0'
+	JP	NZ,TS_DNXT
+	LD	A,(IX+13)
+	CP	'2'
+	JP	NZ,TS_DNXT
 	LD	A,(IX+14)
 	CP	TSSIG0
-	JR	NZ,TS_DNXT
+	JP	NZ,TS_DNXT
 	LD	A,(IX+15)
 	CP	TSSIG1
-	JR	NZ,TS_DNXT
+	JP	NZ,TS_DNXT
+	; validate candidate offset equals off2 + len2
+	LD	E,(IX+4)		; DE = off2
+	LD	D,(IX+5)
+	LD	L,(IX+10)		; HL = len2
+	LD	H,(IX+11)
+	ADD	HL,DE			; HL = off2 + len2
+	LD	A,H
+	OR	L
+	JP	Z,TS_DNXT		; reject zero-size relation
+	PUSH	HL			; save off2 + len2
+	PUSH	IX
+	POP	BC			; BC = candidate absolute address
+	LD	H,B
+	LD	L,C			; HL = candidate absolute address
+	LD	DE,MDLADDR
+	OR	A
+	SBC	HL,DE			; HL = candidate file-relative offset
+	EX	DE,HL			; DE = candidate offset
+	POP	HL			; HL = off2 + len2
+	OR	A
+	SBC	HL,DE
+	JP	NZ,TS_DNXT
 	; record module2 offset and length
 	LD	E,(IX+4)
 	LD	D,(IX+5)
@@ -973,7 +1210,7 @@ TS_DNXT:
 	DEC	BC
 	LD	A,B
 	OR	C
-	JR	NZ,TS_DLP
+	JP	NZ,TS_DLP
 	RET
 ;
 ; Probe for the two AY cards we expect for TurboSound playback.
@@ -1564,12 +1801,21 @@ ERRCMD:	; Command error, display usage info
 	LD	DE,MSGUSE
 	JR	ERR1
 ;
+HELPMSG:	; Display extended help info
+	CALL	CRLF			; blank line after banner
+	LD	DE,MSGHELP
+	JR	ERR1
+;
 ERRNAM:	; Missing or invalid filename parameter
 	LD	DE,MSGNAM
 	JR	ERR
 ;
 ERRFIL:	; Error opening sound file
 	LD	DE,MSGFIL
+	JR	ERR
+;
+ERRALL:	; -all selected but no PT3 files found
+	LD	DE,MSGALL
 	JR	ERR
 ;
 ERRSIZ:	; Sound file is too large for memory
@@ -1728,6 +1974,7 @@ DESC		.DW	0	; Hardware description string adr
 ;
 CURPLT		.DB	0	; Current platform id reported by HBIOS
 QDLY		.DW	0	; quark delay factor
+QDLY0		.DW	0	; base quark delay factor (reset before each song)
 WMOD		.DB	0	; delay mode, non-zero to use timer
 DCSAV		.DB	0	; for saving original Z180 DCNTL value
 CCRSAV		.DB	0	; for saving original Z180 CCR value
@@ -1758,20 +2005,38 @@ TMP		.DB	0	; work around use of undocumented Z80
 HBIOSMD		.DB	0	; NON-ZERO IF USING HBIOS SOUND DRIVER, ZERO OTHERWISE
 DELAYMD		.DB	0	; FORCE DELAY MODE IF TRUE (NON-ZERO)
 OCTAVEADJ	.DB	0	; AMOUNT TO ADJUST OCTAVE UP OR DOWN
+ALLMD		.DB	0	; NON-ZERO TO ENUMERATE/PLAY ALL .PT3 FILES
+STOPREQ		.DB	0	; NON-ZERO IF USER ABORTED WITH KEYPRESS
+SKIPREQ		.DB	0	; NON-ZERO IF USER REQUESTED SKIP TO NEXT TRACK
+PLCNT		.DB	0	; NUMBER OF FILES IN PLAYLIST
+PLIDX		.DB	0	; CURRENT PLAYLIST INDEX
+PLAYLIST	.FILL	(PLMAX * 12),0	; ARRAY OF FCB ENTRIES (DRIVE+11)
+PLSRCHBUF	.FILL	128,0		; DMA BUFFER FOR DIR SEARCH
+PLSRCHFCB	.FILL	36,0		; SEARCH FCB FOR *.PT3
+CLIBUF		.FILL	129,0		; NUL-TERMINATED COPY OF COMMAND TAIL
 
 USEPORTS	.DB	0	; AUDIO CHIP PORT SELECTION MODE
 
-MSGBAN		.DB	"Tune Player for RomWBW v3.2, 17-Feb-2026",0
+MSGBAN		.DB	"Tune Player for RomWBW v3.2b008, 03-Apr-2026",0
 MSGUSE		.DB	"Copyright (C) 2026, Wayne Warthen, GNU GPL v3",13,10
 			.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 			.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
-			.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM] [-msx|-rc|-coleco] [-delay] [--hbios] [+tn|-tn]",0
+			.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM] [-msx|-rc|-coleco] [-delay] [--hbios] [+tn|-tn] [-all] [-loop] [-help]",0
+MSGHELP		.DB	"Copyright (C) 2026, Wayne Warthen, GNU GPL v3",13,10
+			.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
+			.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
+			.DB	"This is a special build (ts variant) by fackie that adds:",13,10,13,10
+			.DB	"- Ability to play TurboSound PT3 files, using 2x AY-3-8910/YM2149 cards in MSX+Coleco addressing",13,10
+			.DB	"- Enumerates and plays all PT3 files in the current directory (-all)",13,10
+			.DB	"- Loops current playing files (-loop)",13,10,13,10
+			.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM] [-msx|-rc|-coleco] [-delay] [--hbios] [+tn|-tn] [-all] [-loop] [-help]",0
 MSGBIO		.DB	"Incompatible BIOS or version, "
 			.DB	"HBIOS v", '0' + RMJ, ".", '0' + RMN, " required",0
 MSGPLT		.DB	"Hardware error, system not supported!",0
 MSGHW		.DB	"Hardware error, sound chip not detected!",0
 MSGNAM		.DB	"Sound filename invalid (must be .PT2, .PT3, or .MYM)",0
 MSGFIL		.DB	"Sound file not found!",0
+MSGALL		.DB	"No .PT3 files found in current directory!",0
 MSGSIZ		.DB	"Sound file too large to load!",0
 MSGTSHB		.DB	"TurboSound PT3 not supported with --HBIOS",0
 MSGTSHW		.DB	"TurboSound PT3 requires two AY cards at A0H/A1H and 50H/51H (readback at +2)",0
@@ -1782,7 +2047,9 @@ MSGTSPST	.DB	" Ports",0
 MSGHBIOS	.DB	"HBIOS sound driver",0
 MSGTIM		.DB	", timer mode",0
 MSGDLY		.DB	", delay mode",0
+MSGPLMODE	.DB	"Playlist Mode: Esc=quit, any key=skip to next track",0
 MSGPLY		.DB	"Playing...",0
+MSGSKIP		.DB	" Skipping",0
 MSGEND		.DB	" Done",0
 MSGERR		.DB	"App Error", 0
 ;
