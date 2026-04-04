@@ -2136,7 +2136,7 @@ CLIBUF		.FILL	129,0		; NUL-TERMINATED COPY OF COMMAND TAIL
 
 USEPORTS	.DB	0	; AUDIO CHIP PORT SELECTION MODE
 
-MSGBAN		.DB	"Tune Player for RomWBW v3.2b019, 03-Apr-2026",0
+MSGBAN		.DB	"Tune Player for RomWBW v3.2b020, 03-Apr-2026",0
 MSGUSE		.DB	"Copyright (C) 2026, Wayne Warthen, GNU GPL v3",13,10
 			.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 			.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
@@ -4147,7 +4147,7 @@ SHOWPLSTATUS0:
 	LD	A,C
 	CP	B
 	RET	NC			; no remaining entries -> ignore '?'
-	CALL	CRLF
+	CALL	CRLF2
 	LD	DE,MSGPLREM
 	CALL	PRTSTR
 	CALL	CRLF
