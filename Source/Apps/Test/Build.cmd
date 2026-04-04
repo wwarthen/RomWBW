@@ -20,6 +20,7 @@ call :build 2piotst || exit /b
 call :build piomon || exit /b
 call :build banktest || exit /b
 call :build portscan || exit /b
+call :build termqry || exit /b
 call :build sound || exit /b
 call :build testh8p || exit /b
 
