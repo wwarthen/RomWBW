@@ -78,6 +78,13 @@ Deliverable:
 
 - New tune.com build with revision increment.
 
+Status update (implemented in this branch):
+
+- Added explicit playlist controls: N=next, P=previous, Esc=quit, ?=refresh playlist view.
+- Playlist view now renders the full list with a current-track marker.
+- Added phase-2 prefetch hook placeholder in the post-load path.
+- Bumped tune banner revision from b020 to b021.
+
 ### Phase 2
 
 Scope:

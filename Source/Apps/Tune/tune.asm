@@ -284,6 +284,7 @@ PLAYNEXT:
 	XOR	A
 	LD	(STOPREQ),A
 	LD	(SKIPREQ),A
+	LD	(PREVREQ),A
 	LD	HL,(QDLY0)
 	LD	(QDLY),HL
 	LD	A,(ALLMD)
@@ -392,8 +393,23 @@ _LDX	LD	C,16			; CPM Close File function
 	LD	DE,FCB			; FCB
 	CALL	BDOS			; Do it
 ;
+	LD	A,(ALLMD)
+	OR	A
+	JR	Z,_LDX0
+	LD	A,(PLSHOWN)
+	OR	A
+	JR	NZ,_LDX0
+	CALL	SHOWPLSTATUS
+	LD	A,$FF
+	LD	(PLSHOWN),A
+_LDX0:
 	; Post-load: print hardware / TurboSound info
 	CALL	PRTPLAYINFO
+	LD	A,(ALLMD)
+	OR	A
+	JR	Z,_LDX1
+	CALL	PREFETCH_TRACKS		; phase-2 hook: banked prefetch staging
+_LDX1:
 	;
 	LD	A,(FILTYP)		; Get file type
 	CP	TYPPT3			; PT3?
@@ -466,13 +482,13 @@ PTXLP:	LD	A,(TSFLAG)
 	JR	Z,PTXLP_KEY
 	LD	A,(TSSET2)
 	BIT	7,A
-	JR	NZ,EXIT				; done when both instances indicate loop point passed
+	JP	NZ,EXIT				; done when both instances indicate loop point passed
 	JR	PTXLP_KEY
 PTXLP_NORM:
 	CALL	START+5		; Play one quark
 	LD	A,(START+10)	; Get setup byte
 	BIT	7,A				; Check bit 7 (loop point passed)
-	JR	NZ,EXIT			; Bail out when done playing
+	JP	NZ,EXIT			; Bail out when done playing
 PTXLP_KEY:
 	CALL	GETKEY		; Check for keypress
 	JR	Z,PTXLP_KEY1
@@ -485,9 +501,19 @@ PTXLP_KEY:
 	JR	Z,PTXLP_SHOWQ
 	CP	27			; ESC quits playlist
 	JR	Z,PTXLP_ABRT
+	AND	$DF
+	CP	'P'
+	JR	Z,PTXLP_PREV
+	CP	'N'
+	JR	NZ,PTXLP_NEXT
+PTXLP_NEXT:
 	LD	A,$FF
 	LD	(SKIPREQ),A
-	JR	EXIT			; any other key skips to next queued track
+	JR	EXIT
+PTXLP_PREV:
+	LD	A,$FF
+	LD	(PREVREQ),A
+	JR	EXIT
 PTXLP_SHOWQ:
 	CALL	SHOWPLSTATUS
 	JR	PTXLP
@@ -553,6 +579,12 @@ EXITX
 	LD	DE,MSGLOOP			; Single-file loop restart
 	JR	EXITX2
 EXITXALL:
+	LD	A,(PREVREQ)
+	OR	A
+	JR	Z,EXITXALL0
+	LD	DE,MSGPREV			; user requested previous track
+	JR	EXITX2
+EXITXALL0:
 	LD	A,(PLIDX)
 	INC	A
 	LD	B,A
@@ -575,6 +607,13 @@ EXITX2:
 	LD	A,(STOPREQ)
 	OR	A
 	JR	NZ,EXITP
+	LD	A,(PREVREQ)
+	OR	A
+	JR	Z,EXITALLNXT
+	CALL	PLAYLIST_PREV
+	JP	NZ,PLAYNEXT
+	JR	EXITP
+EXITALLNXT:
 	CALL	PLAYLIST_ADVANCE
 	JP	NZ,PLAYNEXT
 	LD	A,(LOOPMD)
@@ -647,6 +686,7 @@ PLAYLIST_INIT:
 	LD	(PLCNT),A
 	LD	(PLIDX),A
 	LD	(STOPREQ),A
+	LD	(PLSHOWN),A
 	RET
 ;
 PLAYLIST_SNAPSHOT:
@@ -813,6 +853,26 @@ PLAYLIST_ADVANCE:
 	CP	B
 	RET	Z			; NO MORE ENTRIES
 	OR	$FF			; MORE ENTRIES AVAILABLE
+	RET
+
+PLAYLIST_PREV:
+	LD	A,(PLIDX)
+	OR	A
+	JR	Z,PLAYLIST_PREV_WRAP
+	DEC	A
+	LD	(PLIDX),A
+	OR	$FF			; PREVIOUS ENTRY AVAILABLE
+	RET
+PLAYLIST_PREV_WRAP:
+	LD	A,(LOOPMD)
+	OR	A
+	RET	Z
+	LD	A,(PLCNT)
+	OR	A
+	RET	Z
+	DEC	A
+	LD	(PLIDX),A
+	OR	$FF
 	RET
 ;
 PLAYLIST_PTR_FROM_A:
@@ -2123,6 +2183,8 @@ ALLMD		.DB	0	; NON-ZERO TO ENUMERATE/PLAY ALL .PT3 FILES
 LOOPMD		.DB	0	; NON-ZERO TO LOOP SINGLE FILE OR ENTIRE PLAYLIST
 STOPREQ		.DB	0	; NON-ZERO IF USER ABORTED WITH KEYPRESS
 SKIPREQ		.DB	0	; NON-ZERO IF USER REQUESTED SKIP TO NEXT TRACK
+PREVREQ		.DB	0	; NON-ZERO IF USER REQUESTED PREVIOUS TRACK
+PLSHOWN		.DB	0	; NON-ZERO AFTER INITIAL PLAYLIST RENDER IN -all MODE
 PLCNT		.DB	0	; NUMBER OF FILES IN PLAYLIST
 PLCNT0		.DB	0	; SNAPSHOT OF PLAYLIST COUNT FOR LOOP RESTART
 PLIDX		.DB	0	; CURRENT PLAYLIST INDEX
@@ -2136,7 +2198,7 @@ CLIBUF		.FILL	129,0		; NUL-TERMINATED COPY OF COMMAND TAIL
 
 USEPORTS	.DB	0	; AUDIO CHIP PORT SELECTION MODE
 
-MSGBAN		.DB	"Tune Player for RomWBW v3.2b020, 03-Apr-2026",0
+MSGBAN		.DB	"Tune Player for RomWBW v3.2b022, 04-Apr-2026",0
 MSGUSE		.DB	"Copyright (C) 2026, Wayne Warthen, GNU GPL v3",13,10
 			.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 			.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
@@ -2166,12 +2228,13 @@ MSGTSPST	.DB	" Ports",0
 MSGHBIOS	.DB	"HBIOS sound driver",0
 MSGTIM		.DB	", timer mode",0
 MSGDLY		.DB	", delay mode",0
-MSGPLMODE	.DB	"Playlist Mode: Esc=quit, any key=skip to next track",0
-MSGPLREM	.DB	"Remaining playlist:",0
+MSGPLMODE	.DB	"Playlist Mode: Esc=quit, N=next, P=previous, ?=playlist",0
+MSGPLFULL	.DB	"Playlist:",0
 MSGPLNONE	.DB	" (none)",0
 MSGCURINF	.DB	"Current track:",0
 MSGPLY		.DB	"Playing...",0
 MSGNEXT		.DB	" Next track",0
+MSGPREV		.DB	" Previous track",0
 MSGSKIP		.DB	" Skipping",0
 MSGLOOP		.DB	" Looping from start",0
 MSGEND		.DB	" Done",0
@@ -4132,53 +4195,49 @@ PRTSM2:
 	CALL	CRLF2
 	RET
 ;
-; In playlist mode, print remaining queued tracks and refresh current track info.
+; In playlist mode, print full queued track list with current marker.
 ;
 SHOWPLSTATUS:
 	LD	A,(PLCNT)
-	CP	PLMAX+1
-	JR	C,SHOWPLSTATUS0
-	LD	A,PLMAX
-SHOWPLSTATUS0:
-	LD	B,A			; B = total entries (clamped)
-	LD	A,(PLIDX)
-	INC	A
-	LD	C,A			; C = next queued index
-	LD	A,C
-	CP	B
-	RET	NC			; no remaining entries -> ignore '?'
+	OR	A
+	RET	Z
 	CALL	CRLF2
-	LD	DE,MSGPLREM
+	LD	DE,MSGPLFULL
 	CALL	PRTSTR
 	CALL	CRLF
-	LD	A,B
-	SUB	C
-	LD	D,A			; D = remaining entries to print
+	LD	B,A			; B = total entries
+	LD	A,(PLIDX)
+	LD	D,A			; D = current entry index
+	XOR	A
+	LD	C,A			; C = iter index
 SHOWPLSTATUS1:
 	PUSH	BC
-	PUSH	DE
 	LD	A,C
 	CALL	PLAYLIST_PTR_FROM_A
 	INC	HL			; skip drive byte
+	LD	A,C
+	CP	D
+	JR	NZ,SHOWPLSTATUS1A
+	CALL	PRTPLENTRYCUR
+	JR	SHOWPLSTATUS1B
+SHOWPLSTATUS1A:
 	CALL	PRTPLENTRY
-	POP	DE
+SHOWPLSTATUS1B:
 	POP	BC
 	INC	C
-	DEC	D
-	JR	NZ,SHOWPLSTATUS1
+	DJNZ	SHOWPLSTATUS1
 	CALL	CRLF
-	LD	DE,MSGCURINF
-	CALL	PRTSTR
-	CALL	CRLF
-	CALL	PRTSONGMETA
-	LD	DE,MSGPLY
-	CALL	PRTSTR
 	RET
 ;
 ; Print one 8.3 entry from HL (11 chars: name[8]+ext[3]).
 ;
 PRTPLENTRY:
-	LD	A,'-'
+	LD	A,' '
+	JR	PRTPLENTRY0
+
+PRTPLENTRYCUR:
+	LD	A,'>'
+PRTPLENTRY0:
 	CALL	PRTCHR
 	LD	A,' '
 	CALL	PRTCHR
@@ -4203,6 +4262,9 @@ PRTPLENTRY3:
 PRTPLENTRY4:
 	DJNZ	PRTPLENTRY3
 	CALL	CRLF
+	RET
+
+PREFETCH_TRACKS:
 	RET
 ;
 
