@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 import sys
+from pathlib import Path
 
-vgm_file = "C:/Users/miguel/Documents/development/RomWBW/Binary/Apps/Tunes/bgm.vgm"
+vgm_file = Path(__file__).resolve().parents[3] / "Binary" / "Apps" / "Tunes" / "bgm.vgm"
 
 with open(vgm_file, 'rb') as f:
     data = f.read()
