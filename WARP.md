@@ -23,7 +23,39 @@ These `make` targets delegate into `Tools/` and `Source/` using `Makefile` in th
 - Full clean (Windows, clears `Binary/` and `Source/` products):
   - `Clean.cmd`
 
+### Top-level PowerShell configuration build helpers
+
+The repository also includes convenience PowerShell entrypoints for common hardware/config combinations:
+
+- `build-rcz80std.ps1`:
+  - Runs `Source/HBIOS/Build.cmd RCZ80 std rcz80std`
+  - Then runs `Source/Images/Build.cmd`
+- `build-sc126std.ps1`:
+  - Runs `Source/HBIOS/Build.cmd SCZ180 sc126_std sc126std`
+  - Then runs `Source/Images/Build.cmd`
+- `build-sc720std.ps1`:
+  - Runs `Source/HBIOS/Build.cmd SC720 std sc720std`
+  - Then runs `Source/Images/Build.cmd`
+
+These scripts are useful for quick local builds of a specific ROM target plus refreshed disk images.
+
 Both scripts live at the repository root and delegate into the `Source/` and `Binary/` trees.
+
+## Git Workflow (Fork First)
+
+This workspace is configured for fork-first development.
+
+- `fork` remote:
+  - `git@github.com:jduraes/RomWBW.git` (fetch/push)
+- `origin` remote:
+  - `git@github.com:wwarthen/RomWBW.git` (fetch)
+  - push is disabled
+
+Expected workflow:
+
+- Default state: keep edits local.
+- When commit/push is requested, commit locally and push only to `fork`.
+- Any changes intended for Wayne's upstream must flow through pull requests.
 
 ### Source tree orchestration
 
