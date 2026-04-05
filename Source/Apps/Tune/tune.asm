@@ -80,7 +80,7 @@
 BF_SYSGET_SNDCNT	.EQU	$50		; SYSGET subfunction: sound unit count
 BC_SYSGET_SNDCNT	.EQU	(BF_SYSGET * 256) + BF_SYSGET_SNDCNT
 BF_SNDQ_DEV		.EQU	4		; query: return device type and IO ports
-PLMAX			.EQU	64		; max files in internal playlist
+PLMAX			.EQU	128		; max files in internal playlist
 ;
 HEAPEND			.EQU	$C000	; End of heap storage
 ;
@@ -101,11 +101,20 @@ CFGVER			.EQU	1
 CFG_DFL_ROWS	.EQU	24
 CFG_DFL_COLS	.EQU	80
 CFG_MIN_ROWS	.EQU	8
-CFG_MAX_ROWS	.EQU	99
+CFG_MAX_ROWS	.EQU	50
 CFG_MIN_COLS	.EQU	20
-CFG_MAX_COLS	.EQU	160
+CFG_MAX_COLS	.EQU	150
 TCFG_ORG_ROW	.EQU	5
 TCFG_ORG_COL	.EQU	5
+UI_ROW_BANNER	.EQU	1
+UI_ROW_MODE	.EQU	2
+UI_ROW_INFO	.EQU	4
+UI_ROW_INFO2	.EQU	5
+UI_ROW_META1	.EQU	6
+UI_ROW_META2	.EQU	7
+UI_ROW_PLAY	.EQU	8
+UI_ROW_PLHDR	.EQU	10
+UI_ROW_PLLIST	.EQU	10
 ;
 ; HIGH SPEED CPU CONTROL
 ;
@@ -151,6 +160,7 @@ Id				.EQU	1	; 5) Insert official identificator
 	CALL	CLI_HAVE_HBIOS_SWITCH
 	CALL	CLI_HAVE_DELAY_SWITCH
 	CALL	CLI_OCTAVE_ADJST
+	CALL	UI_SETUP
 
 	LD	A,(CONFIGMD)
 	OR	A
@@ -286,7 +296,7 @@ TSTTIMER:
 	LD	BC,HEAPEND-HEAP-1	; Size of heap except first byte
 	LDIR					; Propagate zero to rest of heap
 ;
-	; If -all is selected, enumerate *.PT3 files once into a playlist.
+	; If -list is selected, enumerate supported files once into a playlist.
 	LD	A,(ALLMD)
 	OR	A
 	JR	NZ,PLAYALL_INIT
@@ -294,12 +304,12 @@ TSTTIMER:
 	JR	PLAYNEXT
 PLAYALL_INIT:
 	CALL	PLAYLIST_INIT
-	CALL	PLAYLIST_ENUM_PT3
+	CALL	PLAYLIST_ENUM_ALL
 	LD	A,(PLCNT)
 	OR	A
 	JP	Z,ERRALL
 	CALL	PLAYLIST_SNAPSHOT
-	LD	DE,MSGPLMODE
+	LD	DE,MSGPLFULL
 	CALL	PRTSTR
 	CALL	CRLF
 	JR	PLAYNEXT
@@ -309,18 +319,22 @@ PLAYNEXT:
 	LD	(STOPREQ),A
 	LD	(SKIPREQ),A
 	LD	(PREVREQ),A
+	LD	(NAVREQ),A
+	LD	(DELREQ),A
+	LD	(PAUSEMD),A
+	LD	(DELCNT),A
 	LD	HL,(QDLY0)
 	LD	(QDLY),HL
 	LD	A,(ALLMD)
 	OR	A
 	JR	Z,PLAYNEXT_SINGLE
 	CALL	PLAYLIST_LOAD_FCB
-	LD	A,TYPPT3
-	LD	(FILTYP),A
+	CALL	PLAYLIST_SET_FILTYP
+	CALL	CLI_ABRT_UNSUPPFILTYP
 	JR	_LD0
 ;
 PLAYNEXT_SINGLE:
-	LD	A,(LOOPMD)
+	LD	A,(LOOPTRKMD)
 	OR	A
 	JR	Z,PLAYNEXT_SINGLE0
 	CALL	SINGLE_FCBRESTORE
@@ -427,6 +441,7 @@ _LDX	LD	C,16			; CPM Close File function
 	LD	A,$FF
 	LD	(PLSHOWN),A
 _LDX0:
+	CALL	UI_CLEAR_TRACK_BLOCK
 	; Post-load: print hardware / TurboSound info
 	CALL	PRTPLAYINFO
 	LD	A,(ALLMD)
@@ -459,6 +474,9 @@ GOPTX
 	SBC	HL,DE			; Adjust for file type
 	LD	(QDLY),HL		; Save updated quark delay factor
 
+	LD	A,(UI_ACTIVE)
+	OR	A
+	JR	NZ,GOPTXSP2
 	LD	A,(INFOLINE)	; spacing before song metadata
 	OR	A
 	JR	Z,GOPTXSP1
@@ -488,7 +506,7 @@ PTXSTART:
 	LD	A,(ALLMD)
 	OR	A
 	JR	NZ,PTXSTARTF
-	LD	A,(LOOPMD)
+	LD	A,(LOOPTRKMD)
 	OR	A
 	JR	Z,PTXSTART0
 PTXSTARTF:
@@ -514,32 +532,258 @@ PTXLP_NORM:
 	JP	NZ,EXIT			; Bail out when done playing
 PTXLP_KEY:
 	CALL	GETKEY		; Check for keypress
-	JR	Z,PTXLP_KEY1
+	JP	Z,PTXLP_KEY1
 	LD	E,A			; save pressed key
+	LD	A,E
+	CP	' '
+	JP	Z,PTXLP_PAUSE_TOGGLE
+	CALL	PLAYLIST_DELSEQ_CHECK
+	CP	0
+	JR	Z,PTXLP_DEL3
+	CP	$FF
+	JP	Z,PTXLP_KEY1
 	LD	A,(ALLMD)
 	OR	A
-	JR	Z,PTXLP_ABRT		; non-playlist mode: any key aborts
+	JP	Z,PTXLP_ABRT		; non-playlist mode: any key aborts
 	LD	A,E
-	CP	'?'
-	JR	Z,PTXLP_SHOWQ
+	CALL	PLAYLIST_MAP_KEY
+	LD	E,A
 	CP	27			; ESC quits playlist
-	JR	Z,PTXLP_ABRT
+	JP	Z,PTXLP_ESC
+	LD	A,E
+	CP	'l'
+	JP	Z,PTXLP_LOOP_TRACK
+	CP	'L'
+	JP	Z,PTXLP_LOOP_PLAY
 	AND	$DF
+	CP	'R'
+	JP	Z,PTXLP_SHOWQ
 	CP	'P'
-	JR	Z,PTXLP_PREV
+	JP	Z,PTXLP_PREV
 	CP	'N'
-	JR	NZ,PTXLP_NEXT
+	JP	Z,PTXLP_NEXT
+	CP	'A'
+	JP	Z,PTXLP_NAV
+	CP	'D'
+	JP	Z,PTXLP_NAV
+	CP	'W'
+	JP	Z,PTXLP_NAV
+	CP	'S'
+	JP	Z,PTXLP_NAV
+	JP	PTXLP_KEY1
+PTXLP_DEL3:
+	LD	A,(ALLMD)
+	OR	A
+	JP	Z,PTXLP_KEY1
+	CALL	PLAYLIST_CONFIRM_DELETE
+	OR	A
+	JP	Z,PTXLP_KEY1
+	CALL	PLAYLIST_DELETE_SELECTED
+	OR	A
+	JP	Z,PTXLP_KEY1
+	JP	EXIT
+PTXLP_NAV:
+	CALL	PLAYLIST_MOVE_WASD
+	JP	Z,PTXLP_KEY1
+	LD	A,$FF
+	LD	(NAVREQ),A
+	JP	EXIT
 PTXLP_NEXT:
 	LD	A,$FF
 	LD	(SKIPREQ),A
-	JR	EXIT
+	JP	EXIT
+PTXLP_PAUSE_TOGGLE:
+	LD	A,(PAUSEMD)
+	OR	A
+	JR	Z,PTXLP_PAUSE_ON
+	XOR	A
+	LD	(PAUSEMD),A
+	JP	PTXLP_KEY1
+PTXLP_PAUSE_ON:
+	LD	A,$FF
+	LD	(PAUSEMD),A
+	CALL	MUTE_NOW
+	CALL	PRTPAUSEMSG
+PTXLP_PAUSE_WAIT:
+	CALL	GETKEY
+	JP	Z,PTXLP_PAUSE_WAIT1
+	CP	' '
+	JR	Z,PTXLP_PAUSE_OFF
+	LD	E,A
+	LD	A,E
+	CALL	PLAYLIST_DELSEQ_CHECK
+	CP	0
+	JR	Z,PTXLP_PAUSE_DEL3
+	CP	$FF
+	JP	Z,PTXLP_PAUSE_WAIT1
+	LD	A,E
+	LD	E,A
+	LD	A,(ALLMD)
+	OR	A
+	JR	Z,PTXLP_PAUSE_KEYDEC
+	LD	A,E
+	CALL	PLAYLIST_MAP_KEY
+	LD	E,A
+PTXLP_PAUSE_KEYDEC:
+	LD	A,E
+	CP	27
+	JP	Z,PTXLP_ESC
+	CP	'l'
+	JP	Z,PTXLP_PAUSE_LOOP_TRACK
+	CP	'L'
+	JP	Z,PTXLP_PAUSE_LOOP_PLAY
+	AND	$DF
+	CP	'R'
+	JP	Z,PTXLP_PAUSE_REDRAW
+	CP	'N'
+	JP	Z,PTXLP_PAUSE_NEXT
+	CP	'P'
+	JP	Z,PTXLP_PAUSE_PREV
+	CP	'A'
+	JP	Z,PTXLP_PAUSE_NAV
+	CP	'D'
+	JP	Z,PTXLP_PAUSE_NAV
+	CP	'W'
+	JP	Z,PTXLP_PAUSE_NAV
+	CP	'S'
+	JP	Z,PTXLP_PAUSE_NAV
+	JP	PTXLP_PAUSE_WAIT1
+PTXLP_PAUSE_DEL3:
+	LD	A,(ALLMD)
+	OR	A
+	JP	Z,PTXLP_PAUSE_WAIT1
+	CALL	PLAYLIST_CONFIRM_DELETE
+	OR	A
+	JP	Z,PTXLP_PAUSE_WAIT1
+	CALL	PLAYLIST_DELETE_SELECTED
+	OR	A
+	JP	Z,PTXLP_PAUSE_WAIT1
+	JP	EXIT
+PTXLP_PAUSE_WAIT1:
+	CALL	WAITQ
+	JR	PTXLP_PAUSE_WAIT
+PTXLP_PAUSE_OFF:
+	XOR	A
+	LD	(PAUSEMD),A
+	LD	A,(NAVREQ)
+	OR	A
+	JP	NZ,EXIT
+	CALL	PRTPLAYMSG
+	JP	PTXLP_KEY1
+PTXLP_PAUSE_NAV:
+	CALL	PLAYLIST_MOVE_WASD
+	JP	Z,PTXLP_PAUSE_WAIT1
+	LD	A,$FF
+	LD	(NAVREQ),A
+	CALL	PAUSE_REFRESH_SELECTION
+	JP	PTXLP_PAUSE_WAIT1
+PTXLP_PAUSE_NEXT:
+	LD	A,(PLIDX)
+	LD	(PLIDXOLD),A
+	CALL	PLAYLIST_ADVANCE
+	JR	NZ,PTXLP_PAUSE_NEXT1
+	LD	A,(LOOPPLMD)
+	OR	A
+	JP	Z,PTXLP_PAUSE_WAIT1
+	CALL	PLAYLIST_RESTORE
+PTXLP_PAUSE_NEXT1:
+	LD	A,$FF
+	LD	(NAVREQ),A
+	CALL	PAUSE_REFRESH_SELECTION
+	JP	PTXLP_PAUSE_WAIT1
+PTXLP_PAUSE_PREV:
+	LD	A,(PLIDX)
+	LD	(PLIDXOLD),A
+	CALL	PLAYLIST_PREV
+	JP	Z,PTXLP_PAUSE_WAIT1
+	LD	A,$FF
+	LD	(NAVREQ),A
+	CALL	PAUSE_REFRESH_SELECTION
+	JP	PTXLP_PAUSE_WAIT1
+PTXLP_PAUSE_REDRAW:
+	CALL	SHOWPLSTATUS
+	CALL	PRTPLAYINFO
+	CALL	PRTSONGMETA
+	CALL	PRTPAUSEMSG
+	JP	PTXLP_PAUSE_WAIT1
+PTXLP_PAUSE_LOOP_TRACK:
+	LD	A,(LOOPTRKMD)
+	OR	A
+	JR	Z,PTXLP_PAUSE_LOOP_TRACK_ON
+	XOR	A
+	LD	(LOOPTRKMD),A
+	CALL	SHOWLOOPSTATUS
+	CALL	PRTPAUSEMSG
+	JP	PTXLP_PAUSE_WAIT1
+PTXLP_PAUSE_LOOP_TRACK_ON:
+	LD	A,$FF
+	LD	(LOOPTRKMD),A
+	XOR	A
+	LD	(LOOPPLMD),A
+	CALL	SHOWLOOPSTATUS
+	CALL	PRTPAUSEMSG
+	JP	PTXLP_PAUSE_WAIT1
+PTXLP_PAUSE_LOOP_PLAY:
+	LD	A,(LOOPPLMD)
+	OR	A
+	JR	Z,PTXLP_PAUSE_LOOP_PLAY_ON
+	XOR	A
+	LD	(LOOPPLMD),A
+	CALL	SHOWLOOPSTATUS
+	CALL	PRTPAUSEMSG
+	JP	PTXLP_PAUSE_WAIT1
+PTXLP_PAUSE_LOOP_PLAY_ON:
+	LD	A,$FF
+	LD	(LOOPPLMD),A
+	XOR	A
+	LD	(LOOPTRKMD),A
+	CALL	SHOWLOOPSTATUS
+	CALL	PRTPAUSEMSG
+	JP	PTXLP_PAUSE_WAIT1
+PTXLP_LOOP_TRACK:
+	LD	A,(LOOPTRKMD)
+	OR	A
+	JR	Z,PTXLP_LOOP_TRACK_ON
+	XOR	A
+	LD	(LOOPTRKMD),A
+	CALL	SHOWLOOPSTATUS
+	CALL	LOOP_STATUS_POST
+	JR	PTXLP_KEY1
+PTXLP_LOOP_TRACK_ON:
+	LD	A,$FF
+	LD	(LOOPTRKMD),A
+	XOR	A
+	LD	(LOOPPLMD),A
+	CALL	SHOWLOOPSTATUS
+	CALL	LOOP_STATUS_POST
+	JR	PTXLP_KEY1
+PTXLP_LOOP_PLAY:
+	LD	A,(LOOPPLMD)
+	OR	A
+	JR	Z,PTXLP_LOOP_PLAY_ON
+	XOR	A
+	LD	(LOOPPLMD),A
+	CALL	SHOWLOOPSTATUS
+	CALL	LOOP_STATUS_POST
+	JR	PTXLP_KEY1
+PTXLP_LOOP_PLAY_ON:
+	LD	A,$FF
+	LD	(LOOPPLMD),A
+	XOR	A
+	LD	(LOOPTRKMD),A
+	CALL	SHOWLOOPSTATUS
+	CALL	LOOP_STATUS_POST
+	JR	PTXLP_KEY1
 PTXLP_PREV:
 	LD	A,$FF
 	LD	(PREVREQ),A
-	JR	EXIT
+	JP	EXIT
 PTXLP_SHOWQ:
 	CALL	SHOWPLSTATUS
 	CALL	PRTPLAYINFO
+	LD	A,(UI_ACTIVE)
+	OR	A
+	JR	NZ,PTXLP_SHOWQ1
 	LD	A,(INFOLINE)
 	OR	A
 	JR	Z,PTXLP_SHOWQ0
@@ -550,17 +794,23 @@ PTXLP_SHOWQ0:
 PTXLP_SHOWQ1:
 	CALL	PRTSONGMETA
 	CALL	PRTPLAYMSG
-	JR	PTXLP
+	JP	PTXLP
+PTXLP_ESC:
+	CALL	MUTE_NOW
 PTXLP_ABRT:
 	LD	A,$FF
 	LD	(STOPREQ),A
-	JR	EXIT
+	JP	EXIT
 PTXLP_KEY1:
 	CALL	WAITQ		; Wait one quark period
-	JR	PTXLP			; Loop for next quark
+	JP	PTXLP			; Loop for next quark
 ;
 gomym
+	LD	A,(UI_ACTIVE)
+	OR	A
+	JR	NZ,gomym0
 	CALL	CRLF2			; Formatting
+gomym0
 	CALL	PRTPLAYMSG		; Playing message
 	ld	hl,(QDLY)			; Get basic quark delay
 	or	a					; Clear carry
@@ -572,23 +822,277 @@ gomym
 	call	mymini			; Initialize player
         call    extract 	; Unpack the first fragment
 mymlp	call	extract
-	jr	nc,EXIT				; CF clear at end of tune
+	jp	nc,EXIT				; CF clear at end of tune
 waitvb	call	WAITQ
 	call	upsg			; Update PSG registers
 	call	GETKEY			; Check for keypress
-	jr	z,waitvb1
+	jp	z,waitvb1
+	ld	e,a			; save raw key
+	ld	a,e
+	cp	' '
+	jp	z,mymkey_pause_toggle
+	call	PLAYLIST_DELSEQ_CHECK
+	cp	0
+	jr	z,mymkey_del3
+	cp	$FF
+	jp	z,waitvb1
+	ld	a,(ALLMD)
+	or	a
+	jp	z,mymkey_abrt		; non-playlist: any key aborts
+	ld	a,e
+	call	PLAYLIST_MAP_KEY
+	ld	e,a
+	cp	27
+	jp	z,mymkey_esc		; ESC quits
+	ld	a,e
+	cp	'l'
+	jp	z,mymkey_loop_track
+	cp	'L'
+	jp	z,mymkey_loop_play
+	and	$DF
+	cp	'R'
+	jp	z,mymkey_showq
+	cp	'P'
+	jp	z,mymkey_prev
+	cp	'N'
+	jp	z,mymkey_next
+	cp	'A'
+	jp	z,mymkey_nav
+	cp	'D'
+	jp	z,mymkey_nav
+	cp	'W'
+	jp	z,mymkey_nav
+	cp	'S'
+	jp	z,mymkey_nav
+	jp	waitvb1			; unrecognised key: ignore
+mymkey_del3:
+	ld	a,(ALLMD)
+	or	a
+	jp	z,waitvb1
+	call	PLAYLIST_CONFIRM_DELETE
+	or	a
+	jp	z,waitvb1
+	call	PLAYLIST_DELETE_SELECTED
+	or	a
+	jp	z,waitvb1
+	jp	EXIT
+mymkey_nav:
+	call	PLAYLIST_MOVE_WASD
+	jp	z,waitvb1		; no move
+	ld	a,$FF
+	ld	(NAVREQ),a
+	jp	EXIT
+mymkey_prev:
+	ld	a,$FF
+	ld	(PREVREQ),a
+	jp	EXIT
+mymkey_next:
+	ld	a,$FF
+	ld	(SKIPREQ),a
+	jp	EXIT
+mymkey_pause_toggle:
+	ld	a,(PAUSEMD)
+	or	a
+	jr	z,mymkey_pause_on
+	xor	a
+	ld	(PAUSEMD),a
+	jp	waitvb1
+mymkey_pause_on:
+	ld	a,$FF
+	ld	(PAUSEMD),a
+	call	MUTE_NOW
+	call	PRTPAUSEMSG
+mymkey_pause_wait:
+	call	GETKEY
+	jp	z,mymkey_pause_wait1
+	cp	' '
+	jr	z,mymkey_pause_off
+	ld	e,a
+	ld	a,e
+	call	PLAYLIST_DELSEQ_CHECK
+	cp	0
+	jr	z,mymkey_pause_del3
+	cp	$FF
+	jp	z,mymkey_pause_wait1
+	ld	a,e
+	ld	e,a
+	ld	a,(ALLMD)
+	or	a
+	jr	z,mymkey_pause_keydec
+	ld	a,e
+	call	PLAYLIST_MAP_KEY
+	ld	e,a
+mymkey_pause_keydec:
+	ld	a,e
+	cp	27
+	jp	z,mymkey_esc
+	cp	'l'
+	jp	z,mymkey_pause_loop_track
+	cp	'L'
+	jp	z,mymkey_pause_loop_play
+	and	$DF
+	cp	'R'
+	jp	z,mymkey_pause_redraw
+	cp	'N'
+	jp	z,mymkey_pause_next
+	cp	'P'
+	jp	z,mymkey_pause_prev
+	cp	'A'
+	jp	z,mymkey_pause_nav
+	cp	'D'
+	jp	z,mymkey_pause_nav
+	cp	'W'
+	jp	z,mymkey_pause_nav
+	cp	'S'
+	jp	z,mymkey_pause_nav
+	jp	mymkey_pause_wait1
+mymkey_pause_del3:
+	ld	a,(ALLMD)
+	or	a
+	jp	z,mymkey_pause_wait1
+	call	PLAYLIST_CONFIRM_DELETE
+	or	a
+	jp	z,mymkey_pause_wait1
+	call	PLAYLIST_DELETE_SELECTED
+	or	a
+	jp	z,mymkey_pause_wait1
+	jp	EXIT
+mymkey_pause_wait1:
+	call	WAITQ
+	jr	mymkey_pause_wait
+mymkey_pause_off:
+	xor	a
+	ld	(PAUSEMD),a
+	ld	a,(NAVREQ)
+	or	a
+	jp	nz,EXIT
+	call	PRTPLAYMSG
+	jp	waitvb1
+mymkey_pause_nav:
+	call	PLAYLIST_MOVE_WASD
+	jp	z,mymkey_pause_wait1
+	ld	a,$FF
+	ld	(NAVREQ),a
+	call	PAUSE_REFRESH_SELECTION
+	jp	mymkey_pause_wait1
+mymkey_pause_next:
+	ld	a,(PLIDX)
+	ld	(PLIDXOLD),a
+	call	PLAYLIST_ADVANCE
+	jr	nz,mymkey_pause_next1
+	ld	a,(LOOPPLMD)
+	or	a
+	jp	z,mymkey_pause_wait1
+	call	PLAYLIST_RESTORE
+mymkey_pause_next1:
+	ld	a,$FF
+	ld	(NAVREQ),a
+	call	PAUSE_REFRESH_SELECTION
+	jp	mymkey_pause_wait1
+mymkey_pause_prev:
+	ld	a,(PLIDX)
+	ld	(PLIDXOLD),a
+	call	PLAYLIST_PREV
+	jp	z,mymkey_pause_wait1
+	ld	a,$FF
+	ld	(NAVREQ),a
+	call	PAUSE_REFRESH_SELECTION
+	jp	mymkey_pause_wait1
+mymkey_pause_redraw:
+	CALL	SHOWPLSTATUS
+	CALL	PRTPLAYINFO
+	CALL	PRTSONGMETA
+	CALL	PRTPAUSEMSG
+	jp	mymkey_pause_wait1
+mymkey_pause_loop_track:
+	ld	a,(LOOPTRKMD)
+	or	a
+	jr	z,mymkey_pause_loop_track_on
+	xor	a
+	ld	(LOOPTRKMD),a
+	call	SHOWLOOPSTATUS
+	call	PRTPAUSEMSG
+	jp	mymkey_pause_wait1
+mymkey_pause_loop_track_on:
+	ld	a,$FF
+	ld	(LOOPTRKMD),a
+	xor	a
+	ld	(LOOPPLMD),a
+	call	SHOWLOOPSTATUS
+	call	PRTPAUSEMSG
+	jp	mymkey_pause_wait1
+mymkey_pause_loop_play:
+	ld	a,(LOOPPLMD)
+	or	a
+	jr	z,mymkey_pause_loop_play_on
+	xor	a
+	ld	(LOOPPLMD),a
+	call	SHOWLOOPSTATUS
+	call	PRTPAUSEMSG
+	jp	mymkey_pause_wait1
+mymkey_pause_loop_play_on:
+	ld	a,$FF
+	ld	(LOOPPLMD),a
+	xor	a
+	ld	(LOOPTRKMD),a
+	call	SHOWLOOPSTATUS
+	call	PRTPAUSEMSG
+	jp	mymkey_pause_wait1
+mymkey_loop_track:
+	ld	a,(LOOPTRKMD)
+	or	a
+	jr	z,mymkey_loop_track_on
+	xor	a
+	ld	(LOOPTRKMD),a
+	call	SHOWLOOPSTATUS
+	call	LOOP_STATUS_POST
+	jp	waitvb1
+mymkey_loop_track_on:
+	ld	a,$FF
+	ld	(LOOPTRKMD),a
+	xor	a
+	ld	(LOOPPLMD),a
+	call	SHOWLOOPSTATUS
+	call	LOOP_STATUS_POST
+	jp	waitvb1
+mymkey_loop_play:
+	ld	a,(LOOPPLMD)
+	or	a
+	jr	z,mymkey_loop_play_on
+	xor	a
+	ld	(LOOPPLMD),a
+	call	SHOWLOOPSTATUS
+	call	LOOP_STATUS_POST
+	jp	waitvb1
+mymkey_loop_play_on:
+	ld	a,$FF
+	ld	(LOOPPLMD),a
+	xor	a
+	ld	(LOOPTRKMD),a
+	call	SHOWLOOPSTATUS
+	call	LOOP_STATUS_POST
+	jp	waitvb1
+mymkey_showq:
+	CALL	SHOWPLSTATUS
+	CALL	PRTPLAYINFO
+	CALL	PRTSONGMETA
+	CALL	PRTPLAYMSG
+	jp	mymlp
+mymkey_esc:
+	CALL	MUTE_NOW
+mymkey_abrt:
 	ld	a,$FF
 	ld	(STOPREQ),a
-	jr	EXIT				; Bail out if so
+	jp	EXIT			; Bail out if so
 waitvb1
 	ld      a,(played)		; Wait until VBI has played a fragment
         or      a
-        jr      nz,waitvb
+        jp      nz,waitvb
         ld      (psource),iy
         ld      a,FRAG
         ld      (played),a
 	;call	PRTDOT
-	jr	mymlp
+	jp	mymlp
 ;
 EXIT	LD	A,(TSFLAG)
 	OR	A
@@ -606,7 +1110,7 @@ EXITX
 	LD	A,(ALLMD)
 	OR	A
 	JR	NZ,EXITXALL
-	LD	A,(LOOPMD)
+	LD	A,(LOOPTRKMD)
 	OR	A
 	JR	Z,EXITX2
 	LD	DE,MSGLOOP			; Single-file loop restart
@@ -618,6 +1122,15 @@ EXITXALL:
 	LD	DE,MSGPREV			; user requested previous track
 	JR	EXITX2
 EXITXALL0:
+	LD	A,(SKIPREQ)
+	OR	A
+	JR	NZ,EXITXALL0A
+	LD	A,(LOOPTRKMD)
+	OR	A
+	JR	Z,EXITXALL0A
+	LD	DE,MSGLOOP			; track loop in playlist mode
+	JR	EXITX2
+EXITXALL0A:
 	LD	A,(PLIDX)
 	INC	A
 	LD	B,A
@@ -627,7 +1140,7 @@ EXITXALL0:
 	LD	DE,MSGNEXT			; another queued track remains
 	JR	EXITX2
 EXITXALL_LAST:
-	LD	A,(LOOPMD)
+	LD	A,(LOOPPLMD)
 	OR	A
 	JR	Z,EXITX2			; no loop at end -> Done
 	LD	DE,MSGLOOP			; playlist wrap in loop mode
@@ -640,29 +1153,62 @@ EXITX2:
 	LD	A,(STOPREQ)
 	OR	A
 	JR	NZ,EXITP
+	LD	A,(NAVREQ)
+	OR	A
+	JR	Z,EXITNAV0
+	LD	A,(DELREQ)
+	OR	A
+	JR	Z,EXITNAVR0
+	XOR	A
+	LD	(DELREQ),A
+	JP	PLAYNEXT		; _LDX0 will call SHOWPLSTATUS (PLSHOWN=0 from PLAYLIST_INIT)
+EXITNAVR0:
+	CALL	UI_UPDATE_MARKER_DELTA
+	JP	PLAYNEXT
+EXITNAV0:
 	LD	A,(PREVREQ)
 	OR	A
 	JR	Z,EXITALLNXT
+	LD	A,(PLIDX)
+	LD	(PLIDXOLD),A
 	CALL	PLAYLIST_PREV
-	JP	NZ,PLAYNEXT
+	JR	Z,EXITP
+	CALL	UI_UPDATE_MARKER_DELTA
+	JP	PLAYNEXT
 	JR	EXITP
 EXITALLNXT:
+	LD	A,(SKIPREQ)
+	OR	A
+	JR	NZ,EXITALLNXT0
+	LD	A,(LOOPTRKMD)
+	OR	A
+	JR	Z,EXITALLNXT0
+	JP	PLAYNEXT			; replay current track
+EXITALLNXT0:
+	LD	A,(PLIDX)
+	LD	(PLIDXOLD),A
 	CALL	PLAYLIST_ADVANCE
-	JP	NZ,PLAYNEXT
-	LD	A,(LOOPMD)
+	JR	Z,EXITALLWRAP
+	CALL	UI_UPDATE_MARKER_DELTA
+	JP	PLAYNEXT
+
+EXITALLWRAP:
+	LD	A,(LOOPPLMD)
 	OR	A
 	JR	Z,EXITP
 	CALL	PLAYLIST_RESTORE
+	CALL	UI_UPDATE_MARKER_DELTA
 	JP	PLAYNEXT
 EXITS:
 	LD	A,(STOPREQ)
 	OR	A
 	JR	NZ,EXITP
-	LD	A,(LOOPMD)
+	LD	A,(LOOPTRKMD)
 	OR	A
 	JR	Z,EXITP
 	JP	PLAYNEXT
 EXITP:
+	CALL	UI_EXIT_TO_PROMPT
 	JP	0					; Exit the easy way
 
 #include "timing.inc"
@@ -859,7 +1405,6 @@ TCFG_ASK_ANSI_NO:
 	RET
 
 TCFG_SIZE_TUNE:
-TCFG_SIZE_TUNE0:
 	CALL	TCFG_CLRHOME
 	LD	DE,MSGTUNETITLE
 	CALL	PRTSTR
@@ -867,21 +1412,12 @@ TCFG_SIZE_TUNE0:
 	LD	DE,MSGTUNEKEYS
 	CALL	PRTSTR
 	CALL	CRLF
-	LD	DE,MSGTUNECURR
-	CALL	PRTSTR
-	LD	A,(cfg_cols)
-	CALL	PRTDECB
-	LD	A,' '
-	CALL	PRTCHR
-	LD	A,'x'
-	CALL	PRTCHR
-	LD	A,' '
-	CALL	PRTCHR
-	LD	A,(cfg_rows)
-	CALL	PRTDECB
-	CALL	CRLF2
-	CALL	TCFG_DRAW_GRID
+	CALL	TCFG_SIZE_REFRESH
 
+	LD	B,4
+	LD	C,1
+	CALL	TCFG_ANSI_AT
+TCFG_SIZE_TUNE0:
 	LD	B,4
 	LD	C,1
 	CALL	TCFG_ANSI_AT
@@ -907,37 +1443,304 @@ TCFG_SIZE_COL_DEC:
 	LD	A,(cfg_cols)
 	CP	CFG_MIN_COLS
 	JP	Z,TCFG_SIZE_TUNE0
+	CALL	TCFG_SIZE_SNAPSHOT
+	LD	A,(cfg_cols)
 	DEC	A
 	LD	(cfg_cols),A
 	CALL	FLUSHKEYS
+	CALL	TCFG_SIZE_REFRESH
 	JP	TCFG_SIZE_TUNE0
 
 TCFG_SIZE_COL_INC:
 	LD	A,(cfg_cols)
 	CP	CFG_MAX_COLS
 	JP	Z,TCFG_SIZE_TUNE0
+	CALL	TCFG_SIZE_SNAPSHOT
+	LD	A,(cfg_cols)
 	INC	A
 	LD	(cfg_cols),A
 	CALL	FLUSHKEYS
+	CALL	TCFG_SIZE_REFRESH
 	JP	TCFG_SIZE_TUNE0
 
 TCFG_SIZE_ROW_DEC:
 	LD	A,(cfg_rows)
 	CP	CFG_MIN_ROWS
 	JP	Z,TCFG_SIZE_TUNE0
+	CALL	TCFG_SIZE_SNAPSHOT
+	LD	A,(cfg_rows)
 	DEC	A
 	LD	(cfg_rows),A
 	CALL	FLUSHKEYS
+	CALL	TCFG_SIZE_REFRESH
 	JP	TCFG_SIZE_TUNE0
 
 TCFG_SIZE_ROW_INC:
 	LD	A,(cfg_rows)
 	CP	CFG_MAX_ROWS
 	JP	Z,TCFG_SIZE_TUNE0
+	CALL	TCFG_SIZE_SNAPSHOT
+	LD	A,(cfg_rows)
 	INC	A
 	LD	(cfg_rows),A
 	CALL	FLUSHKEYS
+	CALL	TCFG_SIZE_REFRESH
 	JP	TCFG_SIZE_TUNE0
+
+TCFG_SIZE_SNAPSHOT:
+	LD	A,(cfg_cols)
+	LD	(TCFG_PREV_COLS),A
+	LD	A,(cfg_rows)
+	LD	(TCFG_PREV_ROWS),A
+	RET
+
+TCFG_SIZE_REFRESH:
+	CALL	TCFG_SIZE_SHOW_CURR
+	LD	A,(TCFG_PREV_COLS)
+	OR	A
+	JR	Z,TCFG_SIZE_REFRESH0
+	LD	A,(TCFG_PREV_ROWS)
+	OR	A
+	JR	Z,TCFG_SIZE_REFRESH0
+	LD	A,(cfg_cols)
+	LD	B,A
+	LD	A,(TCFG_PREV_COLS)
+	CP	B
+	CALL	NZ,TCFG_SIZE_UPDATE_COLS
+	LD	A,(cfg_rows)
+	LD	B,A
+	LD	A,(TCFG_PREV_ROWS)
+	CP	B
+	CALL	NZ,TCFG_SIZE_UPDATE_ROWS
+	JR	TCFG_SIZE_REFRESH1
+TCFG_SIZE_REFRESH0:
+	CALL	TCFG_DRAW_GRID
+TCFG_SIZE_REFRESH1:
+	CALL	TCFG_SIZE_SNAPSHOT
+	RET
+
+TCFG_SIZE_SHOW_CURR:
+	LD	B,3
+	LD	C,1
+	CALL	TCFG_ANSI_AT
+	CALL	TCFG_EL2
+	LD	B,3
+	LD	C,1
+	CALL	TCFG_ANSI_AT
+	LD	DE,MSGTUNECURR
+	CALL	PRTSTR
+	LD	A,(cfg_cols)
+	CALL	PRTDECB
+	LD	A,' '
+	CALL	PRTCHR
+	LD	A,'x'
+	CALL	PRTCHR
+	LD	A,' '
+	CALL	PRTCHR
+	LD	A,(cfg_rows)
+	CALL	PRTDECB
+	LD	DE,MSGTUNEMAX
+	CALL	PRTSTR
+	RET
+
+TCFG_SIZE_UPDATE_COLS:
+	PUSH	AF
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	LD	A,(TCFG_PREV_COLS)
+	LD	D,A			; old cols
+	LD	A,(cfg_cols)
+	LD	E,A			; new cols
+	CP	D
+	JR	C,TCFG_SIZE_UCOLS_DEC
+
+	; expanding width: old C becomes '-', new endpoint gets C
+	LD	B,TCFG_ORG_ROW
+	LD	A,D
+	ADD	A,TCFG_ORG_COL - 1
+	LD	C,A
+	CALL	TCFG_ANSI_AT
+	LD	A,'-'
+	CALL	PRTCHR
+
+	LD	A,E
+	CALL	TCFG_SIZE_IS_DECADE
+	JR	Z,TCFG_SIZE_UCOLS_INC0
+	LD	B,TCFG_ORG_ROW - 1
+	LD	A,E
+	ADD	A,TCFG_ORG_COL - 1
+	LD	C,A
+	CALL	TCFG_ANSI_AT
+	LD	A,E
+	CALL	PRTDECB
+TCFG_SIZE_UCOLS_INC0:
+	JR	TCFG_SIZE_UCOLS_SETC
+
+TCFG_SIZE_UCOLS_DEC:
+	; shrinking width: erase old C endpoint, new endpoint gets C
+	LD	B,TCFG_ORG_ROW
+	LD	A,D
+	ADD	A,TCFG_ORG_COL - 1
+	LD	C,A
+	CALL	TCFG_ANSI_AT
+	LD	A,' '
+	CALL	PRTCHR
+
+	LD	A,D
+	CALL	TCFG_SIZE_IS_DECADE
+	JR	Z,TCFG_SIZE_UCOLS_SETC
+	LD	B,TCFG_ORG_ROW - 1
+	LD	A,D
+	ADD	A,TCFG_ORG_COL - 1
+	LD	C,A
+	CALL	TCFG_ANSI_AT
+	LD	A,' '
+	CALL	PRTCHR
+	CALL	PRTCHR
+	CALL	PRTCHR
+
+TCFG_SIZE_UCOLS_SETC:
+	LD	B,TCFG_ORG_ROW
+	LD	A,E
+	ADD	A,TCFG_ORG_COL - 1
+	LD	C,A
+	CALL	TCFG_ANSI_AT
+	LD	A,'C'
+	CALL	PRTCHR
+
+	; move X marker horizontally
+	LD	A,(TCFG_PREV_ROWS)
+	ADD	A,TCFG_ORG_ROW - 1
+	LD	B,A
+	LD	A,D
+	ADD	A,TCFG_ORG_COL - 1
+	LD	C,A
+	CALL	TCFG_ANSI_AT
+	LD	A,' '
+	CALL	PRTCHR
+	LD	A,(cfg_rows)
+	ADD	A,TCFG_ORG_ROW - 1
+	LD	B,A
+	LD	A,E
+	ADD	A,TCFG_ORG_COL - 1
+	LD	C,A
+	CALL	TCFG_ANSI_AT
+	LD	A,'X'
+	CALL	PRTCHR
+
+	POP	HL
+	POP	DE
+	POP	BC
+	POP	AF
+	RET
+
+TCFG_SIZE_UPDATE_ROWS:
+	PUSH	AF
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	LD	A,(TCFG_PREV_ROWS)
+	LD	D,A			; old rows
+	LD	A,(cfg_rows)
+	LD	E,A			; new rows
+	CP	D
+	JR	C,TCFG_SIZE_UROWS_DEC
+
+	; expanding height: old R becomes '|', new endpoint gets R
+	LD	A,D
+	ADD	A,TCFG_ORG_ROW - 1
+	LD	B,A
+	LD	C,TCFG_ORG_COL
+	CALL	TCFG_ANSI_AT
+	LD	A,'|'
+	CALL	PRTCHR
+
+	LD	A,E
+	CALL	TCFG_SIZE_IS_DECADE
+	JR	Z,TCFG_SIZE_UROWS_INC0
+	LD	A,E
+	ADD	A,TCFG_ORG_ROW - 1
+	LD	B,A
+	LD	C,1
+	CALL	TCFG_ANSI_AT
+	LD	A,E
+	CALL	PRTDECB
+TCFG_SIZE_UROWS_INC0:
+	JR	TCFG_SIZE_UROWS_SETR
+
+TCFG_SIZE_UROWS_DEC:
+	; shrinking height: erase old R endpoint, new endpoint gets R
+	LD	A,D
+	ADD	A,TCFG_ORG_ROW - 1
+	LD	B,A
+	LD	C,TCFG_ORG_COL
+	CALL	TCFG_ANSI_AT
+	LD	A,' '
+	CALL	PRTCHR
+
+	LD	A,D
+	CALL	TCFG_SIZE_IS_DECADE
+	JR	Z,TCFG_SIZE_UROWS_SETR
+	LD	A,D
+	ADD	A,TCFG_ORG_ROW - 1
+	LD	B,A
+	LD	C,1
+	CALL	TCFG_ANSI_AT
+	LD	A,' '
+	CALL	PRTCHR
+	CALL	PRTCHR
+	CALL	PRTCHR
+
+TCFG_SIZE_UROWS_SETR:
+	LD	A,E
+	ADD	A,TCFG_ORG_ROW - 1
+	LD	B,A
+	LD	C,TCFG_ORG_COL
+	CALL	TCFG_ANSI_AT
+	LD	A,'R'
+	CALL	PRTCHR
+
+	; move X marker vertically
+	LD	A,D
+	ADD	A,TCFG_ORG_ROW - 1
+	LD	B,A
+	LD	A,(TCFG_PREV_COLS)
+	ADD	A,TCFG_ORG_COL - 1
+	LD	C,A
+	CALL	TCFG_ANSI_AT
+	LD	A,' '
+	CALL	PRTCHR
+	LD	A,E
+	ADD	A,TCFG_ORG_ROW - 1
+	LD	B,A
+	LD	A,(cfg_cols)
+	ADD	A,TCFG_ORG_COL - 1
+	LD	C,A
+	CALL	TCFG_ANSI_AT
+	LD	A,'X'
+	CALL	PRTCHR
+
+	POP	HL
+	POP	DE
+	POP	BC
+	POP	AF
+	RET
+
+TCFG_SIZE_IS_DECADE:
+	; IN: A=value, OUT: NZ if value is an exact multiple of 10, else Z
+	CP	10
+	JR	C,TCFG_SIZE_IS_DEC0
+TCFG_SIZE_IS_DEC1:
+	SUB	10
+	JR	Z,TCFG_SIZE_IS_DEC2
+	JR	NC,TCFG_SIZE_IS_DEC1
+TCFG_SIZE_IS_DEC0:
+	XOR	A
+	RET
+TCFG_SIZE_IS_DEC2:
+	LD	A,1
+	RET
 
 TCFG_DRAW_GRID:
 	PUSH	AF
@@ -1109,8 +1912,19 @@ TCFG_UPCASE:
 	RET
 
 TCFG_CLRHOME:
+	PUSH	AF
+	LD	A,(cfg_term)
+	OR	A
+	JR	NZ,TCFG_CLRHOME1
+	LD	A,(cfg_flags)
+	AND	CFGF_ANSI
+	JR	Z,TCFG_CLRHOME0
+TCFG_CLRHOME1:
 	LD	DE,TCFG_SEQ_CLR
-	JP	TCFG_EMIT
+	CALL	PRTSTR
+TCFG_CLRHOME0:
+	POP	AF
+	RET
 
 TCFG_COL_HDR:
 	LD	DE,TCFG_SEQ_CYAN
@@ -1139,10 +1953,344 @@ TCFG_EMIT0:
 	RET
 
 PRTPLAYMSG:
+	LD	A,(UI_ACTIVE)
+	OR	A
+	JR	Z,PRTPLAYMSG0
+	CALL	UI_ENSURE_INIT
+	LD	B,UI_ROW_PLAY
+	CALL	UI_CLR_ROW
+	LD	B,UI_ROW_PLAY
+	LD	C,1
+	CALL	TCFG_ANSI_AT
 	CALL	TCFG_COL_OK
 	LD	DE,MSGPLY
 	CALL	PRTSTR
 	CALL	TCFG_COL_RST
+	RET
+PRTPLAYMSG0:
+	LD	A,13
+	CALL	PRTCHR
+	CALL	TCFG_COL_OK
+	LD	DE,MSGPLY
+	CALL	PRTSTR
+	CALL	TCFG_COL_RST
+	RET
+
+PRTPAUSEMSG:
+	LD	A,(UI_ACTIVE)
+	OR	A
+	JR	Z,PRTPAUSEMSG0
+	CALL	UI_ENSURE_INIT
+	LD	B,UI_ROW_PLAY
+	CALL	UI_CLR_ROW
+	LD	B,UI_ROW_PLAY
+	LD	C,1
+	CALL	TCFG_ANSI_AT
+	CALL	TCFG_COL_PRM
+	LD	DE,MSGPAUSE
+	CALL	PRTSTR
+	CALL	TCFG_COL_RST
+	RET
+PRTPAUSEMSG0:
+	LD	A,13
+	CALL	PRTCHR
+	CALL	TCFG_COL_PRM
+	LD	DE,MSGPAUSE
+	CALL	PRTSTR
+	CALL	TCFG_COL_RST
+	RET
+
+PRTDELETEMSG:
+	LD	A,(UI_ACTIVE)
+	OR	A
+	JR	Z,PRTDELETEMSG0
+	CALL	UI_ENSURE_INIT
+	LD	B,UI_ROW_PLAY
+	CALL	UI_CLR_ROW
+	LD	B,UI_ROW_PLAY
+	LD	C,1
+	CALL	TCFG_ANSI_AT
+	CALL	TCFG_COL_PRM
+	LD	DE,MSGDELING
+	CALL	PRTSTR
+	CALL	PLAYLIST_PRINT_SELECTED_NAME
+	CALL	TCFG_COL_RST
+	RET
+PRTDELETEMSG0:
+	LD	A,13
+	CALL	PRTCHR
+	CALL	TCFG_COL_PRM
+	LD	DE,MSGDELING
+	CALL	PRTSTR
+	CALL	PLAYLIST_PRINT_SELECTED_NAME
+	CALL	TCFG_COL_RST
+	RET
+
+UI_SETUP:
+	XOR	A
+	LD	(UI_ACTIVE),A
+	LD	(UI_INIT),A
+	LD	A,(ALLMD)
+	OR	A
+	RET	Z
+	LD	A,(cfg_term)
+	OR	A
+	JR	NZ,UI_SETUP1
+	LD	A,(cfg_flags)
+	AND	CFGF_ANSI
+	RET	Z
+
+UI_SETUP1:
+	LD	A,$FF
+	LD	(UI_ACTIVE),A
+	RET
+
+UI_ENSURE_INIT:
+	LD	A,(UI_ACTIVE)
+	OR	A
+	RET	Z
+	LD	A,(UI_INIT)
+	OR	A
+	RET	NZ
+	CALL	TCFG_CLRHOME
+	CALL	TCFG_COL_HDR
+	LD	B,UI_ROW_BANNER
+	LD	C,1
+	CALL	TCFG_ANSI_AT
+	LD	DE,MSGBAN
+	CALL	PRTSTR
+	CALL	TCFG_COL_PRM
+	LD	B,UI_ROW_MODE
+	LD	C,1
+	CALL	TCFG_ANSI_AT
+	LD	DE,MSGPLFULL
+	CALL	PRTSTR
+	CALL	TCFG_COL_RST
+	LD	A,$FF
+	LD	(UI_INIT),A
+	RET
+
+UI_CLR_ROW:
+	PUSH	AF
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	LD	C,1
+	CALL	TCFG_ANSI_AT
+	CALL	TCFG_EL2
+	LD	C,1
+	CALL	TCFG_ANSI_AT
+	POP	HL
+	POP	DE
+	POP	BC
+	POP	AF
+	RET
+
+TCFG_EL2:
+	PUSH	AF
+	LD	A,(cfg_term)
+	OR	A
+	JR	NZ,TCFG_EL21
+	LD	A,(cfg_flags)
+	AND	CFGF_ANSI
+	JR	Z,TCFG_EL20
+TCFG_EL21:
+	LD	DE,TCFG_SEQ_EL2
+	CALL	PRTSTR
+TCFG_EL20:
+	POP	AF
+	RET
+
+UI_CLEAR_PLAYLIST:
+	PUSH	AF
+	PUSH	BC
+	LD	A,UI_ROW_PLLIST
+	LD	B,A
+UI_CLEAR_PLAYLIST1:
+	LD	A,(cfg_rows)
+	CP	B
+	JR	C,UI_CLEAR_PLAYLIST2
+	CALL	UI_CLR_ROW
+	INC	B
+	JR	UI_CLEAR_PLAYLIST1
+UI_CLEAR_PLAYLIST2:
+	POP	BC
+	POP	AF
+	RET
+
+UI_CALC_COLS:
+	LD	A,(cfg_cols)
+	LD	B,0
+UI_CALC_COLS1:
+	CP	16			; tile width: 1 marker+8 name+1 dot+3 ext+3 gap
+	JR	C,UI_CALC_COLS2
+	SUB	16
+	INC	B
+	JR	UI_CALC_COLS1
+UI_CALC_COLS2:
+	LD	A,B
+	OR	A
+	JR	NZ,UI_CALC_COLS3
+	INC	A
+UI_CALC_COLS3:
+	LD	(UI_PLCOLS),A
+	RET
+
+UI_EXIT_TO_PROMPT:
+	LD	A,(UI_ACTIVE)
+	OR	A
+	RET	Z
+	CALL	UI_CALC_COLS
+	LD	A,(PLCNT)
+	OR	A
+	JR	NZ,UI_EXIT_TO_PROMPT1
+	LD	A,UI_ROW_PLLIST + 1
+	JR	UI_EXIT_TO_PROMPT4
+UI_EXIT_TO_PROMPT1:
+	LD	E,A			; E = remaining entries
+	LD	A,(UI_PLCOLS)
+	LD	D,A			; D = entries per row
+	LD	B,0			; B = rows used
+UI_EXIT_TO_PROMPT2:
+	INC	B
+	LD	A,E
+	SUB	D
+	JR	C,UI_EXIT_TO_PROMPT3
+	LD	E,A
+	JR	UI_EXIT_TO_PROMPT2
+UI_EXIT_TO_PROMPT3:
+	LD	A,UI_ROW_PLLIST
+	ADD	A,B			; last playlist row
+	INC	A			; one blank line below playlist
+	INC	A			; looping status line
+	INC	A			; one blank line below looping status
+UI_EXIT_TO_PROMPT4:
+	LD	D,A			; D = target row
+	LD	A,(cfg_rows)
+	CP	D
+	JR	NC,UI_EXIT_TO_PROMPT5
+	LD	D,A			; clamp to visible screen
+UI_EXIT_TO_PROMPT5:
+	LD	B,D
+	LD	C,1
+	CALL	TCFG_ANSI_AT
+	CALL	TCFG_COL_RST
+	RET
+
+UI_CLEAR_TRACK_BLOCK:
+	LD	A,(UI_ACTIVE)
+	OR	A
+	RET	Z
+	CALL	UI_ENSURE_INIT
+	LD	B,UI_ROW_INFO
+UI_CLEAR_TRACK_BLOCK1:
+	CALL	UI_CLR_ROW
+	LD	A,B
+	CP	UI_ROW_PLAY
+	RET	Z
+	INC	B
+	JR	UI_CLEAR_TRACK_BLOCK1
+
+UI_UPDATE_MARKER_DELTA:
+	LD	A,(UI_ACTIVE)
+	OR	A
+	RET	Z
+	LD	A,(PLIDXOLD)
+	LD	D,' '
+	CALL	UI_DRAW_PL_ENTRY
+	LD	A,(PLIDX)
+	LD	D,'>'
+	CALL	UI_DRAW_PL_ENTRY
+	RET
+
+UI_DRAW_PL_ENTRY:
+	; IN: A = playlist index, D = marker char (' ' or '>')
+	PUSH	AF
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	LD	A,(UI_ACTIVE)
+	OR	A
+	JR	Z,UI_DRAW_PL_ENTRYX
+	LD	A,D
+	LD	(UI_MARK),A
+	POP	HL
+	POP	DE
+	POP	BC
+	POP	AF
+	PUSH	AF
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	LD	(UI_IDXTMP),A
+	CALL	UI_CALC_COLS
+	LD	A,(UI_IDXTMP)
+	LD	E,A			; remainder/index working value
+	XOR	A
+	LD	D,A			; row offset
+	LD	A,(UI_PLCOLS)
+	LD	L,A			; entries per row
+UI_DRAW_PL_ENTRY1:
+	LD	A,E
+	CP	L
+	JR	C,UI_DRAW_PL_ENTRY2
+	SUB	L
+	LD	E,A
+	INC	D
+	JR	UI_DRAW_PL_ENTRY1
+UI_DRAW_PL_ENTRY2:
+	LD	A,UI_ROW_PLLIST
+	ADD	A,D
+	LD	B,A			; row
+	LD	A,(cfg_rows)
+	CP	B
+	JR	C,UI_DRAW_PL_ENTRYX
+	LD	A,E
+	ADD	A,A
+	ADD	A,A
+	ADD	A,A
+	ADD	A,A			; *16
+	INC	A			; column origin is 1
+	LD	C,A
+	CALL	TCFG_ANSI_AT
+	LD	A,(UI_MARK)
+	CP	'>'
+	JR	NZ,UI_DRAW_PL_ENTRY3
+	CALL	TCFG_COL_PRM
+UI_DRAW_PL_ENTRY3:
+	LD	A,(UI_MARK)
+	CALL	PRTCHR
+	LD	A,(UI_IDXTMP)
+	CALL	PLAYLIST_PTR_FROM_A
+	INC	HL
+	LD	B,8
+UI_DRAW_PL_ENTRY4:
+	LD	A,(HL)
+	INC	HL
+	CALL	PRTCHR
+	DJNZ	UI_DRAW_PL_ENTRY4
+	LD	A,'.'
+	CALL	PRTCHR
+	LD	B,3
+UI_DRAW_PL_ENTRY5:
+	LD	A,(HL)
+	INC	HL
+	CALL	PRTCHR
+	DJNZ	UI_DRAW_PL_ENTRY5
+	LD	B,3
+UI_DRAW_PL_ENTRY6:
+	LD	A,' '
+	CALL	PRTCHR
+	DJNZ	UI_DRAW_PL_ENTRY6
+	LD	A,(UI_MARK)
+	CP	'>'
+	JR	NZ,UI_DRAW_PL_ENTRYX
+	CALL	TCFG_COL_RST
+UI_DRAW_PL_ENTRYX:
+	POP	HL
+	POP	DE
+	POP	BC
+	POP	AF
 	RET
 
 ;
@@ -1153,6 +2301,72 @@ GETKEY	LD	C,6		; BDOS direct I/O
 	CALL	BDOS	; Call BDOS
 	OR	A			; Set flags, Z set if no key
 	RET				; Done
+
+PLAYLIST_MAP_KEY:
+	CP	27
+	RET	NZ
+	LD	A,(UI_ACTIVE)
+	OR	A
+	JR	Z,PLAYLIST_MAP_KEY0
+	CALL	GETKEY			; immediate check: makes bare Esc mute/quit fast
+	JR	Z,PLAYLIST_MAP_KEY0
+	CP	'['
+	JR	Z,PLAYLIST_MAP_KEY1
+	CP	'O'
+	JR	NZ,PLAYLIST_MAP_KEY0
+PLAYLIST_MAP_KEY1:
+	CALL	PLAYLIST_GETKEY_WAIT
+	JR	Z,PLAYLIST_MAP_KEY0
+	CP	'3'
+	JR	Z,PLAYLIST_MAP_DEL1
+	CP	'A'
+	JR	Z,PLAYLIST_MAP_UP
+	CP	'B'
+	JR	Z,PLAYLIST_MAP_DOWN
+	CP	'C'
+	JR	Z,PLAYLIST_MAP_RIGHT
+	CP	'D'
+	JR	Z,PLAYLIST_MAP_LEFT
+PLAYLIST_MAP_KEY0:
+	LD	A,27
+	RET
+PLAYLIST_MAP_DEL1:
+	CALL	PLAYLIST_GETKEY_WAIT
+	JR	Z,PLAYLIST_MAP_KEY0
+	CP	'~'
+	JR	NZ,PLAYLIST_MAP_KEY0
+	LD	A,$7F			; DEL key
+	RET
+PLAYLIST_MAP_UP:
+	LD	A,'W'
+	RET
+PLAYLIST_MAP_DOWN:
+	LD	A,'S'
+	RET
+PLAYLIST_MAP_RIGHT:
+	LD	A,'D'
+	RET
+PLAYLIST_MAP_LEFT:
+	LD	A,'A'
+	RET
+
+PLAYLIST_GETKEY_WAIT:
+	PUSH	HL
+	LD	HL,$0080			; short wait for sequence continuation
+PLAYLIST_GETKEY_WAIT1:
+	PUSH	HL				; protect counter: BDOS trashes HL
+	CALL	GETKEY
+	POP	HL				; restore counter
+	JR	NZ,PLAYLIST_GETKEY_WAIT2
+	DEC	HL
+	LD	A,H
+	OR	L
+	JR	NZ,PLAYLIST_GETKEY_WAIT1
+	XOR	A
+PLAYLIST_GETKEY_WAIT2:
+	POP	HL
+	OR	A
+	RET
 ;
 ; Drain any pending console keypresses (used to clear command-enter residue).
 ;
@@ -1187,7 +2401,7 @@ PRTWMOD_DLY:
 PRTWMOD_P:
 	JP	PRTSTR
 ;
-; Playlist support for -all mode
+; Playlist support for -list mode
 ;
 PLAYLIST_INIT:
 	XOR	A
@@ -1254,27 +2468,52 @@ SINGLE_FCBRESTORE:
 	LDIR
 	RET
 ;
-PLAYLIST_ENUM_PT3:
+PLAYLIST_ENUM_ALL:
+	LD	A,'P'
+	LD	B,'T'
+	LD	C,'2'
+	CALL	PLAYLIST_ENUM_EXT
+	LD	A,'P'
+	LD	B,'T'
+	LD	C,'3'
+	CALL	PLAYLIST_ENUM_EXT
+	LD	A,'M'
+	LD	B,'Y'
+	LD	C,'M'
+	CALL	PLAYLIST_ENUM_EXT
+	RET
+
+PLAYLIST_ENUM_EXT:
 	; CLEAR SEARCH FCB
+	PUSH	AF			; save ext1
+	PUSH	BC			; save ext2/ext3
 	LD	HL,PLSRCHFCB
 	XOR	A
 	LD	(HL),A
 	LD	DE,PLSRCHFCB+1
 	LD	BC,35
 	LDIR
-	; BUILD PATTERN ????????.PT3
+	; BUILD PATTERN ????????.XYZ (A/B/C = X/Y/Z)
+	POP	BC			; restore ext2→B, ext3→C
+	POP	AF			; restore ext1→A
+	LD	D,A			; save ext1 in D (A is clobbered by '?' fill)
+	LD	E,B			; save ext2 in E (B is clobbered by DJNZ counter)
+	; C already has ext3
 	LD	HL,PLSRCHFCB+1
 	LD	B,8
 	LD	A,'?'
-PLAYLIST_ENUM_PT30:
+PLAYLIST_ENUM_EXT0:
 	LD	(HL),A
 	INC	HL
-	DJNZ	PLAYLIST_ENUM_PT30
-	LD	(HL),'P'
+	DJNZ	PLAYLIST_ENUM_EXT0
+	LD	A,D			; ext1
+	LD	(HL),A
 	INC	HL
-	LD	(HL),'T'
+	LD	A,E			; ext2
+	LD	(HL),A
 	INC	HL
-	LD	(HL),'3'
+	LD	A,C			; ext3
+	LD	(HL),A
 	; DMA FOR DIR SEARCH RESULTS
 	LD	DE,PLSRCHBUF
 	LD	C,26
@@ -1286,14 +2525,14 @@ PLAYLIST_ENUM_PT30:
 	CP	$FF
 	RET	Z
 	CALL	PLAYLIST_ENUM_ADD
-PLAYLIST_ENUM_PT31:
+PLAYLIST_ENUM_EXT1:
 	LD	DE,PLSRCHFCB
 	LD	C,18
 	CALL	BDOS
 	CP	$FF
 	RET	Z
 	CALL	PLAYLIST_ENUM_ADD
-	JR	PLAYLIST_ENUM_PT31
+	JR	PLAYLIST_ENUM_EXT1
 ;
 PLAYLIST_ENUM_ADD:
 	PUSH	AF
@@ -1351,6 +2590,25 @@ PLAYLIST_LOAD_FCB2:
 	INC	HL
 	DJNZ	PLAYLIST_LOAD_FCB2
 	RET
+
+PLAYLIST_SET_FILTYP:
+	LD	A,(FCB+9)
+	CP	'M'
+	JR	Z,PLAYLIST_SET_FILTYP_MYM
+	LD	A,(FCB+11)
+	CP	'2'
+	JR	Z,PLAYLIST_SET_FILTYP_PT2
+	LD	A,TYPPT3
+	LD	(FILTYP),A
+	RET
+PLAYLIST_SET_FILTYP_PT2:
+	LD	A,TYPPT2
+	LD	(FILTYP),A
+	RET
+PLAYLIST_SET_FILTYP_MYM:
+	LD	A,TYPMYM
+	LD	(FILTYP),A
+	RET
 ;
 PLAYLIST_ADVANCE:
 	LD	A,(PLIDX)
@@ -1372,7 +2630,7 @@ PLAYLIST_PREV:
 	OR	$FF			; PREVIOUS ENTRY AVAILABLE
 	RET
 PLAYLIST_PREV_WRAP:
-	LD	A,(LOOPMD)
+	LD	A,(LOOPPLMD)
 	OR	A
 	RET	Z
 	LD	A,(PLCNT)
@@ -1381,6 +2639,205 @@ PLAYLIST_PREV_WRAP:
 	DEC	A
 	LD	(PLIDX),A
 	OR	$FF
+	RET
+
+PLAYLIST_MOVE_WASD:
+	; IN:  A = key (uppercase W/A/S/D)
+	; OUT: NZ if PLIDX changed, Z if no move
+	LD	(PLM_KEY),A
+	LD	A,(PLCNT)
+	OR	A
+	RET	Z
+	CALL	UI_CALC_COLS
+	LD	A,(PLIDX)
+	LD	B,A			; B = current index
+	LD	C,A			; C = candidate index (default current)
+
+	; Compute current row/col from index and UI_PLCOLS.
+	LD	A,(UI_PLCOLS)
+	LD	D,A			; D = columns per row
+	XOR	A
+	LD	(PLM_ROW),A
+	LD	A,B
+PLM_DIV1:
+	CP	D
+	JR	C,PLM_DIV2
+	SUB	D
+	LD	E,A
+	LD	A,(PLM_ROW)
+	INC	A
+	LD	(PLM_ROW),A
+	LD	A,E
+	JR	PLM_DIV1
+PLM_DIV2:
+	LD	(PLM_COL),A
+
+	; Total rows = ceil(PLCNT / UI_PLCOLS).
+	XOR	A
+	LD	(PLM_ROWS),A
+	LD	A,(PLCNT)
+PLM_ROWS1:
+	OR	A
+	JR	Z,PLM_ROWS2
+	LD	E,A
+	LD	A,(PLM_ROWS)
+	INC	A
+	LD	(PLM_ROWS),A
+	LD	A,E
+	SUB	D
+	JR	C,PLM_ROWS2
+	JR	PLM_ROWS1
+PLM_ROWS2:
+
+	; Current row start and length.
+	CALL	PLM_RECALC_ROW
+
+	LD	A,(PLM_KEY)
+	CP	'A'
+	JR	Z,PLM_LEFT
+	CP	'D'
+	JR	Z,PLM_RIGHT
+	CP	'W'
+	JR	Z,PLM_UP
+	CP	'S'
+	JR	Z,PLM_DOWN
+	XOR	A
+	RET
+
+PLM_LEFT:
+	LD	A,(PLM_COL)
+	OR	A
+	JR	NZ,PLM_LEFT1
+	LD	A,(PLM_ROWLEN)
+	DEC	A
+	LD	(PLM_COL),A
+	JR	PLM_BUILD
+PLM_LEFT1:
+	LD	A,(PLM_COL)
+	DEC	A
+	LD	(PLM_COL),A
+	JR	PLM_BUILD
+
+PLM_RIGHT:
+	LD	A,(PLM_COL)
+	INC	A
+	LD	E,A
+	LD	A,(PLM_ROWLEN)
+	CP	E
+	JR	C,PLM_RIGHT_WRAP
+	JR	Z,PLM_RIGHT_WRAP
+	LD	A,E
+	LD	(PLM_COL),A
+	JR	PLM_BUILD
+PLM_RIGHT_WRAP:
+	XOR	A
+	LD	(PLM_COL),A
+	JR	PLM_BUILD
+
+PLM_UP:
+	LD	A,(PLM_ROW)
+	OR	A
+	JR	NZ,PLM_UP1
+	LD	A,(PLM_ROWS)
+	DEC	A
+	LD	(PLM_ROW),A
+	JR	PLM_UPDN
+PLM_UP1:
+	DEC	A
+	LD	(PLM_ROW),A
+	JR	PLM_UPDN
+
+PLM_DOWN:
+	LD	A,(PLM_ROW)
+	INC	A
+	LD	E,A
+	LD	A,(PLM_ROWS)
+	CP	E
+	JR	C,PLM_DOWN_WRAP
+	JR	Z,PLM_DOWN_WRAP
+	LD	A,E
+	LD	(PLM_ROW),A
+	JR	PLM_UPDN
+PLM_DOWN_WRAP:
+	XOR	A
+	LD	(PLM_ROW),A
+
+PLM_UPDN:
+	CALL	PLM_RECALC_ROW
+	LD	A,(PLM_COL)
+	INC	A
+	LD	E,A
+	LD	A,(PLM_ROWLEN)
+	CP	E
+	JR	NC,PLM_BUILD
+	DEC	A
+	LD	(PLM_COL),A
+	JR	PLM_BUILD
+
+PLM_BUILD:
+	LD	A,(PLM_ROWST)
+	LD	E,A
+	LD	A,(PLM_COL)
+	ADD	A,E
+	LD	C,A
+	JR	PLM_SET
+
+PLM_RECALC_ROW:
+	PUSH	AF
+	PUSH	BC
+	PUSH	DE
+	LD	A,(UI_PLCOLS)
+	LD	D,A
+	LD	A,(PLM_ROW)
+	LD	E,A
+	XOR	A
+	LD	(PLM_ROWST),A
+PLM_RCS0:
+	LD	A,E
+	OR	A
+	JR	Z,PLM_RCS1
+	LD	A,(PLM_ROWST)
+	ADD	A,D
+	LD	(PLM_ROWST),A
+	DEC	E
+	JR	PLM_RCS0
+PLM_RCS1:
+	LD	A,(PLCNT)
+	LD	E,A
+	LD	A,(PLM_ROWST)
+	LD	B,A
+	LD	A,E
+	SUB	B			; remaining entries from this row start
+	LD	E,A
+	LD	A,D
+	CP	E
+	JR	C,PLM_RCS2
+	JR	Z,PLM_RCS2
+	LD	A,E
+	LD	(PLM_ROWLEN),A
+	JR	PLM_RCSX
+PLM_RCS2:
+	LD	A,D
+	LD	(PLM_ROWLEN),A
+PLM_RCSX:
+	POP	DE
+	POP	BC
+	POP	AF
+	RET
+
+PLM_SET:
+	LD	A,B
+	CP	C
+	JR	Z,PLM_NOMOVE
+	LD	A,B
+	LD	(PLIDXOLD),A
+	LD	A,C
+	LD	(PLIDX),A
+	OR	$FF
+	RET
+
+PLM_NOMOVE:
+	XOR	A
 	RET
 ;
 PLAYLIST_PTR_FROM_A:
@@ -1719,6 +3176,61 @@ HBS2_FAIL:
 ; Sets INFOLINE non-zero if a mode line was printed and should be followed by CRLF2.
 ;
 PRTPLAYINFO:
+	LD	A,(UI_ACTIVE)
+	OR	A
+	JR	Z,PRTPLAYINFO0
+	CALL	UI_ENSURE_INIT
+	LD	B,UI_ROW_INFO
+	CALL	UI_CLR_ROW
+	LD	B,UI_ROW_INFO2
+	CALL	UI_CLR_ROW
+	LD	B,UI_ROW_INFO
+	LD	C,1
+	CALL	TCFG_ANSI_AT
+	XOR	A
+	LD	(INFOLINE),A
+	LD	A,(FILTYP)
+	CP	TYPPT3
+	JR	NZ,PRTPIU_NPT3
+	CALL	TS_DETECT
+	LD	A,(TSFLAG)
+	OR	A
+	JR	Z,PRTPIU_NPT3
+	LD	DE,MSGTSDET
+	CALL	PRTSTR
+	LD	B,UI_ROW_INFO2
+	LD	C,1
+	CALL	TCFG_ANSI_AT
+	LD	A,(HBIOSMD)
+	OR	A
+	JR	NZ,PRTPIU_TSHB
+	CALL	TS_PORTS_SETUP
+	CALL	PRT_TSPORTS_LINE
+	CALL	PRTWMOD
+	RET
+PRTPIU_TSHB:
+	LD	DE,MSGTSPRE
+	CALL	PRTSTR
+	LD	DE,MSGHBIOS
+	CALL	PRTSTR
+	CALL	PRTWMOD
+	RET
+PRTPIU_NPT3:
+	LD	A,(HBIOSMD)
+	OR	A
+	JR	Z,PRTPIU_HW
+	LD	DE,MSGHBIOS
+	CALL	PRTSTR
+	CALL	PRTWMOD
+	RET
+PRTPIU_HW:
+	LD	DE,MSGTSPRE
+	CALL	PRTSTR
+	LD	DE,(DESC)
+	CALL	PRTSTR
+	CALL	PRTWMOD
+	RET
+PRTPLAYINFO0:
 	XOR	A
 	LD	(INFOLINE),A
 	CALL	CRLF			; spacing after banner
@@ -2496,7 +4008,7 @@ ERRFIL:	; Error opening sound file
 	LD	DE,MSGFIL
 	JR	ERR
 ;
-ERRALL:	; -all selected but no PT3 files found
+ERRALL:	; -list selected but no supported files found
 	LD	DE,MSGALL
 	JR	ERR
 ;
@@ -2688,46 +4200,71 @@ HBIOSMD		.DB	0	; NON-ZERO IF USING HBIOS SOUND DRIVER, ZERO OTHERWISE
 DELAYMD		.DB	0	; FORCE DELAY MODE IF TRUE (NON-ZERO)
 OCTAVEADJ	.DB	0	; AMOUNT TO ADJUST OCTAVE UP OR DOWN
 CONFIGMD	.DB	0	; NON-ZERO TO ENTER TUNE.CFG EDIT MODE
-ALLMD		.DB	0	; NON-ZERO TO ENUMERATE/PLAY ALL .PT3 FILES
-LOOPMD		.DB	0	; NON-ZERO TO LOOP SINGLE FILE OR ENTIRE PLAYLIST
+ALLMD		.DB	0	; NON-ZERO TO ENUMERATE/PLAY ALL SUPPORTED FILES
+LOOPTRKMD	.DB	0	; NON-ZERO TO LOOP CURRENT TRACK
+LOOPPLMD	.DB	0	; NON-ZERO TO LOOP WHOLE PLAYLIST
+PAUSEMD		.DB	0	; NON-ZERO WHILE PLAYBACK IS PAUSED
+DELCNT		.DB	0	; CONSECUTIVE DELETE KEY PRESS COUNTER
+DELPAUSAV	.DB	0	; SAVED PAUSE STATE FOR DELETE CONFIRM CANCEL
+DELIDX		.DB	0	; SAVED INDEX OF ENTRY SELECTED FOR DELETE
 STOPREQ		.DB	0	; NON-ZERO IF USER ABORTED WITH KEYPRESS
 SKIPREQ		.DB	0	; NON-ZERO IF USER REQUESTED SKIP TO NEXT TRACK
 PREVREQ		.DB	0	; NON-ZERO IF USER REQUESTED PREVIOUS TRACK
-PLSHOWN		.DB	0	; NON-ZERO AFTER INITIAL PLAYLIST RENDER IN -all MODE
+NAVREQ		.DB	0	; NON-ZERO IF USER REQUESTED MATRIX NAV TRACK CHANGE
+DELREQ		.DB	0	; NON-ZERO IF NAVREQ WAS TRIGGERED BY DELETE REFRESH
+PLSHOWN		.DB	0	; NON-ZERO AFTER INITIAL PLAYLIST RENDER IN -list MODE
+UI_ACTIVE	.DB	0	; NON-ZERO FOR ANSI FIXED-SCREEN PLAYLIST UI
+UI_INIT		.DB	0	; NON-ZERO AFTER UI STATIC SECTIONS DRAWN
+UI_PLCOLS	.DB	1	; PLAYLIST CELLS PER ROW (16-CHAR CELLS)
+UI_ROWCUR	.DB	0	; WORK: CURRENT PLAYLIST ROW
+UI_COLCUR	.DB	0	; WORK: CURRENT PLAYLIST COLUMN
+UI_COLUSED	.DB	0	; WORK: COLUMNS USED IN CURRENT ROW
+UI_MARK		.DB	0	; WORK: ENTRY MARKER CHAR
+UI_IDXTMP	.DB	0	; WORK: PLAYLIST INDEX FOR DELTA TILE DRAW
+TCFG_PREV_COLS	.DB	0	; WORK: PRIOR WIDTH FOR TUNE SIZE PREVIEW REDRAW
+TCFG_PREV_ROWS	.DB	0	; WORK: PRIOR HEIGHT FOR TUNE SIZE PREVIEW REDRAW
+PLM_KEY		.DB	0	; WORK: WASD KEY FOR PLAYLIST MATRIX MOVE
+PLM_ROW		.DB	0	; WORK: CURRENT TARGET ROW FOR WASD MOVE
+PLM_COL		.DB	0	; WORK: CURRENT TARGET COLUMN FOR WASD MOVE
+PLM_ROWS		.DB	0	; WORK: TOTAL PLAYLIST ROWS
+PLM_ROWST	.DB	0	; WORK: CURRENT ROW START INDEX
+PLM_ROWLEN	.DB	0	; WORK: CURRENT ROW LENGTH
 PLCNT		.DB	0	; NUMBER OF FILES IN PLAYLIST
 PLCNT0		.DB	0	; SNAPSHOT OF PLAYLIST COUNT FOR LOOP RESTART
 PLIDX		.DB	0	; CURRENT PLAYLIST INDEX
+PLIDXOLD	.DB	0	; PREVIOUS PLAYLIST INDEX FOR DELTA MARKER UPDATE
 PLAYLIST	.FILL	(PLMAX * 12),0	; ARRAY OF FCB ENTRIES (DRIVE+11)
 PLAYLIST0	.FILL	(PLMAX * 12),0	; SNAPSHOT OF ORIGINAL PLAYLIST ENTRIES
 SNGFCBINI	.DB	0	; NON-ZERO WHEN SINGLE-FILE FCB SNAPSHOT IS INITIALIZED
 SNGFCBSAV	.FILL	36,0		; SAVED STARTUP FCB FOR SINGLE-FILE LOOP RESTART
 PLSRCHBUF	.FILL	128,0		; DMA BUFFER FOR DIR SEARCH
-PLSRCHFCB	.FILL	36,0		; SEARCH FCB FOR *.PT3
+PLSRCHFCB	.FILL	36,0		; SEARCH FCB FOR PLAYLIST ENUM PATTERN
 CLIBUF		.FILL	129,0		; NUL-TERMINATED COPY OF COMMAND TAIL
 
 USEPORTS	.DB	0	; AUDIO CHIP PORT SELECTION MODE
 
-MSGBAN		.DB	"Tune Player for RomWBW v3.2b025, 04-Apr-2026",0
+MSGBAN		.DB	"Tune Player for RomWBW v3.2b100, 05-Apr-2026",0
+
 MSGUSE		.DB	"Copyright (C) 2026, Wayne Warthen, GNU GPL v3",13,10
 			.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 			.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
-			.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM] [-msx|-rc|-coleco] [-delay] [--hbios] [+tn|-tn] [-all] [-loop] [-config] [-help]",0
+			.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM] [-msx|-rc|-coleco] [-delay] [--hbios] [+tn|-tn] [-list] [-loop] [-config] [-help]",0
 MSGHELP		.DB	"Copyright (C) 2026, Wayne Warthen, GNU GPL v3",13,10
 			.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 			.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
 			.DB	"This is a special build (ts variant) by fackie that adds:",13,10,13,10
 			.DB	"- Ability to play TurboSound PT3 files, using 2x AY-3-8910/YM2149 cards in MSX+Coleco addressing",13,10
-			.DB	"- Enumerates and plays all PT3 files in the current directory (-all)",13,10
+			.DB	"- Enumerates and plays all supported files (.PT2/.PT3/.MYM) in current directory (-list)",13,10
 			.DB	"- Loops current playing files (-loop)",13,10
 			.DB	"- Configures terminal profile persisted in TUNE.CFG (-config)",13,10,13,10
-			.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM] [-msx|-rc|-coleco] [-delay] [--hbios] [+tn|-tn] [-all] [-loop] [-config] [-help]",0
+			.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM] [-msx|-rc|-coleco] [-delay] [--hbios] [+tn|-tn] [-list] [-loop] [-config] [-help]",0
 MSGBIO		.DB	"Incompatible BIOS or version, "
 			.DB	"HBIOS v", '0' + RMJ, ".", '0' + RMN, " required",0
 MSGPLT		.DB	"Hardware error, system not supported!",0
 MSGHW		.DB	"Hardware error, sound chip not detected!",0
 MSGNAM		.DB	"Sound filename invalid (must be .PT2, .PT3, or .MYM)",0
 MSGFIL		.DB	"Sound file not found!",0
-MSGALL		.DB	"No .PT3 files found in current directory!",0
+MSGALL		.DB	"No .PT2/.PT3/.MYM files found in current directory!",0
 MSGSIZ		.DB	"Sound file too large to load!",0
 MSGTSHB		.DB	"TurboSound PT3 not supported with --HBIOS",0
 MSGTSHW		.DB	"TurboSound PT3 requires two AY cards at A0H/A1H and 50H/51H (readback at +2)",0
@@ -2738,15 +4275,22 @@ MSGTSPST	.DB	" Ports",0
 MSGHBIOS	.DB	"HBIOS sound driver",0
 MSGTIM		.DB	", timer mode",0
 MSGDLY		.DB	", delay mode",0
-MSGPLMODE	.DB	"Playlist Mode: Esc=quit, N=next, P=previous, ?=playlist",0
-MSGPLFULL	.DB	"Playlist:",0
+MSGPLFULL	.DB	"Keys: Esc=quit, (N)ext, (P)revious, WASD=navigate, (R)edraw (slow), (l/L)oop track/plist",0
 MSGPLNONE	.DB	" (none)",0
 MSGCURINF	.DB	"Current track:",0
 MSGPLY		.DB	"Playing...",0
+MSGPAUSE	.DB	"Paused - press spacebar to resume",0
+MSGDELING	.DB	"Deleting ",0
 MSGNEXT		.DB	" Next track",0
 MSGPREV		.DB	" Previous track",0
 MSGSKIP		.DB	" Skipping",0
 MSGLOOP		.DB	" Looping from start",0
+MSGLOOPSTAT	.DB	"Looping Status: ",0
+MSGLOOPOFF	.DB	"Off",0
+MSGLOOPTRK	.DB	"Track",0
+MSGLOOPPLAY	.DB	"Playlist",0
+MSGDELQ1	.DB	"Are you sure you want to delete ",0
+MSGDELQ2	.DB	"? (Y/N)",0
 MSGEND		.DB	" Done",0
 MSGERR		.DB	"App Error", 0
 MSGCFGMODE	.DB	"Configuration mode (-config)",0
@@ -2767,8 +4311,10 @@ MSGYES		.DB	"yes",0
 MSGNO		.DB	"no",0
 MSGTUNETITLE	.DB	"Adjust visible limits until C, R, and X are just visible.",0
 MSGTUNEKEYS	.DB	"Keys: c/C dec/inc cols, r/R dec/inc rows, Esc save+quit",0
-MSGTUNECURR	.DB	"Current size:",0
+MSGTUNECURR	.DB	"Current size: ",0
+MSGTUNEMAX	.DB	" (max: 150 x 50)   ",0
 TCFG_SEQ_CLR	.DB	27,'[','2','J',27,'[','H',0
+TCFG_SEQ_EL2	.DB	27,'[','2','K',0
 TCFG_SEQ_CYAN	.DB	27,'[','3','6','m',0
 TCFG_SEQ_YEL	.DB	27,'[','3','3','m',0
 TCFG_SEQ_GRN	.DB	27,'[','3','2','m',0
@@ -4707,6 +6253,40 @@ endint:	call	NORMIO
 ; Print song metadata from currently loaded module.
 ;
 PRTSONGMETA:
+	LD	A,(UI_ACTIVE)
+	OR	A
+	JR	Z,PRTSONGMETA0
+	CALL	UI_ENSURE_INIT
+	LD	B,UI_ROW_META1
+	CALL	UI_CLR_ROW
+	LD	B,UI_ROW_META2
+	CALL	UI_CLR_ROW
+	LD	B,UI_ROW_META1
+	LD	C,1
+	CALL	TCFG_ANSI_AT
+	LD	DE,MSGSONGNAME
+	CALL	PRTSTR
+	LD	DE,MDLADDR + $1E
+	LD	B,$20
+PRTSM1U:
+	LD	A,(DE)
+	CALL	PRTCHR
+	INC	DE
+	DJNZ	PRTSM1U
+	LD	B,UI_ROW_META2
+	LD	C,1
+	CALL	TCFG_ANSI_AT
+	LD	DE,MSGARTIST
+	CALL	PRTSTR
+	LD	DE,MDLADDR + $42
+	LD	B,$20
+PRTSM2U:
+	LD	A,(DE)
+	CALL	PRTCHR
+	INC	DE
+	DJNZ	PRTSM2U
+	RET
+PRTSONGMETA0:
 	LD	DE, MSGSONGNAME
 	CALL	PRTSTR
 	LD	DE, MDLADDR + $1E
@@ -4732,6 +6312,110 @@ PRTSM2:
 ; In playlist mode, print full queued track list with current marker.
 ;
 SHOWPLSTATUS:
+	LD	A,(UI_ACTIVE)
+	OR	A
+	JP	Z,SHOWPLSTATUS0
+	LD	A,(PLCNT)
+	OR	A
+	RET	Z
+	CALL	UI_ENSURE_INIT
+	CALL	UI_CALC_COLS
+	CALL	UI_CLEAR_PLAYLIST
+	LD	A,(PLCNT)
+	LD	B,A
+	XOR	A
+	LD	C,A
+	LD	A,UI_ROW_PLLIST
+	LD	(UI_ROWCUR),A
+	LD	A,1
+	LD	(UI_COLCUR),A
+	XOR	A
+	LD	(UI_COLUSED),A
+SHOWPLSTATUSU1:
+	PUSH	BC
+	LD	A,C
+	CALL	PLAYLIST_PTR_FROM_A
+	INC	HL
+	PUSH	HL
+	LD	A,(PLIDX)		; reload current index fresh each iteration
+	CP	C			; compare with loop counter
+	JR	NZ,SHOWPLSTATUSU1A
+	LD	A,'>'
+	JR	SHOWPLSTATUSU1B
+SHOWPLSTATUSU1A:
+	LD	A,' '
+SHOWPLSTATUSU1B:
+	LD	(UI_MARK),A
+	LD	A,(UI_ROWCUR)
+	LD	B,A
+	LD	A,(cfg_rows)
+	CP	B
+	JR	C,SHOWPLSTATUSU_DONE
+	LD	A,(UI_COLCUR)
+	LD	C,A
+	CALL	TCFG_ANSI_AT
+	LD	A,(UI_MARK)
+	CP	'>'
+	JR	NZ,SHOWPLSTATUSU1C
+	CALL	TCFG_COL_PRM
+SHOWPLSTATUSU1C:
+	LD	A,(UI_MARK)
+	CALL	PRTCHR			; marker char (1)
+	POP	HL
+	LD	B,8			; print 8 name chars
+SHOWPLSTATUSU1D:
+	LD	A,(HL)
+	INC	HL
+	CALL	PRTCHR
+	DJNZ	SHOWPLSTATUSU1D
+	LD	A,'.'			; dot separator
+	CALL	PRTCHR
+	LD	B,3			; print 3 ext chars
+SHOWPLSTATUSU1DA:
+	LD	A,(HL)
+	INC	HL
+	CALL	PRTCHR
+	DJNZ	SHOWPLSTATUSU1DA
+	LD	B,3			; 3-space column gap
+SHOWPLSTATUSU1DB:
+	LD	A,' '
+	CALL	PRTCHR
+	DJNZ	SHOWPLSTATUSU1DB
+	LD	A,(UI_MARK)
+	CP	'>'
+	JR	NZ,SHOWPLSTATUSU1F
+	CALL	TCFG_COL_RST
+SHOWPLSTATUSU1F:
+	POP	BC
+	INC	C
+	LD	A,(UI_COLCUR)
+	ADD	A,16			; tile width: 1+8+1+3+3=16
+	LD	(UI_COLCUR),A
+	LD	A,(UI_COLUSED)
+	INC	A
+	LD	(UI_COLUSED),A
+	LD	E,A			; use E, not D, to avoid clobbering PLIDX
+	LD	A,(UI_PLCOLS)
+	CP	E
+	JR	NZ,SHOWPLSTATUSU1G
+	XOR	A
+	LD	(UI_COLUSED),A
+	LD	A,1
+	LD	(UI_COLCUR),A
+	LD	A,(UI_ROWCUR)
+	INC	A
+	LD	(UI_ROWCUR),A
+SHOWPLSTATUSU1G:
+	DEC	B
+	JP	NZ,SHOWPLSTATUSU1
+	CALL	SHOWLOOPSTATUS
+	RET
+SHOWPLSTATUSU_DONE:
+	POP	HL
+	POP	BC
+	CALL	SHOWLOOPSTATUS
+	RET
+SHOWPLSTATUS0:
 	LD	A,(PLCNT)
 	OR	A
 	RET	Z
@@ -4763,7 +6447,255 @@ SHOWPLSTATUS1B:
 	POP	BC
 	INC	C
 	DJNZ	SHOWPLSTATUS1
+	CALL	CRLF			; blank line before looping status
+	CALL	SHOWLOOPSTATUS
 	CALL	CRLF
+	RET
+
+SHOWLOOPSTATUS:
+	LD	A,(UI_ACTIVE)
+	OR	A
+	JP	Z,SHOWLOOPSTATUS0
+	CALL	UI_CALC_COLS
+	LD	A,(UI_PLCOLS)
+	LD	D,A
+	LD	A,(PLCNT)
+	LD	E,0
+SHOWLOOPSTATUSU0:
+	OR	A
+	JR	Z,SHOWLOOPSTATUSU1
+	INC	E
+	SUB	D
+	JR	NC,SHOWLOOPSTATUSU0
+SHOWLOOPSTATUSU1:
+	LD	A,UI_ROW_PLLIST
+	ADD	A,E			; row below playlist
+	INC	A			; leave one blank line before looping status
+	LD	B,A
+	LD	A,(cfg_rows)
+	CP	B
+	RET	C
+	CALL	UI_CLR_ROW
+	LD	C,1
+	CALL	TCFG_ANSI_AT
+	JP	SHOWLOOPSTATUSP
+SHOWLOOPSTATUS0:
+	CALL	CRLF
+	LD	DE,MSGLOOPSTAT
+	CALL	PRTSTR
+	CALL	SHOWLOOPSTATUSS
+	CALL	CRLF
+	RET
+
+SHOWLOOPSTATUSP:
+	LD	DE,MSGLOOPSTAT
+	CALL	PRTSTR
+	CALL	SHOWLOOPSTATUSS
+	RET
+
+SHOWLOOPSTATUSS:
+	LD	A,(LOOPPLMD)
+	OR	A
+	LD	DE,MSGLOOPOFF
+	JR	Z,SHOWLOOPSTATUSS0
+	LD	DE,MSGLOOPPLAY
+	JR	SHOWLOOPSTATUSS2
+SHOWLOOPSTATUSS0:
+	LD	A,(LOOPTRKMD)
+	OR	A
+	JR	Z,SHOWLOOPSTATUSS2
+	LD	DE,MSGLOOPTRK
+SHOWLOOPSTATUSS2:
+	CALL	PRTSTR
+	RET
+
+LOOP_STATUS_POST:
+	LD	A,(UI_ACTIVE)
+	OR	A
+	RET	Z
+	JP	PRTPLAYMSG
+
+PLAYLIST_DELSEQ_RESET:
+	XOR	A
+	LD	(DELCNT),A
+	RET
+
+PLAYLIST_DELSEQ_CHECK:
+	CP	$7F			; DEL
+	JR	Z,PLAYLIST_DELSEQ_CHECK1
+	CP	8			; some terms send BS for Delete
+	JR	Z,PLAYLIST_DELSEQ_CHECK1
+	CALL	PLAYLIST_DELSEQ_RESET
+	LD	A,1			; not a delete key
+	RET
+PLAYLIST_DELSEQ_CHECK1:
+	LD	A,(DELCNT)
+	INC	A
+	LD	(DELCNT),A
+	CP	3
+	JR	Z,PLAYLIST_DELSEQ_CHECK2
+	LD	A,$FF			; delete press seen, but not armed yet
+	RET
+PLAYLIST_DELSEQ_CHECK2:
+	CALL	PLAYLIST_DELSEQ_RESET
+	XOR	A			; armed
+	RET
+
+PLAYLIST_CONFIRM_DELETE:
+	LD	A,(PAUSEMD)
+	LD	(DELPAUSAV),A
+	OR	A
+	JR	NZ,PLAYLIST_CONFIRM_DELETE0
+	LD	A,$FF
+	LD	(PAUSEMD),A
+	CALL	MUTE_NOW
+PLAYLIST_CONFIRM_DELETE0:
+	LD	A,(UI_ACTIVE)
+	OR	A
+	JR	Z,PLAYLIST_CONFIRM_DELETE1
+	LD	B,UI_ROW_PLAY
+	CALL	UI_CLR_ROW
+	LD	B,UI_ROW_PLAY
+	LD	C,1
+	CALL	TCFG_ANSI_AT
+	CALL	TCFG_COL_PRM
+	LD	DE,MSGDELQ1
+	CALL	PRTSTR
+	CALL	PLAYLIST_PRINT_SELECTED_NAME
+	LD	DE,MSGDELQ2
+	CALL	PRTSTR
+	CALL	TCFG_COL_RST
+	JR	PLAYLIST_CONFIRM_DELETE2
+PLAYLIST_CONFIRM_DELETE1:
+	CALL	CRLF
+	CALL	TCFG_COL_PRM
+	LD	DE,MSGDELQ1
+	CALL	PRTSTR
+	CALL	PLAYLIST_PRINT_SELECTED_NAME
+	LD	DE,MSGDELQ2
+	CALL	PRTSTR
+	CALL	TCFG_COL_RST
+PLAYLIST_CONFIRM_DELETE2:
+	CALL	GETKEY
+	OR	A
+	JR	Z,PLAYLIST_CONFIRM_DELETE2
+	CP	'Y'
+	JR	Z,PLAYLIST_CONFIRM_DELETEY
+	CP	'y'
+	JR	Z,PLAYLIST_CONFIRM_DELETEY
+	CP	'N'
+	JR	Z,PLAYLIST_CONFIRM_DELETEN
+	CP	'n'
+	JR	Z,PLAYLIST_CONFIRM_DELETEN
+	JR	PLAYLIST_CONFIRM_DELETE2
+PLAYLIST_CONFIRM_DELETEN:
+	LD	A,(DELPAUSAV)
+	LD	(PAUSEMD),A
+	OR	A
+	JR	Z,PLAYLIST_CONFIRM_DELETEN1
+	CALL	PRTPAUSEMSG
+	XOR	A
+	RET
+PLAYLIST_CONFIRM_DELETEN1:
+	CALL	PRTPLAYMSG
+	XOR	A
+	RET
+PLAYLIST_CONFIRM_DELETEY:
+	XOR	A
+	LD	(PAUSEMD),A
+	OR	$FF
+	RET
+
+PLAYLIST_DELETE_SELECTED:
+	LD	A,(PLIDX)
+	LD	(DELIDX),A
+	CALL	PLAYLIST_LOAD_FCB
+	CALL	PRTDELETEMSG
+	LD	DE,FCB
+	LD	C,19			; BDOS delete file
+	CALL	BDOS
+	CALL	PLAYLIST_INIT
+	CALL	PLAYLIST_ENUM_ALL
+	LD	A,(PLCNT)
+	OR	A
+	JR	NZ,PLAYLIST_DELETE_SELECTED1
+	LD	A,$FF
+	LD	(STOPREQ),A
+	OR	$FF
+	RET
+PLAYLIST_DELETE_SELECTED1:
+	CALL	PLAYLIST_SNAPSHOT
+	LD	A,(DELIDX)
+	LD	B,A
+	LD	A,(PLCNT)
+	CP	B
+	JR	Z,PLAYLIST_DELETE_SELECTED_CLAMP
+	JR	C,PLAYLIST_DELETE_SELECTED_CLAMP
+	LD	A,B
+	JR	PLAYLIST_DELETE_SELECTED2
+PLAYLIST_DELETE_SELECTED_CLAMP:
+	DEC	A			; clamp to new last entry (PLCNT-1)
+PLAYLIST_DELETE_SELECTED2:
+	LD	(PLIDX),A
+	LD	(PLIDXOLD),A		; keep delta marker update aligned after refresh
+	LD	A,$FF
+	LD	(NAVREQ),A
+	LD	(DELREQ),A
+	OR	$FF
+	RET
+
+PLAYLIST_PRINT_SELECTED_NAME:
+	PUSH	AF
+	PUSH	BC
+	PUSH	HL
+	LD	A,(PLIDX)
+	CALL	PLAYLIST_PTR_FROM_A
+	INC	HL			; skip drive byte
+	LD	B,8
+PLAYLIST_PRINT_SELECTED_NAME1:
+	LD	A,(HL)
+	INC	HL
+	CP	' '
+	JR	Z,PLAYLIST_PRINT_SELECTED_NAME2
+	CALL	PRTCHR
+PLAYLIST_PRINT_SELECTED_NAME2:
+	DJNZ	PLAYLIST_PRINT_SELECTED_NAME1
+	LD	A,'.'
+	CALL	PRTCHR
+	LD	B,3
+PLAYLIST_PRINT_SELECTED_NAME3:
+	LD	A,(HL)
+	INC	HL
+	CP	' '
+	JR	Z,PLAYLIST_PRINT_SELECTED_NAME4
+	CALL	PRTCHR
+PLAYLIST_PRINT_SELECTED_NAME4:
+	DJNZ	PLAYLIST_PRINT_SELECTED_NAME3
+	POP	HL
+	POP	BC
+	POP	AF
+	RET
+
+PAUSE_REFRESH_SELECTION:
+	LD	A,(UI_ACTIVE)
+	OR	A
+	JR	Z,PAUSE_REFRESH_SELECTION0
+	CALL	UI_UPDATE_MARKER_DELTA
+	CALL	PRTPAUSEMSG
+	RET
+PAUSE_REFRESH_SELECTION0:
+	CALL	SHOWPLSTATUS
+	CALL	PRTPAUSEMSG
+	RET
+
+MUTE_NOW:
+	LD	A,(TSFLAG)
+	OR	A
+	JR	Z,MUTE_NOW0
+	CALL	TS_MUTE
+	RET
+MUTE_NOW0:
+	CALL	START+8
 	RET
 ;
 ; Print one 8.3 entry from HL (11 chars: name[8]+ext[3]).

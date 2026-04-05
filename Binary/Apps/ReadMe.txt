@@ -11,7 +11,8 @@ are specific to RomWBW.  The source for these applications is found
 in the Source\Apps directory of the distribution.
 
 The Tunes subdirectory contains some sample ProTracker and MYM sound
-files that can be played by the TUNE application.
+files that can be played by the TUNE application (single file or
+playlist mode via TUNE -LIST).
 
 All of these files are already included in the pre-built boot disk
 images.  They are also included on the ROM disk except for

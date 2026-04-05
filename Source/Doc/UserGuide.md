@@ -3202,7 +3202,7 @@ floppy disk and hard disk images.
 
 | **Application** | **Description**                                                    |
 |-----------------|--------------------------------------------------------------------|
-| TUNE            | Play .PT2, .PT3, .MYM audio files.                                 |
+| TUNE            | Play .PT2/.PT3/.MYM files with interactive playlist, pause, and loop controls. |
 | INTTEST         | Test interrupt vector hooking.                                     |
 
 # Real Time Clock & Date/Time Stamping

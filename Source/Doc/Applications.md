@@ -2535,9 +2535,10 @@ provided in the RomWBW distribution.
 | ROM-based           |No |
 | Disk-based          |Yes|
 
-If your RomWBW system has a sound card based on either an AY-3-8190 or
+If your RomWBW system has a sound card based on either an AY-3-8910 or
 YM2149F sound chip, you can use the `TUNE` application to play PT or
-MYM sound files.
+MYM sound files. In addition to single-file playback, `TUNE` supports
+interactive playlist mode for directory-wide playback and navigation.
 
 Note: TUNE will detect an AY-3-8910/YM2149 Sound Module regardless of 
 whether support for it is included in the RomWBW HBIOS configuration
@@ -2545,16 +2546,23 @@ whether support for it is included in the RomWBW HBIOS configuration
 #### Syntax
 
 | `TUNE `*`<filename>`* `*`<options>`*`
+| `TUNE -LIST `*`<options>`*`
 
 *`<filename>`* is the name of a sound file ending in .PT2, .PT3, or
-.MYM
+.MYM. In `-LIST` mode, TUNE builds a playlist from all supported files
+in the current directory.
 
 | Option      | Description                                            |
 | ----------- | ------------------------------------------------------ |
 |  `-MSX`     | Force MSX port addresses A0H/A1H (no PSG detection)    |
 |  `-RC`      | Force RCBus port addresses D8H/D0H (no PSG detection)  |
+|  `-COLECO`  | Force Coleco port addresses 50H/51H (no PSG detection) |
 |  `--HBIOS`  | Utilise HBIOS' sound driver                            |
 |  `-DELAY`   | Force delay mode (don't use hardware timer)            |
+|  `-LIST`    | Enumerate and play all .PT2/.PT3/.MYM files in current directory |
+|  `-LOOP`    | Enable looping at startup (track loop for single-file mode, playlist loop for `-LIST`) |
+|  `-CONFIG`  | Open terminal size configuration for playlist UI        |
+|  `-HELP`    | Show usage and help text                               |
 |  `+T1`      | Play tune an octave higher                             |
 |  `+T2`      | Play tune two octaves higher                           |
 |  `-T1`      | Play tune an octave lower                              |
@@ -2572,6 +2580,19 @@ your tune filenames should end in .PT2, .PT3, or .MYM.
 To play a sound file, just use the command and specify the file to
 play after the command. So, for example, `TUNE ATTACK.PT2` will
 immediately begin playing the PT sound file "ATTACK.PT2".
+
+To play all supported files in the current directory as a playlist,
+use `TUNE -LIST`.
+
+In playlist mode, key controls include:
+
+- `Esc` quit
+- `W/A/S/D` (and terminal cursor keys) to navigate the playlist matrix
+- `N` next and `P` previous track
+- `l` toggle current-track loop and `L` toggle playlist loop
+- `Space` pause/resume playback (navigation still available while paused)
+- `R` redraw the playlist display
+- Press Delete three times to arm file deletion, then confirm with `Y` or `N`
 
 #### Notes
 

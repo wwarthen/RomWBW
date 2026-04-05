@@ -711,7 +711,7 @@ RomWBW Distribution.
 | `SYSCOPY.COM`  | RomWBW            | Copy system tracks to disks (make bootable)                   |  
 | `TALK.COM`     | RomWBW            | Route console I/O to & from specified serial port             |  
 | `TIMER.COM`    | RomWBW            | Test and display system timer ticks                           |  
-| `TUNE.COM`     | RomWBW            | Play .PT2, .PT3, and .MYM audio files on supported hardware   |  
+| `TUNE.COM`     | RomWBW            | Play .PT2/.PT3/.MYM audio files with interactive playlist, loop, and pause controls |  
 | `VGMPLAY.COM`  |                   | Simple player for VGM (Video Game Music) files.               |
 | `WDATE.COM`    | Kevin Boone       | Utility to configure RTC Date.                                |  
 | `XM.COM`       | RomWBW            | XModem file transfer application                              |  
