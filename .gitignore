@@ -19,7 +19,9 @@
 **/*/font*.asm
 
 Binary/**/*.mym
+Binary/**/*.pt2
 Binary/**/*.pt3
+Binary/**/*.vgm
 !Binary/CPNET/NetBoot/*/cpnos.sys
 
 Source/**/eeprom

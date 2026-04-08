@@ -1,4 +1,11 @@
 {
+  "vscode-serial-monitor.dataBits": 8,
+  "vscode-serial-monitor.stopBits": 1,
+  "vscode-serial-monitor.parity": "none",
+  "vscode-serial-monitor.lineEnding": "none",
+  "vscode-serial-monitor.customBaudRates": [
+    115200
+  ],
   "z80-macroasm.format.enabled": true,
   "z80-macroasm.format.baseIndent": 1,
   "z80-macroasm.format.whitespaceAfterInstruction": "tab",
