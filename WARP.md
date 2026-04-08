@@ -120,6 +120,20 @@ Many applications also have their own `Build.cmd`/`Clean.cmd` plus local `Makefi
 
 - `Source\Apps\Test\Build.cmd` – builds the test utilities suite (banktest, inttest, ramtest, etc.)
 - `Source\Apps\VGM\Build.cmd` – builds the VGM player and related utilities (see module-specific `WARP.md` in `Source/Apps/VGM/` for details)
+- `Source\Apps\VibeTune\Build.cmd` – builds the VibeTune audio player (PT2/PT3/MYM files) with multiple port variants
+
+#### VibeTune Development
+
+VibeTune (renamed from Tune in this fork) is an interactive audio player. To build VibeTune:
+
+- Windows:
+  - `cd Source\Apps\VibeTune`
+  - `Build.cmd`
+- POSIX:
+  - `cd Source/Apps/VibeTune`
+  - `make`
+
+**Note:** The original `Tune` application exists in `Source/Apps/Tune/` for syncing upstream changes. VibeTune is a fork with source files renamed to `vibetune.asm`, `vibetune.inc`, etc.
 
 ### Tests and diagnostics
 
