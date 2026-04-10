@@ -157,7 +157,7 @@ cfg_fcb_init:
 
 cfg_fcb_tmpl:
 	.db	0
-	.db	'T','U','N','E',' ',' ',' ',' '
+	.db	'T','E','R','M',' ',' ',' ',' '
 	.db	'C','F','G'
 	.fill	24,0
 cfg_fcb:

@@ -1,4 +1,4 @@
-OBJECTS = vibetune.com vibetunezx.com vibetunemsx.com
+OBJECTS = vtune.com vtunezx.com vtunemsx.com
 DEST = ../../../Binary/Apps
 TOOLS = ../../../Tools
 
@@ -6,14 +6,14 @@ include $(TOOLS)/Makefile.inc
 
 DEPS := vibetune.asm $(shell find . -name '*.inc')
 
-vibetune.com: $(DEPS)
-	$(TASM) -dWBW vibetune.asm vibetune.com vibetune.lst
+vtune.com: $(DEPS)
+	$(TASM) -dWBW vibetune.asm vtune.com vtune.lst
 
-vibetunezx.com: $(DEPS)
-	$(TASM) -dZX vibetune.asm vibetunezx.com vibetunezx.lst
+vtunezx.com: $(DEPS)
+	$(TASM) -dZX vibetune.asm vtunezx.com vtunezx.lst
 
-vibetunemsx.com: $(DEPS)
-	$(TASM) -dMSX vibetune.asm vibetunemsx.com vibetunemsx.lst
+vtunemsx.com: $(DEPS)
+	$(TASM) -dMSX vibetune.asm vtunemsx.com vtunemsx.lst
 
 all::
 	mkdir -p $(DEST)/Tunes

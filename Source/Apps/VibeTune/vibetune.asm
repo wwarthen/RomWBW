@@ -61,6 +61,10 @@
 ;                    add -coleco CLI/ports mode
 ;	2026-02-17 [JMD] Add support for playing TurboSound files when the system has
 ;					 two sound cards (in Coleco and MSX addressing mode)
+;   2026-04-08 [JMD] Branched out of TUNE into VIBETUNE as of TUNE.COM v3.2 for RomWBW
+;					 The App will... to-do
+;   2026-04-09 [JMD] Add VGM file format support (AY-3-8910 single/dual chip, OPL2/OPL3, SN76489)
+;                    Dual-AY VGM reuses TS_PORTS1/TS_PORTS2 identical to TurboSound PT3
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -87,13 +91,14 @@ HEAPEND			.EQU	$C000	; End of heap storage
 TYPPT2			.EQU	1		; FILTYP value for PT2 sound file
 TYPPT3			.EQU	2		; FILTYP value for PT3 sound file
 TYPMYM			.EQU	3		; FILTYP value for MYM sound file
+TYPVGM			.EQU	4		; FILTYP value for VGM sound file
 ;
 PORTS_AUTO		.EQU	0		; AUTO select audio chip ports
 PORTS_MSX		.EQU	1		; force MSX audio chip ports
 PORTS_RC		.EQU	2		; force RCBUS audio chip ports
 PORTS_COLECO	.EQU	3		; force Coleco-style AY ports (50H/51H)
 
-; Shared terminal config (TUNE.CFG) constants/aliases for termcfg.inc
+; Shared terminal config (TERM.CFG) constants/aliases for termcfg.inc
 bdos			.EQU	BDOS
 dma_default	.EQU	$0080
 CFGF_ANSI	.EQU	$01
@@ -147,9 +152,16 @@ Id				.EQU	1	; 5) Insert official identificator
 ;
 	PRTCRLF
 	PRTSTRDE(MSGBAN)		; Print to banner message
+	CALL	PRTCPUKHZBAN		; Print detected CPU speed in MHz
 	CALL	CRLF			; newline after banner
+	; Determine load ceiling from CP/M BDOS entry address.
+	; Bytes 0x0006/0x0007 in page 0 hold the 16-bit BDOS entry (JP dest).
+	; We use (BDOS page - 1) so the load loop stops one 256-byte page
+	; below BDOS, giving a safe margin.
+	LD	A,(7)			; high byte of BDOS entry address
+	DEC	A			; stop one page below BDOS
+	LD	(HEAPENDB),A		; save as runtime load ceiling page
 	CALL	CLI_PREP
-	CALL	CLI_SHOW_HELP
 	CALL	CLI_HAVE_ALL_SWITCH
 	CALL	CLI_HAVE_LOOP_SWITCH
 	CALL	CLI_HAVE_CONFIG_SWITCH
@@ -159,6 +171,8 @@ Id				.EQU	1	; 5) Insert official identificator
 	CALL	CLI_PORTS
 	CALL	CLI_HAVE_HBIOS_SWITCH
 	CALL	CLI_HAVE_DELAY_SWITCH
+	CALL	CLI_HAVE_YM2151_SWITCH
+	CALL	YM2151_PORTCFG
 	CALL	CLI_OCTAVE_ADJST
 	CALL	UI_SETUP
 
@@ -331,7 +345,7 @@ PLAYNEXT:
 	CALL	PLAYLIST_LOAD_FCB
 	CALL	PLAYLIST_SET_FILTYP
 	CALL	CLI_ABRT_UNSUPPFILTYP
-	JR	_LD0
+	JP	_LD0
 ;
 PLAYNEXT_SINGLE:
 	LD	A,(LOOPTRKMD)
@@ -339,7 +353,7 @@ PLAYNEXT_SINGLE:
 	JR	Z,PLAYNEXT_SINGLE0
 	CALL	SINGLE_FCBRESTORE
 PLAYNEXT_SINGLE0:
-	; Check sound filename (must be *.PT2, *.PT3, or *.MYM)
+	; Check sound filename (must be .PT2, .PT3, .MYM, .VGM)
 	LD	A,(FCB+1)		; Get first char of filename
 	CP	' '				; Compare to blank
 	JP	Z,ERRCMD		; If so, missing filename
@@ -370,7 +384,7 @@ HASEXT	LD	A,(FCB+9)	; Extension char 1
 	JP	ERRNAM			; Anything else is a bad file extension
 CHKMYM	LD	A,(FCB+9)	; Extension char 1
 	CP	'M'				; Check for 'M'
-	JP	NZ,ERRNAM		; If not, bad file extension
+	JP	NZ,CHKVGM		; If not, check for VGM extension
 	LD	A,(FCB+10)		; Extension char 2
 	CP	'Y'				; Check for 'Y'
 	JP	NZ,ERRNAM		; If not, bad file extension
@@ -379,6 +393,17 @@ CHKMYM	LD	A,(FCB+9)	; Extension char 1
 	CP	'M'				; Check for 'M'
 	JR	Z,_SET			; If so, commit file type value
 	JP	ERRNAM			; Anything else is a bad file extension
+CHKVGM	LD	A,(FCB+9)	; Extension char 1
+	CP	'V'				; Check for 'V'
+	JP	NZ,ERRNAM		; If not, unsupported extension
+	LD	A,(FCB+10)		; Extension char 2
+	CP	'G'				; Check for 'G'
+	JP	NZ,ERRNAM
+	LD	A,(FCB+11)		; Extension char 3
+	LD	C,TYPVGM		; Assume VGM file type
+	CP	'M'				; Check for 'M'
+	JR	Z,_SET			; If so, commit file type value
+	JP	ERRNAM
 _SET	LD	A,C			; Get file type value
 	LD	(FILTYP),A		; Save file type value
 ;
@@ -398,6 +423,7 @@ _LD0	LD	C,15			; CPM Open File function
 	JR	NZ,_LDCLR		; If not, all set
 	LD	HL,rows			; Otherwise, load address
 	LD	(DMA),HL		; ... for MYM files
+	JR	_LDCLR
 ;
 _LDCLR	XOR	A			; reset load byte counter
 	LD	(LOADBYTES),A
@@ -408,17 +434,17 @@ _LD	LD	HL,(DMA)		; Get load address
 	LD	DE,128			; Bump by size of
 	ADD	HL,DE			; ... one record
 	LD	(DMA),HL		; Save for next loop
-	LD	A,HEAPEND >> 8		; A := page limit for load
-	CP	H			; Check to see if limit hit
+	LD	A,(HEAPENDB)	; A := dynamic page limit (BDOS - 1 page)
+	CP	H				; Check to see if limit hit
 	JP	Z,ERRSIZ		; Handle size error
-	POP	DE			; Restore current DMA to DE
+	POP	DE				; Restore current DMA to DE
 	LD	C,26			; CPM Set DMA function
-	CALL	BDOS			; Read next 128 bytes
+	CALL	BDOS		; Read next 128 bytes
 ;
 	LD	C,20			; CPM Read Sequential function
 	LD	DE,FCB			; FCB
-	CALL	BDOS			; Read next 128 bytes
-	OR	A			; Set flags to check EOF
+	CALL	BDOS		; Read next 128 bytes
+	OR	A				; Set flags to check EOF
 	JR	NZ,_LDX			; Non-zero is EOF
 	; successful read, count bytes loaded (128 at a time)
 	LD	HL,(LOADBYTES)
@@ -455,6 +481,8 @@ _LDX1:
 	JR	Z,GOPT3			; If so, do it
 	CP	TYPMYM			; MYM?
 	JP	Z,gomym			; If so, do it
+	CP	TYPVGM			; VGM?
+	JP	Z,goVGM			; If so, do it
 	JP	ERRNAM			; This should never happen
 
 GOPT2	LD	A,2			; SETUP value to PT2 sound files
@@ -1094,7 +1122,456 @@ waitvb1
 	;call	PRTDOT
 	jp	mymlp
 ;
-EXIT	LD	A,(TSFLAG)
+;
+;===============================================================================
+; goVGM - Play a VGM file
+;===============================================================================
+; Loads and plays a VGM file.  Supports single-chip AY, dual-chip AY (via
+; TS_PORTS1/TS_PORTS2, same hardware as TurboSound), OPL2/OPL3, and SN76489.
+; Keyboard navigation matches the MYM / PT3 player.
+;===============================================================================
+
+goVGM:
+	CALL	VGM_VALIDATE_IMAGE	; fail fast if VGM image is truncated
+
+	; Probe AY chip ports into TS_PORTS1/TS_PORTS2 (same as TurboSound PT3)
+	ISHBIOS
+	JR	NZ,goVGM_portsfb	; HBIOS mode: skip direct probe for AY
+	CALL	TS_PORTS_SETUP		; populates TS_PORTS1 and TS_PORTS2
+goVGM_portsfb:
+	; If TS_PORTS1 is zero (e.g. HBIOS mode), seed it from PORTS so AY
+	; writes don't go to port 0.
+	LD	HL,(TS_PORTS1)
+	LD	A,H
+	OR	L
+	JR	NZ,goVGM_fdly
+	LD	HL,(PORTS)		; fallback: copy active PORTS word
+	LD	(TS_PORTS1),HL
+
+goVGM_fdly:
+	LD	BC,$F8F0		; HBIOS SYSGET/CPUINFO
+	RST	08			; L := CPU index/code
+	LD	A,L
+	CALL	VGM_SETFDELAY
+goVGM_fd_done:
+
+	; Mark this track as VGM so EXIT skips the PT3 MUTE call
+	LD	A,$FF
+	LD	(VGMFLAG),A
+
+	; Compute stream start address from VGM header offset field at +0x34
+	; Absolute start = (vgmdata+0x34) + value_at(vgmdata+0x34)
+	; If offset field is 0 (v1.00 files), default stream starts at +0x40
+	LD	HL,(vgmdata + 34H)
+	LD	A,H
+	OR	L
+	JR	NZ,goVGM_ofs
+	LD	HL,0CH			; v1.00/zero-offset default: stream at vgmdata+0x40 (=0x34+0x0C)
+goVGM_ofs:
+	LD	DE,vgmdata + 34H	; address of the offset field itself
+	ADD	HL,DE			; absolute command stream start
+	LD	(vgmpos),HL
+
+	; Initialise delay counter
+	LD	HL,0
+	LD	(vgmdly),HL
+	XOR	A
+	LD	(VGMKEYCHK),A		; poll keyboard every 32 loops (responsive, low overhead)
+
+	; Print VGM metadata block before "Playing..."
+	LD	A,(UI_ACTIVE)
+	OR	A
+	JR	NZ,goVGM_meta0
+	LD	A,(INFOLINE)
+	OR	A
+	JR	Z,goVGM_meta1
+	CALL	CRLF2
+	JR	goVGM_meta0
+goVGM_meta1:
+	CALL	CRLF
+goVGM_meta0:
+	CALL	PRTVGMMETA
+
+	; Print "Playing..." (deferred hardware info already shown by PRTPLAYINFO)
+	CALL	PRTPLAYMSG		; "Playing..."
+
+	; Flush any stale key presses
+	LD	A,(ALLMD)
+	OR	A
+	JR	NZ,goVGM_flush
+	LD	A,(LOOPTRKMD)
+	OR	A
+	JR	Z,goVGM_lp
+goVGM_flush:
+	CALL	FLUSHKEYS
+
+;-----------------------------------------------------------------------
+; Main VGM playback loop
+;-----------------------------------------------------------------------
+goVGM_lp:
+	CALL	VGM_PLAY_FRAME		; process commands until next wait
+	JP	Z,goVGM_done		; Z = end of stream (no loop)
+
+	; Check for keypress every 32 loops.
+	LD	A,(VGMKEYCHK)
+	DEC	A
+	AND	01FH
+	LD	(VGMKEYCHK),A
+	JP	NZ,goVGM_nodelay
+	CALL	GETKEY
+	JP	Z,goVGM_nodelay		; no key pressed
+
+	LD	E,A			; save raw key
+	CP	' '
+	JP	Z,goVGM_pause_toggle
+	CALL	PLAYLIST_DELSEQ_CHECK
+	CP	0
+	JR	Z,goVGM_del3
+	CP	$FF
+	JP	Z,goVGM_nodelay
+	LD	A,(ALLMD)
+	OR	A
+	JP	Z,goVGM_abrt		; non-playlist: any key aborts
+	LD	A,E
+	CALL	PLAYLIST_MAP_KEY
+	LD	E,A
+	CP	27			; ESC
+	JP	Z,goVGM_esc
+	CP	'l'
+	JP	Z,goVGM_lp_looptrk
+	CP	'L'
+	JP	Z,goVGM_lp_loopply
+	AND	$DF			; uppercase
+	CP	'R'
+	JP	Z,goVGM_showq
+	CP	'P'
+	JP	Z,goVGM_prev
+	CP	'N'
+	JP	Z,goVGM_next
+	CP	'A'
+	JP	Z,goVGM_nav
+	CP	'D'
+	JP	Z,goVGM_nav
+	CP	'W'
+	JP	Z,goVGM_nav
+	CP	'S'
+	JP	Z,goVGM_nav
+	JP	goVGM_nodelay
+
+goVGM_del3:
+	LD	A,(ALLMD)
+	OR	A
+	JP	Z,goVGM_nodelay
+	CALL	PLAYLIST_CONFIRM_DELETE
+	OR	A
+	JP	Z,goVGM_nodelay
+	CALL	PLAYLIST_DELETE_SELECTED
+	OR	A
+	JP	Z,goVGM_nodelay
+	JP	goVGM_exit_mute
+
+goVGM_nav:
+	CALL	PLAYLIST_MOVE_WASD
+	JP	Z,goVGM_nodelay
+	LD	A,$FF
+	LD	(NAVREQ),A
+	JP	goVGM_exit_mute
+
+goVGM_next:
+	LD	A,$FF
+	LD	(SKIPREQ),A
+	JP	goVGM_exit_mute
+
+goVGM_prev:
+	LD	A,$FF
+	LD	(PREVREQ),A
+	JP	goVGM_exit_mute
+
+goVGM_lp_looptrk:
+	LD	A,(LOOPTRKMD)
+	OR	A
+	JR	Z,goVGM_lt_on
+	XOR	A
+	LD	(LOOPTRKMD),A
+	CALL	SHOWLOOPSTATUS
+	CALL	LOOP_STATUS_POST
+	JP	goVGM_nodelay
+goVGM_lt_on:
+	LD	A,$FF
+	LD	(LOOPTRKMD),A
+	XOR	A
+	LD	(LOOPPLMD),A
+	CALL	SHOWLOOPSTATUS
+	CALL	LOOP_STATUS_POST
+	JP	goVGM_nodelay
+
+goVGM_lp_loopply:
+	LD	A,(LOOPPLMD)
+	OR	A
+	JR	Z,goVGM_lp_on
+	XOR	A
+	LD	(LOOPPLMD),A
+	CALL	SHOWLOOPSTATUS
+	CALL	LOOP_STATUS_POST
+	JP	goVGM_nodelay
+goVGM_lp_on:
+	LD	A,$FF
+	LD	(LOOPPLMD),A
+	XOR	A
+	LD	(LOOPTRKMD),A
+	CALL	SHOWLOOPSTATUS
+	CALL	LOOP_STATUS_POST
+	JP	goVGM_nodelay
+
+goVGM_showq:
+	CALL	SHOWPLSTATUS
+	CALL	PRTPLAYINFO
+	LD	A,(UI_ACTIVE)
+	OR	A
+	JR	NZ,goVGM_showq0
+	LD	A,(INFOLINE)
+	OR	A
+	JR	Z,goVGM_showq1
+	CALL	CRLF2
+	JR	goVGM_showq0
+goVGM_showq1:
+	CALL	CRLF
+goVGM_showq0:
+	CALL	PRTVGMMETA
+	CALL	PRTPLAYMSG
+	JP	goVGM_lp
+
+goVGM_pause_toggle:
+	LD	A,(PAUSEMD)
+	OR	A
+	JR	Z,goVGM_pause_on
+	XOR	A
+	LD	(PAUSEMD),A
+	JP	goVGM_nodelay
+goVGM_pause_on:
+	LD	A,$FF
+	LD	(PAUSEMD),A
+	CALL	MUTE_NOW
+	CALL	PRTPAUSEMSG
+goVGM_pause_wait:
+	CALL	GETKEY
+	JP	Z,goVGM_pause_yield
+	CP	' '
+	JR	Z,goVGM_pause_off
+	LD	E,A
+	CALL	PLAYLIST_DELSEQ_CHECK
+	CP	0
+	JR	Z,goVGM_pause_del3
+	CP	$FF
+	JP	Z,goVGM_pause_yield
+	LD	A,E
+	LD	E,A
+	LD	A,(ALLMD)
+	OR	A
+	JR	Z,goVGM_pause_kdec
+	LD	A,E
+	CALL	PLAYLIST_MAP_KEY
+	LD	E,A
+goVGM_pause_kdec:
+	LD	A,E
+	CP	27
+	JP	Z,goVGM_esc
+	CP	'l'
+	JP	Z,goVGM_pause_lt
+	CP	'L'
+	JP	Z,goVGM_pause_lp
+	AND	$DF
+	CP	'R'
+	JP	Z,goVGM_pause_redraw
+	CP	'N'
+	JP	Z,goVGM_pause_next
+	CP	'P'
+	JP	Z,goVGM_pause_prev
+	CP	'A'
+	JP	Z,goVGM_pause_nav
+	CP	'D'
+	JP	Z,goVGM_pause_nav
+	CP	'W'
+	JP	Z,goVGM_pause_nav
+	CP	'S'
+	JP	Z,goVGM_pause_nav
+	JP	goVGM_pause_yield
+goVGM_pause_del3:
+	LD	A,(ALLMD)
+	OR	A
+	JP	Z,goVGM_pause_yield
+	CALL	PLAYLIST_CONFIRM_DELETE
+	OR	A
+	JP	Z,goVGM_pause_yield
+	CALL	PLAYLIST_DELETE_SELECTED
+	OR	A
+	JP	Z,goVGM_pause_yield
+	JP	goVGM_exit_mute
+goVGM_pause_yield:
+	CALL	WAITQ
+	JR	goVGM_pause_wait
+goVGM_pause_off:
+	XOR	A
+	LD	(PAUSEMD),A
+	LD	A,(NAVREQ)
+	OR	A
+	JP	NZ,goVGM_exit_mute
+	CALL	PRTPLAYMSG
+	JP	goVGM_nodelay
+goVGM_pause_nav:
+	CALL	PLAYLIST_MOVE_WASD
+	JP	Z,goVGM_pause_yield
+	LD	A,$FF
+	LD	(NAVREQ),A
+	CALL	PAUSE_REFRESH_SELECTION
+	JP	goVGM_pause_yield
+goVGM_pause_next:
+	LD	A,(PLIDX)
+	LD	(PLIDXOLD),A
+	CALL	PLAYLIST_ADVANCE
+	JR	NZ,goVGM_pause_next1
+	LD	A,(LOOPPLMD)
+	OR	A
+	JP	Z,goVGM_pause_yield
+	CALL	PLAYLIST_RESTORE
+goVGM_pause_next1:
+	LD	A,$FF
+	LD	(NAVREQ),A
+	CALL	PAUSE_REFRESH_SELECTION
+	JP	goVGM_pause_yield
+goVGM_pause_prev:
+	LD	A,(PLIDX)
+	LD	(PLIDXOLD),A
+	CALL	PLAYLIST_PREV
+	JP	Z,goVGM_pause_yield
+	LD	A,$FF
+	LD	(NAVREQ),A
+	CALL	PAUSE_REFRESH_SELECTION
+	JP	goVGM_pause_yield
+goVGM_pause_redraw:
+	CALL	SHOWPLSTATUS
+	CALL	PRTPLAYINFO
+	CALL	PRTPAUSEMSG
+	JP	goVGM_pause_yield
+goVGM_pause_lt:
+	LD	A,(LOOPTRKMD)
+	OR	A
+	JR	Z,goVGM_pause_lt_on
+	XOR	A
+	LD	(LOOPTRKMD),A
+	CALL	SHOWLOOPSTATUS
+	CALL	PRTPAUSEMSG
+	JP	goVGM_pause_yield
+goVGM_pause_lt_on:
+	LD	A,$FF
+	LD	(LOOPTRKMD),A
+	XOR	A
+	LD	(LOOPPLMD),A
+	CALL	SHOWLOOPSTATUS
+	CALL	PRTPAUSEMSG
+	JP	goVGM_pause_yield
+goVGM_pause_lp:
+	LD	A,(LOOPPLMD)
+	OR	A
+	JR	Z,goVGM_pause_lp_on
+	XOR	A
+	LD	(LOOPPLMD),A
+	CALL	SHOWLOOPSTATUS
+	CALL	PRTPAUSEMSG
+	JP	goVGM_pause_yield
+goVGM_pause_lp_on:
+	LD	A,$FF
+	LD	(LOOPPLMD),A
+	XOR	A
+	LD	(LOOPTRKMD),A
+	CALL	SHOWLOOPSTATUS
+	CALL	PRTPAUSEMSG
+	JP	goVGM_pause_yield
+
+goVGM_esc:
+	CALL	MUTE_NOW
+goVGM_abrt:
+	LD	A,$FF
+	LD	(STOPREQ),A
+	JP	goVGM_exit_mute
+
+goVGM_nodelay:
+	LD	A,(vgmfdcyc)
+	OR	A
+	JR	Z,goVGM_nodelay_base
+	LD	B,A
+	LD	A,(vgmfdpos)
+	INC	A
+	CP	B
+	JR	C,goVGM_nodelay_posok
+	XOR	A
+goVGM_nodelay_posok:
+	LD	(vgmfdpos),A
+	LD	C,A
+	LD	A,(vgmfdlo)
+	CP	C
+	JR	Z,goVGM_nodelay_base
+	JR	C,goVGM_nodelay_base
+	LD	A,(vgmfdly0)
+	DEC	A
+	LD	(vgmfdly),A
+	JR	goVGM_nodelay_apply
+goVGM_nodelay_base:
+	LD	A,(vgmfdly0)
+	LD	(vgmfdly),A
+goVGM_nodelay_apply:
+	CALL	VGM_APPLY_DELAY
+	JP	goVGM_lp
+
+goVGM_done:
+	; End of stream reached normally
+goVGM_exit_mute:
+	CALL	VGM_MUTE_ALL		; Silence all hardware
+	JP	EXIT
+
+;
+; Validate loaded VGM size against the header EOF offset (bytes 0x04..0x07).
+; Expected file size is EOF offset + 4 bytes (32-bit value).
+; If expected size exceeds 64K, or loaded bytes are smaller than expected,
+; the file is truncated/corrupt for our in-memory playback model.
+;
+VGM_VALIDATE_IMAGE:
+	LD	HL,(vgmdata + 04H)	; low 16 bits of EOF offset
+	LD	DE,4
+	ADD	HL,DE			; expected size low16 = eof+4
+	LD	A,(vgmdata + 06H)	; high 16 bits of EOF offset (LSB first)
+	LD	C,A
+	LD	A,(vgmdata + 07H)
+	LD	B,A			; BC = high16 eof
+	JR	NC,VGM_VAL0
+	INC	BC			; propagate carry from +4 into high16
+VGM_VAL0:
+	LD	A,B
+	OR	C
+	JP	NZ,ERRVGMTR		; expected size exceeds 64K
+	LD	DE,(LOADBYTES)		; actual loaded bytes
+	OR	A			; clear carry before 16-bit SBC
+	SBC	HL,DE			; expected - loaded
+	RET	Z			; exact fit
+	RET	C			; loaded >= expected
+	JP	ERRVGMTR		; loaded < expected => truncated image
+;
+EXIT	LD	A,(SKIPREQ)		; mute all cards immediately on track navigation
+	OR	A
+	JR	NZ,EXITMALL
+	LD	A,(PREVREQ)
+	OR	A
+	JR	NZ,EXITMALL
+	LD	A,(NAVREQ)
+	OR	A
+	JR	Z,EXIT0
+EXITMALL:
+	CALL	VGM_MUTE_ALL
+EXIT0:
+	LD	A,(VGMFLAG)
+	OR	A
+	JR	NZ,EXITX		; VGM: already muted by VGM_MUTE_ALL
+	LD	A,(TSFLAG)
 	OR	A
 	JR	Z,EXITN
 	CALL	TS_MUTE			; Mute both chips
@@ -1211,11 +1688,38 @@ EXITP:
 	CALL	UI_EXIT_TO_PROMPT
 	JP	0					; Exit the easy way
 
+;
+; Configure runtime YM2151 ports from CLI switch selection.
+; YM2151MAP = 0 => 0xDE/0xDF, YM2151MAP = 1 => 0xFE/0xFF.
+;
+YM2151_PORTCFG:
+	LD	A,(YM2151MAP)
+	OR	A
+	JR	Z,YM2151_PORTCFG_DE
+	LD	A,0FEH
+	LD	(YM2151SELV),A
+	LD	A,0FFH
+	LD	(YM2151DATV),A
+	XOR	A
+	LD	(YM2151SEL2V),A
+	LD	(YM2151DAT2V),A
+	RET
+YM2151_PORTCFG_DE:
+	LD	A,0DEH
+	LD	(YM2151SELV),A
+	LD	A,0DFH
+	LD	(YM2151DATV),A
+	XOR	A
+	LD	(YM2151SEL2V),A
+	LD	(YM2151DAT2V),A
+	RET
+
 #include "timing.inc"
 #include "strings.inc"
 #include "cli.inc"
 #include "printing.inc"
 #include "termcfg.inc"
+#include "vgm_player.inc"
 
 TCFG_INIT:
 	CALL	cfg_defaults
@@ -2302,6 +2806,101 @@ GETKEY	LD	C,6		; BDOS direct I/O
 	OR	A			; Set flags, Z set if no key
 	RET				; Done
 
+; Print detected CPU speed in MHz (X.YYY) below the startup banner.
+; Uses HBIOS SYSGET/CPUINFO (BC=$F8F0), DE := KHz.
+PRTCPUKHZBAN:
+	PUSH	AF
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	CALL	CRLF
+	LD	DE,MSGCPUMHZ
+	CALL	PRTSTR
+	LD	BC,$F8F0
+	RST	08
+	EX	DE,HL
+
+	; Integer MHz = KHz / 1000 in B, remainder KHz in HL.
+	LD	B,0
+PRTCPUSPD_DIV1000:
+	LD	A,H
+	CP	03H
+	JR	C,PRTCPUSPD_DIV1000_DONE
+	JR	NZ,PRTCPUSPD_DIV1000_SUB
+	LD	A,L
+	CP	0E8H
+	JR	C,PRTCPUSPD_DIV1000_DONE
+PRTCPUSPD_DIV1000_SUB:
+	LD	A,L
+	SUB	0E8H
+	LD	L,A
+	LD	A,H
+	SBC	A,03H
+	LD	H,A
+	INC	B
+	JR	PRTCPUSPD_DIV1000
+PRTCPUSPD_DIV1000_DONE:
+
+	LD	A,B
+	CALL	PRTDECB
+	LD	A,'.'
+	CALL	PRTCHR
+
+	; Hundreds digit of remainder (0..999)
+	LD	A,0
+PRTCPUSPD_DIV100:
+	LD	B,A
+	LD	A,H
+	OR	A
+	JR	NZ,PRTCPUSPD_DIV100_SUB
+	LD	A,L
+	CP	100
+	JR	C,PRTCPUSPD_DIV100_DONE
+PRTCPUSPD_DIV100_SUB:
+	LD	A,L
+	SUB	100
+	LD	L,A
+	LD	A,H
+	SBC	A,0
+	LD	H,A
+	LD	A,B
+	INC	A
+	JR	PRTCPUSPD_DIV100
+PRTCPUSPD_DIV100_DONE:
+	LD	A,B
+	ADD	A,'0'
+	CALL	PRTCHR
+
+	; Tens digit of remainder (0..99)
+	LD	A,0
+PRTCPUSPD_DIV10:
+	LD	B,A
+	LD	A,L
+	CP	10
+	JR	C,PRTCPUSPD_DIV10_DONE
+	SUB	10
+	LD	L,A
+	LD	A,B
+	INC	A
+	JR	PRTCPUSPD_DIV10
+PRTCPUSPD_DIV10_DONE:
+	LD	A,B
+	ADD	A,'0'
+	CALL	PRTCHR
+
+	; Ones digit of remainder
+	LD	A,L
+	ADD	A,'0'
+	CALL	PRTCHR
+
+	LD	DE,MSGMHZ
+	CALL	PRTSTR
+	POP	HL
+	POP	DE
+	POP	BC
+	POP	AF
+	RET
+
 PLAYLIST_MAP_KEY:
 	CP	27
 	RET	NZ
@@ -2481,6 +3080,10 @@ PLAYLIST_ENUM_ALL:
 	LD	B,'Y'
 	LD	C,'M'
 	CALL	PLAYLIST_ENUM_EXT
+	LD	A,'V'
+	LD	B,'G'
+	LD	C,'M'
+	CALL	PLAYLIST_ENUM_EXT
 	RET
 
 PLAYLIST_ENUM_EXT:
@@ -2493,27 +3096,22 @@ PLAYLIST_ENUM_EXT:
 	LD	DE,PLSRCHFCB+1
 	LD	BC,35
 	LDIR
+	POP	BC			; restore ext2/ext3
+	POP	AF			; restore ext1
+	LD	E,B			; preserve ext2
+	LD	D,C			; preserve ext3
 	; BUILD PATTERN ????????.XYZ (A/B/C = X/Y/Z)
-	POP	BC			; restore ext2→B, ext3→C
-	POP	AF			; restore ext1→A
-	LD	D,A			; save ext1 in D (A is clobbered by '?' fill)
-	LD	E,B			; save ext2 in E (B is clobbered by DJNZ counter)
-	; C already has ext3
-	LD	HL,PLSRCHFCB+1
+	LD	HL,PLSRCHFCB+1		; filename bytes
 	LD	B,8
-	LD	A,'?'
-PLAYLIST_ENUM_EXT0:
-	LD	(HL),A
+PLAYLIST_ENUM_QM:
+	LD	(HL),'?'
 	INC	HL
-	DJNZ	PLAYLIST_ENUM_EXT0
-	LD	A,D			; ext1
-	LD	(HL),A
-	INC	HL
+	DJNZ	PLAYLIST_ENUM_QM
+	LD	(PLSRCHFCB+9),A	; ext1
 	LD	A,E			; ext2
-	LD	(HL),A
-	INC	HL
-	LD	A,C			; ext3
-	LD	(HL),A
+	LD	(PLSRCHFCB+10),A
+	LD	A,D			; ext3
+	LD	(PLSRCHFCB+11),A
 	; DMA FOR DIR SEARCH RESULTS
 	LD	DE,PLSRCHBUF
 	LD	C,26
@@ -2595,6 +3193,8 @@ PLAYLIST_SET_FILTYP:
 	LD	A,(FCB+9)
 	CP	'M'
 	JR	Z,PLAYLIST_SET_FILTYP_MYM
+	CP	'V'
+	JR	Z,PLAYLIST_SET_FILTYP_VGM
 	LD	A,(FCB+11)
 	CP	'2'
 	JR	Z,PLAYLIST_SET_FILTYP_PT2
@@ -2607,6 +3207,10 @@ PLAYLIST_SET_FILTYP_PT2:
 	RET
 PLAYLIST_SET_FILTYP_MYM:
 	LD	A,TYPMYM
+	LD	(FILTYP),A
+	RET
+PLAYLIST_SET_FILTYP_VGM:
+	LD	A,TYPVGM
 	LD	(FILTYP),A
 	RET
 ;
@@ -3178,7 +3782,7 @@ HBS2_FAIL:
 PRTPLAYINFO:
 	LD	A,(UI_ACTIVE)
 	OR	A
-	JR	Z,PRTPLAYINFO0
+	JP	Z,PRTPLAYINFO0
 	CALL	UI_ENSURE_INIT
 	LD	B,UI_ROW_INFO
 	CALL	UI_CLR_ROW
@@ -3190,6 +3794,8 @@ PRTPLAYINFO:
 	XOR	A
 	LD	(INFOLINE),A
 	LD	A,(FILTYP)
+	CP	TYPVGM
+	JR	Z,PRTPIU_VGM
 	CP	TYPPT3
 	JR	NZ,PRTPIU_NPT3
 	CALL	TS_DETECT
@@ -3215,6 +3821,11 @@ PRTPIU_TSHB:
 	CALL	PRTSTR
 	CALL	PRTWMOD
 	RET
+PRTPIU_VGM:
+	CALL	VGM_DETECT_HW
+	CALL	PRT_VGMHW_LINE
+	CALL	PRTWMOD
+	RET
 PRTPIU_NPT3:
 	LD	A,(HBIOSMD)
 	OR	A
@@ -3235,6 +3846,8 @@ PRTPLAYINFO0:
 	LD	(INFOLINE),A
 	CALL	CRLF			; spacing after banner
 	LD	A,(FILTYP)
+	CP	TYPVGM
+	JR	Z,PRTPI_VGM
 	CP	TYPPT3
 	JR	NZ,PRTPI_NPT3
 	CALL	TS_DETECT		; sets TSFLAG/TS_OFF2/TS_LEN2 if detected
@@ -3265,6 +3878,13 @@ PRTPI_TSHB:
 	CALL	PRTSTR
 	LD	DE,MSGHBIOS
 	CALL	PRTSTR
+	CALL	PRTWMOD
+	LD	A,$FF
+	LD	(INFOLINE),A
+	RET
+PRTPI_VGM:
+	CALL	VGM_DETECT_HW
+	CALL	PRT_VGMHW_LINE
 	CALL	PRTWMOD
 	LD	A,$FF
 	LD	(INFOLINE),A
@@ -3302,6 +3922,342 @@ PRT_TSPORTS_LINE:
 	CALL	PRTSTR
 	LD	DE,MSGTSPST
 	JP	PRTSTR
+
+;
+; Detect VGM chip usage from the actual command stream.
+; Sets VGMCHIPFLG bits:
+;   bit 0: OPL2 (YM3812)
+;   bit 1: OPL3 (YMF262)
+;   bit 2: AY-3-8910 / YM2149
+;   bit 3: SN76489
+;   bit 4: YM2151 (OPM)
+;
+VGM_DETECT_HW:
+	XOR	A
+	LD	(VGMCHIPFLG),A
+	LD	(VGMDUALFLG),A
+	LD	HL,(vgmdata + 34H)
+	LD	A,H
+	OR	L
+	JR	NZ,VGM_DET_OFS
+	LD	HL,0CH
+VGM_DET_OFS:
+	LD	DE,vgmdata + 34H
+	ADD	HL,DE
+VGM_DET_LP:
+	LD	A,(HL)
+	INC	HL
+	CP	66H
+	JP	Z,VGM_DET_DONE
+	CP	4FH
+	JR	Z,VGM_DET_S1
+	CP	50H
+	JR	Z,VGM_DET_SN1
+	CP	30H
+	JR	Z,VGM_DET_SN2
+	CP	5AH
+	JR	Z,VGM_DET_OPL2
+	CP	5EH
+	JR	Z,VGM_DET_OPL31
+	CP	5FH
+	JR	Z,VGM_DET_OPL32
+	CP	0A0H
+	JR	Z,VGM_DET_AY
+	CP	054H
+	JR	Z,VGM_DET_2151
+	CP	0A4H
+	JR	Z,VGM_DET_21512
+	CP	61H
+	JR	Z,VGM_DET_S2
+	CP	62H
+	JP	Z,VGM_DET_LP
+	CP	63H
+	JP	Z,VGM_DET_LP
+	CP	70H
+	JP	NC,VGM_DET_WAIT
+	JP	VGM_DET_SKIP
+VGM_DET_WAIT:
+	CP	80H
+	JP	C,VGM_DET_LP
+	JP	VGM_DET_SKIP
+VGM_DET_S1:
+	INC	HL
+	JP	VGM_DET_LP
+VGM_DET_S2:
+	INC	HL
+	INC	HL
+	JP	VGM_DET_LP
+VGM_DET_SN1:
+	LD	A,(VGMCHIPFLG)
+	OR	00001000B
+	LD	(VGMCHIPFLG),A
+	INC	HL
+	JP	VGM_DET_LP
+VGM_DET_SN2:
+	LD	A,(VGMCHIPFLG)
+	OR	00001000B
+	LD	(VGMCHIPFLG),A
+	LD	A,(VGMDUALFLG)
+	OR	00001000B
+	LD	(VGMDUALFLG),A
+	INC	HL
+	JP	VGM_DET_LP
+VGM_DET_OPL2:
+	LD	A,(VGMCHIPFLG)
+	OR	00000001B
+	LD	(VGMCHIPFLG),A
+	INC	HL
+	INC	HL
+	JP	VGM_DET_LP
+VGM_DET_OPL31:
+VGM_DET_OPL32:
+	LD	A,(VGMCHIPFLG)
+	OR	00000010B
+	LD	(VGMCHIPFLG),A
+	INC	HL
+	INC	HL
+	JP	VGM_DET_LP
+VGM_DET_AY:
+	LD	A,(VGMCHIPFLG)
+	OR	00000100B
+	LD	(VGMCHIPFLG),A
+	INC	HL
+	INC	HL
+	JP	VGM_DET_LP
+VGM_DET_2151:
+VGM_DET_21512:
+	LD	A,(VGMCHIPFLG)
+	OR	00010000B
+	LD	(VGMCHIPFLG),A
+	INC	HL
+	INC	HL
+	JP	VGM_DET_LP
+VGM_DET_DONE:
+	RET
+
+VGM_DET_SKIP:
+	CP	67H
+	JR	Z,VGM_DET_SKIP67
+	CP	68H
+	JR	Z,VGM_DET_SKIP68
+	CP	0E0H
+	JR	Z,VGM_DET_SKIP4
+	CP	0C0H
+	JP	NC,VGM_DET_SKIP3
+	CP	0B0H
+	JP	NC,VGM_DET_SKIP2
+	CP	0A1H
+	JP	NC,VGM_DET_SKIP2
+	CP	90H
+	JR	C,VGM_DET_SKIPR
+	CP	96H
+	JR	C,VGM_DET_SKIP4
+	JP	VGM_DET_SKIP1
+VGM_DET_SKIPR:
+	CP	50H
+	JP	NC,VGM_DET_SKIP2
+	CP	40H
+	JP	NC,VGM_DET_SKIP1
+	CP	30H
+	JP	NC,VGM_DET_SKIP1
+	JP	VGM_DET_SKIP1
+VGM_DET_SKIP1:
+	INC	HL
+	JP	VGM_DET_LP
+VGM_DET_SKIP2:
+	INC	HL
+	INC	HL
+	JP	VGM_DET_LP
+VGM_DET_SKIP3:
+	INC	HL
+	INC	HL
+	INC	HL
+	JP	VGM_DET_LP
+VGM_DET_SKIP4:
+	INC	HL
+	INC	HL
+	INC	HL
+	INC	HL
+	JP	VGM_DET_LP
+VGM_DET_SKIP68:
+	LD	DE,12
+	ADD	HL,DE
+	JP	VGM_DET_LP
+VGM_DET_SKIP67:
+	INC	HL
+	INC	HL
+	LD	E,(HL)
+	INC	HL
+	LD	D,(HL)
+	INC	HL
+	LD	A,(HL)
+	INC	HL
+	LD	C,(HL)
+	INC	HL
+	ADD	HL,DE
+	LD	A,C
+	OR	A
+	JP	Z,VGM_DET_LP
+VGM_DET_SKIP67P:
+	LD	A,H
+	ADD	A,C
+	LD	H,A
+	DEC	C
+	JR	NZ,VGM_DET_SKIP67P
+	JP	VGM_DET_LP
+
+; Print VGM hardware line after MSGTSPRE, listing detected chips.
+PRT_VGMHW_LINE:
+	LD	DE,MSGTSPRE
+	CALL	PRTSTR
+	XOR	A
+	LD	(VGMPRNSEP),A
+	LD	A,(VGMCHIPFLG)
+	OR	A
+	JR	NZ,PRT_VGMHW0
+	LD	DE,MSGVGMUNK
+	JP	PRTSTR
+PRT_VGMHW0:
+	; A still valid from LD A,(VGMCHIPFLG) above
+	BIT	1,A
+	JR	Z,PRT_VGMHW1
+	LD	DE,MSGVGMOPL3
+	CALL	PRT_VGM_TOKEN
+PRT_VGMHW1:
+	LD	A,(VGMCHIPFLG)		; reload: A clobbered by PRT_VGM_TOKEN
+	BIT	0,A
+	JR	Z,PRT_VGMHW2
+	LD	DE,MSGVGMOPL2
+	CALL	PRT_VGM_TOKEN
+PRT_VGMHW2:
+	LD	A,(VGMCHIPFLG)
+	BIT	2,A
+	JR	Z,PRT_VGMHW3
+	LD	DE,MSGVGMAY
+	CALL	PRT_VGM_TOKEN
+PRT_VGMHW3:
+	LD	A,(VGMCHIPFLG)
+	BIT	4,A
+	JR	Z,PRT_VGMHWPSG
+	LD	DE,MSGVGM2151
+	CALL	PRT_VGM_TOKEN
+PRT_VGMHWPSG:
+	LD	A,(VGMCHIPFLG)
+	BIT	3,A
+	JR	Z,PRT_VGMHW4
+	LD	A,(VGMDUALFLG)
+	BIT	3,A
+	JR	Z,PRT_VGMHWPSG1
+	LD	DE,MSGVGMPSG2
+	CALL	PRT_VGM_TOKEN
+	JR	PRT_VGMHW4
+PRT_VGMHWPSG1:
+	LD	DE,MSGVGMPSG
+	CALL	PRT_VGM_TOKEN
+PRT_VGMHW4:
+	RET
+
+; DE -> token string, prints with comma separator when needed.
+PRT_VGM_TOKEN:
+	PUSH	DE
+	LD	A,(VGMPRNSEP)
+	OR	A
+	JR	Z,PRT_VGM_TOKEN0
+	LD	DE,MSGVGMCOM
+	CALL	PRTSTR
+PRT_VGM_TOKEN0:
+	POP	DE
+	CALL	PRTSTR
+	LD	A,$FF
+	LD	(VGMPRNSEP),A
+	RET
+
+; Setup VGM frame delay from RomWBW CPU index using the same table/dither
+; scheme as the reference VGMPlay implementation.
+; Input: A = CPU index/code from HBIOS SYSGET/CPUINFO.
+VGM_SETFDELAY:
+	PUSH	AF
+	LD	HL,VGMCLKTBL-1
+	ADD	A,L
+	LD	L,A
+	ADC	A,H
+	SUB	L
+	LD	H,A
+	LD	A,(HL)
+	OR	A
+	JR	NZ,VGM_SETFDELAY0
+	LD	A,10			; safe default for 7MHz-class systems
+VGM_SETFDELAY0:
+	LD	(vgmfdly0),A
+	LD	(vgmfdly),A
+	XOR	A
+	LD	(vgmfdpos),A
+	LD	(vgmfdlo),A
+	LD	(vgmfdcyc),A
+	POP	AF
+	LD	A,(vgmfdly0)
+	LD	B,A
+	CP	10
+	JR	NZ,VGM_SETFD11
+	LD	A,25
+	LD	(vgmfdcyc),A
+	LD	A,7
+	LD	(vgmfdlo),A
+	RET
+VGM_SETFD11:
+	LD	A,B
+	CP	11
+	JR	NZ,VGM_SETFD14
+	LD	A,4
+	LD	(vgmfdcyc),A
+	LD	A,1
+	LD	(vgmfdlo),A
+	RET
+VGM_SETFD14:
+	LD	A,B
+	CP	14
+	JR	NZ,VGM_SETFD15
+	LD	A,3
+	LD	(vgmfdcyc),A
+	LD	A,1
+	LD	(vgmfdlo),A
+	RET
+VGM_SETFD15:
+	LD	A,B
+	CP	15
+	JR	NZ,VGM_SETFD16
+	LD	A,20
+	LD	(vgmfdcyc),A
+	LD	A,7
+	LD	(vgmfdlo),A
+	RET
+VGM_SETFD16:
+	LD	A,B
+	CP	16
+	JR	NZ,VGM_SETFD17
+	LD	A,8
+	LD	(vgmfdcyc),A
+	LD	A,3
+	LD	(vgmfdlo),A
+	RET
+VGM_SETFD17:
+	LD	A,B
+	CP	17
+	JR	NZ,VGM_SETFD23
+	LD	A,5
+	LD	(vgmfdcyc),A
+	LD	A,2
+	LD	(vgmfdlo),A
+	RET
+VGM_SETFD23:
+	LD	A,B
+	CP	23
+	RET	NZ
+	LD	A,13
+	LD	(vgmfdcyc),A
+	LD	A,7
+	LD	(vgmfdlo),A
+	RET
 ;
 ;===============================================================================
 ; TurboSound-packed PT3 support ("PT3! <off> PT3! <len> 02 TS" footer)
@@ -3995,11 +4951,6 @@ ERRCMD:	; Command error, display usage info
 	LD	DE,MSGUSE
 	JR	ERR1
 ;
-HELPMSG:	; Display extended help info
-	CALL	CRLF			; blank line after banner
-	LD	DE,MSGHELP
-	JR	ERR1
-;
 ERRNAM:	; Missing or invalid filename parameter
 	LD	DE,MSGNAM
 	JR	ERR
@@ -4015,8 +4966,20 @@ ERRALL:	; -list selected but no supported files found
 ERRSIZ:	; Sound file is too large for memory
 	LD	DE,MSGSIZ
 	JR	ERR
+
+ERRVGMTR:	; VGM file is truncated versus header EOF size
+	LD	DE,MSGVGMTR
+	JR	ERR
 ;
 ERR:	; print error string and return error signal
+	LD	A,(ALLMD)
+	OR	A
+	JR	Z,ERR0
+	CALL	PLAYLIST_ERR_STATUS	; append error beside Playing... and continue playlist
+	LD	A,$FF
+	LD	(SKIPREQ),A
+	JP	EXIT
+ERR0:
 	CALL	CRLF2		; print newline
 ;
 ERR1:	; without the leading crlf
@@ -4025,6 +4988,30 @@ ERR1:	; without the leading crlf
 ERR2:	; without the string
 	CALL	CRLF		; print newline
 	JP	0		; fast exit
+
+; In playlist mode, append current-track error info on the Playing line.
+; IN: DE -> error message string
+PLAYLIST_ERR_STATUS:
+	PUSH	AF
+	PUSH	BC
+	PUSH	HL
+	PUSH	DE			; save error string pointer
+	CALL	PRTPLAYMSG
+	LD	A,' '
+	CALL	PRTCHR
+	LD	A,'['
+	CALL	PRTCHR
+	CALL	PRTFCB83
+	LD	A,']'
+	CALL	PRTCHR
+	LD	A,' '
+	CALL	PRTCHR
+	POP	DE			; restore error string pointer
+	CALL	PRTSTR
+	POP	HL
+	POP	BC
+	POP	AF
+	RET
 ;
 CFGTBL:	;	PLT	RSEL	RDAT	RIN	Z180	ACR	ACRVAL
 ;	; DESC
@@ -4189,6 +5176,23 @@ TS_PORTS2	.DW	0	; chip 2 ports (RDAT:RSEL)
 TS_DESC1	.DW	0	; chip 1 port description string
 TS_DESC2	.DW	0	; chip 2 port description string
 INFOLINE	.DB	0	; non-zero if a hardware/mode line was printed
+VGMFLAG	.DB	0	; non-zero while VGM is the active player
+vgmpos		.DW	0	; byte offset into VGM data stream (current position)
+vgmdly		.DW	0	; remaining sample-delay count
+vgmfdly	.DB	12	; effective frame-delay constant (base or base-1)
+vgmfdly0	.DB	12	; base frame-delay constant from CLKTBL
+vgmfdpos	.DB	0	; dither position [0..vgmfdcyc-1]
+vgmfdlo	.DB	0	; frames/cycle using (vgmfdly0-1)
+vgmfdcyc	.DB	0	; dither cycle length
+VGMCHIPFLG	.DB	0	; detected VGM chips from header clocks (bitmask)
+VGMDUALFLG	.DB	0	; detected VGM dual-chip markers (bitmask)
+VGMPRNSEP	.DB	0	; non-zero once first VGM chip token was printed
+HEAPENDB	.DB	$C0	; runtime load ceiling page (updated at startup to BDOS-1)
+YM2151MAP	.DB	0	; YM2151 port map: 0=DE/DF (0xFF-0x20), 1=FE/FF
+YM2151SELV	.DB	0DEH	; YM2151 register-select port (runtime)
+YM2151DATV	.DB	0DFH	; YM2151 data port (runtime)
+YM2151SEL2V	.DB	0	; secondary YM2151 register-select port (runtime)
+YM2151DAT2V	.DB	0	; secondary YM2151 data port (runtime)
 ;
 ; Context save/restore pointers
 CTX_VPTR	.DW	0
@@ -4199,7 +5203,7 @@ TMP		.DB	0	; work around use of undocumented Z80
 HBIOSMD		.DB	0	; NON-ZERO IF USING HBIOS SOUND DRIVER, ZERO OTHERWISE
 DELAYMD		.DB	0	; FORCE DELAY MODE IF TRUE (NON-ZERO)
 OCTAVEADJ	.DB	0	; AMOUNT TO ADJUST OCTAVE UP OR DOWN
-CONFIGMD	.DB	0	; NON-ZERO TO ENTER TUNE.CFG EDIT MODE
+CONFIGMD	.DB	0	; NON-ZERO TO ENTER TERM.CFG EDIT MODE
 ALLMD		.DB	0	; NON-ZERO TO ENUMERATE/PLAY ALL SUPPORTED FILES
 LOOPTRKMD	.DB	0	; NON-ZERO TO LOOP CURRENT TRACK
 LOOPPLMD	.DB	0	; NON-ZERO TO LOOP WHOLE PLAYLIST
@@ -4208,6 +5212,7 @@ DELCNT		.DB	0	; CONSECUTIVE DELETE KEY PRESS COUNTER
 DELPAUSAV	.DB	0	; SAVED PAUSE STATE FOR DELETE CONFIRM CANCEL
 DELIDX		.DB	0	; SAVED INDEX OF ENTRY SELECTED FOR DELETE
 STOPREQ		.DB	0	; NON-ZERO IF USER ABORTED WITH KEYPRESS
+VGMKEYCHK	.DB	0	; VGM key poll divider (masked to 32-loop cadence)
 SKIPREQ		.DB	0	; NON-ZERO IF USER REQUESTED SKIP TO NEXT TRACK
 PREVREQ		.DB	0	; NON-ZERO IF USER REQUESTED PREVIOUS TRACK
 NAVREQ		.DB	0	; NON-ZERO IF USER REQUESTED MATRIX NAV TRACK CHANGE
@@ -4242,30 +5247,45 @@ PLSRCHFCB	.FILL	36,0		; SEARCH FCB FOR PLAYLIST ENUM PATTERN
 CLIBUF		.FILL	129,0		; NUL-TERMINATED COPY OF COMMAND TAIL
 
 USEPORTS	.DB	0	; AUDIO CHIP PORT SELECTION MODE
+;
+; VGM hardware port constants (fixed addresses)
+; Primary AY uses dynamic TS_PORTS1; secondary AY uses TS_PORTS2
+OPL3ADDR1	.EQU	090H	; OPL3 bank 1 register select
+OPL3DATA1	.EQU	091H	; OPL3 bank 1 data
+OPL3ADDR2	.EQU	092H	; OPL3 bank 2 register select
+OPL3DATA2	.EQU	093H	; OPL3 bank 2 data
+PSGREG		.EQU	0FFH	; SN76489 PSG (primary chip, RCBUS SNMODE_RC)
+PSG2REG		.EQU	0FBH	; SN76489 PSG (secondary chip, RCBUS SNMODE_RC)
+YM2151SEL	.EQU	0DEH	; YM2151 register select (primary, board mapped at 0xFF-0x20)
+YM2151DAT	.EQU	0DFH	; YM2151 data write (primary)
+YM2151SEL2	.EQU	000H	; YM2151 register select (secondary, undefined on RCBUS)
+YM2151DAT2	.EQU	000H	; YM2151 data write (secondary, undefined on RCBUS)
 
-MSGBAN		.DB	"Tune Player for RomWBW v3.2b100, 05-Apr-2026",0
+MSGBAN		.DB	"VibeTune Player for RomWBW v0.1b001, 10-Apr-2026",0
+MSGCPUMHZ	.DB	"CPU Speed: ",0
+MSGMHZ		.DB	" MHz",0
+MSGVGMCOM	.DB	", ",0
+MSGVGMUNK	.DB	"VGM hardware",0
+MSGVGMOPL2	.DB	"YM3812/OPL2",0
+MSGVGMOPL3	.DB	"YMF262/OPL3",0
+MSGVGMAY	.DB	"AY-3-8910/YM2149",0
+MSGVGMPSG	.DB	"SN76489",0
+MSGVGMPSG2	.DB	"2xSN76489",0
+MSGVGM2151	.DB	"YM2151/OPM",0
 
 MSGUSE		.DB	"Copyright (C) 2026, Wayne Warthen, GNU GPL v3",13,10
 			.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 			.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
-			.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM] [-msx|-rc|-coleco] [-delay] [--hbios] [+tn|-tn] [-list] [-loop] [-config] [-help]",0
-MSGHELP		.DB	"Copyright (C) 2026, Wayne Warthen, GNU GPL v3",13,10
-			.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
-			.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
-			.DB	"This is a special build (ts variant) by fackie that adds:",13,10,13,10
-			.DB	"- Ability to play TurboSound PT3 files, using 2x AY-3-8910/YM2149 cards in MSX+Coleco addressing",13,10
-			.DB	"- Enumerates and plays all supported files (.PT2/.PT3/.MYM) in current directory (-list)",13,10
-			.DB	"- Loops current playing files (-loop)",13,10
-			.DB	"- Configures terminal profile persisted in TUNE.CFG (-config)",13,10,13,10
-			.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM] [-msx|-rc|-coleco] [-delay] [--hbios] [+tn|-tn] [-list] [-loop] [-config] [-help]",0
+			.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM|VGM] [-msx|-rc|-coleco] [-delay] [--hbios] [+tn|-tn] [-list] [-loop] [-config]",0
 MSGBIO		.DB	"Incompatible BIOS or version, "
 			.DB	"HBIOS v", '0' + RMJ, ".", '0' + RMN, " required",0
 MSGPLT		.DB	"Hardware error, system not supported!",0
 MSGHW		.DB	"Hardware error, sound chip not detected!",0
-MSGNAM		.DB	"Sound filename invalid (must be .PT2, .PT3, or .MYM)",0
+MSGNAM		.DB	"Sound filename invalid (must be .PT2, .PT3, .MYM, or .VGM)",0
 MSGFIL		.DB	"Sound file not found!",0
-MSGALL		.DB	"No .PT2/.PT3/.MYM files found in current directory!",0
+MSGALL		.DB	"No .PT2/.PT3/.MYM/.VGM files found in current directory!",0
 MSGSIZ		.DB	"Sound file too large to load!",0
+MSGVGMTR	.DB	"VGM file appears truncated/corrupt (header size > loaded size)",0
 MSGTSHB		.DB	"TurboSound PT3 not supported with --HBIOS",0
 MSGTSHW		.DB	"TurboSound PT3 requires two AY cards at A0H/A1H and 50H/51H (readback at +2)",0
 MSGTSDET	.DB	"TurboSound (2x AY-3-8910) file detected",0
@@ -4294,9 +5314,9 @@ MSGDELQ2	.DB	"? (Y/N)",0
 MSGEND		.DB	" Done",0
 MSGERR		.DB	"App Error", 0
 MSGCFGMODE	.DB	"Configuration mode (-config)",0
-MSGCFGFOUND	.DB	"Loaded existing TUNE.CFG:",0
-MSGCFGDEFAULT	.DB	"No TUNE.CFG found, using built-in defaults:",0
-MSGCFGSAVED	.DB	"Saved TUNE.CFG",0
+MSGCFGFOUND	.DB	"Loaded existing TERM.CFG:",0
+MSGCFGDEFAULT	.DB	"No TERM.CFG found, using built-in defaults:",0
+MSGCFGSAVED	.DB	"Saved TERM.CFG",0
 MSGCFGTERM	.DB	"  Term type: ",0
 MSGCFGANSI	.DB	"  ANSI enabled: ",0
 MSGCFGSIZE	.DB	"  Size: ",0
@@ -4344,6 +5364,28 @@ MSGUNSUP		.DB	"MYM files not supported with HBIOS yet!\r\n", 0
 
 MSGSONGNAME     .DB     "Song name: ", 0
 MSGARTIST       .DB     "by:        ", 0
+MSGFROM		.DB	" from: ",0
+MSGVGMGD3		.DB	"(VGM GD3 tag optional)",0
+VGMCLKTBL:	.DB	1		; 1MHz
+		.DB	3		; 2MHz
+		.DB	0		; 3MHz
+		.DB	7		; 4MHz (+1)
+		.DB	0		; 5MHz
+		.DB	9		; 6MHz (+1)
+		.DB	10		; 7MHz / 7.3728MHz (+1)
+		.DB	11		; 8MHz (+1)
+		.DB	0		; 9MHz
+		.DB	15		; 10MHz (+1)
+		.DB	0		; 11MHz
+		.DB	17		; 12MHz (+1)
+		.DB	0		; 13MHz
+		.DB	0		; 14MHz
+		.DB	0		; 15MHz
+		.DB	23		; 16MHz (+1)
+		.DB	0		; 17MHz
+		.DB	0		; 18MHz
+		.DB	0		; 19MHz
+		.DB	0		; 20MHz
 ;
 ;===============================================================================
 ; PTx Player Routines
@@ -6250,6 +7292,302 @@ endint:	call	NORMIO
 	ei
 	ret			; And done
 ;
+; Print current FCB filename in 8.3 form, suppressing trailing spaces.
+;
+PRTFCB83:
+	PUSH	AF
+	PUSH	BC
+	PUSH	HL
+	LD	HL,FCB+1
+	LD	B,8
+PRTFCB83_1:
+	LD	A,(HL)
+	INC	HL
+	CP	' '
+	JR	Z,PRTFCB83_2
+	CALL	PRTCHR
+PRTFCB83_2:
+	DJNZ	PRTFCB83_1
+	LD	A,'.'
+	CALL	PRTCHR
+	LD	B,3
+PRTFCB83_3:
+	LD	A,(HL)
+	INC	HL
+	CP	' '
+	JR	Z,PRTFCB83_4
+	CALL	PRTCHR
+PRTFCB83_4:
+	DJNZ	PRTFCB83_3
+	POP	HL
+	POP	BC
+	POP	AF
+	RET
+;
+; Print VGM metadata block.
+;
+PRTVGMMETA:
+	LD	A,(UI_ACTIVE)
+	OR	A
+	JR	Z,PRTVGMMETA0
+	CALL	UI_ENSURE_INIT
+	LD	B,UI_ROW_META1
+	CALL	UI_CLR_ROW
+	LD	B,UI_ROW_META2
+	CALL	UI_CLR_ROW
+	LD	B,UI_ROW_META1
+	LD	C,1
+	CALL	TCFG_ANSI_AT
+	LD	DE,MSGSONGNAME
+	CALL	PRTSTR
+	CALL	VGM_GD3_INIT
+	JR	NZ,PRTVGMMETAU_FN
+	CALL	VGM_GD3_PRINT_FIELD	; track name (English)
+	PUSH	AF
+	CALL	VGM_GD3_SKIP_FIELD	; skip track_jp, land on game_en
+	PUSH	HL
+	PUSH	DE
+	CALL	VGM_GD3_FIELD_HAS_TEXT
+	POP	DE
+	POP	HL
+	JR	Z,PRTVGMMETAU_FN1
+	PUSH	DE
+	LD	DE,MSGFROM
+	CALL	PRTSTR
+	POP	DE
+	CALL	VGM_GD3_PRINT_FIELD
+PRTVGMMETAU_FN1:
+	POP	AF
+	OR	A
+	JR	NZ,PRTVGMMETAU_ART
+PRTVGMMETAU_FN:
+	CALL	PRTFCB83
+PRTVGMMETAU_ART:
+	LD	B,UI_ROW_META2
+	LD	C,1
+	CALL	TCFG_ANSI_AT
+	LD	DE,MSGARTIST
+	CALL	PRTSTR
+	CALL	VGM_GD3_INIT
+	JR	NZ,PRTVGMMETAU_GD3
+	LD	B,6			; skip to author_en
+PRTVGMMETAU_SKP:
+	CALL	VGM_GD3_SKIP_FIELD
+	DJNZ	PRTVGMMETAU_SKP
+	CALL	VGM_GD3_PRINT_FIELD	; author (English)
+	RET
+PRTVGMMETAU_GD3:
+	RET
+PRTVGMMETA0:
+	LD	DE,MSGSONGNAME
+	CALL	PRTSTR
+	CALL	VGM_GD3_INIT
+	JR	NZ,PRTVGMMETA0_FN
+	CALL	VGM_GD3_PRINT_FIELD	; track name (English)
+	PUSH	AF
+	CALL	VGM_GD3_SKIP_FIELD	; skip track_jp, land on game_en
+	PUSH	HL
+	PUSH	DE
+	CALL	VGM_GD3_FIELD_HAS_TEXT
+	POP	DE
+	POP	HL
+	JR	Z,PRTVGMMETA0_FN1
+	PUSH	DE
+	LD	DE,MSGFROM
+	CALL	PRTSTR
+	POP	DE
+	CALL	VGM_GD3_PRINT_FIELD
+PRTVGMMETA0_FN1:
+	POP	AF
+	OR	A
+	JR	NZ,PRTVGMMETA0_ART
+PRTVGMMETA0_FN:
+	CALL	PRTFCB83
+PRTVGMMETA0_ART:
+	CALL	CRLF
+	LD	DE,MSGARTIST
+	CALL	PRTSTR
+	CALL	VGM_GD3_INIT
+	JR	NZ,PRTVGMMETA0_GD3
+	LD	B,6			; skip to author_en
+PRTVGMMETA0_SKP:
+	CALL	VGM_GD3_SKIP_FIELD
+	DJNZ	PRTVGMMETA0_SKP
+	CALL	VGM_GD3_PRINT_FIELD	; author (English)
+PRTVGMMETA0_GD3:
+PRTVGMMETA0_END:
+	CALL	CRLF2
+	RET
+
+; Return NZ if UTF-16LE field at HL has at least one character and is in bounds.
+; Input: HL=field pointer, DE=text_end.
+VGM_GD3_FIELD_HAS_TEXT:
+	LD	A,H
+	CP	D
+	JR	C,VGM_GD3_FHT0
+	JR	NZ,VGM_GD3_FHTX
+	LD	A,L
+	CP	E
+	JR	NC,VGM_GD3_FHTX
+VGM_GD3_FHT0:
+	LD	A,(HL)
+	INC	HL
+	LD	C,A
+	LD	A,H
+	CP	D
+	JR	C,VGM_GD3_FHT1
+	JR	NZ,VGM_GD3_FHTX
+	LD	A,L
+	CP	E
+	JR	NC,VGM_GD3_FHTX
+VGM_GD3_FHT1:
+	LD	A,(HL)
+	OR	C
+	RET
+VGM_GD3_FHTX:
+	XOR	A
+	RET
+
+; Initialize GD3 pointers for parsing.
+; Returns Z on success with HL=text_start, DE=text_end.
+; Returns NZ if GD3 is missing/invalid/out of bounds.
+VGM_GD3_INIT:
+	LD	HL,(vgmdata + 14H)	; GD3 offset relative to 0x14
+	LD	A,H
+	OR	L
+	JR	Z,VGM_GD3_INIT_FAIL
+	LD	DE,0014H
+	ADD	HL,DE
+	LD	DE,vgmdata
+	ADD	HL,DE			; HL = GD3 block base
+	LD	A,(HL)
+	CP	'G'
+	JR	NZ,VGM_GD3_INIT_FAIL
+	INC	HL
+	LD	A,(HL)
+	CP	'd'
+	JR	NZ,VGM_GD3_INIT_FAIL
+	INC	HL
+	LD	A,(HL)
+	CP	'3'
+	JR	NZ,VGM_GD3_INIT_FAIL
+	INC	HL
+	LD	A,(HL)
+	CP	' '
+	JR	NZ,VGM_GD3_INIT_FAIL
+	INC	HL			; +4 version[0]
+	INC	HL			; +5
+	INC	HL			; +6
+	INC	HL			; +7 version[3]
+	INC	HL			; +8 length[0]
+	LD	C,(HL)
+	INC	HL			; +9 length[1]
+	LD	B,(HL)
+	INC	HL			; +A length[2]
+	LD	A,(HL)
+	INC	HL			; +B length[3]
+	LD	D,(HL)
+	INC	HL			; +C text start
+	OR	D
+	JR	NZ,VGM_GD3_INIT_FAIL	; length above 64K unsupported
+	PUSH	HL			; save text start
+	ADD	HL,BC			; HL = text end
+	EX	DE,HL			; DE = text end
+	LD	HL,(LOADBYTES)
+	LD	BC,MDLADDR
+	ADD	HL,BC			; HL = loaded end
+	OR	A			; clear carry
+	SBC	HL,DE			; loaded_end - text_end
+	JR	C,VGM_GD3_INIT_FAIL_POP
+	POP	HL			; restore text start
+	XOR	A			; Z = success
+	RET
+VGM_GD3_INIT_FAIL_POP:
+	POP	HL
+VGM_GD3_INIT_FAIL:
+	OR	$FF			; NZ = fail
+	RET
+
+; Skip one UTF-16LE null-terminated GD3 field.
+; Input: HL=field pointer, DE=text_end.
+; Output: HL=next field pointer.
+VGM_GD3_SKIP_FIELD:
+	LD	A,H
+	CP	D
+	JR	C,VGM_GD3_SKIP0
+	JR	NZ,VGM_GD3_SKIPX
+	LD	A,L
+	CP	E
+	JR	NC,VGM_GD3_SKIPX
+VGM_GD3_SKIP0:
+	LD	A,(HL)
+	INC	HL
+	LD	C,A			; low byte
+	LD	A,H
+	CP	D
+	JR	C,VGM_GD3_SKIP1
+	JR	NZ,VGM_GD3_SKIPX
+	LD	A,L
+	CP	E
+	JR	NC,VGM_GD3_SKIPX
+VGM_GD3_SKIP1:
+	LD	A,(HL)
+	INC	HL
+	OR	C
+	JR	NZ,VGM_GD3_SKIP_FIELD
+VGM_GD3_SKIPX:
+	RET
+
+; Print one UTF-16LE GD3 field as ASCII-ish text.
+; Input: HL=field pointer, DE=text_end.
+; Output: HL=next field pointer, A=0 if empty, A=FF if anything printed.
+VGM_GD3_PRINT_FIELD:
+	XOR	A
+	LD	(TMP),A			; printed flag
+VGM_GD3_PLP:
+	LD	A,H
+	CP	D
+	JR	C,VGM_GD3_PL0
+	JR	NZ,VGM_GD3_PLX
+	LD	A,L
+	CP	E
+	JR	NC,VGM_GD3_PLX
+VGM_GD3_PL0:
+	LD	A,(HL)
+	INC	HL
+	LD	C,A			; low byte
+	LD	A,H
+	CP	D
+	JR	C,VGM_GD3_PL1
+	JR	NZ,VGM_GD3_PLX
+	LD	A,L
+	CP	E
+	JR	NC,VGM_GD3_PLX
+VGM_GD3_PL1:
+	LD	A,(HL)
+	INC	HL
+	LD	B,A			; high byte
+	LD	A,B
+	OR	C
+	JR	Z,VGM_GD3_PLX
+	LD	A,B
+	OR	A
+	JR	Z,VGM_GD3_ASCII
+	LD	A,'?'
+	CALL	PRTCHR
+	LD	A,$FF
+	LD	(TMP),A
+	JR	VGM_GD3_PLP
+VGM_GD3_ASCII:
+	LD	A,C
+	CALL	PRTCHR
+	LD	A,$FF
+	LD	(TMP),A
+	JR	VGM_GD3_PLP
+VGM_GD3_PLX:
+	LD	A,(TMP)
+	RET
+;
 ; Print song metadata from currently loaded module.
 ;
 PRTSONGMETA:
@@ -6826,6 +8164,7 @@ TS_CTX2_VARS	.DS	PTX_CTXSIZ
 TS_CTX2_PATCH	.DS	PTX_PATCHSZ
 
 MDLADDR .EQU	$
+vgmdata .EQU	MDLADDR		; VGM data stream loaded here (same as PT3 load address)
 ;
 ;===============================================================================
 ; MYM Player Storage
