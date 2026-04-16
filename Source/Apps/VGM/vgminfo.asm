@@ -8,7 +8,7 @@
 ; (c)2026 Joao Miguel Duraes
 ; Licensed under the MIT License
 ;
-; Version: 1.2 - 20-Feb-2026
+; Version: 1.2 - 16-Apr-2026
 ;
 ; Assemble with:
 ;   TASM -80 -b vgminfo.asm vgminfo.com
@@ -44,7 +44,7 @@ LF              .equ    0AH                 ; line feed
 DEBUG_SUM       .equ    1                   ; 1 = build with checksum support
 
 ; Increment BUILD_NUM on every source change so we can confirm which binary is running.
-BUILD_NUM       .equ    0022H               ; debug build number (hex)
+BUILD_NUM       .equ    0026H               ; debug build number (hex)
 
 ; Run modes
 MODE_SIMPLE     .equ    0                   ; v1.1-style table output
@@ -69,12 +69,14 @@ VGM_DATAOFF     .equ    34H                 ; VGM data offset (relative to 0x34)
 VGM_YM3812_CLK  .equ    50H                 ; YM3812 clock (OPL2)
 VGM_YMF262_CLK  .equ    5CH                 ; YMF262 clock (OPL3)
 VGM_AY8910_CLK  .equ    74H                 ; AY-3-8910 clock (4 bytes, little-endian)
+VGM_SAA1099_CLK .equ    88H                 ; SAA1099 clock (4 bytes, little-endian)
 
 ;------------------------------------------------------------------------------
 ; VGM Command codes (subset)
 ;------------------------------------------------------------------------------
 
 VGM_PSG1_W      .equ    050H                ; PSG (SN76489) write
+VGM_GGST_W      .equ    04FH                ; Game Gear stereo write
 VGM_PSG2_W      .equ    030H                ; PSG #2 write
 VGM_YM26121_W   .equ    052H                ; YM2612 port 0 write
 VGM_YM26122_W   .equ    053H                ; YM2612 port 1 write
@@ -86,6 +88,7 @@ VGM_OPL2_W      .equ    05AH                ; YM3812 (OPL2) write
 VGM_OPL31_W     .equ    05EH                ; YMF262 (OPL3) port 0 write
 VGM_OPL32_W     .equ    05FH                ; YMF262 (OPL3) port 1 write
 VGM_AY_W        .equ    0A0H                ; AY-3-8910 write
+VGM_SAA1099_W   .equ    0BDH                ; SAA1099 write
 VGM_ESD         .equ    066H                ; End of sound data
 VGM_WNS         .equ    061H                ; Wait n samples
 VGM_W735        .equ    062H                ; Wait 735 samples
@@ -558,10 +561,19 @@ CHK_OPL2:       CP      VGM_OPL2_W
 CHK_OPL3:       CP      VGM_OPL31_W
                 JR      Z, GOT_OPL3
                 CP      VGM_OPL32_W
-                JP      NZ, CHK_WAIT
+                JP      NZ, CHK_SAA1099
 GOT_OPL3:       ; Mark OPL3 present
                 LD      A, (CHIP_TYPES)
                 OR      020H                 ; bit 5 = OPL3
+                LD      (CHIP_TYPES), A
+                INC     HL                   ; skip register
+                INC     HL                   ; skip data
+                JP      SCAN_NEXT
+
+CHK_SAA1099:    CP      VGM_SAA1099_W
+                JP      NZ, CHK_WAIT
+                LD      A, (CHIP_TYPES)
+                OR      040H                 ; bit 6 = SAA1099
                 LD      (CHIP_TYPES), A
                 INC     HL                   ; skip register
                 INC     HL                   ; skip data
@@ -574,15 +586,117 @@ CHK_WAIT:       CP      VGM_WNS
                 JP      SCAN_NEXT
                 
 CHK_W735:       CP      VGM_W735
-                JR      Z, SCAN_NEXT
+                JP      Z, SCAN_NEXT
                 CP      VGM_W882
-                JR      Z, SCAN_NEXT
-                
-                ; Unknown command or short wait 0x70-0x7F -> just continue
-                CP      70H
-                JR      C, SCAN_NEXT
-                CP      80H
-                JR      NC, SCAN_NEXT
+                JP      Z, SCAN_NEXT
+
+                ; Data block write: 67 66 tt ss ss ss ss [data]
+                CP      067H
+                JP      Z, SKIP_DATABLOCK
+
+                ; PCM RAM write: 68 66 cc oo oo oo dd dd dd ss ss ss
+                CP      068H
+                JP      Z, SKIP_PCMRAM
+
+                ; Short waits / YM2612 DAC waits (0x70-0x8F) are 1 byte.
+                CP      070H
+                JR      C, CHK_GGST
+                CP      090H
+                JP      C, SCAN_NEXT
+
+CHK_GGST:       CP      VGM_GGST_W
+                JP      Z, SKIP_1
+
+                ; DAC stream commands (0x90-0x95)
+                CP      090H
+                JP      C, CHK_51_5F
+                CP      096H
+                JP      NC, CHK_51_5F
+                CP      092H
+                JP      Z, SKIP_5
+                CP      093H
+                JP      Z, SKIP_10
+                CP      094H
+                JP      Z, SKIP_1
+                ; 0x90, 0x91, 0x95
+                JP      SKIP_4
+
+CHK_51_5F:      CP      051H
+                JR      C, CHK_A1_BF
+                CP      060H
+                JP      C, SKIP_2
+
+CHK_A1_BF:      CP      0A1H
+                JR      C, CHK_C0_DF
+                CP      0C0H
+                JP      C, SKIP_2
+
+CHK_C0_DF:      CP      0C0H
+                JR      C, CHK_E0
+                CP      0E0H
+                JP      C, SKIP_3
+
+CHK_E0:         CP      0E0H
+                JP      Z, SKIP_4
+
+                ; Unknown command: stop scan to avoid stream desynchronization
+                JP      SCAN_DONE
+
+SKIP_1:         INC     HL
+                JP      SCAN_NEXT
+
+SKIP_2:         INC     HL
+                INC     HL
+                JP      SCAN_NEXT
+
+SKIP_3:         INC     HL
+                INC     HL
+                INC     HL
+                JP      SCAN_NEXT
+
+SKIP_4:         INC     HL
+                INC     HL
+                INC     HL
+                INC     HL
+                JP      SCAN_NEXT
+
+SKIP_5:         INC     HL
+                INC     HL
+                INC     HL
+                INC     HL
+                INC     HL
+                JP      SCAN_NEXT
+
+SKIP_10:        LD      B, 10
+SKIP_10_L:      INC     HL
+                DJNZ    SKIP_10_L
+                JP      SCAN_NEXT
+
+SKIP_PCMRAM:    LD      A, (HL)
+                CP      066H
+                JP      NZ, SCAN_DONE
+                LD      B, 11
+SKIP_PCM_L:     INC     HL
+                DJNZ    SKIP_PCM_L
+                JP      SCAN_NEXT
+
+SKIP_DATABLOCK: LD      A, (HL)
+                CP      066H
+                JP      NZ, SCAN_DONE
+                INC     HL                  ; skip 0x66 marker
+                INC     HL                  ; skip data block type
+                LD      E, (HL)             ; size lo
+                INC     HL
+                LD      D, (HL)             ; size hi
+                INC     HL
+                LD      A, (HL)             ; size byte 2
+                INC     HL
+                OR      (HL)                ; size byte 3
+                INC     HL                  ; now at data payload
+                OR      A
+                JP      NZ, SCAN_DONE       ; >64K block not expected here
+                ADD     HL, DE
+                JP      SCAN_NEXT
                 
 SCAN_NEXT:      DEC     C
                 JP      NZ, SCAN_LOOP
@@ -685,6 +799,17 @@ AY_DUAL:        LD      DE, MSG_AY8910X2
                 CALL    PRTSTR
 AY_DONE:        INC     B
 NO_AY:
+                ; SAA1099
+                LD      A, (CHIP_TYPES)
+                BIT     6, A
+                JR      Z, NO_SAA1099
+                LD      A, B
+                OR      A
+                CALL    NZ, PRINT_COMMA
+                LD      DE, MSG_SAA1099
+                CALL    PRTSTR
+                INC     B
+NO_SAA1099:
                 ; None
                 LD      A, B
                 OR      A
@@ -1043,6 +1168,13 @@ PD_CLK_EXT_PRINT:
                 LD      HL, TMP32
                 CALL    PRTHEX32_LE
 
+                ; SAA1099
+                LD      DE, MSG_L_CLK_SAA
+                CALL    PRTSTR
+                CALL    GET_SAA1099_CLK
+                LD      HL, TMP32
+                CALL    PRTHEX32_LE
+
                 CALL    CRLF
 
 PD_SKIP_CLOCKS:
@@ -1198,6 +1330,26 @@ GET_AY_CLK:     CALL    EXT_CLOCKS_OK
                 CALL    COPY32
                 RET
 GAC_ZERO:       XOR     A
+                LD      (TMP32), A
+                LD      (TMP32+1), A
+                LD      (TMP32+2), A
+                LD      (TMP32+3), A
+                RET
+
+; Read SAA1099 clock into TMP32 if available, else 0
+GET_SAA1099_CLK:
+                CALL    EXT_CLOCKS_OK
+                OR      A
+                JR      Z, GSC_ZERO
+                LD      HL, (HDR_SIZE)
+                LD      DE, 008CH           ; need header_size > 0x8B
+                OR      A
+                SBC     HL, DE
+                JR      C, GSC_ZERO
+                LD      HL, VGMBUF+VGM_SAA1099_CLK
+                CALL    COPY32
+                RET
+GSC_ZERO:       XOR     A
                 LD      (TMP32), A
                 LD      (TMP32+1), A
                 LD      (TMP32+2), A
@@ -2154,7 +2306,7 @@ CRLF:           LD      A, CR
 
 MSG_S_HEADER1:  .DB     CR, LF
                 .DB     "VGM Music Chip Scanner v1.2 b", 0
-MSG_S_HEADER2:  .DB     " - 21-Feb-2026", CR, LF
+MSG_S_HEADER2:  .DB     " - 16-Apr-2026", CR, LF
                 .DB     "(c)2026 Joao Miguel Duraes - MIT License", CR, LF
                 .DB     CR, LF
                 .DB     "Filename  Chips Used", CR, LF
@@ -2165,7 +2317,7 @@ MSG_S_DIVIDER:  .DB     "========  =====================", CR, LF
 MSG_HEADER1:    .DB     CR, LF
                 .DB     "VGMINFO v1.2 b", 0
 
-MSG_HEADER2:    .DB     " - 21-Feb-2026", CR, LF
+MSG_HEADER2:    .DB     " - 16-Apr-2026", CR, LF
                 .DB     "(c)2026 Joao Miguel Duraes - MIT License", CR, LF
                 .DB     CR, LF
                 .DB     0
@@ -2224,6 +2376,7 @@ MSG_OPL2:       .DB     "YM3812", 0
 MSG_OPL3:       .DB     "YMF262", 0
 MSG_AY8910:     .DB     "AY-3-8910", 0
 MSG_AY8910X2:   .DB     "2xAY-3-8910", 0
+MSG_SAA1099:    .DB     "SAA1099", 0
 MSG_UNKNOWN:    .DB     "Unknown/None", 0
 
 ; Details labels
@@ -2238,6 +2391,7 @@ MSG_L_CLK_YM2151:.DB     " YM2151=", 0
 MSG_L_CLK2:     .DB     "Clk2: OPL2=", 0
 MSG_L_CLK_OPL3: .DB     " OPL3=", 0
 MSG_L_CLK_AY:   .DB     " AY=", 0
+MSG_L_CLK_SAA:  .DB     " SAA=", 0
 
 ; GD3 labels
 MSG_GD3_TITLE:  .DB     "Title: ", 0
@@ -2269,6 +2423,7 @@ CHIP_FLAGS:     .DB     0                   ; Detected chip flags
                                             ; bit6 AY #1, bit7 AY #2
 CHIP_TYPES:     .DB     0                   ; Chip types present (OPL2/OPL3 use)
                                             ; bit4 OPL2 (YM3812), bit5 OPL3 (YMF262)
+                                            ; bit6 SAA1099
 
 DIRIDX:         .DB     0                   ; (unused)
 
