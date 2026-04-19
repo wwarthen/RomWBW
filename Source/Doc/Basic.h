@@ -1,4 +1,4 @@
-$define{doc_ver}{Version 3.6}$
+$define{doc_ver}{Version 3.7}$
 $define{doc_product}{RomWBW}$
 $define{file_root}{https://github.com/wwarthen/RomWBW/raw/master}$
 $define{doc_root}{$file_root$/Doc}$
