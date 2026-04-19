@@ -69,7 +69,7 @@ while ! echo ${platforms[@]} | grep -q -w -s "${ROM_PLATFORM}" ; do
 	read ROM_PLATFORM
 done
 
-configs=$(find Config -name ${ROM_PLATFORM}_\* -print | \
+configs=$(find Config -name ${ROM_PLATFORM}_\*.asm -print | \
 	sed -e 's,Config/,,' -e "s/${ROM_PLATFORM}_//" -e "s/.asm//")
 while ! echo ${configs[@]} | grep -s -w -q "${ROM_CONFIG}" ; do
 	echo -n "Enter config for $platform [" ${configs[@]} "] :"
