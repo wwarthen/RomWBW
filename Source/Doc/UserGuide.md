@@ -1807,6 +1807,7 @@ The following table shows the disk images available.
 | xxx_qpm.img       | QPM Operating System                 | Yes      |
 | xxx_tpascal.img   | Borland Turbo Pascal Compiler        | No       |
 | xxx_wp.img        | WordStar v4 & ZDE Applications       | No       |
+| xxx_z3plus.img    | Z3PLUS ZCPR 3.4 Operating System     | Yes      |
 | xxx_z80asm.img    | Relocating macro assembler for CP/M  | No       |
 | xxx_zpm3.img      | ZPM3 Operating System                | Yes      |
 | xxx_zsdos.img     | ZCPR-DJ & ZSDOS 1.1 Operating System | Yes      |
