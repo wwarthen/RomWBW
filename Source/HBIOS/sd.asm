@@ -311,22 +311,13 @@ SD_INVCS	.EQU	FALSE		; INVERT CS
 		DEVECHO	"MT"
 #ENDIF
 ;
-#IF (SDMODE == SDMODE_PIO)		; Z80 PIO
+#IF (SDMODE == SDMODE_ZPIO)		; ZILOG PIO
 ;
 ;	These mappings work for the RCbus Gluino card with an Arduino
-;	shield attached and are the ones also used in other bitbang setups
-;	directly attached to a PIO. It also works on a straight digital I/O
-;	port as the config writes will disappear into oblivion harmlessly.
-;	Ultimately, this mode should probably be split into SDMODE_ZPIO (for
-;	Zilog PIO (like the Gluino) and SDMODE_GPIO for straight bitbang
-;	interfaces such as SC611 and SC734.
+;	shield attached.
 ;
 ;	The Gluino mapping (ie Arduino pin mapping equivalent) is thus
 ;	D10 SS, D11 CIPO, D12 COPI, D13 SCL.
-;
-;	This config also works for Steve Cousins SD Card Boards such as
-;	SC611 and SC734.  These cards do not require DDR manipulation,
-;	but the DDR writes are benign at this point.
 ;
 ;	For speed reasons MISO/MOSI are mapped to the top and bottom bits.
 ;	RomWBW doesn't yet use this fact but the optimized Fuzix routines do.
@@ -347,7 +338,29 @@ SD_CINIT	.EQU	TRUE		; INITIALIZE OUTPUT PORT
 SD_DDR		.EQU	$6B		; DATA DIRECTION REGISTER
 SD_DDRVAL	.EQU	%11100110	; DATA DIRECTION REGISTER VALUE
 SD_INVCS	.EQU	TRUE		; INVERT CS
-		DEVECHO	"PIO"
+		DEVECHO	"ZPIO"
+#ENDIF
+;
+#IF (SDMODE == SDMODE_GPIO)		; BIT-BANG
+;
+;	This mode is used for generic bit-bang interfaces.
+;	This config works for Steve Cousins SD Card Boards such as
+;	SC611 and SC734.
+;
+;	For speed reasons MISO/MOSI are mapped to the top and bottom bits.
+;	RomWBW doesn't yet use this fact but the optimized Fuzix routines do.
+;
+SD_DEVMAX	.EQU	1		; NUMBER OF PHYSICAL UNITS (SOCKETS)
+SD_IOBASE	.EQU	$69		; IO BASE ADDRESS FOR SD INTERFACE
+SD_OPRREG	.EQU	SD_IOBASE	; OUTPUT PORT (OUTPUT: CS, CLK, DIN)
+SD_OPRDEF	.EQU	%11101111	; OUTPUT PORT DEFAULT STATE
+SD_INPREG	.EQU	SD_IOBASE	; INPUT REGISTER
+SD_CS0		.EQU	%00001000	; SELECT
+SD_CLK		.EQU	%00010000	; CLOCK
+SD_DI		.EQU	%00000001	; DATA IN (CARD <- CPU) MOSI
+SD_DO		.EQU	%10000000	; DATA OUT (CARD -> CPU) MISO
+SD_INVCS	.EQU	TRUE		; INVERT CS
+		DEVECHO	"GPIO"
 #ENDIF
 ;
 #IF (SDMODE == SDMODE_USR)		; USER DEFINED HARDWARE CONFIGURATION
@@ -713,8 +726,15 @@ SD_INIT:
 	CALL	PRTHEXBYTE
 #ENDIF
 ;
-#IF (SDMODE == SDMODE_PIO)
-	PRTS(" MODE=PIO$")
+#IF (SDMODE == SDMODE_ZPIO)
+	PRTS(" MODE=ZPIO$")
+	PRTS(" IO=0x$")
+	LD	A,SD_IOBASE
+	CALL	PRTHEXBYTE
+#ENDIF
+;
+#IF (SDMODE == SDMODE_GPIO)
+	PRTS(" MODE=GPIO$")
 	PRTS(" IO=0x$")
 	LD	A,SD_IOBASE
 	CALL	PRTHEXBYTE
@@ -1986,7 +2006,7 @@ SD_SETUP:
 	OUT	(SD_OPRREG),A
 #ENDIF
 ;
-#IF ((SDMODE == SDMODE_MK4) | (SDMODE == SDMODE_DSD) | (SDMODE == SDMODE_PPI) | (SDMODE == SDMODE_MT) | (SDMODE == SDMODE_EPITX))
+#IF ((SDMODE == SDMODE_MK4) | (SDMODE == SDMODE_DSD) | (SDMODE == SDMODE_PPI) | (SDMODE == SDMODE_MT) | (SDMODE == SDMODE_EPITX) | (SDMODE == SDMODE_GPIO))
 	LD	A,SD_OPRDEF
 	LD	(SD_OPRVAL),A
 	OUT	(SD_OPRREG),A
@@ -2000,7 +2020,7 @@ SD_SETUP:
 	OUT	(SD_OPRREG),A		; OPRREG == SIO_MCR
 #ENDIF
 ;
-#IF ((SDMODE == SDMODE_PIO) | (SDMODE == SDMODE_EZ512) | (SDMODE == SDMODE_K80W))
+#IF ((SDMODE == SDMODE_ZPIO) | (SDMODE == SDMODE_EZ512) | (SDMODE == SDMODE_K80W))
 	LD	A,SD_OPRDEF		; All output bits high
 	LD	(SD_OPRVAL),A		; WBW
 	OUT	(SD_OPRREG),A
@@ -2262,7 +2282,7 @@ SD_PUT:
 	OUT	(SD_IOCLK),A
 #ENDIF
 ;
-#IF ((SDMODE == SDMODE_JUHA) | (SDMODE == SDMODE_N8) | (SDMODE == SDMODE_PPI) | (SDMODE == SDMODE_UART) | (SDMODE == SDMODE_DSD) | (SDMODE == SDMODE_USR) | (SDMODE == SDMODE_PIO) | (SDMODE == SDMODE_EZ512) | (SDMODE == SDMODE_K80W))
+#IF ((SDMODE == SDMODE_JUHA) | (SDMODE == SDMODE_N8) | (SDMODE == SDMODE_PPI) | (SDMODE == SDMODE_UART) | (SDMODE == SDMODE_DSD) | (SDMODE == SDMODE_USR) | (SDMODE == SDMODE_ZPIO) | (SDMODE == SDMODE_GPIO) | (SDMODE == SDMODE_EZ512) | (SDMODE == SDMODE_K80W))
       #IF (SDMODE == SDMODE_UART)
 	XOR	$FF			; DI IS INVERTED ON UART
       #ENDIF
@@ -2362,14 +2382,14 @@ SD_GET:
 	POP	DE
 #ENDIF
 ;
-#IF ((SDMODE == SDMODE_JUHA) | (SDMODE == SDMODE_N8) | (SDMODE == SDMODE_PPI) | (SDMODE == SDMODE_UART) | (SDMODE == SDMODE_DSD) | (SDMODE == SDMODE_USR) | (SDMODE == SDMODE_PIO) | (SDMODE == SDMODE_EZ512) | (SDMODE == SDMODE_K80W))
+#IF ((SDMODE == SDMODE_JUHA) | (SDMODE == SDMODE_N8) | (SDMODE == SDMODE_PPI) | (SDMODE == SDMODE_UART) | (SDMODE == SDMODE_DSD) | (SDMODE == SDMODE_USR) | (SDMODE == SDMODE_ZPIO) | (SDMODE == SDMODE_GPIO) | (SDMODE == SDMODE_EZ512) | (SDMODE == SDMODE_K80W))
 	LD	B,8			; RECEIVE 8 BITS (LOOP 8 TIMES)
 	LD	A,(SD_OPRVAL)		; LOAD CURRENT OPR VALUE
 SD_GET1:
 	XOR	SD_CLK			; TOGGLE CLOCK
 	OUT	(SD_OPRREG),A		; UPDATE CLOCK
 	IN	A,(SD_INPREG)		; READ THE DATA WHILE CLOCK IS ACTIVE
-  #IF ((SDMODE == SDMODE_JUHA) | (SDMODE == SDMODE_PPI) | (SDMODE == SDMODE_PIO) | (SDMODE == SDMODE_EZ512) | (SDMODE == SDMODE_K80W))
+  #IF ((SDMODE == SDMODE_JUHA) | (SDMODE == SDMODE_PPI) | (SDMODE == SDMODE_ZPIO) | (SDMODE == SDMODE_GPIO) | (SDMODE == SDMODE_EZ512) | (SDMODE == SDMODE_K80W))
 	RLA				; ROTATE INP:7 INTO CF
   #ENDIF
   #IF (SDMODE == SDMODE_N8)
