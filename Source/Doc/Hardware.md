@@ -115,6 +115,7 @@ Others
 | [eZ80 for RCBus Module]^8^, 512K RAM/ROM                    | RCBus   | RCEZ80_std.rom                       |        115200 |
 | [Genesis Z180 System]^7^                                    | STD     | GMZ180_std.rom                       |        115200 |
 | [Heath H8 Z80 System]^5^                                    | H8      | HEATH_std.rom                        |        115200 |
+| [MECB]^11^                                                  | ECB     | MECB_std.rom                         |         38400 |
 | [MSX]^9^                                                    | MSX     | MSX_std.rom                          |        115200 |
 | [N8 PC]^10^                                                 | ISA     | N8PC_std.rom                         |         38400 |
 | [NABU w/ RomWBW Option Board]^5^                            | NABU    | NABU_std.rom                         |        115200 |
@@ -137,6 +138,7 @@ Others
 | ^8^Designed by Dean Netherton
 | ^9^MSX Port by Henk Berends
 | ^10^Designed by Dan Werner
+| ^11^Designed by Digicool Things
 
 `\clearpage`{=latex}
 
@@ -604,6 +606,53 @@ Turn your H8 into a RomWBW CP/M computer
 - FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
 - PPIDE: MODE=STD, IO=32, MASTER
 - PPIDE: MODE=STD, IO=32, SLAVE
+
+`\clearpage`{=latex}
+
+## MECB
+
+Minimalist Europe Card Bus (MECB)
+
+The “Minimalist Europe Card Bus” (MECB) is a Retro 8-bit CPU Bus based
+PCB design standard.  The purpose of which is to provide a modular
+platform to re-experience the fun of experimenting with the different
+8-bit CPUs, and the various video and peripheral devices of the
+late 1970’s and early 1980’s.
+
+* Creator: Digicool Things
+* Github Repository: [Minimalist Europe Card Bus (MECB)](https://github.com/DigicoolThings/MECB)
+
+#### ROM Image File:  MECB_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Bus               | ECB           |
+| Default CPU Speed | 10.000 MHz    |
+| Interrupts        | Mode 1        |
+| System Timer      | TMS           |
+| Serial Default    | 38400 Baud    |
+| Memory Manager    | Z2            |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+#### Supported Hardware
+
+- FP: LEDIO=193, SWIO=193
+- LCD: IO=218, SIZE=20X4
+- ACIA: IO=8, INTERRUPTS ENABLED
+- DSRTC: MODE=STD, IO=192
+- TMS: MODE=MECB, IO=128, SCREEN=80X24, KEYBOARD=NONE, INTERRUPTS ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: MODE=STD, IO=32, MASTER
+- PPIDE: MODE=STD, IO=32, SLAVE
+- SD: MODE=PIO, IO=105, UNITS=1
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
 
 `\clearpage`{=latex}
 

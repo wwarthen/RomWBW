@@ -2619,6 +2619,11 @@ The hardware Platform (L) is identified as follows:
 | PLT_NABU      |     22 | NABU PC W/ ROMWBW OPTION BOARD          |
 | PLT_SZ80      |     23 | S100 COMPUTERS Z80                      |
 | PLT_RCEZ80    |     24 | RCBUS W/ eZ80                           |
+| PLT_MSX       |     25 | MSX Computers                           |
+| PLT_N8PC      |     26 | MSX-like Z180 ATX SBC                   |
+| PLT_RC2014    |     27 | Official RC2014 Z80 Kits                |
+| PLT_MECB      |     28 | Digicool Things MECB Kits               |
+
 
 For more information on these platforms see $doc_hardware$
 

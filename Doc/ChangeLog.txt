@@ -1,3 +1,7 @@
+Version 3.7
+-----------
+- ???: Added support for MECB platform
+
 Version 3.6
 -----------
 - RDG: Added VDA driver for Xosera FPGA-based VDC
