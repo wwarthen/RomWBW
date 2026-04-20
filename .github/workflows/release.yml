@@ -13,8 +13,8 @@ jobs:
 
     steps:
 
-      - name: Dump GitHub Context
-        run: echo "${{toJSON(github)}}"    
+      # - name: Dump GitHub Context
+      #   run: echo "${{toJSON(github)}}"
 
       - name: Checkout
         uses: actions/checkout@v6
