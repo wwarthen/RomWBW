@@ -49,12 +49,12 @@ Requests.
 RomWBW seeks to satisfy the broadest possible audience. Since many of the
 projects utilizing RomWBW are intended to be retro-computing
 initiatives, the use of AI generated code may legitimately undermine this
-objective.  This is a philosophical perspective, not a  judgment of
-AI's  technical capabilities.
+objective.  This is a philosophical perspective, not a judgment of
+AI's technical capabilities.
 
 RomWBW is intended to be free of AI (LLM) generated code. The use of AI
-during develpment to understand or research potential solutions is fine.
-Additionally, forks or derivatives of RomWBW are free to use AI they
+during development to understand or research potential solutions is fine.
+Additionally, forks or derivatives of RomWBW are free to use AI as they
 desire.
 
 The one exception to this policy is that AI generated, standalone
