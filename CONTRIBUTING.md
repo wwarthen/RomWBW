@@ -41,8 +41,26 @@ Requests.
 - You are encouraged to comment your submissions to ensure your work is
   properly attributed.
 - When ready, submit a Pull Request to merge your forked branch into the
-  RomWBW master branch.  In the comments, be sure to indicate if an
+  RomWBW master branch.  In the comments, please indicate if an
   AI LLM was utilized in any way.
+
+## Artificial Intelligence
+
+RomWBW seeks to satisfy the broadest possible audience. Since many of the
+projects utilizing RomWBW are intended to be retro-computing
+initiatives, the use of AI generated code may legitimately undermine this
+objective.  This is a philosophical perspective, not a  judgment of
+AI's  technical capabilities.
+
+RomWBW is intended to be free of AI (LLM) generated code. The use of AI
+during develpment to understand or research potential solutions is fine.
+Additionally, forks or derivatives of RomWBW are free to use AI they
+desire.
+
+The one exception to this policy is that AI generated, standalone
+**applications** are acceptable if they are clearly annotated as such in
+the RomWBW Applications Guide.  The use of AI should be described in the
+comments of the source file(s) involved.
 
 ## Coding Style
 
