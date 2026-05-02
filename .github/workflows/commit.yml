@@ -25,6 +25,7 @@ jobs:
       - name: Build
         run: |
           export TZ='America/Los_Angeles'
+          sudo apt-get update
           sudo apt-get install srecord
           make transpile-c-code
           make distlog --trace
