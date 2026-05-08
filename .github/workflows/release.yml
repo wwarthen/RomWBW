@@ -96,12 +96,12 @@ jobs:
           mkdocs build -f Source/Doc/mkdocs.yml
 
       - name: Configure Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload Pages Artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: 'Source/Doc/site'
 
       - name: Deploy GitHub Pages
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
