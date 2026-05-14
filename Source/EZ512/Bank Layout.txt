@@ -1,7 +1,16 @@
+EaZy80-512 has a 64K ROM with a hardware monitor.  The monitor command
+"b 4" loads the RomWBW image from the SD Card starting from sector 288
+into the first 4 banks of memory.  RAM disk is not loaded, so drive A is
+the ROM disk is empty.
 
-Eazy80_512 has a 64K ROM contains a monitor.  The monitor command "b 4" loads RomWBW program
-starting from SD sector 288 into first 4 banks of memory.  RAM disk is not loaded, so drive A is
-blank.
+As an alternative, it is possible to load RomWBW directly from the
+64K ROM.  This is accomplished by replacing the normal hardware monitor
+on the ROM with a decompression program and a compressed image of
+RomWBW.  In this scenario, some components of the RomWBW ROM are removed
+in order to make the compressed RomWBW image fit on the 64K ROM.  Also
+note that in this scenario, the ROM does not provide the
+features of the standard EZ512 hardware monitor.  It simply does the
+decompression and launches RomWBW.
 
 Bank		Contents	Description
 --------	--------	-----------
