@@ -1,6 +1,5 @@
-.PHONY: tools source clean clobber diff dist
+.PHONY: tools source clean clobber diff transpile-c-code dist distlog
 
-.ONESHELL:
 .SHELLFLAGS = -ce
 
 all: tools source
@@ -24,8 +23,7 @@ diff:
 
 # Convert c code to assembly code
 transpile-c-code:
-	@cd Source/HBIOS/ch376-native
-	$(MAKE) -j
+	$(MAKE) -j --directory Source/HBIOS/ch376-native
 
 dist:
 	$(MAKE) ROM_PLATFORM=dist

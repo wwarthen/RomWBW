@@ -27,8 +27,8 @@ jobs:
           export TZ='America/Los_Angeles'
           sudo apt-get update
           sudo apt-get install srecord
-          make transpile-c-code
-          make distlog --trace
+          make --trace transpile-c-code
+          make --trace dist
           rm -rf .git*
 
       - name: List Output
@@ -59,6 +59,7 @@ jobs:
       - name: Build
         run: |
           export TZ='America/Los_Angeles'
+          brew update
           brew install srecord
           make distlog
           rm -rf .git*

@@ -15,7 +15,7 @@ jobs:
 
       - name: Dump GitHub Context
         env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
+          GITHUB_CONTEXT: ${{toJson(github)}}
         run: echo "$GITHUB_CONTEXT"
 
       - name: Checkout
@@ -26,8 +26,8 @@ jobs:
           export TZ='America/Los_Angeles'
           sudo apt-get update
           sudo apt-get install srecord
-          make transpile-c-code
-          make distlog --trace
+          make --trace transpile-c-code
+          make --trace dist
 
       - name: Create Package Archive
         run: |
@@ -52,7 +52,7 @@ jobs:
 
       - name: Create Release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           TAG: ${{github.ref_name}}
         run: |
           gh release create "$TAG" RomWBW-$TAG-Package.zip \
@@ -81,7 +81,7 @@ jobs:
 
       - name: Dump GitHub Context
         env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
+          GITHUB_CONTEXT: ${{toJson(github)}}
         run: echo "$GITHUB_CONTEXT"
 
       - name: Checkout
@@ -92,7 +92,7 @@ jobs:
           export TZ='America/Los_Angeles'
           sudo apt-get install gpp pandoc
           pip install mkdocs
-          make -C Source/Doc deploy_mkdocs
+          make --trace --directory Source/Doc deploy_mkdocs
           mkdocs build -f Source/Doc/mkdocs.yml
 
       - name: Configure Pages
