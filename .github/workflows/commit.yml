@@ -61,7 +61,7 @@ jobs:
           export TZ='America/Los_Angeles'
           brew update
           brew install srecord
-          make distlog
+          make dist
           rm -rf .git*
 
       - name: List Output
