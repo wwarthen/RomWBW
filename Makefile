@@ -23,7 +23,7 @@ diff:
 
 # Convert c code to assembly code
 transpile-c-code:
-	$(MAKE) -j --directory Source/HBIOS/ch376-native
+	cd Source/HBIOS/ch376-native; $(MAKE) -j
 
 dist:
 	$(MAKE) ROM_PLATFORM=dist
