@@ -2,6 +2,7 @@ Version 3.7
 -----------
 - ???: Added support for MECB platform
 - WBW: Split SDMODE_PIO into SDMODE_ZPIO & SDMODE_GPIO
+- HJB: Add HBIOS FastPath support into CP/NET
 
 Version 3.6
 -----------
