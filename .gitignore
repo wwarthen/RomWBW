@@ -204,3 +204,4 @@ Source/ZPM3/setz3.com
 Tools/unix/OpenSpin/build/
 Tools/unix/zxcc/config.h
 Tools/unix/zxcc/zxcc
+!.claude/settings.local.json
