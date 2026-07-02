@@ -139,9 +139,9 @@ void cout(byte c)
 
 int cstat()
 {
-	int i;
+	int i = 0;
 
-	ioctl(STDIN_FILENO, FIONREAD, &i);
+	if (ioctl(STDIN_FILENO, FIONREAD, &i) < 0) return 0;
 	if (i > 0) return 0xFF;
 	return 0;
 }
