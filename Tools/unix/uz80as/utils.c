@@ -5,7 +5,7 @@
  * ===========================================================================
  */
 
-#include "config.h"
+#include <config.h>
 #include "utils.h"
 
 #ifndef CTYPE_H
@@ -21,15 +21,9 @@
  */
 void copychars(char *dst, const char *p, const char *q)
 {
-//	int i = 0;
-//	printf("copychars %x->%x to %x \'", p, q, dst);
-	while (p != q) {
-//		printf("%c", *p);
+	while (p != q)
 		*dst++ = *p++;
-//		i++;
-	}
 	*dst = '\0';
-//	printf("\' %d %x %d\n", *dst, dst, i);
 }
 
 /* Skip space. */
@@ -119,7 +113,7 @@ int hexval(char c)
 		return hexvalu(c);
 }
 
-int int_precission(void)
+int int_precision(void)
 {
 	static int bits = 0;
 	unsigned int i;

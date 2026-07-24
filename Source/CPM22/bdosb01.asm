@@ -1,5 +1,5 @@
 	.title	"Digital Research BDOS, Version 2.2"
-	.page	49
+	;.page	49
 
 ENDFIL	.EQU	1		;FILL FULL BDOS LENGTH
 ;
@@ -2579,8 +2579,8 @@ READ:	.EQU	BIOS+39		;Read sector
 WRITE:	.EQU	BIOS+42		;Write sector
 SECTRN:	.EQU	BIOS+48		;Sector translation routine
 ;
-	.IF	ENDFIL
+	#IF	ENDFIL
 	.FILL	((BDOSO + 0E00H) - $),055H
-	.ENDIF
+	#ENDIF
 
 	.END

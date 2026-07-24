@@ -5,7 +5,7 @@
  * ===========================================================================
  */
 
-#include "config.h"
+#include <config.h>
 #include "exprint.h"
 #include "err.h"
 

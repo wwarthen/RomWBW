@@ -8,8 +8,6 @@
 #ifndef UZ80AS_H
 #define UZ80AS_H
 
-static int verbose;
-
 /* matchtab.flags */
 enum {
 	MATCH_F_UNDOC = 1,

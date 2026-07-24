@@ -21,6 +21,6 @@ int scmp(const char *p, const char *q, const char *s);
 const char *skipws(const char *p);
 int hexvalu(char c);
 int hexval(char c);
-int int_precission(void);
+int int_precision(void);
 
 #endif

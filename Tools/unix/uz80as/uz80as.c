@@ -5,7 +5,7 @@
  * ===========================================================================
  */
 
-#include "config.h"
+#include <config.h>
 #include "uz80as.h"
 #include "options.h"
 #include "utils.h"
@@ -38,21 +38,19 @@
 #include <string.h>
 #endif
 
-static void output();
-
 static const char *d_align(const char *);
 static const char *d_null(const char *);
 static const char *d_block(const char *);
 static const char *d_byte(const char *);
 static const char *d_chk(const char *);
 static const char *d_codes(const char *);
+static const char *d_ds(const char *);
 static const char *d_echo(const char *);
 static const char *d_eject(const char *);
 static const char *d_export(const char *);
 static const char *d_end(const char *);
 static const char *d_equ(const char *);
 static const char *d_fill(const char *);
-static const char *d_ds(const char *);
 static const char *d_list(const char *);
 static const char *d_lsfirst(const char *);
 static const char *d_module(const char *);
@@ -167,14 +165,6 @@ void
 open_output()
 {
 	fout = efopen(s_objfname, "wb");
-}
-
-void
-close_output()
-{
-	if (fclose(fout) == EOF) {
-		eprint(_("cannot close file %s\n"), s_objfname);
-	}
 }
 
 /* 
@@ -468,8 +458,7 @@ found:
 	return p;
 }
 
-static const char *
-d_null(const char *p)
+static const char *d_null(const char *p)
 {
 	p = sync(p);
 	while (*p != '\0' && *p != '\\') {
@@ -607,7 +596,7 @@ static const char *d_equ(const char *p)
 	} else {
 		/* TODO: check label misalign? */
 		s_lastsym->val = n;
-		s_lastsym->isequ = 1;
+		s_lastsym->flags |= SYM_FLAG_EQU;
 	}
 	return p;
 }
@@ -632,15 +621,39 @@ static const char *d_set(const char *p)
 	} else {
 		/* TODO: check label misalign? */
 		s_lastsym->val = n;
-		s_lastsym->isequ = 1;
+		s_lastsym->flags |= SYM_FLAG_EQU;
 	}
 	return p;
 }
 
 static const char *d_export(const char *p)
 {
-	/* TODO */
-	return NULL;
+	const char *q;
+	struct sym *sym;
+
+again:	if (isidc0(*p)) {
+		q = p;
+		while (isidc(*p))
+			p++;
+		sym = lookup(q, p, 0, 0);
+		if (s_pass > 0) {
+			if (sym == NULL) {
+				eprint(_("undefined label"));
+				epchars(q, p);
+				enl();
+				newerr();
+			} else {
+				sym->flags |= SYM_FLAG_EXPORT;
+			}
+		}
+		p = skipws(p);
+		if (*p == ',') {
+			p = skipws(p + 1);
+			goto again;
+		}
+	}
+
+	return p;
 }
 
 static const char *d_fill(const char *p)
@@ -681,50 +694,6 @@ static const char *d_fill(const char *p)
 
 	while (n--)
 		genb(v, eps);
-
-	if (er)
-		return NULL;
-	else
-		return p;
-}
-
-static const char *d_ds(const char *p)
-{
-	int n, v, er;
-	const char *q;
-	enum expr_ecode ecode;
-	const char *ep, *eps;
-
-	eps = p;
-	er = 0;
-	p = expr(p, &n, s_pc, 0, &ecode, &ep); 
-	if (p == NULL) {
-		exprint(ecode, s_pline, ep);
-		newerr();
-		return NULL;
-	}
-
-	if (n < 0) {
-		eprint(_("number of positions to space over is negative (%d)\n"), n);
-		eprcol(s_pline, eps);
-		exit(EXIT_FAILURE);
-	}
-
-	v = 255;
-	p = skipws(p);
-	if (*p == ',') {
-		p = skipws(p + 1);
-		q = expr(p, &v, s_pc, s_pass == 0, &ecode, &ep);
-		if (q == NULL) {
-			er = 1;
-			exprint(ecode, s_pline, ep);
-			newerr();
-		} else {
-			p = q;
-		}
-	}
-
-	s_pc += n;
 
 	if (er)
 		return NULL;
@@ -773,7 +742,7 @@ static const char *d_org(const char *p)
 	if (s_lastsym != NULL) {
 		/* TODO: check label misalign? */
 		s_lastsym->val = s_pc;
-		s_lastsym->isequ = 1;
+		s_lastsym->flags |= SYM_FLAG_EQU;
 	}
 
 	return p;
@@ -809,16 +778,20 @@ dnlst:
 			newerr();
 			return NULL;
 		}
-		if (w)
+		if (w) {
 			genw(n, eps);
-		else
+		} else {
 			genb(n, eps);
+		}
 	}
 	p = skipws(p);
 	if (*p == ',') {
 		p++;
 		p = skipws(p);
-		goto dnlst;
+		/* allow for trailing comma */
+	        if (*p != '\0' && *p != '\\') {
+			goto dnlst;
+		}
 	}
 	return p;
 }
@@ -889,7 +862,7 @@ static const char *d_title(const char *p)
 	return NULL;
 }
 
-static const char *d_block(const char *p)
+static const char *d_block_ds(const char *p, const char *cmd)
 {
 	int n;
 	enum expr_ecode ecode;
@@ -905,13 +878,23 @@ static const char *d_block(const char *p)
 
 	s_pc += n;
 	if (s_pc < 0 || s_pc > 65536) {
-		eprint(_("address (%d) set by .BLOCK is not in range "
-			 "[0, 65536]\n"), s_pc);
+		eprint(_("address (%d) set by .%s is not in range "
+			 "[0, 65536]\n"), s_pc, cmd);
 		eprcol(s_pline, eps);
 		exit(EXIT_FAILURE);
 	}
 
 	return p;
+}
+
+static const char *d_block(const char *p)
+{
+	return d_block_ds(p, "BLOCK");
+}
+
+static const char *d_ds(const char *p)
+{
+	return d_block_ds(p, "DS");
 }
 
 /* a must be < b. */
@@ -922,8 +905,9 @@ static int checksum(int a, int b)
 	assert(a < b);
 
 	n = 0;
-	while (a < b)
+	while (a < b) {
 		n ^= s_mem[a++];
+	}
 
 	return n;
 }
@@ -1058,8 +1042,8 @@ loop:
 			} else if (*cp == '=') {
 				alloweq = 1;
 			}
-			if (s_pass == 1 && !s_lastsym->isequ &&
-				s_lastsym->val != s_pc)
+			if (s_pass == 1 && !(s_lastsym->flags & SYM_FLAG_EQU)
+				&& s_lastsym->val != s_pc)
 			{
 				eprint(_("misaligned label %s\n"),
 					s_lastsym->name);
@@ -1150,7 +1134,6 @@ static void dopass(const char *fname)
 		s_list_on = 1;
 	}
 
-
 	install_predefs();
 	s_minpc = -1;
 	s_maxpc = -1;
@@ -1182,10 +1165,8 @@ static void dopass(const char *fname)
 	}
 }
 
-/*
- * Write the object file in memory order
- */
-static void output()
+/* Write the object file. */
+static void output(void)
 {
 	int i;
 
@@ -1204,6 +1185,10 @@ static void output()
 	if (ferror(fout)) {
 		eprint(_("cannot write to file %s\n"), s_objfname);
 		clearerr(fout);
+	}
+
+	if (fclose(fout) == EOF) {
+		eprint(_("cannot close file %s\n"), s_objfname);
 	}
 }
 
@@ -1225,7 +1210,7 @@ void uz80as(void)
 			wprint(_("no .END statement in the source\n"));
 		}
 		if (s_nerrors == 0) {
-			if (verbose) printf("Pass %d completed.\n", s_pass + 1);
+			printf("Pass %d completed.\n", s_pass + 1);
 		}
 	}
 
@@ -1236,5 +1221,8 @@ void uz80as(void)
 	if (!b_flag) {
 		output();
 	}
-	close_output();
+
+	if (s_force_export || anything_to_export()) {			
+		write_export_file(s_expfname);
+	}
 }

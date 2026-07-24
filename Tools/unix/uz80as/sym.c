@@ -5,7 +5,7 @@
  * ===========================================================================
  */
 
-#include "config.h"
+#include <config.h>
 #include "sym.h"
 #include "utils.h"
 #include "err.h"
@@ -16,6 +16,10 @@
 
 #ifndef STDLIB_H
 #include <stdlib.h>
+#endif
+
+#ifndef STRING_H
+#include <string.h>
 #endif
 
 /*
@@ -70,7 +74,7 @@ struct sym *lookup(const char *p, const char *q, int insert, int pc)
 	for (k = s_symtab[h]; k != 0; k = s_symlist[k].next) {
 		if (scmp(p, q, s_symlist[k].name) == 0) {
 			if (insert) {
-				if (!s_symlist[k].isequ) {
+				if (!s_symlist[k].flags & SYM_FLAG_EQU) {
 					wprint("duplicate label (%s)\n",
 						s_symlist[k].name);
 				}
@@ -100,4 +104,39 @@ struct sym *lookup(const char *p, const char *q, int insert, int pc)
 	}
 
 	return NULL;
+}
+
+/* Returns non zero if anyhting to export. */
+int anything_to_export(void)
+{
+	int i;
+
+	for (i = 1; i < s_nsyms; i++) {
+		if (s_symlist[i].flags & SYM_FLAG_EXPORT)
+			return 1;
+	}
+
+	return 0;
+}
+
+void write_export_file(const char *fname)
+{
+	FILE *fout;
+	int i;
+	size_t len, j;
+
+	fout = efopen(fname, "w");
+	for (i = 1; i < s_nsyms; i++) {
+		if (s_symlist[i].flags & SYM_FLAG_EXPORT) {
+			len = strlen(s_symlist[i].name);
+			fputs(s_symlist[i].name, fout);
+			for (j = len; j < 16; j++)
+				fputc(' ', fout);
+			fprintf(fout, " .EQU  $%.4X\n", s_symlist[i].val);
+		}
+	}
+
+	if (fclose(fout) == EOF) {
+		eprint(_("cannot close file %s\n"), fname);
+	}
 }

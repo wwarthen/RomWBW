@@ -1,0 +1,86 @@
+uz80as - Micro Z80 Assembler
+============================
+
+`uz80as` is an assembler for the Zilog Z80 and several other microprocessors.
+It accepts source files with the same syntax accepted by the Telemark Cross
+Assembler (TASM), with only minor differences.
+
+Currently, uz80as can assemble for these microprocessors:
+  - Z80 family
+    - Zilog Z80
+    - Hitachi HD64180
+    - Sharp LR35902 (Nintendo Gameboy CPU)
+  - 6500 family
+    - MOS Technology 6502
+    - California Micro Devices G65SC02
+    - Rockwell R6501, R65C02, R65C29
+    - Western Design Center W65C02S
+  - Datapoint 2200 (versions I & II)
+  - Intel 4004, 4040, 8008, 8021, 8022, 8041, 8048, 8051, 8080, 8085
+  - Motorola 6800, 6801, 68HC11
+  - RCA 1802
+
+uz80as is free software. See the file `COPYING` for copying conditions.
+
+Home page: https://jorgicor.niobe.org/uz80as  
+GitHub: https://github.com/jorgicor/uz80as
+Send bug reports to: jorge.giner@hotmail.com
+
+Windows precompiled binaries
+============================
+
+A precompiled distribution for *Microsoft Windows* is provided in a ZIP file.
+It can be found at https://jorgicor.niobe.org/uz80as . After decompressing it,
+you will have these files:
+
+~~~
+uz80as.exe      The program.
+uz80as.html     The manual.
+readme.txt      This file.
+copying.txt     License.
+news.txt        What's new in this version.
+~~~
+
+Compiling
+=========
+
+Getting the code from revision control
+--------------------------------------
+
+If you cloned the project from a revision control system (i.e. GitHub), you
+will need first to use the GNU autotools to generate some files, in particular,
+the `configure` script. Use:
+
+    $ ./bootstrap
+
+to generate the required files. You will need *GNU autoconf*, *GNU automake*,
+*GNU texinfo* and *help2man*.
+
+Compiling from the source distribution
+--------------------------------------
+
+If you have the official source package, and you are building on a Unix-like
+environment (this includes *Cygwin* on *Windows*), you can find detailed
+instructions in the file `INSTALL`. The complete source distribution can always
+be found at https://jorgicor.niobe.org/uz80as .  
+
+After installing, you can type `man uz80as` to see a brief explanation on how
+to use the `uz80as` program. More detailed documentation can be found using the
+GNU documentation system: type `info uz80as` to read it.
+
+Normally, after installing from source, you can find this on your system:
+
+~~~
+/usr/local/bin/uz80as                    The program executable.
+/usr/local/share/man/man1/uz80as.1       The manual page.
+/usr/local/share/info/uz80as.info        The info manual.
+/usr/local/share/doc/uz80as/COPYING      License.
+/usr/local/share/doc/uz80as/README       This file.
+/usr/local/share/doc/uz80as/NEWS         What's new in this version.
+/usr/local/share/doc/uz80as/INSTALL      How to compile, install and uninstall.
+/usr/local/share/doc/uz80as/AUTHORS      Authors.
+~~~
+
+If you are installing uz80as using your OS distribution package system, these
+folders will probably be different. Try changing `/usr/local` to `/usr`.
+

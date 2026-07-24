@@ -1044,7 +1044,7 @@ normalkeys: ; The TI character codes, offset from label by keyboard scan code
 ;		.DB   	  0,  0,  0,"*",  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
 
 	
- .include "font.asm"	
+#include "font.asm"	
 
 ;__________________________________________________________________________________________________
 ;

@@ -5,7 +5,7 @@
  * ===========================================================================
  */
 
-#include "config.h"
+#include <config.h>
 #include "expr.h"
 #include "utils.h"
 #include "err.h"
@@ -31,9 +31,11 @@
 #include <stdlib.h>
 #endif
 
-/* Max nested expressions. */
-#define ESTKSZ		16
-#define ESTKSZ2		(ESTKSZ*2)
+enum {
+	NESTED = 32,		/* Max nested expressions */
+	STKSZ = NESTED * 3, 	/* 3 positions are pushed at once, 3 popped */
+	USTKSZ = NESTED,	/* Unary operator stack */
+};
 
 /* Return -1 on syntax error.
  * *p must be a digit already.
@@ -123,7 +125,7 @@ static const char *getpnum(const char *p, int radix, int *v)
 /* Left shift */
 static int shl(int r, int n)
 {
-	n &= int_precission();
+	n &= int_precision();
 	return r << n;
 }
 
@@ -131,7 +133,7 @@ static int shl(int r, int n)
 /* Portable arithmetic right shift. */
 static int ashr(int r, int n)
 {
-	n &= int_precission();
+	n &= int_precision();
 	if (r & INT_MIN) {
 		return ~(~r >> n);
 	} else {
@@ -156,11 +158,13 @@ static int ashr(int r, int n)
 const char *expr(const char *p, int *v, int linepc, int allowfr,
 	enum expr_ecode *ecode, const char **ep)
 {
-	int si, usi, usl;
-	const char *q;
+	int si, usi;	/* stack index, unary stack index */
+	int usl;	/* where in the unary op stack this nested expression
+			   begins */
+       	const char *q;
 	char last;
-	int stack[ESTKSZ2];
-	int uopstk[ESTKSZ];
+	int stack[STKSZ];
+	int uopstk[USTKSZ];	/* unary operator stack */
 	int r, n;
 	struct sym *sym;
 	int err;
@@ -169,17 +173,17 @@ const char *expr(const char *p, int *v, int linepc, int allowfr,
 	ec = EXPR_E_NO_EXPR;
 	err = 0;
 	usi = 0;
+	usl = 0;
 	si = 0;
 	r = 0;
 	last = 'V';	/* first void */
-	usl = 0;
 loop:
 	p = skipws(p);
 	if (*p == '(') {
 		if (last == 'n') {
 			goto end;
 		} else {
-			if (si >= ESTKSZ2) {
+			if (si >= STKSZ) {
 				eprint(_("expression too complex\n"));
 				exit(EXIT_FAILURE);
 			}
@@ -385,7 +389,12 @@ loop:
 		ec = EXPR_E_SYNTAX;
 		goto esyntax;
 	} else {
-end:		if (v != NULL)
+end:		if (si > 0) {
+			err = 1;
+			eprint(_("missing )\n"));
+			newerr();
+		}
+		if (v != NULL)
 			*v = r;
 		return p;
 	}
@@ -393,13 +402,15 @@ end:		if (v != NULL)
 uoper:
 	if (last == 'n')
 		goto end;
-	if (usi >= ESTKSZ) {
+	if (usi >= USTKSZ) {
 		eprint(_("expression too complex\n"));
 		exit(EXIT_FAILURE);
 	}
 	uopstk[usi++] = *p++;
 	goto loop;
 oper:
+	/* first apply all unary operators stacked since the start
+	 * of this nested expression */
 	while (usi > usl) {
 		usi--;
 		switch (uopstk[usi]) {

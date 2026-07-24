@@ -18,10 +18,10 @@
     .ORG 100H
     jp start
 ;
-    .include "crc.asm"		; comparison of data blocks, used for verify
-    .include "cio.asm"		; bdos IO routines
-    .include "bdos.asm"		; bdos general routines
-    .include "hbios.asm"	; hbios routines
+    #include "crc.asm"		; comparison of data blocks, used for verify
+    #include "cio.asm"		; bdos IO routines
+    #include "bdos.asm"		; bdos general routines
+    #include "hbios.asm"	; hbios routines
 ;
 ; -------------------------
 ;

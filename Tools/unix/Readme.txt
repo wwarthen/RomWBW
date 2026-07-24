@@ -89,11 +89,8 @@ Credit:
 	jorge.giner@hotmail.com, and the original source can be found 
 	at https://github.com/jorgicor/uz80as.
 
-	The propeller tools use bstc and openspin, parallax tools from 
-	http://www.fnarfbargle.com/bst.html 
-	https://github.com/parallaxinc/OpenSpin Note that bst is not 
-	open source or even currently maintained, so I could not 
-	generate a version for 64 bit macOS.
+	The propeller tools use openspin from
+	https://github.com/parallaxinc/OpenSpin.
 
 	cpmtools were the most current I could find, and it has been 
 	hacked to do case-insensitivity. These are not marked, and are 

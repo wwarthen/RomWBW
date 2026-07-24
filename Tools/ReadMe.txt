@@ -18,13 +18,6 @@ ANSICON provides ANSI escape sequences for Windows console
 programs.  It provides much the same functionality as 'ANSI.SYS' 
 does for MS-DOS.
 
-bst:
-
-The bst tool set is a multi-platform set of tools for developing with 
-the Parallax Propeller microcontroller. bst stands for “Brad's Spin 
-Tool”, however it is never capitalised.  This toolset is used to 
-compile the Propeller firmware for PropIO and ParPortProp.
-
 cpm:
 
 This is the root of a directory tree containing native CP/M-80 
@@ -41,11 +34,6 @@ be created and managed from a Windows command line.  These tools
 are used to construct CP/M file system images included with the 
 RomWBW distribution including the ROM disk image, floppy images, 
 and hard disk images.
-
-hex2bin:
-
-A pair of programs by John Coffman to translate between Intel hex 
-file format and pure binary images.
 
 rawwritewin:
 
@@ -68,7 +56,7 @@ Win32 Disk Imager:
 Program which can read or write hard disk images directly to or 
 from CF Cards or SD Cards.
 
-zx:
+zxcc:
 
 A port of zxcc for Windows.  This program is a command line 
 CP/M-80 emulator.  It allows many CP/M-80 programs to run directly 

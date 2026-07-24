@@ -14,8 +14,8 @@ DISKDEFS=$(shell cd ../../cpmtools ; pwd)/diskdefs
 DEFFORMAT=wbw_fd144
 
 # Locate the ncurses libs or try a guess if pkg-config does not exist
-NCURSESLIBS=$(shell if env pkg-config --libs ncurses ; then : ; else echo -lncurses ; fi)
-NCURSESCFLAGS=$(shell if env pkg-config --cflags ncurses ; then : ; fi)
+NCURSESLIBS=$(shell if env pkg-config --libs ncurses 2>/dev/null; then : ; else echo -lncurses ; fi)
+NCURSESCFLAGS=$(shell if env pkg-config --cflags ncurses 2>/dev/null; then : ; fi)
 
 CPPFLAGS = -DDISKDEFS=\"$(DISKDEFS)\" -DFORMAT=\"$(DEFFORMAT)\" $(NCURSESCFLAGS)
 

@@ -14,7 +14,7 @@ OBJECTS = ngetopt.o main.o options.o \
 	dp2200.o i4004.o \
 	i8008.o i8048.o \
 	i8051.o i8080.o \
-	mos6502.o mc6800.o
+	mos6502.o mc6800.o rca1802.o
 
 SOURCES = \
 	config.h \
@@ -41,7 +41,8 @@ SOURCES = \
 	i8051.c \
 	i8080.c \
 	mos6502.c \
-	mc6800.c
+	mc6800.c \
+	rca1802.c
 
 all: uz80as $(DEST)
 	cp -p uz80as $(DEST)

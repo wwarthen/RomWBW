@@ -1,0 +1,179 @@
+2.02	2023-06-19
+
+	* The .EXPORT directive is implemented.
+
+	* Fixed expression parser: check for matching parenthesis. This was
+	  accepted without errors:
+
+		LD HL,(TABLE
+
+	  Thanks to Kenny Maytum for the bug report.
+
+2.01	2022-05-11
+
+	* CHK directive behaviour: changed to follow how TASM calculated
+	  checksums (with an XOR of all bytes). This implies that programs
+	  using the CHK directive will generate a different object binary file
+	  than with the previous version of uz80as. Thanks to Dimitri Theulings
+	  (dimitrit).
+
+	* New target added: RCA 1802.
+
+1.12	2021-08-01
+
+	* Added DS directive (just another name for the BLOCK directive). It
+	  existed in TASM but not in the official documentation. Thank you
+	  Nathan Poysti to point this out.
+
+	* Allow trailing commas (in DB and DW lists, for example).
+
+	* Added > operator to force 6502 16 bit addresses when a zero page is
+	  used, following the same syntax of the mc6800 target.
+
+1.11	2020-03-29
+
+	* Fixed an important bug with unary operators and nested expressions.
+          For instance, ~(1|2) resulted in 0xFE generated (it was parsed as
+          if ~1|2), instead of the correct 0xFC (~3).
+          Thank you very much to Curt Meyer (https://github.com/cm68) for
+          the bug report and providing a simple and clever fix.
+	  This was a severe bug that didn't show with any of my tests.
+
+	Source changes
+	--------------
+
+	* expr.c: Fixed the expression parser and multiplied the stack size
+          by 3 since we now always push 3 elements, to avoid overflow.
+
+	* Added a new test 'unary' for testing unary operators with nested
+          expressions.
+
+	* Added THANKS file.
+
+1.10	2018-10-14
+
+	* Changed project site to https://jorgicor.niobe.org/uz80as .
+
+1.09	2018-09-29
+
+	* New target added: Motorola 68HC11.
+	* Fixes tests for 6800 and 6801.
+	* The instructions in the documentation for each target now are listed
+          in alphabetical order.
+
+1.08	2018-09-23
+
+	* New targets added:
+	  - Intel 8021, 8022, 8041, 8048, 8051.
+	  - Motorola 6800, 6801.
+
+	Source changes
+	--------------
+
+	* Changed the substitution algorithm of print_inst(). Now it allows for
+	  multiple digits after a character code (permits e16 in tables).
+	  Duplicating @ if found. Changed targets' tables accordingly.
+
+1.07	2018-09-15
+
+	* New targets added:
+	  - i4004: Intel 4004.
+	  - i4040: Intel 4040. 
+
+	Source changes
+	--------------
+
+	* Fixed mreg(). If we had a word list like { LD, LDD, ... } and we
+	  tried to parse LDD, only LD was matched. Now, if we match a word
+	  but what comes next is alphanumeric, we discard the match and
+	  resume with the rest of words in the list.
+
+	* Changed the substitution algorithm of print_inst(). Now it requires
+	  two characters for each 'a' substitution. Changed targets' tables
+	  accordingly.
+
+	* Changed instruction syntax in the manual when referring to
+	  expressions.
+
+1.06	2018-09-09
+
+	* 6500 family added:
+	  - mos6502: MOS Technology 6502.
+	  - r6501: Rockwell R6501.
+	  - g65sc02: California Micro Devices G65SC02.
+	  - r65c02: Rockwell R65C02.
+	  - r65c29: Rockwell R65C29.
+	  - w65c02s: Western Design Center W65C02S.
+
+	* Fixed some instructions for the i8080 and i8085 (ADI, ACI, SUI, SBI,
+	  ANI, XRI, ORI, CPI, IN, OUT).
+
+1.05	2018-07-22
+
+	* New targets added:
+	  - hd64180: Hitachi HD64180.
+	  - dp2200: Datapoint 2200 version I.
+	  - dp2200ii: Datapoint 2200 version II.
+	  - i8008: Intel 8008.
+	  - i8085: Intel 8085.
+
+	* Changes to facilitate the addition of a new target that merely
+	  extends another.
+
+1.04	2018-07-15
+
+	* uz80as becomes a multitarget assembler. The default target is the
+	  Zilog Z80. Other targets can be selected using the `--target` command
+	  line option.
+
+	* The targets accepted are:
+	  - z80: Zilog Z80 (the default if no target specified).
+	  - i8080: Intel 8080.
+	  - gbcpu: Sharp LR35902 (Nintendo Gameboy CPU).
+
+	* Added the `--undocumented` command line option to enable undocumented
+	  instructions.
+
+	* Added a `--license` command line option.
+
+	* Fixed: for the Z80, the `OUT (C),0` and SLL instructions where
+	  accepted by default, but they are undocumented instructions. Now are
+	  only accepted with the `--undocumented` command line option.
+
+1.03	2017-04-04
+
+	* Fixed typo in the --help output (assemle to assemble).
+
+	* Separating a long command line option from its argument using '=' now
+	  is accepted, for example, `--define="MUL(a,b) (a*b)"`.
+
+	* The CHANGELOG.md file is now called NEWS.
+
+1.02	2016-09-02
+
+	* Fixed: the object and listing files, when they were not specified
+	  on the command line, were generated in the same directory of the
+	  source. Now they are generated in the current working directory.
+
+	Source changes
+	--------------
+
+	* main.c (mkfname): changed to remove the path from the source
+	  filename.
+
+	* Prepared for VPATH builds. Changed all tests to allow this.
+
+1.01	2016-08-10
+
+	Source changes
+	--------------
+
+	* The configure script and Makefiles are generated from autoconf 2.69
+	  and automake 1.15.
+
+	* Including mkwin script to build on Windows.
+
+1.00	2016-06-05
+
+	* Initial release.
+

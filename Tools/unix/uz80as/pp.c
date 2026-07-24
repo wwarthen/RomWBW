@@ -5,7 +5,7 @@
  * ===========================================================================
  */
 
-#include "config.h"
+#include <config.h>
 #include "pp.h"
 #include "utils.h"
 #include "err.h"
@@ -386,6 +386,7 @@ static void define(const char *idp, const char *idq,
 
 	nod = emalloc((sizeof *nod) + (idq - idp) + (aq - ap) + 2);
 	nod->text = emalloc(tq - tp + 1);
+
 	nod->name = (char *) ((unsigned char *) nod + (sizeof *nod));
 	nod->pars = nod->name + (idq - idp + 1);
 
@@ -393,7 +394,7 @@ static void define(const char *idp, const char *idq,
 	copychars(nod->text, tp, tq);
 	copychars(nod->pars, ap, aq);
 
-	// printf("DEF %s(%s) %s\n", nod->name, nod->pars, nod->text);
+	/* printf("DEF %s(%s) %s\n", nod->name, nod->pars, nod->text); */
 
 	/* We don't check whether the arguments are different. */
 
@@ -652,8 +653,7 @@ static void pif(const char *p)
  * Parse a preprocessor line.
  * 'p' points to the next character after the '#'.
  */
-static int 
-parse_line(const char *p)
+static void parse_line(const char *p)
 {
 	if (isppid(p, IFDEFSTR)) {
 		pifdef(p, sizeof IFDEFSTR, 1);
@@ -674,14 +674,10 @@ parse_line(const char *p)
 	} else if (isppid(p, DEFCONTSTR)) {
 		pdefcont(p);
 	} else {
-		return 0;
-/*
 		eprint(_("unknown preprocessor directive\n"));
 		eprcol(s_line, s_line_ep);
 		newerr();
-*/
 	}
-	return 1;
 }
 
 /*
@@ -698,20 +694,17 @@ void pp_line(const char *line)
 	s_line_ep = line;
 
 	p = skipws(line);
-	if ((*p == '#') || (*p == '.')) {
+	if (*p == '#') {
 		s_line_ep = p;
-		if (parse_line(p + 1)) {
-			s_ppbuf[0][0] = '\0';
-			s_pline = &s_ppbuf[0][0];
-			return;
-		}
-	}
-	if (s_skipon) {
+		parse_line(p + 1);
 		s_ppbuf[0][0] = '\0';
 		s_pline = &s_ppbuf[0][0];
-		return;
+	} else if (s_skipon) {
+		s_ppbuf[0][0] = '\0';
+		s_pline = &s_ppbuf[0][0];
+	} else {
+		s_pline = expand_line0(line);
 	}
-	s_pline = expand_line0(line);
 }
 
 /* Reset the module for other passes. */

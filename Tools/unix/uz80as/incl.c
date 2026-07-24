@@ -5,7 +5,7 @@
  * ===========================================================================
  */
 
-#include "config.h"
+#include <config.h>
 #include "incl.h"
 #include "utils.h"
 #include "err.h"
@@ -68,7 +68,6 @@ void pushfile(const char *p, const char *q)
 		exit(EXIT_FAILURE);
 	}
 
-	// printf("pushfile: %s\n", p);
 	ifile = emalloc((sizeof *ifile) + (q - p) + 1);
 	ifile->name = (char *) ((unsigned char *) ifile + sizeof *ifile);
 	copychars(ifile->name, p, q);

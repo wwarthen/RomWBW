@@ -908,13 +908,13 @@ CurPos	.DB 0 ;for visualization only (i.e. no need for playing)
 #ENDIF
 
 ;Identifier
-	.IF Id
+	#IF Id
 	.DB "=Uni PT2 and PT3 Player r."
 	.DB Release
 	.DB "="
-	.ENDIF
+	#ENDIF
 
-	.IF LoopChecker
+	#IF LoopChecker
 CHECKLP	LD HL,SETUP
 	SET 7,(HL)
 	BIT 0,(HL)
@@ -924,7 +924,7 @@ CHECKLP	LD HL,SETUP
 	INC (HL)
 	LD HL,ChanA+NtSkCn
 	INC (HL)
-	.ENDIF
+	#ENDIF
 
 MUTE	ISHBIOS
 	JR	NZ,MUTEVIAHBIOS

@@ -5,14 +5,16 @@
  * ===========================================================================
  */
 
-#include "config.h"
+#include <config.h>
 #include "options.h"
 #include "err.h"
 
 const char *s_asmfname;	/* Name of source file. */
 const char *s_objfname;	/* Name of generated binary file. */
 const char *s_lstfname;	/* Name of listing file. */
+const char *s_expfname;	/* Name of export file. */
 const char *s_target_id = "z80"; /* ID of target */
+int s_force_export = 0;	/* If export file was explicitly specified. */
 int s_listing = 1;	/* If we generate the listing file or not. */
 int s_extended_op = 0;	/* Allow extended instruction syntax. */
 int s_undocumented_op = 0;  /* Allow undocumented instructions. */

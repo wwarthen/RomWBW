@@ -789,7 +789,7 @@ static void handle_endif(struct preprocess *pp, ParseState *P)
     free(I);
 }
 
-static void handle_message(struct preprocess *pp, ParseState *P, char *type)
+static void handle_message(struct preprocess *pp, ParseState *P, const char *type)
 {
     char *msg;
     if (!pp_active(pp))
