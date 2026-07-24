@@ -1243,6 +1243,12 @@ vs. CP/M 3.  If you utilize an RSX that modifies the BDOS version
 returned, you are likely to have serious problems.  In this case, be
 sure to use `ASSIGN` prior to loading the RSX or after it is unloaded.
 
+When `ASSIGN` assigns a drive letter to an area on disk (slice), it
+does **not** initialize this area.  If it was previously initialized,
+it will be ready to use with whatever data was previously stored there.
+If it has not been previously initialized, you should use `CLRDIR` to
+initialize it before attempting to use it.
+
 #### Etymology
 
 The `ASSIGN` command is an original product and the source code is
