@@ -4,6 +4,7 @@ Version 3.7
 - WBW: Split SDMODE_PIO into SDMODE_ZPIO & SDMODE_GPIO
 - HJB: Add HBIOS FastPath support into CP/NET
 - WDC: Added I2C LCD driver
+- J?L: Source for NZCOM (from disassembly)
 
 Version 3.6
 -----------

@@ -1,0 +1,755 @@
+	TITLE	"NZBLITZ for NZ-COM The Automatic Z-System"
+;************************************************************************
+;*  N Z B L I T Z							*
+;* Clone Utility for NZ-COM						*
+;*----------------------------------------------------------------------*
+;*  by Cameron W. Cotrill						*
+;*     disassembled jxl							*
+;*----------------------------------------------------------------------*
+;* Revisions:								*
+;* Disassembly:	jxl					Jul 2025	*
+;*		public release 1.0			Jul 2025	*
+;*		see remarks at the end					*
+;*----------------------------------------------------------------------*
+;* ASSEMBLE directly to .COM file					*
+;*									*
+;* A>Z80ASM NZBLITZ							*
+;************************************************************************
+
+
+	NAME	('NZBLITZ')
+
+
+VER	EQU	14H
+REV	MACRO
+	DEFB	' '
+	ENDM
+
+DATE	MACRO
+	DEFB	'1988-90'
+	ENDM
+
+
+
+
+;::::: DEFINITIONS
+
+
+BEL	EQU	07H		; Bell character
+LF	EQU	0AH		; Line Feed character
+CR	EQU	0DH		; carriage return character
+
+CPMBIOS	EQU	0		; CP/M BIOS warm boot (JP)
+CPMBDOS	EQU	5		; CP/M BDOS entry point (JP)
+CPMFCB	EQU	5CH		; CP/M standard FCB #1
+				;   +1 filename
+				;   +9 filetype
+
+
+
+
+;::::: PROGRAM START
+
+
+NZBLITZ: JP	START		; bypass header
+	DEFB	'Z3ENV'		; this is a ZCPR3 utility
+	DEFB	1		; show external environment
+
+ENVADR:	DEFW	0		; environment storage location
+
+
+	; Option flags
+	; (can be configured with NZBLTZ14.CFG)
+RSXOPT:	DEFB	0FFH		; Flag: save loaded RSX (0= no, else = yes)
+SAVOPT:	DEFB	1		; Flag: system image will be saved up to
+				;   CBIOS start / Memory top / Addr specified
+CFGNAME: DEFB	'NZBLTZ14',0	; default name for CFG file
+ARCOPT:	DEFW	0		; Flag: set archive attribute for NZCOM.CCP
+				;   ##### defined as byte in CFG, however routine CALCEADR reads
+SAVADR:	DEFW	0		; Save system image up to this addr
+
+
+START:	LD	HL,(ENVADR)	; Environment addr poked by ZCPR
+	LD	(ENVPTR),HL	; ..save locally
+	LD	A,H		; test if invalid (= zero)
+	OR	L
+	JP	Z,NONZCOM	; ..if so, jump display msg and exit
+	PUSH	HL		;   else, save addr
+	LD	DE,M$BLTZ	; display msg (prg name and version)
+	CALL	PSTRING
+	XOR	A		; clear A
+	LD	(ERRFLAG),A	; and clear error flag
+	INC	HL		; move fwd to 'Z3ENV' id
+	INC	HL
+	INC	HL
+	LD	B,5		; # chars to compare
+	LD	DE,NZBLITZ+3	; point to 'Z3ENV' in prg header
+START1:	LD	A,(DE)		; get char
+	CP	(HL)		; compare
+	INC	HL		; move ptr's fwd
+	INC	DE
+	JP	NZ,NONZCOM	; ..if no match, jump
+	DJNZ	START1		; loop
+
+	; 'Z3ENV' matches, check type
+	LD	A,(HL)		; get ENVTYP
+	RLCA			; test bit7 (= Extended Env ?)
+	JP	NC,NONZCOM	; ..if not, jump
+
+	; found an Extended Environment Descriptor
+	LD	HL,(CPMBIOS+1)	; BIOS warm boot addr
+	LD	A,3*29		; move past fn #29 (last in standard BIOS)
+	ADD	A,L		; ##### LD L,3*30 would have the same effect
+				;       given BIOS starts on a page boundary
+	LD	L,A
+	LD	DE,NZID		; id string 'NZ-COMÄ (embedded in error msg)
+	LD	B,6		; # chars to compare
+START2:	LD	A,(DE)		; get char
+	CP	(HL)		; compare
+	JP	NZ,NONZCOM	; ..if not match, jump
+	INC	DE		; move ptr's fwd
+	INC	HL
+	DJNZ	START2		; loop
+
+	; running under NZ-COM
+	LD	DE,CCPUSER	; copy from ZFCB: user, drive, file name
+	LD	BC,13
+	LDIR			; evaluate cmdline
+	LD	A,(CPMFCB+1)	; check first char of cmdline
+	CP	' '		; blank ?
+	JP	Z,HELP
+	CP	'?'		; question mark ?
+	JP	Z,HELP
+	CP	'/'		; help request ?
+	JP	Z,HELP		; not a help request, continue cmdline processing
+	LD	DE,CPMFCB+9	; point to file type in standard FCB
+	LD	HL,FTYPCOM	; point to file type 'COM'
+	LD	C,3		; # chars to copy (B is still zero)
+	LDIR
+
+	; get system addr's
+	LD	HL,(CPMBIOS+1)	; BIOS warm boot addr
+	LD	(BIOADDR),HL	; ..store for loader
+	LD	HL,(CPMBDOS+1)	; BDOS entry point
+	LD	(DOSADDR),HL	; ..store for loader
+
+	LD	IX,(ENVADR)	; get Environment addr
+	LD	E,(IX+03FH)	; offset CCP (ZCPR) base addr
+	LD	D,(IX+040H)
+	LD	A,(IX+041H)	; offset CCP size in # recs
+	LD	(CPRADDR),DE	; local copies
+	LD	(CPRSIZ),A	; check if RSX is installed
+	PUSH	HL
+	XOR	A		; clear Carry
+	SBC	HL,DE		; is ZCPR above BDOS entry ?
+	POP	HL
+	JP	C,RSXFND	; ..if so, jump
+	EX	DE,HL		; swap regs
+
+	; calculate/determine end addr for copy
+CALCEADR: LD	(CPYDEST),HL
+	EX	DE,HL
+	LD	HL,(ARCOPT)	; get option flag archive attribute for CCP
+	LD	(CCPSATR),HL	; ..and store it for loader
+	LD	A,(SAVOPT)	; get option flag 'Save up to..'
+	LD	L,0		; prepare for CBIOS (base addr in HL)
+	LD	H,(IX+2)
+	RRA			; test bit0
+	JR	C,CPYSYS	; ..if save up to 'Start of CBIOS', then jump
+	LD	H,0		; clear HL
+	RRA			; test next bit
+	JR	C,CPYSYS	; ..save up to 'Top of Memory', then jump
+	LD	HL,(SAVADR)	;   else, use addr specified through CFG
+				;   ..and fall through
+
+	; copy system from high mem to buffer
+CPYSYS:	SBC	HL,DE		; calculate length
+	LD	(CPYLEN),HL	; ..and store it for loader
+	LD	B,H		; transfer into BC
+	LD	C,L
+	PUSH	BC		; save it
+	EX	DE,HL		; swap regs (HL= start addr)
+	LD	DE,BUFFER	; ptr to buffer
+	LDIR			; ..and copy
+
+	; write "blitzed" system to disk
+	LD	A,0FFH
+	CALL	USRAREA		; get currently logged user
+	LD	(CURRUSR),A	; ..store it
+	LD	A,(CPMFCB+13)	; get user area from S1 byte in standard FCB
+	CALL	USRAREA		; log in
+	LD	DE,CPMFCB	; stardard FCB
+	PUSH	DE
+	LD	C,19		; fn #19 Delete file
+	CALL	CPMBDOS		; ..in case file already exists
+	POP	DE
+	LD	C,22		; fn #22 Make file
+	CALL	CPMBDOS		; now create it
+	POP	HL		; restore length
+
+	; calc number of records
+	LD	BC,128-1	; round up to full record
+	ADD	HL,BC
+	ADD	HL,HL		; *2
+	LD	A,H		; /256 (cut off low byte)
+	ADD	A,8		; +8 (size loader)
+	LD	C,A		; ..in C (B is already 0)
+				; ##### why not use B alone, and DJNZ ??
+	LD	DE,LOADER-128	; ptr to LOADER code
+				;   (loop below is 128 bytes ahead, so deduct)
+
+	; write file to disk
+WRFILE:	LD	A,B		; test counter
+	OR	C		; all records written ?
+	JR	Z,CLFILE	; ..if zero, then jump to exit loop
+	LD	HL,128		; move 128 bytes (1 rec) fwd
+	ADD	HL,DE
+	PUSH	HL		; save current addr
+	EX	DE,HL
+	CALL	SETDMA		; ..and set as DMA buffer addr
+	LD	DE,CPMFCB	; ptr to standard FCB
+	CALL	FWRITE		; sequential write (1 record)
+	POP	DE		; restore addr in DE
+	JP	NZ,FILERR		; ..if error, then jump
+	DEC	BC		;   else, counter -1
+	JR	WRFILE		;   ..and loop
+
+	; writing done
+CLFILE:	CALL	FCLOSE		; close file
+	INC	A
+	JP	Z,FILERR	; ..if error occurred, then jump
+	LD	DE,M$SAVD	;   else, display msg system saved
+	JR	PFNAM		; and skip over
+
+
+	; error writing file
+FILERR:	OR	0FFH
+	LD	(ERRFLAG),A	; set error flag
+	CALL	FCLOSE
+	LD	DE,CPMFCB	; ptr to standard FCB
+	LD	C,19		; fn #19 Delete file
+	CALL	CPMBDOS		; ..and remove defective file
+	LD	DE,E$DWRT	; display msg disk write error
+				; ..and fall through
+
+
+	; display file name
+PFNAM:	CALL	PSTRING
+	LD	HL,CPMFCB+1	; file name in standard FCB
+	LD	B,11		; # byte to display
+PFNAM1:	LD	A,(HL)
+	AND	01111111B	; reset high bit
+	CALL	COUT		; ..and set to console
+	INC	HL		; move ptr fwd
+	DJNZ	PFNAM1		; loop
+
+	LD	A,(ERRFLAG)	; get error flag
+	AND	A		; test
+	LD	DE,E$ABORT	; display msg aborting
+	CALL	NZ,PSTRING	; ..if error occurred, display msg
+	LD	A,(CURRUSR)	; get previously logged user area
+	CALL	USRAREA		; ..and log in
+	LD	DE,M$CRLF	; send <CR><LF> to console
+	CALL	PSTRING
+
+
+	; clear multiple command line buffer in currently running system
+CLRMCL:	LD	HL,(ENVADR)	; env addr currently running system
+	LD	A,H		; test if invalid (= zero)
+	OR	L
+	RET	Z		; ..if so, return
+
+	; determine addr of mcl buffer
+	LD	DE,18H		; offset to Z3CL Multiple command line buffer
+	ADD	HL,DE		; move ptr fwd
+	LD	A,(HL)
+	INC	HL
+	LD	H,(HL)		; addr of mcl buffer in HL
+	LD	L,A
+	XOR	A		; clear A
+	EX	DE,HL		; swap regs
+	LD	L,4		; move ptr to cmdline location
+	ADD	HL,DE
+	EX	DE,HL		; swap regs back
+
+	; reset mcl buffer variables
+	LD	(HL),E		; let next char point to start of buffer
+	INC	HL
+	LD	(HL),D
+	INC	HL		; move ptr fwd
+	INC	HL
+	LD	(HL),A		; reset char count
+	INC	HL
+	LD	(HL),A		; mark buffer as empty (nul-terminator)
+	RET
+
+
+HELP:	LD	DE,M$SYTX	; show syntax help
+	JR	EXIT
+
+
+	; installed RSX found
+RSXFND:	LD	A,(RSXOPT)	; get flag
+	AND	A		; test
+	JP	NZ,CALCEADR	; ..if set, jump to continue
+	LD	DE,E$RSX	;   else, display error (RSX installed)
+	JR	ERREXIT
+
+
+	; not running under NZ-COM, so exit prog
+NONZCOM: LD	DE,E$NONZ	; ptr to msg Not NZ-COM
+				; ..fall through
+
+
+ERREXIT: OR	0FFH
+	LD	(ERRFLAG),A	; set error flag
+				; ##### not necessary anymore
+	CALL	EXIT		; display msg
+	CALL	CLRMCL		; clear mcl buffer
+	LD	DE,E$ABORT+2	; msg aborting
+
+	; display msg and return (to system)
+EXIT:	LD	C,9		; fn #9 Print string
+	JP	CPMBDOS		; call BDOS and let return from there
+
+
+
+	; Messages and strings
+
+E$RSX:	DEFB	BEL,"Can't save with RSX's loaded!$"
+E$NONZ:	DEFB	BEL,'Not '
+NZID:	DEFB	'NZ-'
+FTYPCOM: DEFB	'COM system!$'
+M$BLTZ:	DEFB	'NZBLITZ, Version ',VER/16 + '0','.',VER MOD 16 + '0',CR,LF,'$'
+M$SYTX:	DEFB	' Saves running NZCOM system as .COM file.  Any commands',CR,LF
+	DEFB	' remaining on the ZCPR multiple command line will execute',CR,LF
+	DEFB	' each time the program image is loaded.',CR,LF,LF
+	DEFB	'Syntax:',CR,LF
+	DEFB	' NZBLITZ [dir:]sysname[.com][;trailing;commands]',CR,LF,'$'
+E$DWRT:	DEFB	BEL,'Disk write error '
+E$ABORT: DEFB	' - Aborting!'
+M$CRLF:	DEFB	CR,LF,'$'
+M$SAVD:	DEFB	' System saved as $'
+
+
+
+	; BDOS function calls
+
+SETDMA:	PUSH	BC
+	LD	C,26		; fn #26 Set DMA buffer addr
+
+BDOS1:	PUSH	DE
+BDOS2:	PUSH	HL
+	CALL	CPMBDOS
+	POP	HL
+	POP	DE
+	POP	BC
+	AND	A
+	RET
+
+COUT:	PUSH	BC
+	LD	C,2		; fn #2 Console output
+
+BDOS3:	PUSH	DE
+	LD	E,A
+	JR	BDOS2
+
+FWRITE:	PUSH	BC
+	LD	C,21		; fn #21 Sequential write
+	JR	BDOS1
+
+FCLOSE:	PUSH	BC
+	LD	DE,CPMFCB
+	LD	C,16		; fn #16 Close file
+	JR	BDOS1
+
+PSTRING:	PUSH	BC
+	LD	C,9		; fn #9 Print string
+	JR	BDOS1
+
+USRAREA:	PUSH	BC
+	LD	C,32		; fn #32 Get/Set user area
+	JR	BDOS3
+
+
+
+	; RAM Storage
+
+CURRUSR: DEFB	0		; currently logged user area
+ERRFLAG: DEFB	0		; Flag: file error occurred (0= no, <>0 = yes)
+
+
+
+;:::: LOADER
+
+				; all symbols start with 'L'
+
+LOADER:	EQU	$
+
+
+	.PHASE	100H
+
+L_LOADR: JP	L_START		; bypass header
+	DEFB	'Z3ENV'		; this is a ZCPR3 utility
+	DEFB	1		; show external environment
+
+L_ENVAD: DEFW	0		; environment storage location
+
+
+	; variables of "blitzed" system are filled by NZBLITZ and
+	; saved in header of loader program - area is used by main
+	; program AND loader, hence need symbols for both worlds
+
+	ENVPTR:		EQU	LOADER+$-100H
+	BIOADDR:	EQU	ENVPTR+2
+	DOSADDR:	EQU	ENVPTR+4
+	CPRADDR:	EQU	ENVPTR+6
+	CPRSIZ:		EQU	ENVPTR+8
+	CPYLEN:		EQU	ENVPTR+9
+	CPYDEST:	EQU	ENVPTR+11
+
+	CCPSATR:	EQU	ENVPTR+13
+	CCPAATR:	EQU	ENVPTR+14
+	CCPUSER:	EQU	ENVPTR+15
+	CCPFCB:		EQU	ENVPTR+16
+
+L_ENVPT:	DEFW	0	; local env ptr
+L_BIOAD:	DEFW	0	; BIOS warm boot addr
+L_DOSAD:	DEFW	0	; BDOS entry point
+L_CPRAD:	DEFW	0	; ZCPR base addr
+L_CPRSZ:	DEFB	0	; ZCPR size in # recs
+L_CPLEN:	DEFW	0	; length of copy (# bytes)
+L_CPDST:	DEFW	0	; destination addr (in high mem)
+
+				; for NZCOM.CCP
+L_CCPSA:	DEFB	0	;   Flag: set system attribute (0= no)
+L_CCPAA:	DEFB	0	;   Flag: set archive attribute (0= no)
+L_CCPUS:	DEFB	0	;   User area to save file
+L_CCPFC: DEFB	0,'nzcom   ccp'	; FCB 36 bytes
+	DEFS	36-($-L_CCPFC)
+
+
+L_START: LD	SP,L_LOADR	; set local stack
+	LD	DE,L$BLTZ	; display start msg
+	CALL	L@PSTR
+
+	LD	HL,(L_CPRAD)	; ZCPR base addr of "blitzed" system
+	LD	DE,(L_CPDST)	; destination addr
+	XOR	A		; clear Carry
+	SBC	HL,DE		; calc offset to begin of ZCPR
+	LD	DE,L_BUFF-128	; calc addr in buffer
+				;   (loop below is 128 bytes ahead, so deduct)
+	ADD	HL,DE
+	PUSH	HL		; save addr
+	LD	A,0FFH
+	CALL	L@USER		; get currently logged user
+	LD	(L_USER),A	; ..and store it
+	CALL	L@GDISK		; get currently logged disk
+	LD	(L_DISK),A	; ..and store it
+
+	; evaluate cmdline
+	LD	A,(CPMFCB+1)	; first char of file name in standard FCP
+	CP	'?'		; is this a help request ?
+	JP	Z,L_HELP
+	CP	'/'		; is this a cmdline option ?
+	JR	NZ,L_WRCCP	; ..if not, skip over
+	LD	A,(CPMFCB+2)	;   else, get next char
+	CP	'F'		; is it 'F' option ?
+	JP	Z,L_SVMCL	; ..if so, jump and do _not_ save NZCOM.CCP
+	JP	L_HELP		;   else, display help
+
+	; write NZCOM.CCP to disk
+L_WRCCP: LD	A,(L_CCPUS)	; get user area for NZCOM.CCP
+	CALL	L@USER		; ..and set it
+	LD	DE,L_CCPFC	; ptr to FCB
+	PUSH	DE
+	LD	C,19		; fn #19 Delete file
+	CALL	CPMBDOS		; ..in case the file already exists
+	POP	DE
+	LD	C,22		; fn #22 Make file
+	CALL	CPMBDOS		; now create it
+	POP	DE		; restore addr in buffer (ZCPR - 0x80)
+	LD	A,(L_CPRSZ)	; ZCPR size (# recs) of "blitzed" system
+	LD	C,A		; ..in C
+	LD	B,0		; set to zero for 16-bit DEC
+				; ##### why not in B, and use DJNZ ??
+L_WRCC1: LD	A,B		; test counter
+	OR	C		; all records written ?
+	JR	Z,L_ATCCP	; ..if zero, then jump to exit loop
+	LD	HL,128		; move 128 bytes (1 rec) fwd
+	ADD	HL,DE
+	PUSH	HL		; save current addr
+	EX	DE,HL
+	CALL	L@STDMA		; ..and set as DMA buffer addr
+	LD	DE,L_CCPFC	; ptr to FCB
+	CALL	L@WRITE		; sequential write (1 record)
+	POP	DE		; restore addr in DE
+	JP	NZ,L_FIERR	; ..if error, then jump
+	DEC	BC		;   else, counter -1
+	JR	L_WRCC1		;   ..and loop
+
+	; set file attributes
+L_ATCCP: CALL	L@CLOSE		; close file
+	INC	A
+	JP	Z,L_FIERR	; ..if error, then jump
+	LD	HL,L_CCPFC+3	; attribute F3 (no datestamp)
+	SET	7,(HL)
+	LD	HL,L_CCPFC+10	; attribute T2 (system)
+	LD	A,(L_CCPSA)
+	OR	A		; test flag if system attribute shall be set
+	JR	Z,L_ATCC1	; ..if not, skip over
+	SET	7,(HL)
+L_ATCC1: LD	A,(L_CCPAA)
+	OR	A		; test flag if archive attribute shall be set
+	JR	Z,L_ATCC2	; ..if not, skip over
+	INC	HL		; move fwd attribute F3 (archive)
+	SET	7,(HL)		; ..and set T3 high bit
+L_ATCC2: LD	C,30		; fn #30 Set file attributes
+	CALL	CPMBDOS		; call BDOS to set attribute bits
+
+	; preserve multiple command line of currently running system
+L_SVMCL: LD	BC,0
+	LD	IX,(L_ENVAD)	; env addr currently running system
+	LD	A,(IX+3)	; offset first char of id string
+	CP	'Z'		; test if 'Z'
+	JR	NZ,L_CPSYS	; ..if not, then jump
+	LD	L,(IX+18H)	;   else, get addr of Z3CL in HL
+	LD	H,(IX+19H)	;   (Multiple command line buffer)
+	CALL	L_LDHLI		; ptr to next char in mcl buffer
+	LD	DE,(L_CPDST)	; destination addr (hi mem)
+	DEC	D		; ..go down by 0x0200
+	DEC	D
+	LD	(L_TMPB),DE	; store addr (temp. buffer)
+	CALL	L_CPYHD		; copy mcl tail to temp. buffer
+
+	; copy "blitzed" system to destination in high memory
+L_CPSYS: PUSH	BC		; save byte count (0= no mcl saved)
+
+	; setup page 0 addr's
+	LD	HL,(L_BIOAD)	; BIOS wboot of "blitzed" system
+	LD	(CPMBIOS+1),HL	; ..set
+	LD	HL,(L_DOSAD)	; BDOS entry of "blitzed" system
+	LD	(CPMBDOS+1),HL	; ..set
+
+	; perform copy
+	LD	BC,(L_CPLEN)	; # bytes to copy
+	LD	DE,(L_CPDST)	; dest addr
+	LD	HL,L_BUFF	; ptr to buffer
+	LDIR			; initialize system
+	LD	C,37		; fn #37 Reset drives
+	LD	DE,0FFFFH	; select all drives
+	CALL	CPMBDOS
+	LD	HL,(L_ENVPT)
+	LD	DE,22H		; offset to Z3MSG buffer addr
+	ADD	HL,DE		; move ptr fwd
+	CALL	L_LDHLI		; get addr in HL
+	LD	E,2EH		; move ptr fwd to last char in error cmd line
+	ADD	HL,DE
+	LD	A,(L_USER)	; get user area logged at start
+	LD	(HL),A		; ..store
+	CALL	L@USER		; ..and log in
+	INC	HL		; move ptr fwd
+	LD	A,(L_DISK)	; get disk logged at start
+	LD	(HL),A		; store
+	CALL	L@SDISK		; ..and log in
+
+	; append mcl of currently running system to mcl of "blitzed" system
+	POP	BC		; restore mcl byte count
+	LD	A,B		; test if zero
+	OR	C
+	JR	Z,L_DONE	; ..if no mcl, then nothing to do
+	LD	IX,(L_ENVPT)	; addr env of "blitzed" system
+	CALL	L_GMCLP		; get mcl parameters
+	PUSH	AF		; save mcl size
+	CALL	L_LDHLI		; ptr to next char in mcl buffer
+	CALL	L_CPYHD		; copy mcl tail to start of mcl buffer
+	POP	AF
+	DEC	B		; test if and pending cmd's..
+	INC	B		;   ..of running system saved ?
+	JR	NZ,L_CLERR	; ..if not, skip over
+	CP	C		;   else, test if buffer is big enough
+				; ##### BUG: already copied byte in buffer
+				;            are not considered
+	JR	C,L_CLERR	; ..if not, then jump (overflow error)
+	LD	HL,(L_TMPB)	; addr of temp. buffer
+	CALL	L_CPYHD		; ..and append commands of running system
+				;   to commands of "blitzed" system
+	CALL	L_GMCLP		; get mcl parameters
+	LD	(HL),E		; ..and set ptr to next char
+	INC	HL		;   to start of mcl buffer
+	LD	(HL),D
+	JR	L_DONE		; jump to bypass error msg
+
+	; multiple command line buffer overflow
+L_CLERR: LD	DE,L$ECOFL	; error msg Cmdline Overflow
+	CALL	L@PSTR		; display and fall through
+
+
+	; done, let ZCPR take over
+L_DONE:	LD	A,(CPMBIOS+4)	; current drive and user
+	LD	C,A		; ..into C
+	LD	HL,(L_CPRAD)	; ZCPR base of "blitzed" system (now = new sys)
+	JP	(HL)		; exit and pass controll to ZCPR
+
+
+	; file error
+L_FIERR: CALL	L@CLOSE		; close file
+	LD	DE,L_CCPFC
+	LD	C,19		; fn #19 Delete file
+	CALL	CPMBDOS
+	LD	DE,L$EDWRI	; error msg Disk write
+
+
+	; error exit routine
+L_EEXIT: CALL	L@PSTR
+	LD	A,(L_USER)	; log in original user area
+	CALL	L@USER
+	LD	A,(L_DISK)	; log in original disk
+	CALL	L@SDISK
+	JP	0		; ..then exit (initiate Warm boot)
+
+
+	; display help
+L_HELP:	LD	DE,L$HELP	; ptr to help msg
+	JR	L_EEXIT		; jump to display and exit
+
+
+
+	; --- Messages
+
+L$BLTZ:	DEFB	'NZBLITZ loader vers ',VER/16 + '0','.',VER MOD 16 + '0',CR,LF,'$'
+L$EDWRI: DEFB	BEL,'Disk write error on NZCOM.CCP - aborting!',CR,LF,'$'
+L$HELP:	DEFB	' This program contains a NZCOM operating system.',CR,LF
+	DEFB	' The NZCOM system will replace the current system if',CR,LF
+	DEFB	' the name of this file is typed with no arguments.',CR,LF,LF
+	DEFB	' When running in a ZCPR3 environment, pending commands',CR,LF
+	DEFB	' will be appended to the NZCOM multiple command line,',CR,LF
+	DEFB	' allowing the NZCOM system to be loaded as part of an',CR,LF
+	DEFB	' alias script.',CR,LF,LF
+	DEFB	' If a single NZCOM system is always used, the /F option',CR,LF
+	DEFB	' may be used to skip writing NZCOM.CCP.',CR,LF,'$'
+L$ECOFL: DEFB	BEL,'Command line overflow!',CR,LF,'$'
+
+
+
+	; --- BDOS function calls
+
+L@STDMA: PUSH	BC
+	LD	C,26		; fn #16 Set DMA
+
+L@BDOS:	PUSH	DE
+	PUSH	HL
+	CALL	CPMBDOS
+	POP	HL
+	POP	DE
+	POP	BC
+	AND	A
+	RET
+
+L@GDISK: PUSH	BC
+	LD	C,25		; fn #25 Get current disk
+	JR	L@BDOS
+
+L@SDISK: PUSH	BC
+	LD	C,14		; fn #14 Select disk
+	JR	L@BDOS2
+
+L@WRITE: PUSH	BC
+	LD	C,21		; fn #21 Sequential write
+	JR	L@BDOS
+
+L@CLOSE: PUSH	BC
+	LD	DE,L_CCPFC
+	LD	C,16		; fn #16 Close file
+	JR	L@BDOS
+
+L@PSTR:	PUSH	BC
+	LD	C,9		; fn #9 Print string
+	JR	L@BDOS
+
+L@USER:	PUSH	BC
+	LD	C,32		; fn #32 Get/Set user
+L@BDOS2: LD	E,A
+	JR	L@BDOS
+
+
+
+	; --- Support functions
+
+	; copy series of bytes till nul-terminator is found
+	;  in: HL= source addr
+	;      DE= dest addr
+	; out: BC= # bytes copied
+L_CPYHD: LD	A,(HL)		; get byte
+	LD	(DE),A		; ..and store at dest
+	OR	A
+	RET	Z		; ..if end reached (= zero), then exit
+	INC	HL		;   else, move ptr's fwd
+	INC	DE
+	INC	BC
+	JR	L_CPYHD		; and loop
+
+
+	; get parameters of Multiple Command Line buffer
+	;  in: IX= addr of env
+	; out: HL= ptr to Z3CL
+	;      DE= ptr to cmdline location
+	;       A= buffer size
+L_GMCLP: LD	L,(IX+18H)	; offset to Z3CL Multiple command line buffer
+	LD	H,(IX+19H)	;   addr in HL
+	LD	E,L		;   ..and in DE
+	LD	D,H
+	INC	DE		; move fwd
+	INC	DE
+	LD	A,(DE)		; get mcl buffer size
+	INC	DE		; move ptr fwd to cmdline location
+	INC	DE
+	RET
+
+
+	; indirect load word (16-bit) LD HL,(HL)
+	;  in: HL= addr
+	; out: HL= 16-bit value at addr
+L_LDHLI: LD	A,(HL)		; get low byte
+	INC	HL		; move ptr fwd
+	LD	H,(HL)		; ..and get high byte
+	LD	L,A
+	RET
+
+
+
+	; --- RAM Storage
+
+L_DISK:	DEFB	0		; currently logged disk
+L_USER:	DEFB	0		; currently logged user
+L_TMPB:	DEFW	0		; addr of temporary buffer (for mcl)
+
+L_BUFF:	EQU	$
+
+	.DEPHASE
+
+
+BUFFER:	EQU	$
+
+
+	END
+
+
+
+;************************************************************************
+; Remarks jxl:
+;   NZBLITZ.COM, included in available NZ-COM package(s), was disassembled
+; and extensively commented. Labels are up to seven chars long to comply
+; with M-REL standards. However, it is recommended to use SLR tools that
+; support labels up to sixteen chars.
+;   In its current state, the compiled/linked file matches exactly the
+; origial NZBLITZ.COM v1.4 distributes along with NZ-COM v1.2H, i.e. no
+; changes to the source were made. Possible optimizations detected during
+; disassembly are marked with '#####' in the comment.
+;
+;   The program consists of two parts: The main program to create a clone
+; of the running NZ-COM system, and a loader that is placed ahead of the
+; cloned ("blitzed") system. The loader itself also runs at standard TPA
+; base address 0x0100, and therefore is embedded with .PHASE/.DEPHASE
+; pseudo-ops.
+;************************************************************************

@@ -337,7 +337,8 @@ please let me know if I missed you!
   controller.
 
 * Jörg Linder has contributed disassembled and nicely commented
-  source for ZSDOS2 and the BPBIOS utilities.
+  source for ZSDOS2 and the BPBIOS utilities as well as for
+  NZCOM.
 
 * Marshall Gates has contriubed sample program source files for all
   of the language disk images.

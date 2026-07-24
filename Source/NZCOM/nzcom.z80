@@ -1,0 +1,4155 @@
+	TITLE	"NZ-COM The Automatic Z-System"
+;************************************************************************
+;*  N Z - C O M								*
+;* System loader for Z-COM v2.0						*
+;*----------------------------------------------------------------------*
+;*  by Joe Wright							*
+;*     disassembled jxl							*
+;*----------------------------------------------------------------------*
+;* Revisions:								*
+;* Disassembly:	jxl					Jun 2025	*
+;*		public release 1.0			Jul 2025	*
+;*		see remarks at the end					*
+;*----------------------------------------------------------------------*
+;* LINK with Z3LIB v1.1 and SYSLIB v3.6					*
+;*									*
+;* A>Z80ASM NZCOM/RS							*
+;* A>SLRNK NZCOM/N,NZCOM/M,/A:100,NZCOM,Z3LIB11/S,SYSLIB36/S,/E		*
+;************************************************************************
+
+
+	NAME	('NZ-COM')
+
+
+VER	EQU	12H
+REV	MACRO
+	DEFB	'H'
+	ENDM
+
+DATE	MACRO
+	DEFB	'1987-88'
+	ENDM
+
+
+
+
+;::::: DEFINITIONS
+
+
+BEL	EQU	07H		; Bell character
+BS	EQU	08H		; Backspace character
+TAB	EQU	09H		; Tab character
+LF	EQU	0AH		; Line Feed character
+CR	EQU	0DH		; carriage return character
+CTRLZ	EQU	1AH		; Control-Z character
+
+CPMBIOS	EQU	0		; CP/M BIOS warm boot (JP)
+CPMBDOS	EQU	5		; CP/M BDOS entry point (JP)
+CPMFCB	EQU	5CH		; CP/M standard FCB #1
+				;   +1 filename
+				;   +9 filetype
+CPMDMA	EQU	80H		; CP/M standard DMA buffer
+
+
+; From Z3LIB v1.1 Get..
+	EXTRN	DUTDIR, Z3INIT, ENVPTR
+
+; From SYSLIB v3.6 Get..
+	EXTRN	PRINT, PSTR, COUT, CRLF, RETUD, LOGUD, CODEND
+	EXTRN	INITFC, SETDMA, PFN2, FNAME, PAFDC, PHL4HC, EVAL16
+	EXTRN	F$OPEN, F$EXIS, F$DELE, F$MAKE, F$WRIT, F$CLOS
+
+
+
+
+	ORG	100H
+	CSEG
+
+;::::: HEADER / EMBEDDED ENV + TCAP
+
+				; begin of program is overwritten by
+				; environment descriptor + tcap of the
+				; new system being built
+				; symbols start with 'B_'
+
+NZCOM:
+B_DESC:	JP	START		; JP CBIOS / bypass header
+	DEFB	'Z3ENV'		;          / this is a ZCPR3 utility
+	DEFB	1		; ENVTYP   / show external environment
+
+ENVADR:
+B_PATH:	DEFW	0		; EXPATH   / environment storage location
+	DEFB	0		; EXPATHS
+B_RCP:	DEFW	0		; RCP
+B_RCPS:	DEFB	0		; RCPS
+B_IOP:	DEFW	0		; IOP
+B_IOPS:	DEFB	0		; IOPS
+B_FCP:	DEFW	0		; FCP
+B_FCPS:	DEFB	0		; FCPS
+B_NDIR:	DEFW	0		; Z3NDIR
+B_NDIRS: DEFB	0		; Z3NDIRS
+B_Z3CL:	DEFW	0		; Z3CL
+B_Z3CLS: DEFB	0		; Z3CLS
+B_ZENV:	DEFW	0		; Z3ENV
+	DEFB	0		; Z3ENVS
+B_SHST:	DEFW	0		; SHSTK
+B_SHSTS: DEFB	0		; SHSTKS
+B_SHSIZ: DEFB	0		; SHSIZE
+B_Z3MSG: DEFW	0		; Z3MSG
+B_EXFCB: DEFW	0		; EXTFCB
+B_EXSTK: DEFW	0		; EXTSTK
+	DEFB	0		; QUIET
+B_Z3WHL: DEFW	0		; Z3WHL
+	;
+	DEFB	0	; SPEED
+	DEFB	0	; MAXDRV
+	DEFB	0	; MAXUSR
+	DEFB	0	; DUOK
+	DEFB	0	; CRT
+	DEFB	0	; PRT
+	DEFB	0	; COLS
+	DEFB	0	; ROWS
+	DEFB	0	; LINS
+	DEFW	0	; DRVEC
+	;
+	DEFB	0	; SPAR1
+	DEFB	0	; PCOL
+	DEFB	0	; PROW
+	DEFB	0	; PLIN
+	DEFB	0	; FORM
+	DEFB	0	; SPAR2
+	DEFB	0	; SPAR3
+	DEFB	0	; SPAR4
+	DEFB	0	; SPAR5
+	;
+B_CCP:	DEFW	0		; CCP
+B_CCPS:	DEFB	0		; CCPS
+B_DOS:	DEFW	0		; DOS
+B_DOSS:	DEFB	0		; DOSS
+B_BIO:	DEFW	0		; BIO
+	;
+	DEFB	'SH      VAR'
+	DEFB	'           '
+	DEFB	'           '
+	DEFB	'           '
+	DEFB	'           '
+	DEFB	0	; PUBDRV
+	DEFB	0	; PUBUSR
+
+	; TCAP
+B_TCAP:	DEFB	'Dumb Terminal   '
+	DEFB	0BH,0AH,0CH,08H,01H,0,0,1AH
+	DEFB	0,1BH,3DH,25H,2BH,20H,25H,2BH,20H
+	DEFS	128-($-B_TCAP)
+
+
+	; Scratch area
+	; when running under NZ-COM, load env descriptor here
+	; to compare current and new system
+	DEFS	128
+
+
+	; User patch area (0x0280..0x067F 1kB)
+	; for user code (see NZ-COM manual 6.4.2)
+	;  in: HL= ptr to WRTBUF (write buffer new system)
+	;      DE= ptr to MODLST (module list) and SEGLST (segment list)
+	;       A= program status code
+	;          0 started, no NZ-COM running, no files loaded
+	;          1 started, running under NZ-COM, no files loaded
+	;          2 modules loaded in buffer, no modifications made
+	;          3 modules move to runtime addr's, ready to cold boot
+	;       0xFF no installation (either not necessary, or not possible)
+UPATCH:	RET
+	DEFS	1023
+
+
+	; Internal path
+	; 5 elements, 2 bytes each, 0x00 and 0xFF terminated
+	; (see NZ-COM manual 6.4.1)
+IPATH:	DEFB	1,0		; A0:
+	DEFB	'$$'		; placeholder current drive+user
+	DEFB	1,0,0,0,0,0	; A0: (last entry = root)
+	DEFB	0		; terminator
+	DEFB	0FFH		; end of sequence
+
+
+	; Option flags
+
+	; path preference (not documented)
+	; if running under NZ-COM, the current Path is used when <>0
+	; (only used by routine GETROOT)
+PATHOPT: DEFB	0		; Flag: preferred path (0= internal IPATH)
+
+	; (see NZ-COM manual 6.4.2)
+VOPT:	DEFB	0FFH		; Flag: verbose (0x00 = quiet, 0xFF= verbose)
+ZOPT:	DEFB	0FFH		; Flag: file extension (0x00 = REL, 0xFF = ZRL)
+
+	; write NZCOM.CCP, overwrite NZCPM.COM (not documented)
+WRNZOPT: DEFB	0		; Flag: 0= save NZCOM.CCP, don't overwrite NZCPM.COM
+				;      <>0 don't save NZCOM.CCP, overwrite NZCPM.COM
+
+
+	; --> area is used to store Z3CL (multiple command line buffer)
+	;     when running under ZCPR3 system
+AUTOCMD: DEFB	'STARTZCM'	; auto-start command (NZ-COM manual 6.4.3)
+	DEFB	0		; terminator
+	DEFB	0FFH		; end of sequence
+
+	DEFB	'(C) Copyright '
+	DATE
+	DEFB	' by Joe Wright and Alpha Systems Corp. '
+	DEFB	'San Jose, CA.  All rights reserved.'
+
+	DEFS	98
+	; <-- store Z3CL up to here
+
+
+	DEFS	35
+STACK:	DEFW	0		; local stack
+
+
+	; location to create minipath from actual Path (more bytes than needed)
+MPATH:	DEFB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+
+
+	; display initial start message
+STRTMSG: CALL	PRINT
+	DEFB	'NZCOM Version ',VER/16 + '0','.',VER MOD 16 + '0'
+	DEFB	' System Loader for Z-Com v2.0',CR,LF
+	DEFB	'Copyright (C) '
+	DATE
+	DEFB	' Alpha Systems  '
+	DEFB	0
+
+	LD	HL,SERNO	; ptr to serial # string
+	CALL	PSTR		; display it
+	CALL	PRINT		; ..followed by <CR><LF>
+	DEFB	CR,LF
+	DEFB	0
+	RET
+
+	DEFS	10		; not used
+
+
+
+
+;::::: PROGRAM START
+
+
+START:	JR	START0
+
+SERNO:	DEFB	'001-11255'	; serial no.
+	DEFB	0
+
+START0:	LD	(STACK),SP
+	LD	SP,STACK
+	CALL	STRTMSG		; display start msg
+
+	; evaluate first token of cmdline
+	LD	HL,CPMFCB+1	; ptr to filename in standard CP/M FCB
+	LD	A,'?'		; is '?' first char ?
+	CP	(HL)
+	JP	Z,HELP		; ..if so, then jump display help and exit
+	LD	A,'/'		; is '/' first char ?
+	CP	(HL)
+	JR	NZ,START1	; ..if not, skip over
+	INC	HL		;   else, move to next char
+	CP	(HL)
+	JP	Z,HELP		; ..if also '/', then display help and exit
+	LD	A,' '
+	CP	(HL)
+	JP	Z,HELP		;   or if <SP>, then also display help and exit
+
+	; not a help request, continue
+START1:	CALL	RETUD		; get currently logged drive and user
+	LD	(DUCURR),BC	; store it
+	CALL	CODEND		; get first available memory page
+	PUSH	HL		; save addr
+	LD	(WSPCADR),HL	; ..and store in memory
+	LD	(CMDBADR),HL
+	INC	H		; add 0x100 (ENV + Z3T)
+	LD	(RDBUF),HL	; ..and store addr
+	LD	DE,8*1024	; room for 8 kB
+	ADD	HL,DE
+	LD	(WRTBUF),HL	; ..and store as start addr of write buffer
+	POP	HL
+	LD	D,H		; copy in DE
+	LD	E,L
+	INC	DE		; move to next byte
+	LD	BC,24*1024-1	; 24 kB
+	LD	(HL),0		; clear memory
+	LDIR
+
+	; determine if running under NZ-COM
+	LD	HL,(CPMBIOS+1)	; get BIOS warm boot addr
+	LD	L,3*30		; move past fn #29 (last in standard BIOS)
+	LD	DE,NZID		; id string 'NZ-COM'
+	LD	B,6		; # of chars
+	CALL	CP$HLDE		; compare strings
+	LD	HL,(ENVADR)	; get environment addr (filled by ZCPR)
+	CALL	Z3INIT		; ..and init for Z3 routines
+	PUSH	HL		; save HL
+	LD	DE,3FH		; offset to ZCPR start addr
+	ADD	HL,DE
+	LD	E,(HL)		; get addr in DE
+	INC	HL
+	LD	D,(HL)
+	LD	HL,16H		; offset to SCANNER routine
+	ADD	HL,DE
+	LD	(NZSCANR),HL	; patch evaluation routine EVCLDU
+	POP	HL		; restore HL
+	LD	DE,B_DESC	; ptr to embedded env descriptor
+	JR	NZ,START2	; ..if not NZ-COM (comp. failed), then jump
+	LD	BC,100H		; copy env descriptor + tcap
+	LDIR
+	PUSH	DE		; save end addr
+	CALL	BIOSIZE		; calc NZBIO size (in # recs)
+	POP	DE
+
+	; D indicates whether NZ-COM is running (= 2), or not (= 1)
+START2:	LD	(ENVDEST),DE	; store dest addr for loading ENV/ZCM/ZCI
+				;   (under NZ-COM = 0x0200, else 0x0100)
+	LD	A,D		; get high byte in A (either 1 or 2)
+	DEC	A		; -1
+	LD	(RUNZCOM),A	; set flag running under NZ-COM (1= yes, 0= no)
+	PUSH	AF		; save status
+				;   (started, no files loaded, running NZ-COM)
+	CALL	USRCOD		; ..and call user code in patch area
+	POP	AF
+	LD	HL,CPMDMA+1	; prepare to read cmdline from standard buffer
+	JR	Z,START3	; ..if not running under NZ-COM, skip over
+
+	; disable STARTZCM if running under NZ-COM
+	LD	HL,0FF00H	; string terminator in HL
+	LD	(AUTOCMD),HL	; disable STARTZCM command
+	LD	HL,(B_Z3CL)	; addr Cmdline Buffer new system
+	CALL	GWRDHL		; get word at addr
+START3:	LD	DE,AUTOCMD	; set pointer to startup command
+				;   (used as temp. storage)
+	LD	B,202		; max. MCL buffer size
+
+
+	; save following commands of multiple command line
+	; later transfer to new system, so it will be processed by ZCPR
+	; HL points to CP/M standard cmdline buffer (0x81), or to MCL buffer
+	; now move fwd after first delimiter, consider buffer could be empty
+SAVEMCL: LD	A,(HL)		; get byte
+	OR	A		; test
+	JR	Z,EVCLOPT	; ..if end-of-line or empty buffer, exit loop
+	CP	';'		; is it Semi-colon (MCL delimiter) ?
+	INC	HL
+	JR	NZ,SAVEMCL	; ..if not, loop
+
+	; get following commands, and replace default startup command
+SAVMCL1: LD	A,(HL)		; get byte
+	OR	A
+	JR	Z,SAVMCL2	; ..if end reached, exit loop
+	LD	(DE),A		; copy byte to temp. buffer
+	INC	HL		; move ptr's fwd
+	INC	DE
+	DJNZ	SAVMCL1		; ..and loop
+SAVMCL2: XOR	A		; null A
+	LD	(DE),A		; set 0x00 0xFF termination markers
+	DEC	A
+	INC	DE
+	LD	(DE),A
+
+
+
+
+;::::: EVALUATE COMMAND LINE
+
+
+	;   NZCOM [library] [descriptor] [filelist] [/options] [;commands]
+	;   - defaults to NZCOM NZCOM.LBR NZCOM.ZCM
+	;   - separator space or comma or combination
+	;   - supports multiple cmdline
+
+	; evaluate cmdline options
+EVCLOPT: LD	HL,CPMDMA+1	; point to begin of cmdline
+	CALL	SCANCL		; scan cmdline (skip separators, 
+				;   move fwd to valid char)
+	LD	(CLPOS),HL	; store location
+	OR	A
+	JP	Z,EVCLFI1	; ..if end reached, jump
+EVCLOP1: LD	A,(HL)		; get byte
+	INC	HL		; move ptr fwd
+	OR	A
+	JR	Z,EVCLFIL	; ..if nul-terminator reached, then jump
+	CP	';'
+	JR	Z,EVCLFIL	; ..or if end of cmd in MCL, then jump
+	SUB	'/'
+	JR	NZ,EVCLOP1	; ..if not option, then loop
+
+	; options must be at the end of cmdline
+	DEC	HL		; move ptr back
+	LD	(HL),0		; set nul-terminator to prevent further eval
+	LD	DE,(VOPT)	; default to internal flags (Quiet + ZRL)
+EVCLOP2: INC	HL		; move ptr fwd
+	LD	A,(HL)		; get next char that follows '/'
+	OR	A
+	JR	Z,EVCLOP7	; ..if nul-terminator, then jump
+	CP	';'
+	JR	Z,EVCLOP7	; ..or if end of cmd in MCL, then jump
+	CP	'/'
+	JP	Z,HELP		; ..if this is a help request, then jump
+	CP	'C'		; Clone ?
+	JR	NZ,EVCLOP3	; ..if not, skip over
+	OR	0FFH		;   else, set option flag accordingly
+	LD	(COPT),A
+EVCLOP3: CP	'Q'		; Quiet ?
+	JR	NZ,EVCLOP4
+	LD	E,0		; store in E
+EVCLOP4: CP	'V'		; Verbose ?
+	JR	NZ,EVCLOP5
+	LD	E,0FFH		; store in E
+EVCLOP5: CP	'Z'		; ZRL files ?
+	JR	NZ,EVCLOP6
+	LD	D,0FFH		; store in D
+EVCLOP6: SUB	'R'		; REL files ?
+	JR	NZ,EVCLOP2
+	LD	D,A
+	JR	EVCLOP2
+EVCLOP7: LD	(VOPT),DE	; save both option flags
+
+
+	; evaluate cmdline (file specification)
+	; and determine module id
+EVCLFIL: LD	HL,(CLPOS)	; current location in cmdline buffer
+	PUSH	HL
+	CALL	EVCLDU		; parse DU:FN.FT
+	POP	HL		; restore buffer location
+	LD	(CLPOS),HL	; ..and save it
+	LD	DE,FTYPES+27	; filetype 'LBR'
+	LD	HL,PRIMFCB+9	; point to file type in primary FCB
+	LD	B,3
+	CALL	CP$HLDE		; compare strings (3 bytes)
+	JR	NZ,EVCLFI1	; ..if no match, skip over
+	CALL	EVCLDU		;   else, let parse DU:FN.FT again
+	CALL	LOGDUHL		; log DU: in HL (or use current)
+	CALL	PROCLBR		; process specified .LBR file
+	JR	Z,EVCLFI3	; ..if successful, then jump
+				;   else, fall through
+	; try to interpret as regular file
+EVCLFI1: LD	A,(CPMFCB)	; drive in standard FCB
+	OR	A
+	JR	Z,EVCLFI2	; ..if none, jump
+	LD	DE,PRIMFCB+9	; point to filetype in primary FCB
+	CALL	GMODID		; find in list of modules/known filetypes
+	SUB	9		; reduce id for subsequent tests
+	JR	Z,EVCLFI2	; ..if 'ZCM', then default to NZCOM.LBR
+	DEC	A
+	JR	Z,EVCLFI2	; ..or if 'ENV', then also NZCOM.LBR
+	CP	4		; or blank filetype ?
+	JR	NZ,EVCLFI3	; ..if not, skip over
+				;   else, fall through try NZCOM.LBR
+	; default to NZCOM.LBR
+EVCLFI2: LD	HL,DEFLTFN	; point to 0,'NZCOM   LBR' (default)
+	LD	DE,PRIMFCB	; use primary FCB
+	LD	BC,12		; # bytes to copy
+	LDIR
+	CALL	OPENLBR		; open .LBR file
+				; ..and fall through
+EVCLFI3: LD	HL,(CLPOS)	; current position in cmdline buffer
+	CALL	SCANCL		; scan cmdline (move fwd to valid char)
+	OR	A		; end reached ?
+	JR	NZ,EVCLFI4	; ..if not, then skip over
+	EX	DE,HL
+	LD	HL,PKGID+15	; ptr string 'NZCOM'
+	LD	BC,10		; # bytes to copy   ##### BUG ?
+	LDIR
+
+	; if LBR it's opened, file name and type parsed
+	; time to inform user
+EVCLFI4: LD	A,(VOPT)	; get flag
+	OR	A
+	JR	Z,EVCLFI5	; ..if running in quiet mode, skip over
+	LD	HL,(CMDBADR)	; addr of cmd input buffer
+	CALL	PRINT		; ..and display it
+	DEFB	'   Input buffer start '
+	DEFB	0
+
+	CALL	PHL4HC
+	CALL	CRLF
+	LD	HL,(RDBUF)	; addr of read buffer
+	CALL	PRINT		; ..and display it
+	DEFB	'   Read  buffer start '
+	DEFB	0
+
+	CALL	PHL4HC
+	CALL	CRLF
+	LD	HL,(WRTBUF)	; addr of write buffer
+	CALL	PRINT		; ..and display it
+	DEFB	'   Write buffer start '
+	DEFB	0
+
+	CALL	PHL4HC
+	CALL	CRLF
+
+	; parse file names and add to cmdline input buffer
+EVCLFI5: CALL	EVCLDU		; parse DU:FN.FT
+	JP	M,PRCFIL0	; ..if end reached, then jump
+	LD	HL,PRIMFCB+1	; filename in primary FCB
+	LD	DE,(CMDBADR)	; addr of cmd input buffer
+	LD	BC,13		; # bytes to copy (drive, name, type, user)
+	LDIR
+	LD	(CMDBADR),DE	; update addr
+	LD	A,(WSPCADR+1)	; get high byte of workspace addr
+	INC	A		; +1
+	CP	D		; compare to high byte of input buffer addr
+	JR	NC,EVCLFI5	; ..if enough space, then continue
+	JP	E$XCL		;   else, display error msg
+				;  (expanded cmdline too long)
+
+
+
+
+;::::: PROCESS FILES
+
+
+PRCFIL0: LD	HL,(WSPCADR)	; begin of workspace
+	LD	(CMDBADR),HL	; reset cmd input buffer ptr
+
+	; iterate over files to be processed
+	; start addr of routine is pushed onto stack to always return here
+PROCFIL: LD	SP,STACK
+	LD	HL,PROCFIL	; stuff return addr
+	PUSH	HL
+	LD	DE,PRIMFCB	; ptr primary FCB
+	CALL	INITFC		; init FCB
+	INC	DE		; move fwd to file name
+	LD	HL,(CMDBADR)	; addr of cmd input buffer
+	LD	A,(HL)		; test first char
+	OR	A
+	JP	Z,PRCCPL	; ..if no more file, then jump to exit loop
+	LD	BC,11		; # bytes
+	LDIR			; copy file name + type
+	LD	E,(HL)		; user in E
+	INC	HL
+	LD	D,(HL)		; drive in D
+	INC	HL
+	LD	(CMDBADR),HL	; ..and store as new addr
+	EX	DE,HL		; swap regs
+	LD	(DUFILE),HL	; store drive/user of file
+	CALL	LOGDUHL		; log DU: in HL (or use current)
+	LD	DE,PRIMFCB+9	; file type in primary FCB
+
+	; test module type being processed
+	CALL	GMODID		; get module id
+	CP	3		; IOP
+	JP	Z,PROCIOP
+	CP	4		; RCP
+	JP	Z,PROCRCP
+	CP	5		; FCP
+	JP	Z,PROCFCP
+	CP	6		; NDR
+	JP	Z,PROCNDR
+	CP	7		; Z3T
+	JP	Z,PROCZ3T
+	CP	8		; REL
+	JP	Z,PROCREL
+	CP	9		; ZCM
+	JP	Z,PROCZCM
+	CP	10		; ENV
+	JP	Z,PROCENV
+	CP	14		; '   ' (blank)
+	JP	Z,PROCBLK
+	CP	16		; ZRL
+	JP	Z,PROCREL
+	CP	17		; LBR
+	JP	Z,PROCLBR
+	CP	19		; ZCI
+	JP	Z,PROCZCI
+	JP	E$TYPE		; else, display error msg and exit
+				;   (invalid type)
+
+
+	;--- Support functions
+
+	; try to log drive/user in HL (default to current DU)
+	;  in: H= drive (1-based), L= user
+LOGDUHL: LD	BC,(DUCURR)	; get current drive/user (as fallback)
+	LD	A,H		; get drive
+	OR	A
+	JR	Z,LOGDUH1	; ..if zero, skip over
+	DEC	H		;   else, make 0-based (A: = 0, B: = 1 etc.)
+	LD	B,H		; drive in B
+	LD	C,L		; user in C
+LOGDUH1: JP	LOGUD		; login DU, and let return from there
+
+
+	; compare strings
+	;  in:  B= char count
+	;      DE= ptr to string1
+	;      HL= ptr to string2
+	; out: Z-Flag set (Z) if match, NZ= no match
+CP$HLDE: LD	A,(DE)		; get char
+	XOR	(HL)		; compare
+	AND	7FH		; mask off bit7
+	RET	NZ		; ..if no match, return
+	INC	DE		;   else, move ptr's fwd
+	INC	HL
+	DJNZ	CP$HLDE		; loop till done
+	RET
+
+	;---
+
+
+	; Process 'blank'
+	; if no filetype given, search for .ZCI, .ZCM, .ENV (in that order)
+PROCBLK: LD	HL,PRIMFCB+9	; point to file type in primary FCB
+	LD	DE,FTYPES+33	; filetype 'ZCI'
+	CALL	PRCBLK1		; copy file type and try to open
+	JP	Z,PROCZCI	; ..if successful, process ZCI file
+
+	LD	DE,FTYPES+3	; filetype 'ZCM'
+	CALL	PRCBLK1
+	JP	Z,PROCZCM
+
+	LD	DE,FTYPES+6	; filetype 'ENV'
+	CALL	PRCBLK1
+	JP	Z,PROCENV
+
+	LD	DE,FTYPES+18	; filetype '   ' (blank)
+	CALL	PRCBLK2		; restore blank file type
+	JP	E$TYPE		; ..jump error msg and exit (invalid type)
+
+	; copy file type and try to open the file
+PRCBLK1: PUSH	HL
+	CALL	PRCBLK2		; copy file type (3 bytes)
+	CALL	OPENFIL		; try to open the file
+	POP	HL
+	RET
+
+	; copy 3 bytes from (DE) to (HL)
+PRCBLK2: PUSH	HL		; save HL
+	LD	B,3		; # of bytes to copy
+PRCBLK3: LD	A,(DE)		; get byte
+	LD	(HL),A		; copy to destination
+	INC	DE		; move ptr's fwd
+	INC	HL
+	DJNZ	PRCBLK3		; loop till done
+	POP	HL		; retore HL
+	RET
+
+
+	; Process 'ZCI'
+	; binary image file
+PROCZCI: LD	A,(COPT)	; Clone option set ?
+	OR	A
+	JP	NZ,E$CLONE	; ..if so, display error msg (can't clone ZCI)
+	CALL	M$LOAD		; display loading msg, and read file
+	PUSH	DE
+	CALL	CRLF
+	LD	DE,(ENVDEST)	; dest addr for env descriptor
+	LD	A,(RUNZCOM)	; get flag
+	OR	A		; test if running under NZ-COM
+	JR	NZ,PRCZCI1	; ..if yes, skip over
+	LD	BC,256		; # bytes (env descriptor + tcap)
+	LDIR			; copy
+	JR	PRCZCI2
+
+PRCZCI1: LD	BC,128		; # bytes (env descriptor)
+	PUSH	BC
+	LDIR			; copy
+	POP	BC
+	ADD	HL,BC		; move ptr past tcap
+PRCZCI2: POP	BC
+	DEC	B
+	ADD	HL,BC
+	EX	DE,HL
+	LD	HL,(WRTBUF)	; get addr of write buffer
+	ADD	HL,BC
+	EX	DE,HL
+	DEC	HL		; adjust ptr's
+	DEC	DE
+	LDDR			; ..and copy (downwards)
+	OR	0FFH
+	LD	(PROCIMG),A	; set flag for processing image file (ZCI)
+	JP	PRCENV1		; ..jump to continue in common ENV/ZCM/ZCI code
+
+
+	; Processing completed
+	; all files done
+PRCCPL:	LD	HL,PROCDON	; status flag 'processing done'
+	LD	A,(HL)		; get current value
+	OR	A		; test
+	JR	Z,PRCCPL1	; ..if done, skip over
+	LD	(HL),0		; set flag to prevent re-execution of next code
+	LD	A,(MODWIP)	; worklist of modules to be installed
+	OR	A		; test
+	JP	NZ,FINISH	; ..if not done, jump
+
+PRCCPL1: LD	A,2		; set status
+				;   (modules loded in buffer, no modifications)
+	CALL	USRCOD		; ..and call user code in patch area
+	LD	A,(COPT)	; Clone option set ?
+	OR	A
+	JR	Z,PRCCPL2	; ..if not set, then jump
+
+	; clone system
+	LD	A,(INSTENV)	; get flag 'descriptor found'
+	OR	A
+	JP	Z,E$NOENV	; ..if none found, display error msg
+				;   (can't clone with no descriptor)
+	LD	HL,DEFLTFN+36	; 0,'NZCOM   ZCI' (default name)
+	CALL	INIWFCB		; init FCB to write file
+	LD	BC,(DUCURR)	; get current drive/user
+	CALL	LOGUD		; log in
+	CALL	M$WRITE		; inform user
+	LD	HL,(WRTBUF)	; addr of write buffer
+	DEC	H		; make room (0x100) for env descriptor and tcap
+	PUSH	HL		; save
+	EX	DE,HL		; swap regs (dest addr in DE)
+	LD	HL,B_DESC	; point to descriptor of built system
+	LD	BC,256		; # bytes (env descriptor + tcap)
+	LDIR			; ..copy
+	POP	DE		; restore start addr in DE
+	LD	HL,(B_EXSTK)	; get addr Ext. Stack new system
+	CALL	ENV2WRB		; convert to addr in write buffer
+
+	; ##### Ext. Stack = highest element in ENV/ZCM generated by MKZCM.COM
+	;       low byte of addr = 0xD0  -->  issue if file is modified
+
+	LD	A,30H		; make addr page-aligned
+	CALL	ADDHLA
+	OR	A		; clear C-Flag before SBC operation
+	SBC	HL,DE		; calc size (in bytes)
+	LD	B,H		; divide result by 128 (# recs)
+	RL	L		;   (rotate bit7 of low byte into Carry
+	RL	B		;    and from there into bit0 of high byte)
+	EX	DE,HL		; swap regs (HL points to start addr)
+	CALL	WRTFILE		; write file to disk
+	JP	EXIT0		; exit w/o Z3MSG
+				; --> clone done
+
+	; continue here if not cloning
+PRCCPL2: LD	A,(MODLST)	; get module list
+	OR	A		; test if something to install
+	JR	NZ,PRCCPL3	; ..if so, jump to continue
+	LD	HL,B_DESC	;   else, copy env descriptor
+	LD	DE,(B_ZENV)	;   to existing/running system
+	LD	BC,128		; # bytes
+	LDIR
+	JP	M$RUNNG		; display msg (is running), and exit w/o Z3MSG
+
+	; write NZCOM.CCP and NZCPM.COM if necessary
+PRCCPL3: RRA			; bit0 into Carry
+	CALL	C,WRNZCCP	; ..if CCP installed, write NZCOM.CCP to disk
+	LD	A,(RUNZCOM)	; get flag
+	OR	A		; test if running under NZ-COM
+	CALL	Z,WRNZCPM	; ..if not, write NZCPM.COM to disk
+
+	LD	A,(MODLST)	; get module list
+	AND	04H		; install BIO ?
+	CALL	NZ,M$BOOT	; ..if so, display boot msg
+
+	LD	A,(MODLST)	; get module list again
+	AND	08H		; install IOP ?
+	JR	Z,XFERSYS	; ..if not, jump transfer new system
+	LD	A,(RUNZCOM)	; get flag
+	OR	A		; test
+	JR	Z,XFERSYS	; ..if not not running under NZ-COM, then jump
+	LD	A,0FH		; offset IOP addr
+	CALL	GWRDENV		; get env IOP addr in HL
+	OR	H		; addr invalid (high byte = zero) ?
+	JR	Z,XFERSYS	; ..if so, jump
+
+	; ZCPR34 NZIOP.Z80: Select (B=0ffh) will effectively remove this IOP
+	LD	B,0FFH
+	LD	A,3		; offset to select device entry point
+	ADD	A,L
+	LD	L,A		; adjust addr
+	CALL	JUMPHL		; ..and call IOP to disable/remove it
+				;   then fall through
+
+
+
+
+;::::: TRANSFER NEW SYSTEM
+
+
+	; copy segments and modules to runtime addr's in new system
+	; uses common routine which copies (or not) based on SEGLST/MODLST bits
+	; sequence leads to a cold boot
+
+	; segments first
+XFERSYS: CALL	CPYSEG		; copy segments to new system
+
+	; then modules
+	LD	A,(MODLST)	; get module list
+	LD	(COPYWIP),A	; ..into worklist for copying
+
+	LD	A,(B_CCPS)	; CCP size in # recs
+	CALL	MULT128		; convert to bytes
+	LD	HL,(B_CCP)	; CCP base addr in new system
+	CALL	CPYMOD		; ..copy
+
+	LD	A,(B_DOSS)	; BDOS size in # recs
+	CALL	MULT128		; convert to bytes
+	LD	HL,(B_DOS)	; BDOS base addr in new system
+	CALL	CPYMOD		; ..copy
+
+	LD	A,(BIOSREC)	; BIOS size in # recs
+	CALL	MULT128		; convert to bytes
+	LD	HL,(B_BIO)	; BIOS base addr in new system
+	CALL	CPYMOD		; ..copy
+	JR	NC,XFERSY3	; ..if none installed, jump to continue
+
+	; installation of a BIOS requires some additional steps
+	LD	A,1
+	LD	(INSTBIO),A	; set flag that a BIOS was installed
+
+	; copy additional BIOS fn calls into NZBIO
+	LD	HL,(B_DESC+1)	; patch CBIOS addr from new environment
+	LD	L,3*17		; get past fn #16 (last in standard CP/M 2.2)
+	LD	DE,(B_BIO)	; get NZBIO start addr from new environment
+	LD	E,L		; adjust equally
+	LD	B,13		; # of fn calls to copy
+XFERSY1: LD	A,(HL)		; get first byte
+	CP	0C3H		; is it 0xC3 (JP) ?
+	JR	NZ,XFERSY2	; ..if not, exit loop
+	PUSH	BC
+	LD	BC,3		; copy bytes in one chunk
+	LDIR
+	POP	BC
+	DJNZ	XFERSY1		; loop till done
+
+	; patch user number and drive for NZCOM.CCP into NZBIO
+XFERSY2: CALL	GETROOT
+	LD	HL,(B_BIO)	; get NZBIO start addr from new environment
+	LD	L,96		; offset to 'user' (see NZBIO.Z80)
+	LD	(HL),C		; store user number
+	INC	HL		; move fwd to 'zcfcb'
+	INC	B		; make drive 1-based (A=1..P=16)
+	LD	(HL),B		; ..and store
+
+	; continue copying modules, IOP is next
+XFERSY3: LD	A,(B_IOPS)	; IOP size in # recs
+	CALL	MULT128		; convert to bytes
+	LD	HL,(B_IOP)	; IOP base addr in new system
+	CALL	CPYMOD		; ..copy
+	JR	NC,XFERSY6	; ..if none installed, jump to continue
+
+	; additional init
+	LD	HL,(B_IOP)	; IOP base addr
+	PUSH	HL
+	LD	DE,3DH		; offset to 'auxjmp'
+	ADD	HL,DE		; move ptr fwd
+	LD	DE,(B_BIO)	; NZBIO base addr from new env
+	PUSH	DE
+	LD	E,130		; offset to 'auxjmp'
+	LD	B,7		; copy dest addr's of 7 jp instructions
+	CALL	XFERSY5		; ..from NZBIO to IOP (similar to TINIT)
+	POP	HL		; restore IOP base addr
+	POP	DE		;         NZBIO base
+	LD	A,4*3		; offset to fn #4 (JP CONOUT)
+	ADD	A,E		; move ptr fwd
+	LD	E,A
+	CALL	XFERSY4		; ..and copy 6 + 1 jp instructions
+	LD	HL,(B_PATH)	; addr Path new system
+	PUSH	HL		; save temporarily
+	LD	HL,(ENVPTR)	; get addr ENV currently running system
+	LD	(B_PATH),HL	; ..and replace
+	LD	HL,(B_IOP)	; IOP base addr
+	LD	A,09H		; offset to TINIT routine
+	ADD	A,L
+	LD	L,A		; adjust addr
+	CALL	JUMPHL		; ..and call TINIT
+	POP	HL
+	LD	(B_PATH),HL	; restore Path addr
+	JR	XFERSY6		; ..then jump to continue
+
+	; copy 6 + 1 jp instructions
+XFERSY4: LD	L,6		; move ptr fwd
+	LD	B,L		; ..and is also the count
+	CALL	XFERSY5		; copy dest addr's
+	LD	L,3*15		; offset to fn #15 (JP LISTST)
+	INC	B		; count = 1
+
+	; similar to NZBIO.Z80 > TINIT, copy addr's of jp instructions
+	; HL= ptr to first jp, DE= addr in NZBIO
+XFERSY5: INC	HL		; move ptr fwd (past 'JP')
+	LD	(HL),E		; store low byte of addr
+	INC	HL
+	LD	(HL),D		; ..and store high byte in next
+	INC	HL		; move ptr fwd
+	INC	DE		; increase addr (move to next NZBIO JP)
+	INC	DE
+	INC	DE
+	DJNZ	XFERSY5		; loop
+	RET
+
+	; copy remaining modules
+XFERSY6: LD	A,(B_RCPS)	; RCP size in # recs
+	CALL	MULT128		; convert to bytes
+	LD	HL,(B_RCP)	; RCP addr in new system
+	CALL	CPYMOD		; ..copy
+
+	LD	A,(B_FCPS)	; FCP size in # recs
+	CALL	MULT128		; convert to bytes
+	LD	HL,(B_FCP)	; FCP addr in new system
+	CALL	CPYMOD		; ..copy
+
+	LD	A,(B_NDIRS)	; NDR # of entries
+	CALL	CALCNDR		; calc NDR buffer size (in BC)
+	LD	HL,(B_NDIR)	; Z3NDIR addr in new system
+	CALL	CPYMOD		; ..copy
+
+	LD	A,3		; set status
+				;   (modules at runtime addr, ready to boot)
+	CALL	USRCOD		; ..and call user code in patch area
+
+	LD	A,(INSTBIO)	; get flag whether a BIOS was installed
+	OR	A
+	JP	Z,EXIT0		; ..if not, exit w/o Z3MSG
+	LD	HL,(B_BIO)	;   else, load base addr
+				;   ..and fall through, initiating a cold boot
+
+
+	;--- Support functions
+
+	; "called" as a pseudo-routine that returns to caller
+JUMPHL:	JP	(HL)		; jump to addr in HL
+
+
+	; copy segments to new system
+CPYSEG: LD	A,(SEGLST)	; get segment list
+	LD	(COPYWIP),A	; ..and save as worklist for copying
+	LD	HL,B_DESC	; point to descriptor of new system
+	LD	DE,(B_ZENV)	; get dest. addr for new ENV
+	LD	BC,256		; # bytes to copy (env descriptor + tcap)
+	LDIR
+
+	; copy shell stack
+	LD	BC,(B_SHSTS)	; get ShStack # entries (C) and entry size (B)
+	LD	HL,0		; initial value
+CPYSEG1: LD	A,C		; multiply by adding # and size
+	CALL	ADDHLA
+	DJNZ	CPYSEG1		; loop
+	LD	B,H		; result from HL to BC
+	LD	C,L
+	LD	HL,(B_SHST)	; SHSTK addr in new system
+	CALL	CPYMOD		; ..copy
+	LD	BC,80		; size msg buffer
+	LD	HL,(B_Z3MSG)	; Z3MSG buffer addr in new system
+	CALL	CPYMOD		; ..copy
+	LD	BC,36		; size Ext. FCB
+	LD	HL,(B_EXFCB)	; EXTFCB addr in new system
+	CALL	CPYMOD		; ..copy
+	LD	BC,11		; size of five path elements + nul-terminator
+	LD	HL,(B_PATH)	; EXPATH addr in new system
+	CALL	CPYMOD		; ..copy
+	LD	BC,1		; "size" of wheel byte
+	LD	HL,(B_Z3WHL)	; Z3WHL addr in new system
+	CALL	CPYMOD		; ..copy
+	LD	BC,208		; size MCL buffer +5 (structure)
+	LD	HL,(B_Z3CL)	; Z3CL addr in new system
+				; ..fall through
+
+
+	; copy bytes of a module (if in worklist) to new system
+	; processing in fixed order: bit0..7 (CCP DOS BIO IOP RCP FCP NDR Z3T)
+	;  in: BC= # bytes to copy
+	;      HL= dest. addr in new system
+	; out: C-Flag set (C) when copied, NC= segment not in worklist
+CPYMOD:	PUSH	HL		; save regs
+	LD	HL,COPYWIP
+	SRL	(HL)		; shift bit0 into Carry
+	POP	HL		; clear stack prior to possible return
+	RET	NC		; ..if segment not in worklist, return
+	PUSH	HL
+	CALL	WRBDEST		; convert to addr in write buf and set as dest
+	POP	DE
+	LDIR			; ..and copy from write buffer to dest
+	SCF			; set return status
+	RET
+
+
+	; save NZCOM.CCP file to disk in root dir
+WRNZCCP: LD	A,1
+	LD	(SAVECCP),A	; set flag CCP was saved, for exit routine
+	LD	A,(WRNZOPT)	; get option flag
+	OR	A
+	RET	NZ		; ..if set, then return (= don't save file)
+	LD	HL,DEFLTFN+12	; 0,'NZCOM   CCP' (default name)
+	CALL	INIWFCB		; init FCB to write file
+	CALL	LOGROOT		; log in root DU (or default to current DU)
+	CALL	M$WRITE
+	LD	HL,(WRTBUF)	; get addr of write buffer
+	LD	A,(B_CCPS)	; size (# recs) of CCP new system
+	LD	B,A		; ..in B
+	JP	WRTFILE		; write file to disk, and let return from there
+
+
+	; init WRTFCB and copy drive + name + type
+	; plus copy them to PRIMFCB
+	;  in: HL= ptr to <d:fn.ft>
+INIWFCB: PUSH	HL		; save dest addr
+	LD	DE,WRTFCB	; FCB used for writing output
+	CALL	INITFC		; initialize
+	LD	BC,12		; copy 12 bytes (drive, filename, filetype)
+	PUSH	BC
+	LDIR
+	POP	BC
+	POP	HL		; restore dest addr
+	LD	DE,PRIMFCB	; point to primary FCB
+	LDIR			; ..and copy 12 bytes again
+	RET
+
+
+	; display msg 'Writing'
+M$WRITE: LD	A,(VOPT)	; get flag
+	OR	A
+	JP	Z,PDOT		; ..in quiet mode, just display a dot
+	CALL	PRINT
+	DEFB	'   Writing '
+	DEFB	0
+
+	CALL	PDUNDR
+	JP	CRLF
+
+
+	; display msg 'Booting'
+M$BOOT:	LD	A,(VOPT)	; get flag
+	OR	A
+	JP	Z,PDOT		; ..in quiet mode, just display a dot
+	CALL	PRINT
+	DEFB	'   Booting NZ-COM...'
+	DEFB	0
+	RET
+
+
+	; save NZCPM.COM file to disk in root dir
+WRNZCPM: LD	HL,DEFLTFN+24	; 0,'NZCPM   COM' (default name)
+	CALL	INIWFCB		; init FCB to write file
+	LD	DE,WRTFCB	; FCB used for writing output
+	LD	A,(WRNZOPT)	; get flag
+	OR	A
+	JR	NZ,WRNZCP1	; ..if not set, then skip over (= overwrite)
+	CALL	DMARDFX		; set DMA buffer and test for existing file
+	RET	NZ		; ..if file already exists, then return
+WRNZCP1: CALL	M$WRITE		; inform user
+	LD	HL,(B_DESC+1)	; get addr CBIOS warm boot new system
+	LD	L,0		; set to base addr
+	CALL	ENV2WRB		; convert to addr in write buffer
+	PUSH	HL
+	JR	WRNZCP2		; jump to continue
+
+	; >>>>>>>>>>
+	; inline code
+	; loader copies BDOS to high memory, and then initiates a cold boot
+	; code is transferred to begin of NZCPM.COM
+BOOTCOD: LD	HL,100H + (BOOTEND - BOOTCOD) + 3
+				; point to first byte after cold boot
+BOOTDOS: LD	DE,0		; BDOS base addr is patched in here
+	LD	BC,0E00H	; 3.5 kB (standard BDOS size)
+	LDIR
+	XOR	A		; clear A
+	LD	(CPMBIOS+4),A	; CP/M current default drive
+
+	; a jump to BIOS cold boot is patched hereinafter
+	; ..and will be initiated when NZCPM.COM is executed
+BOOTEND	EQU	$
+	; >>>>>>>>>>
+
+WRNZCP2: EX	DE,HL		; save WRTBUF addr in DE
+	LD	HL,(CPMBDOS+1)	; BDOS entry addr
+	LD	L,0		; make page-aligned
+	PUSH	HL		; save BDOS base
+	LD	(BOOTDOS+1),HL	; patch BDOS base addr into inline code
+	LD	HL,BOOTCOD
+	LD	BC,BOOTEND-BOOTCOD
+	LDIR
+	LD	HL,CPMBIOS	; BIOS cold boot jp
+	LD	BC,3		; copy 3 bytes
+	LDIR
+	POP	HL
+	LD	BC,0E00H	; 3.5 kB (standard BDOS size)
+	LDIR			; ..copy
+	POP	HL
+	LD	B,29		; 29 recs (3.5 kB + 128 bytes)
+	JP	WRTFILE		; write file to disk, and let return from there
+
+	;---
+
+
+
+
+;::::: EXIT
+
+
+	; exit routine
+	;  in: C= return code to put in Z3MSG Error Type flag
+EXIT:	LD	A,(RUNZCOM)	; get flag
+	OR	A		; test if running under NZ-COM
+	JR	Z,EXIT0		; ..if not, skip over
+	LD	HL,(B_Z3MSG)	; get addr of Z3MSG buffer new system
+	LD	(HL),C		; store error return code
+	INC	HL		; move ptr fwd to Command Status flag
+	INC	HL
+	INC	HL
+	LD	A,00001110b	; bits: error, extendend cp, ext. program flag
+	OR	(HL)		; merge with current value
+	LD	(HL),A		; ..and store it
+EXIT0:	LD	A,(MODLST)	; get module list
+	AND	02H		; install DOS ?
+	JR	Z,EXIT1		; ..if not, skip over
+	LD	DE,0FFFFH	; set drive mask (= all)
+	LD	C,37		; BDOS fn #37 reset Disk system
+	CALL	CPMBDOS		; ..and reset all drives
+EXIT1:	LD	BC,(DUCURR)	; get previously logged drive/user
+	CALL	LOGUD		; set DU
+	OR	0FFH		; set status
+				;   (no install, not necessary/not possible)
+	CALL	USRCOD		; ..and call user code in patch area
+	LD	A,(SAVECCP)	; flag if CCP was saved
+	OR	A
+	JP	NZ,CPMBIOS	; ..if so, initiate warm boot
+
+	; exit program
+EXITX:	LD	SP,(STACK)	;   else, return to running system
+	RET
+
+
+	;--- Support functions
+
+	; call code in user patch area
+USRCOD:	LD	HL,(WRTBUF)	; get addr of write buffer
+	LD	DE,MODLST	; ptr to MODLST/SEGLST
+	JP	UPATCH		; jump and let return from there
+
+
+	; set base addr's of known named COMMON's as defined for new system
+SETCOMB: CALL	LINKMEM		; get Linker variables
+
+	; pointers: BC= PROGRAM name, DE= COMM bases, HL= LCMTBL
+	LD	HL,(B_DESC+1)	; get addr CBIOS warm boot new system
+	LD	L,0		; adjust to base addr
+	PUSH	HL
+	CALL	ENV2WRB		; convert to addr in write buffer
+	LD	(CBIOWRT),HL	; ..stored (but never read/used)
+	EX	DE,HL		; swap regs (HL= ptr to base addr's of COMMONs)
+	CALL	LDIHLDE		;   _ID_
+	LD	DE,(B_CCP)	; CCP addr new system
+	CALL	LDIHLDE		;   _CCP_
+	LD	DE,(B_DOS)	; DOS addr
+	CALL	LDIHLDE		;   _BDOS_
+	LD	DE,(B_BIO)	; BIOS addr
+	CALL	LDIHLDE		;   _BIOS_
+	LD	DE,(B_ZENV)	; ENV addr
+	CALL	LDIHLDE		;   _ENV_
+	LD	DE,(B_SHST)	; Shell Stack addr
+	CALL	LDIHLDE		;   _SSTK_
+	LD	DE,(B_Z3MSG)	; MSG Buffer addr
+	CALL	LDIHLDE		;   _MSG_
+	LD	DE,(B_EXFCB)	; Ext. FCB addr
+	CALL	LDIHLDE		;   _FCB_
+	LD	DE,(B_Z3CL)	; Z3 Command Line Buffer addr
+	CALL	LDIHLDE		;   _MCL_
+	LD	DE,(B_EXSTK)	; Ext. Stack addr
+	CALL	LDIHLDE		;   _XSTK_
+	LD	DE,0		; set to zero
+	CALL	LDIHLDE		;   _SCB_
+	CALL	LDIHLDE		;   _RSX_
+	POP	DE		; restore CBIOS base addr in DE
+				; ..and fall through to store in _CBIO_
+
+	; indirect load LD (HL),DE
+	; store 16-bit word in DE in location addressed by HL
+	;  in: DE= value to store
+	;      HL= dest addr
+LDIHLDE: LD	(HL),E		; store low byte
+	INC	HL
+	LD	(HL),D		; store high byte
+	INC	HL
+	RET
+
+	;---
+
+
+
+
+;::::: LINKER CALLBACK ROUTINES
+
+
+	; the following 2 routiness are called by the Linker
+	; and can be used to control its function
+	; if the Linker was made an external module, these
+	; symbols have to be PUBLIC
+
+
+	; get map flag
+	; obtain size information (and possibly stop linking)
+	; return flag whether to generate a bitmap
+	;  in: BC= size of module (CSEG + DSEG)
+	; out:  A= 0 create bitmap
+	;          1 no bitmap
+	;          0xFD only sizing (stop linker)
+	; routine is invoked two times, and STOPLNK flag is toggled inbetween
+	;  1st: get size info,  2nd: perform linking
+	; (changing HL and/or DE in this routine would impact output addr's)
+@GMAPFL: LD	(FILESZ),BC	; store MODULE size
+	LD	A,(STOPLNK)	; get flag
+	OR	A		; test
+	LD	A,0
+	LD	(STOPLNK),A	; clear flag for next run
+	LD	A,1		; prepare return code
+	RET	Z		; ..if flag was already cleared (= zero), return
+	LD	A,0FDH		;   else, return code to stop linking
+	RET
+
+
+	; read one byte from input
+	;  in: -
+	; out: A= byte
+	;      C-Flag set (C) to indicate end-of-file (stop linker)
+	;      implemented with C-Flag clear all times
+@GBYTE:	OR	A		; clear C-Flag
+	JP	RDNXBYT		; ..get next byte from read buffer
+				;   and let return from there
+
+
+
+
+;::::: EVALUATE COMMAND LINE SUBROUTINES
+
+
+	; scan cmdline (move to next valid char, skip separators)
+	;  in: HL= cmdline position
+	; out:  A= 0, Z-Flag set (Z) at end of cmd
+	;        <>0, Z-Flag clear (NZ) if invalid char found
+	;      HL= ptr to last read char
+SCANCL:	LD	A,(HL)		; get byte
+	OR	A		; test if <NUL> (end of line)
+	RET	Z		; ..if so, return
+	CP	';'		;   else, is it a Semi-colon ?
+	JR	NZ,SCANCL1	;   ..if not, jump
+	XOR	A		; clear A, set Z-Flag
+	RET
+SCANCL1: CP	'/'		; is it lower than '/' ?
+	RET	NC		; ..if so, return
+	INC	HL		;   else, move ptr fwd
+	JR	SCANCL		; and loop
+
+
+	; evaluate cmdline, extract DU:FN.FT
+	; out: CPMFCB+0= drive
+	;      PRIMFCB+1= file name and type
+	;      PRIMFCB+12/+13= user/drive
+EVCLDU:	LD	HL,(CLPOS)	; current position in cmdline buffer
+	CALL	SCANCL		; move fwd to valid char
+	DEC	A		; end reached ?
+	RET	M		; ..if so, return
+	LD	DE,PRIMFCB	; ptr to primary FCB
+	LD	A,(RUNZCOM)	; get flag
+	OR	A		; test if running under NZ-COM
+	JR	Z,EVCLDU2	; ..if not, jump
+
+	; running under NZ-COM, so use its scanner routine
+	PUSH	DE
+	PUSH	DE
+	INC	DE		; move fwd to filename field
+	LD	B,11		; # chars to clear
+	LD	A,' '
+EVCLDU1: LD	(DE),A		; store <SP>
+	INC	DE		; move ptr fwd
+	DJNZ	EVCLDU1		; ..and loop
+	POP	DE		; restore ptr to primary FCB
+NZSCANR: EQU	$+1
+	CALL	$		; addr of ZCPR SCANNER routine is patched here
+	LD	C,08H		; set Z3MSG return code
+	JP	NZ,EXIT		; ..if error, jump exit
+	LD	(CLPOS),HL	; store cmdline buffer pos
+	POP	HL		; ptr to primary FCB
+	LD	A,(HL)		; get drive
+	LD	(CPMFCB),A	; ..and store in standard FCB
+	LD	(HL),0		; clear drive in primary FCB
+	LD	H,A		; drive in H
+	LD	A,(PRIMFCB+13)	; user (s1) in primary FCB
+	LD	L,A		; user in L
+	LD	(PRIMFCB+12),HL	; store DU: (s1/extent) in primary FCB
+	XOR	A		; clear A
+	RET
+
+	; *not* running under NZ-COM, use SYSLIB's parse routine
+EVCLDU2: CALL	FNAME		; parse DU:FN.FT to primary FCB
+	JP	Z,E$BADDU	; display error msg (bad DU spec.)
+	LD	(CLPOS),HL	; store new cmdline position
+	PUSH	BC		; save DU:
+	LD	C,08H		; set Z3MSG return code
+	LD	B,11		; # chars to check
+EVCLDU3: INC	DE		; move ptr fwd
+	LD	A,(DE)		; get char
+	CP	'?'		; is filename/type ambiguous ?
+	JP	Z,EXIT		; ..if so, jump exit
+	DJNZ	EVCLDU3		; loop till done
+	POP	BC		; restore specified DU:
+	LD	HL,1
+	ADD	HL,BC		; FNAME returns BC= 0xFFFF if no DU: was given
+	JR	C,EVCLDU5	; ..if no DU:, then jump
+
+	; at this point, drive and/or user is valid
+	; replace missing information with current
+	LD	HL,(DUCURR)	; get current drive/user
+	INC	H		; make drive 1-based (A: = 1, B: = 2 etc.)
+	LD	A,C		; specified user in A
+	INC	A
+	JR	Z,EVCLDU4	; ..if not valid, skip over
+	LD	L,C		;   else, specified user area in L
+EVCLDU4: LD	A,B		; specified drive in A
+	INC	A
+	JR	Z,EVCLDU5	; ..if not valid, skip over
+	LD	H,B		;   else, specified drive in H
+
+	; finally store drive/user (or set both 0x00 if none specified)
+EVCLDU5: LD	A,H
+	LD	(CPMFCB),A	; store drive in standard FCB
+	LD	(PRIMFCB+12),HL	; store DU: (s1/extent) in primary FCB
+	XOR	A		; clear A
+	RET
+
+
+
+
+;::::: VALIDATE ENV SIZES
+
+
+	; determine if new ENV segment fits into old size
+	;  in:  A= old size (in 128-byte recs)
+	;      DE= actual size of new segment (in bytes)
+	; out: returns if ok, else display error msg
+CHKSIZ:	PUSH	HL
+	LD	H,A		; make 16-bit value
+	LD	L,0		; (equiv. to *256)
+	SRL	H		; divide by 2
+	RR	L
+	SBC	HL,DE		; ..and subtract actual size
+	JP	C,E$TOBIG	; display error msg (is too big)
+	POP	HL
+	RET
+
+
+	; determine size of NZBIO (in # recs)
+	;  in: -  (env descriptor loaded)
+	; out: -  (size store in memory location)
+BIOSIZE: LD	DE,(B_BIO)	; NZBIO base addr
+	LD	HL,(B_IOP)	; addr of IOP
+	CALL	BIOSIZ1
+	LD	HL,(B_RCP)	; addr of RCP
+	CALL	BIOSIZ1
+	LD	HL,(B_FCP)	; addr of FCP
+	CALL	BIOSIZ1
+	LD	HL,(B_NDIR)	; addr of NDR buffer
+	CALL	BIOSIZ1
+	LD	HL,(B_SHST)	; addr of Shell Stack
+	CALL	BIOSIZ1
+	LD	HL,(B_ZENV)	; addr of Z3ENV Descriptor
+				; ..and fall through
+
+	; first element above NZBIO determines its size
+BIOSIZ1: OR	A		; clear C-Flag
+	SBC	HL,DE		; subtract DE from HL
+	RET	C		; ..if HL < DE, then return
+	LD	A,H		;   else, divide result by 128
+	RL	L		;   (rotate bit7 of low byte into Carry,
+	RLA			;    and from there into bit0 of high byte)
+	LD	(BIOSREC),A	; save BIOS size (in # recs)
+	POP	HL		; clear stack (trash HL)
+				; ..to return immediately, no further tests
+	RET
+
+
+
+
+;::::: PROCESS FILES (CONT'D)
+
+
+	; Process IOP file
+PROCIOP: LD	A,(B_IOPS)	; get size (# recs)
+	OR	A
+	JP	Z,E$SPACE	; ..if no space allocated, display error
+	PUSH	AF		; save regs
+	CALL	M$LOAD		; display loading msg, and read file
+	POP	AF
+	PUSH	DE		; save size (returned by M$LOAD - RDFILE)
+	LD	HL,(B_IOP)	; IOP base addr
+	PUSH	HL
+	CALL	CHKSIZ		; test if IOP fits into existing space
+	LD	HL,(RDBUF)	; addr of read buffer
+	LD	DE,30H		; offset to identifier
+	ADD	HL,DE		; move ptr fwd
+	LD	DE,PKGID	; ptr string 'Z3IOP'
+	LD	B,5		; # bytes
+	CALL	CP$HLDE		; compare strings
+	JP	NZ,E$TYPE	; ..if no match, then display error msg
+	POP	HL		; restore IOP base addr
+	PUSH	HL		; ..and save again
+	CALL	MADRSAV		; store start/end addr
+	LD	HL,(RDBUF)	; addr of read buffer
+
+	; test if file is a valid IOP
+PRCIOP1: LD	A,0C3H		; test if byte is opcode 0xC3 (JP)
+	CP	(HL)
+	JR	NZ,PRCIOP2	; ..if not, skip over
+	INC	HL		;   else, move ptr fwd
+	CALL	MADRVAL		;   ..and check if addr's are valid
+	INC	HL		; move ptr fwd
+	JR	PRCIOP1		; ..and loop
+PRCIOP2: POP	HL		; restore IOP base addr
+	CALL	M$FORAT		; convert target to buffer addr, and display
+	EX	DE,HL		; save in DE
+	LD	HL,(RDBUF)	; addr of read buffer
+	POP	BC		; restore size (previously in DE)
+	LDIR
+	LD	BC,0008H	; module list: IOP bit, segment list: -
+	CALL	SETMSL		; set bit(s)
+
+
+	;--- Support functions
+
+	; mark module in worklist as done
+	;  in: C= bit(s) to reset
+MODWDON: LD	HL,MODWIP	; ptr worklist of modules to be installed
+	LD	A,C		; bit mask in A
+	CPL			; invert to reset respective bit(s)
+	AND	(HL)		; merge with current worklist
+	LD	(HL),A		; ..and save back
+	RET
+
+
+	; store start and end addr of a module (IOP, FCP, RCP)
+	;  in: HL= start addr
+MADRSAV: LD	(MADRBEG),HL	; store start addr
+	LD	BC,(FILESZ)	; get file size
+	ADD	HL,BC		; calc end addr
+	LD	(MADREND),HL	; ..and store it
+	RET
+
+
+	; check if module (FCP, RCP) is valid
+	;  in: HL= start addr
+	;      DE= ptr to id string
+MVALID:	CALL	MADRSAV		; store start/end addr's
+	LD	HL,(RDBUF)	; addr of read buffer
+	LD	B,5		; # bytes
+	CALL	CP$HLDE		; compare strings
+	JP	NZ,E$TYPE	; ..if no match, then display error msg
+	LD	E,(HL)		; get 'cmdsize'
+				;   (size of text entries of each command)
+	LD	D,0		; set for 16-bit math
+
+	; for each command test if its address is valid
+MVALID1: INC	HL		; move ptr fwd
+	LD	A,(HL)		; get byte
+	OR	A
+	JR	Z,MVALID2	; ..if end reached (= zero), then exit loop
+	ADD	HL,DE		; move ptr fwd (to addr of command)
+	CALL	MADRVAL		; check if addr is valid
+	JR	MVALID1		; ..loop
+MVALID2: LD	HL,(MADRBEG)	; restore start addr
+	RET
+
+
+	; check if module addr's are valid
+	;  in: HL= ptr to addr in module
+	; out: HL= ptr+1 (no return if error)
+MADRVAL: LD	C,(HL)		; low byte
+	INC	HL
+	LD	B,(HL)		; high byte
+	PUSH	HL		; save ptr
+	LD	HL,(MADRBEG)	; check against start addr
+	SBC	HL,BC
+	JP	NC,E$ADDR	; ..if not greater or equal, then jump error
+	LD	HL,(MADREND)	; check against end addr
+	SBC	HL,BC
+	JP	C,E$ADDR	; ..if greater, then jump error
+	POP	HL		; restore orig ptr+1
+	RET
+
+	; storage location for start/end addr of IOP, FCP, RCP
+MADRBEG: DEFW	0
+MADREND: DEFW	0
+
+	;---
+
+
+	; Process RCP file
+PROCRCP: LD	A,(B_RCPS)	; get size (# recs)
+	OR	A
+	JP	Z,E$SPACE	; ..if no space allocated, display error
+	PUSH	AF
+	CALL	M$LOAD		; display loading msg, and read file
+	POP	AF
+	PUSH	DE		; save size (returned by M$LOAD - RDFILE)
+	LD	HL,(B_RCP)	; designatred RCP addr
+	CALL	CHKSIZ		; test if new RCP fits into old size
+	LD	DE,PKGID+5	; ptr string 'Z3RCP'
+	CALL	MVALID		; test if module is valid
+	CALL	M$FORAT		; convert target to buffer addr, and display
+	EX	DE,HL
+	LD	HL,(RDBUF)	; addr of read buffer
+	POP	BC		; restore size (previously in DE)
+	LDIR
+	LD	BC,0010H	; module list: RCP bit, segment list: -
+	CALL	SETMSL		; set bit(s)
+	JP	MODWDON		; mark as done in worklist
+				; ..and let return from there
+
+
+	; Process FCP file
+PROCFCP: LD	A,(B_FCPS)	; get size (# recs)
+	OR	A
+	JP	Z,E$SPACE	; ..if no space allocated, display error
+	PUSH	AF
+	CALL	M$LOAD		; display loading msg, and read file
+	POP	AF
+	PUSH	DE		; save size (returned by M$LOAD - RDFILE)
+	LD	HL,(B_FCP)	; designated FCP addr
+	CALL	CHKSIZ		; test if new FCP fits into old size
+	LD	DE,PKGID+10	; ptr string 'Z3FCP'
+	CALL	MVALID		; test if module is valid
+	CALL	M$FORAT		; convert target to buffer addr, and display
+	EX	DE,HL
+	LD	HL,(RDBUF)	; addr of read buffer
+	POP	BC		; restore size (previously in DE)
+	LDIR
+	LD	BC,0020H	; module list: FCP bit, segment list: -
+	CALL	SETMSL		; set bit(s)
+	JP	MODWDON		; mark as done in worklist
+				; ..and let return from there
+
+
+	; Process NDR file
+PROCNDR: LD	A,(B_NDIRS)	; get size (# entries)
+	OR	A
+	JP	Z,E$SPACE	; ..if no space allocated, display error
+	CALL	CALCNDR		; calc NDR buffer size (in BC)
+	PUSH	BC
+	CALL	M$LOAD		; display loading msg, and read file
+	POP	HL		; buffer size now in HL
+	PUSH	HL
+	SBC	HL,DE		; compare by subtracting file size
+	JP	C,E$TOBIG	; display error msg (is too big)
+	LD	HL,(B_NDIR)
+	CALL	M$FORAT		; convert target to buffer addr, and display
+	EX	DE,HL
+	LD	HL,(RDBUF)	; addr of read buffer
+	POP	BC		; restore file size (previously in HL)
+	LDIR
+	LD	BC,0040H	; module list: NDR bit, segment list: -
+	CALL	SETMSL		; set bit(s)
+	JP	MODWDON		; mark as done in worklist
+				; ..and let return from there
+
+
+	;--- Support function
+
+	; calc NDR buffer size (multiply A by 18)
+	;  in:  A= # of NDR entries
+	; out: BC= size of NDR buffer
+CALCNDR: LD	L,A		; in L for 16-bit math
+	LD	H,0
+	ADD	HL,HL		; *2
+	LD	D,H
+	LD	E,L
+	ADD	HL,HL		; *4
+	ADD	HL,HL		; *8
+	ADD	HL,HL		; *16
+	ADD	HL,DE		; *18
+	LD	DE,7FH		; make rec-aligned (0x00 or 0x80)
+	ADD	HL,DE
+	LD	A,80H
+	AND	L
+	LD	C,A		; result in BC
+	LD	B,H
+	RET
+
+	;---
+
+
+	; Process Z3T file
+	; terminal capabilities descriptor (TCAP)
+PROCZ3T: CALL	M$LOAD		; display loading msg, and read file
+	LD	DE,B_TCAP
+	LD	BC,128		; # bytes to copy (tcap size)
+	LDIR
+	LD	HL,(B_ZENV)	; designated ENV addr
+	LD	DE,80H		; offset to TCAP
+	ADD	HL,DE
+	CALL	M$FORAT		; convert target to buffer addr, and display
+	EX	DE,HL
+	LD	HL,B_TCAP	; ptr to TCAP
+	LD	BC,128		; # bytes to copy
+	LDIR
+	LD	BC,0080H	; module list: Z3T bit, segment list: -
+	CALL	SETMSL		; set bit(s)
+	JP	MODWDON		; mark as done in worklist
+				; ..and let return from there
+
+
+	;--- Support function
+
+	; display 'Loading <lbr><filename>'
+	; and read file into buffer
+M$LOAD:	CALL	OPENFIL		; try to open the file
+	JP	NZ,PRCLBR1
+	LD	A,(VOPT)	; get flag
+	OR	A
+	JR	NZ,M$LOAD1	; ..if running in verbose mode, skip over
+	CALL	PDOT		;   else, display a dot
+	JR	M$LOAD2		;   ..and skip over
+M$LOAD1: CALL	PRINT
+	DEFB	'  Loading '
+	DEFB	0
+
+	CALL	PDUNDR		; display drive/user and dir name (if in NDR)
+M$LOAD2: JP	RDFILE
+
+	;---
+
+
+	; Process REL/ZRL file
+PROCREL: CALL	M$LOAD		; display loading msg, and read file
+	LD	A,1		; indicate only size info for now
+	LD	(STOPLNK),A	; store flag (toggled prior to 2nd run)
+	CALL	PRCREL5		; ..and call linker
+	EX	DE,HL		; swap regs (now DE= prog name)
+	CALL	GMODID		; check against list of known module names
+	JP	NZ,E$NAME	; ..if no match, display error msg
+				;   (not properly named)
+
+	; valid module name found, use linker output to build new system
+	; count down module id number until match is found, or use error exit
+	LD	C,A		; module id in C
+	LD	B,A		; and in B
+	OR	A
+	LD	HL,(B_CCP)
+	LD	A,(B_CCPS)	; prepare for CCP
+	JP	Z,PRCREL1	; ..if match, jump
+	DEC	C		; id -1
+	LD	HL,(B_DOS)
+	LD	A,(B_DOSS)	; prepare for DOS
+	JP	Z,PRCREL1	; ..if match, jump
+	DEC	C		; id -1
+	LD	HL,(B_BIO)
+	LD	A,(BIOSREC)	; prepare for BIOS
+	JP	Z,PRCREL1	; ..if match, jump
+	DEC	C		; id -1
+	LD	HL,(B_IOP)
+	LD	A,(B_IOPS)	; prepare for IOP
+	JP	Z,PRCREL1	; ..if match, jump
+	DEC	C		; id -1
+	LD	HL,(B_RCP)
+	LD	A,(B_RCPS)	; prepare for RCP
+	JP	Z,PRCREL1	; ..if match, jump
+	DEC	C		; id -1
+	LD	HL,(B_FCP)
+	LD	A,(B_FCPS)	; prepare for FCP
+	JP	NZ,E$NAME	; ..if no match, display error msg
+				;   (not properly named)
+				;   else, fall through
+
+	; module id (in B) is valid, HL= base addr, A= # recs
+PRCREL1: PUSH	BC		; save regs
+	PUSH	HL
+	OR	A		; test allocated size
+	JP	Z,E$SPACE	; ..if none, display error msg and exit
+	CALL	MULT128		; convert # recs to size in bytes
+	LD	H,B		; ..in HL
+	LD	L,C
+	LD	DE,(FILESZ)	; get actual file size (determined by linker)
+	SBC	HL,DE		; compare
+	JP	C,E$TOBIG	; ..if too big, display error and exit
+	POP	HL		;   else, restore regs
+	POP	BC
+	LD	A,B		; module id in A
+	CP	1
+	JR	NZ,PRCREL2	; ..if not DOS, then jump
+	LD	DE,INSTENV
+	LD	A,(DE)		; get flag
+	OR	A
+	JR	NZ,PRCREL2	; ..if descriptor found, skip over
+	CALL	PRCREL4
+	LD	BC,0002H	; module list: DOS bit, segment list: -
+	CALL	SETMSL		; set bit(s)
+	JP	MODWDON		; mark as done in worklist
+				; ..and let return from there
+
+	; update module list
+PRCREL2: INC	B		; adjust module id for use as counter
+	XOR	A		; clear A
+	SCF			; set C-Flag
+PRCREL3: RLA
+	DJNZ	PRCREL3		; rotate bit into correct position
+	LD	C,A		; save result in C
+	LD	DE,MODLST	; point to module list
+	LD	A,(DE)		; get current byte
+	OR	C		; set bit
+	LD	(DE),A		; ..and store byte again
+	PUSH	HL
+	CALL	MODWDON		; mark as done in worklist
+	POP	HL
+PRCREL4: LD	(LNKTRGT),HL	; store phys. target addr for linker
+	CALL	M$FORAT		; convert target to buffer addr, and display
+	LD	HL,(RDBUF)	; addr of read buffer
+	LD	(RDPOS),HL	; ..as initial reading pos for linker
+	LD	HL,COMMSET	; ptr to flag if COMMON's base addr are set
+	LD	A,(HL)		; test
+	OR	A
+	LD	(HL),0		; mark as done (avoid next call is re-executed)
+	CALL	NZ,SETCOMB	; ..if not yet done, set base addr's
+				;   then fall through and link the file
+
+	; use combined M-REL/S-REL linker to generate output
+PRCREL5: LD	HL,(LNKDEST)	; output dest. addr
+	LD	DE,(LNKTRGT)	; phys. target addr
+	CALL	LINK		; link
+	RET	Z		; ..if no error, return
+	CP	0FDH		;   else, check return code
+	RET	Z		;   ..if 0xFD, return (also ok)
+	JP	E$REL		; for all other, display REL error and exit
+
+
+	;--- Support functions
+
+	; convert target addr to addr in write buffer
+	; and display 'for <target addr> at <buffer addr>' (in verbose)
+	;  in: HL= target addr
+	; out: HL= buffer addr
+M$FORAT: LD	A,(VOPT)	; get flag
+	OR	A
+	JR	NZ,M$FORA1	; ..if running in verbose mode, skip over
+	JR	WRBDEST		; convert to addr in write buffer
+				; and set as dest, let return from there
+M$FORA1: CALL	PRINT
+	DEFB	' for '
+	DEFB	0
+
+	CALL	PHL4HC		; display target addr as Hex
+	CALL	WRBDEST		; convert to addr in write buffer
+				; and set as dest.
+	CALL	PRINT
+	DEFB	' at '
+	DEFB	0
+
+	CALL	PHL4HC		; display buffer addr as Hex
+	JP	CRLF
+
+
+	; convert base addr of env element to addr in write buffer
+	;  in: HL= base addr element
+	; out: HL= addr in write buffer (start of element)
+ENV2WRB: PUSH	DE
+	LD	DE,(B_CCP)	; get addr of CCP of new system
+	LD	A,H		; get high byte of env element addr
+	OR	A		; test and clear C-Flag
+	JR	Z,E$ADERR	; ..if invalid, then display error and exit
+	SBC	HL,DE		; calc difference
+	LD	DE,(WRTBUF)	; get addr of write buffer
+	ADD	HL,DE		; add offset
+	POP	DE
+	RET
+
+E$ADERR: CALL	PRINT
+	DEFB	' Address Error.'
+	DEFB	0
+
+	JP	EXIT0		; exit w/o Z3MSG
+
+
+	; convert to addr in write buffer and set dest. addr
+WRBDEST: CALL	ENV2WRB		; convert to addr in write buffer
+	LD	(LNKDEST),HL	; ..store as dest. addr
+	RET
+
+
+	; test if memory is protected (due to installed RSX)
+MEMPROT: LD	HL,CPMBDOS+2	; ptr to high byte of BDOS entry
+	LD	A,(RUNZCOM)	; get flag
+	OR	A		; test
+	LD	A,(B_CCP+1)	; get high byte from ENV
+	JR	NZ,MEMPRO1	; ..if running under NZ-COM, skip over
+	LD	A,(CPMBIOS+2)	;   else, get high byte of BIOS warm boot
+	SUB	16H		; calculate CCP base from BIOS base
+
+	;   DOS 3.5k (0xE00) + CCP 2k (0x800) = 0x1600
+MEMPRO1: CP	(HL)		; compare
+	JP	NC,E$MPROT	; ..if warm boot lower than CCP base,
+				;     display error and exit (memory protected)
+	CALL	M$LOAD		;   else, display loading msg, and read file
+	JP	CRLF
+
+	;---
+
+
+	; Process ENV file
+PROCENV: CALL	MEMPROT		; check if memory is protected
+	LD	DE,(ENVDEST)	; dest addr for env descriptor
+	LD	BC,128		; # bytes
+	LDIR			; copy
+	JR	PRCENV1
+
+
+	; Process ZCM file
+	; similar structured as a SYM file (value-key-pairs)
+	; line format: 5* <value><SP><key><TAB> + <CR><LF>
+PROCZCM: CALL	MEMPROT		; check if memory is protected
+	CALL	RDZCM		; read input and interpret
+
+	; common code for ENV/ZCM/ZCI files
+PRCENV1: LD	HL,INSTENV
+	LD	A,(HL)		; get current flag for 'descriptor found'
+	LD	(HL),1		; ..and indicate one was found
+	OR	A		; test if already set before
+	JP	NZ,E$1DESC	; ..if so, display error msg
+				;   (only one descriptor allowed)
+	LD	HL,(ENVPTR)	; get addr ENV currently running system
+	INC	HL		; move to high byte of CBIOS addr
+	INC	HL
+	LD	A,(HL)		; get byte
+	LD	HL,(ENVDEST)	; dest addr for env descriptor
+	INC	HL		; move to high byte of CBIOS addr
+	INC	HL
+	CP	(HL)		; compare
+	JP	NZ,E$ADDR	; ..if no match, then display error and exit
+	;
+	LD	HL,PRIMFCB	; primary FCB
+	LD	DE,DEFLTFN+36	; 0,'NZCOM   ZCI' (default name)
+	LD	BC,9		; # bytes
+	LDIR			; copy drive and file name
+	LD	HL,B_PATH	; Path in embedded descriptor (0x0109)
+	LD	DE,B_PATH+100H	; ..in scratch area (0x0209)
+	LD	A,(RUNZCOM)	; get flag
+	OR	A		; test if running under NZ-COM
+	JR	NZ,COLLPTH	; ..if so, skip over
+	EX	DE,HL		;   else, swap ptr's (change direction)
+
+	; collect modules/segments in order of appeareance
+	; in environment decriptor...
+
+	; Path
+COLLPTH: CALL	TRFDH3B		; transfer 3 bytes (DE) -> HL
+	JR	Z,COLLRCP	; ..if no Path addr/elem, then jump next
+	LD	BC,0800H	; module list: -, segment list: PATH bit
+	CALL	SETMSL		; set bit(s)
+
+	; RCP
+COLLRCP: CALL	TRFDH3B		; transfer 3 bytes
+	JR	Z,COLLIOP	; ..if no RCP addr/recs, then jump next
+	LD	BC,0010H	; module list: RCP bit, segment list: -
+	CALL	SETMSL		; set bit(s)
+
+	; IOP
+COLLIOP: CALL	TRFDH3B		; transfer 3 bytes
+	JR	Z,COLLFCP	; ..if no IOP addr/recs, then jump next
+	LD	BC,0008H	; module list: IOP bit, segment list: -
+	CALL	SETMSL		; set bit(s)
+
+	; FCP
+COLLFCP: CALL	TRFDH3B		; transfer 3 bytes
+	JR	Z,COLLNDR	; ..if no FCP addr/recs
+	LD	BC,0020H	; module list: FCP bit, segment list: -
+	CALL	SETMSL		; set bit(s)
+
+	; NDR
+COLLNDR: CALL	TRFDH3B		; transfer 3 bytes
+	JR	Z,COLLMCL	; ..if no addr/entries, then jump next
+	LD	BC,0040H	; module list: NDR bit, segment list: -
+	CALL	SETMSL		; set bit(s)
+
+	; MCL
+COLLMCL: CALL	TRFDH3B		; transfer 3 bytes
+	JR	Z,COLLZ3T	; ..if no MCL addr/bytes, then jump next
+	LD	BC,2000H	; module list: -, segment list: MCL bit
+	CALL	SETMSL		; set bit(s)
+
+	; ENV/Z3T
+COLLZ3T: CALL	TRFDH3B		; transfer 3 bytes
+	JR	Z,COLLSHS	; ..if no ENV addr/recs, then jump next
+	LD	BC,0080H	; module list: Z3T bit, segment list: -
+	CALL	SETMSL		; set bit(s)
+
+	; SHSTK
+COLLSHS: CALL	TRFDH2B		; transfer 2 bytes
+	JR	Z,COLLMSG	; ..if no Shell Stack addr, then jump next
+	LD	BC,0100H	; module list: -, segment list: SHSTK bit
+	CALL	SETMSL		; set bit(s)
+
+	; MSG
+COLLMSG: CALL	TRFDH2B		; transfer 2 bytes, ignore result
+				;   (Shell Stack entries+size)
+	CALL	TRFDH2B		; transfer 2 bytes
+	JR	Z,COLLXFC	; ..if no MSG buffer addr, then jump next
+	LD	BC,0200H	; module list: -, segment list: MSG bit
+	CALL	SETMSL		; set bit(s)
+
+	; Ext. FCB
+COLLXFC: CALL	TRFDH2B		; transfer 2 bytes
+	JR	Z,COLLWHL	; ..if no Ext. FCB addr, then jump next
+	LD	BC,0400H	; module list: -, segment list: XFCB bit
+	CALL	SETMSL		; set bit(s)
+
+	; WHL
+COLLWHL: CALL	TRFDH2B		; transfer 2 bytes, ignore result
+				;   (Ext. Stack addr)
+	CALL	TRFDH1B		; transfer 1 byte, ignore result
+				;   (Quiet flag)
+	CALL	TRFDH2B		; transfer 2 bytes
+	JR	Z,COLLSYS	; ..if no Wheel byte, then jump to continue
+	LD	BC,1000H	; module list: -, segment list: WHL bit
+	CALL	SETMSL		; set bit(s)
+
+	; System elements (CCP, DOS, BIO)
+COLLSYS: LD	BC,1400H	; transfer next 20 bytes
+	CALL	TRFDH		;   (cpu frequency to prt1 parameters)
+	LD	BC,0800H	; transfer 8 bytes
+	CALL	TRFDH		;   (ccp addr/recs, dos addr/recs, bios addr)
+	JR	Z,REQENV	; ..if no Sys elements, then skip over
+	LD	BC,0007H	; module list: CCP, DOS, BIO bits, segment: -
+	CALL	SETMSL		; set bit(s)
+
+	; fetched all modules/segments to be installed
+	; test if an ENV shall be installed
+REQENV:	LD	A,(MODLST)	; get module list
+	RLA			; install new ENV ? (Z3T bit7 into Carry)
+	JR	NC,MLSTCPL	; ..if not, jump
+
+	; a new ENV requires a set of modules/segments to be installed
+	LD	B,3FH		; segment list: ALL bits
+				;   (SHSTK, MSG, XFCB, PATH, WHL, MCL)
+	LD	C,07H		; module list: CCP, DOS, BIO bits
+	CALL	SETMSL		; set bits
+
+	; test if further modules shall be installed
+	LD	A,(B_IOPS)	; get IOP size (# recs)
+	OR	A
+	JR	Z,REQRCP	; ..if size is zero, then jump next
+	LD	BC,0008H	; module list: IOP bit, segment list: -
+	CALL	SETMSL		; set bit(s)
+REQRCP:	LD	A,(B_RCPS)	; get RCP size (# recs)
+	OR	A
+	JR	Z,REQFCP	; ..if size is zero, then jump next
+	LD	BC,0010H	; module list: RCP bit, segment list: -
+	CALL	SETMSL		; set bit(s)
+REQFCP:	LD	A,(B_FCPS)	; get FCP size (# recs)
+	OR	A
+	JR	Z,MLSTCPL	; ..if size is zero, then jump to continue
+	LD	BC,0020H	; module list: FCP bit, segment list: -
+	CALL	SETMSL		; set bit(s)
+
+	; list of modules complete
+MLSTCPL: LD	A,(MODLST)	; get module list
+	LD	(MODWIP),A	; save as worklist to install
+	JP	BIOSIZE		; calc NZBIO size (in # recs)
+				; ..and let return from there
+
+
+	;--- Support functions
+
+	; processing of files done, execute this code portion only once
+FINISH:	CALL	INITSYS		; initialize system
+	LD	HL,PROCIMG	; ptr to flag for processing image file (ZCI)
+	LD	A,(HL)
+	OR	A		; test flag
+	LD	(HL),0		; reset flag
+				; (prevent re-execution of following code)
+	RET	NZ		; ..if not ZCI file, then return
+
+	; modify cmd input buffer when processing ZCI (image) file
+	LD	DE,(CMDBADR)	; addr of cmd input buffer
+	LD	HL,RELFN	; ptr string 'NZCPR   REL' (first default name)
+	LD	A,(ZOPT)	; get flag
+	OR	A
+	JR	Z,FINISH1	; ..if REL chosen, then skip over
+	LD	HL,ZRLFN	; ptr string 'NZCPR   ZRL' (first default name)
+FINISH1: LD	A,(MODWIP)	; get worklist of modules to be installed
+	LD	C,A		; ..in C
+	LD	B,8		; # of modules/filenames
+FINISH2: RR	C		; move bit0 into Carry
+	JR	C,FINISH3	; ..if set, jump to continue
+	LD	A,8+3		;   else, move ptr fwd to next name
+	CALL	ADDHLA
+	JR	FINISH4
+FINISH3: CALL	INSFCMB		; insert file name
+FINISH4: DJNZ	FINISH2		; ..loop till done
+	RET
+
+
+	; ZCI binary image specific
+	; insert file name of module into cmd input buffer
+	;  in: DE= cmd input buffer location
+	;      HL= ptr to file name
+	; out: DE= new location
+	;      HL= ptr to next file name (previous pos +11)
+INSFCMB: PUSH	BC		; save regs
+	PUSH	HL
+	PUSH	DE
+	LD	HL,(RDBUF)	; addr of read buffer
+	PUSH	HL
+	OR	A		; clear Carry
+	SBC	HL,DE		; calc length to end of cmd input buffer
+				;   (read buffer marks end of cmd input buf)
+	LD	DE,-13		; reduce by size of file spec 13 bytes
+				;   (drive, user file name, type)
+	ADD	HL,DE		; adjust
+	LD	B,H		; # of bytes to shift downwards into BC
+	LD	C,L
+	EX	DE,HL		; -13 in HL
+	POP	DE		; restore addr of read buffer in DE
+	DEC	DE		; one below
+	ADD	HL,DE		; adjust source ptr
+	LDDR			; ..and copy
+	POP	DE		; restore addr of input buffer
+	POP	HL		; ..and ptr to file name
+	LD	BC,11		; # bytes (file name + type)
+	LDIR			; copy
+	PUSH	HL
+	; ##### could be done easier
+	LD	HL,0		; clear HL
+	LD	A,L		; zero into A
+	LD	(DE),A		; ..and at cmd input buffer pos (drive)
+	INC	DE		; move ptr fwd
+	LD	A,H		; repeat with H
+	LD	(DE),A		; (user)
+	INC	DE
+	POP	HL		; restore regs
+	POP	BC
+	RET
+
+
+TRFDH3B: LD	BC,0300H	; set counter to 3 (and C= 0)
+	JR	TRFDH		; ..then jump to continue
+
+TRFDH2B: LD	BC,0200H	; set counter to 2 (and C= 0)
+	JR	TRFDH		; ..then jump to continue
+
+TRFDH1B: LD	BC,0100H	; set counter to 1 (and C= 0)
+				; ..and fall through
+
+	; transfer (copy) bytes from memory location (DE) to (HL)
+	; with early exit
+	;  in: DE= source addr,  HL= dest. addr
+	;       B= # of bytes,    C= "stop byte"
+	; out: A= last byte, Z-Flag set (Z) if A zero
+TRFDH:	LD	A,(COPT)	; get option flag to clone system
+	OR	A
+	JR	Z,TRFDH2	; ..if not set, then jump
+				;   else, fall through
+
+	; loop till counter = 0, or current byte = previous byte
+TRFDH1:	LD	A,(DE)		; get byte
+	LD	(HL),A		; store at destination
+	OR	C		; compare with initial/previous
+	LD	C,A		; remember current byte
+	INC	DE		; move ptr's fwd
+	INC	HL
+	DJNZ	TRFDH1		; ..and loop
+	JR	TRFDHX		; jump exit
+
+	; loop till counter = 0, or (current byte - dest. byte) = previous byte
+TRFDH2:	LD	A,(DE)		; get byte
+	PUSH	AF
+	SUB	(HL)		; subtract byte at dest
+	OR	C		; compare with initial/previous
+	LD	C,A		; remember current byte
+	POP	AF		; restore current byte
+	LD	(HL),A		; store at destination
+	INC	DE		; move ptr's fwd
+	INC	HL
+	DJNZ	TRFDH2		; ..and loop
+
+TRFDHX:	OR	A		; test current byte
+	RET	Z		; ..if zero, return
+	LD	A,C		;   else, get previous byte
+	OR	A		;   ..and set return status
+	RET
+
+
+	; set bits in MODLST (module list) and SEGLIST (segment list)
+	;  in: B= bits to set in SEGLST
+	;      C= bits to set in MODLST
+SETMSL:	PUSH	HL		; save regs
+	LD	HL,MODLST	; point to module list
+	LD	A,(HL)		; get current byte
+	OR	C		; set bit(s)
+	LD	(HL),A		; ..and store again
+	INC	HL		; move ptr fwd to segment list
+	LD	A,(HL)
+	OR	B		; set bit(s)
+	LD	(HL),A
+	POP	HL		; restore regs
+	RET
+
+
+
+
+;::::: INITIALIZE SYSTEM
+
+
+	; setup various elements of new system
+	; (still in write buffer)
+INITSYS: PUSH	HL
+	PUSH	DE
+	LD	A,(RUNZCOM)	; get flag
+	OR	A		; test if running under NZ-COM
+	JP	Z,ININZCM	; ..if not, jump
+
+	; init existing NZ-COM
+	; was already running, so copy and init new elements as needed
+	LD	C,80H		; Z3T
+	CALL	MODWDON		; mark as done in worklist
+	LD	A,(MODLST)	; get module list
+	AND	40H		; install NDR ?
+	JR	Z,INISH1	; ..if not, then jump next
+	LD	HL,(ENVPTR)	; get addr ENV currently running system
+	LD	DE,17H		; offset Z3NDIRS (# recs)
+	ADD	HL,DE
+	LD	A,(HL)		; # of entries
+	OR	A
+	JR	Z,INISH1	; ..if zero (no entries), then jump next
+	LD	(OLDNDRN),A	; store # entries of old (running) system
+	LD	A,(B_NDIRS)
+	LD	(NEWNDRN),A	; store new # entries
+	DEC	HL		; move ptr to Z3NDIR
+	LD	D,(HL)		; ..and put dest addr in DE
+	DEC	HL
+	LD	E,(HL)
+	LD	C,40H		; NDR
+	LD	A,(MODWIP)	; get worklist of modules to be installed
+	AND	C
+	JR	Z,INISH1	; ..if NDR not to be installed, then jump next
+	CALL	MODWDON		;   else, mark as done in worklist
+	LD	HL,(B_NDIR)	; get addr NDR Buffer new system
+	CALL	ENV2WRB		; convert to addr in write buffer
+
+ININDR1: LD	A,(DE)		; test if end reached (zero)
+	OR	A
+	JR	Z,INISH1	; ..if so, jump to continue next
+
+	; copy one NDR entry
+	LD	B,18		; # bytes of one NDR entry
+ININDR2: LD	A,(DE)		; get byte
+	LD	(HL),A		; store at dest location in write buffer
+	INC	DE		; move ptr's fwd
+	INC	HL
+	DJNZ	ININDR2		; ..and loop
+
+	; update remaining # NDR entries
+	PUSH	HL
+	LD	HL,OLDNDRN	; old (running) system
+	DEC	(HL)		; -1
+	POP	HL
+	JR	Z,INISH1	; ..if end reached, then exit loop
+	PUSH	HL
+	LD	HL,NEWNDRN	; new system
+	DEC	(HL)		; -1
+	POP	HL
+	JR	NZ,ININDR1	; ..if more to go, loop
+	JP	E$NDROV		;   else, display error msg
+				;   (new Z3NDIR overflow)
+
+
+	; Shell Stack
+INISH1:	LD	A,(SEGLST)	; list of segments
+	RRA			; bit0 into Carry
+	JR	NC,INIMSG	; ..if SHSTK not to be installed, then jp next
+	LD	HL,(ENVPTR)	; get addr ENV currently running system
+	LD	DE,1EH		; offset SHSTK
+	ADD	HL,DE
+	LD	E,(HL)		; addr in DE
+	INC	HL
+	LD	D,(HL)
+	LD	A,D		; check addr is valid (<> 0)
+	OR	E
+	JR	Z,INIMSG	; ..if not, then jump next
+	LD	A,(DE)		; test shell stack entry
+	OR	A
+	JR	Z,INIMSG	; ..if empty (= zero), then jump next
+	INC	HL		; move ptr fwd
+	LD	C,(HL)		; # entries in C
+	INC	HL
+	LD	B,(HL)		; size of an entry in B
+	LD	A,(B_SHSIZ)	; size in new system
+	CP	(HL)		; compare, new size must be lower or equal
+	JP	C,E$SHSZ	; ..if not, then display error msg
+				;   (new sh stack size)
+	LD	(OLDSHNO),BC	; store # entries and its size (old system)
+	LD	A,(B_SHSTS)
+	LD	(NEWSHNO),A	; store # entries (new system)
+	LD	HL,(B_SHST)	; get addr Shell Stack new system
+	CALL	ENV2WRB		; convert to addr in write buffer
+INISH2:	PUSH	HL		; save HL
+	LD	A,(DE)		; test if end reached (zero)
+	OR	A
+	JR	Z,INISH4	; ..if so, jump to exit loop
+	LD	A,(OLDSHSZ)	; size of an entry
+	LD	B,A		; ..in B
+INISH3:	LD	A,(DE)		; get byte
+	LD	(HL),A		; store at dest locaiton in write buffer
+	INC	HL		; move ptr's fwd
+	INC	DE
+	DJNZ	INISH3		; ..and loop
+
+	; update remaining # SHSTK entries
+	LD	HL,OLDSHNO	; old (running) system
+	DEC	(HL)		; -1
+	JR	Z,INISH4	; ..if end reached, then exit loop
+	LD	HL,NEWSHNO	; new system
+	DEC	(HL)		; -1
+	JP	Z,E$SHSTO	; ..if zero, then display error msg
+				;   (new sh stack overflow)
+	POP	HL		; restore start addr of entry
+	PUSH	DE
+	LD	DE,(B_SHSIZ)	; size of an entry (in E)
+	LD	D,B		; nullify D for 16-bit math
+	ADD	HL,DE		; move ptr to next entry
+	POP	DE
+	JR	INISH2		; loop
+INISH4:	POP	HL		; clear stack
+				; ..and fall through
+
+
+	; msg buffer
+INIMSG:	LD	HL,(ENVPTR)	; get addr ENV currently running system
+	LD	DE,22H		; offset to Z3MSG
+	ADD	HL,DE
+	LD	E,(HL)		; addr of MSG Buffer in DE
+	INC	HL
+	LD	D,(HL)
+	LD	HL,(B_Z3MSG)	; get addr MSG Buffer new system
+	CALL	ENV2WRB		; convert to addr in write buffer
+	EX	DE,HL		; swap regs
+	LD	BC,128		; # bytes
+	LDIR			; ..copy
+	JR	INIMCL		; jump, continue in common code
+
+
+	; init new system
+	; started from CP/M, copy elements to newly built NZ-COM
+ININZCM: LD	HL,(B_EXFCB)	; get addr of Ext. FCB
+	CALL	WRBDEST		; convert to addr in write buffer, set as dest
+	CALL	CPYINLN		; copy inline data (empty FCB)
+
+	; >>>>>>>>>>
+	; inline data: empty FCB 0xFF terminated
+	DEFB	0
+	DEFB	'        '
+	DEFB	'   '
+	DEFB	0,0,0,0,0
+	DEFB	'        '
+	DEFB	'   '
+	DEFB	0,0,0,0,0,0,0,0
+	DEFB	0FFH
+	; >>>>>>>>>>
+
+	; prog continues after 0xFF
+	LD	HL,(B_PATH)	; get Path addr
+	CALL	WRBDEST		; convert to addr in write buffer, set as dest
+
+	; copy internal path
+	LD	HL,IPATH	; point to internal path
+	CALL	CPYDATA		; ..and copy path elements
+
+	; set Wheel byte
+	LD	HL,(B_Z3WHL)	; get addr of Wheel byte
+	CALL	WRBDEST		; convert to addr in write buffer, set as dest
+	LD	A,0FFH		; default to wheel 'on'
+	CALL	CPYBYTE		; ..and patch byte
+
+
+	; setup MCL buffer
+INIMCL:	LD	HL,(B_Z3CL)	; get addr of MCL buffer in new system
+	PUSH	HL		; save regs
+	CALL	WRBDEST		; convert to addr in write buffer, set as dest
+	POP	HL
+	LD	A,4		; offset to cmdline
+	ADD	A,L		; copy addr in HL to NXTCHR pointer
+	CALL	CPYBYTE
+	LD	A,H
+	CALL	CPYBYTE
+	LD	A,(B_Z3CLS)	; get MCL buffer size
+	CALL	CPYBYTE		; ..and copy
+	XOR	A		; clear A (char count)
+	CALL	CPYBYTE
+	LD	HL,AUTOCMD	; point to start-up command
+				;   (is also temp. storage location for MCL)
+	CALL	CPYDATA		; ..and copy startup/mcl
+	POP	DE
+	POP	HL
+	RET
+
+
+	;--- Support functions
+
+	; copy inline data to new system
+CPYINLN: EX	(SP),HL		; swap return addr (top of stack) to HL
+	CALL	CPYDATA		; ..and copy inline data to new system
+	EX	(SP),HL
+	RET
+
+	; copy 0xFF terminated data to new system
+CPYDATA: LD	A,(HL)		; get byte
+	INC	HL		; move ptr fwd
+	CP	0FFH		; test for end-marker
+	RET	Z		; ..if end reached, return
+	CALL	CPYBYTE		;   else, copy byte
+	JR	CPYDATA		; loop
+
+
+	; copy one byte to new system
+	;  in: A= byte
+	;      dest. addr set in memory using LNKDEST
+CPYBYTE: PUSH	HL
+	LD	HL,(LNKDEST)	; get linker output dest.
+	LD	(HL),A
+	INC	HL		; move fwd
+	LD	(LNKDEST),HL	; ..and save new output dest.
+	POP	HL
+	RET
+
+
+	; read ZCM file
+	; convert values, find labels and store at env offset addr's
+	; (dest addr = 0x0100, or 0x0200 if running under NZ-COM)
+RDZCM:	LD	HL,ZCMBUF	; ptr to buffer
+	PUSH	HL
+RDZCM1:	CALL	RDZCM3		; read byte from input file
+	CP	LF
+	JR	Z,RDZCM1	; ..if <LF>, then loop
+	CP	' '
+	JR	C,RDZCM2	; ..if control char, skip over
+	LD	(HL),A		; store byte
+	INC	HL		; move ptr fwd
+	JR	RDZCM1		; ..and loop
+RDZCM2:	LD	(HL),0		; set nul-terminator
+	POP	HL		; restore ptr to start of buffer
+	CALL	EVAL16		; convert hex ascii to number
+				;   (result in DE, A= E)
+	PUSH	DE		; ..and store
+	CALL	GENVOFF		; get offset for env element
+	LD	HL,(ENVDEST)	; dest addr for env descriptor
+	ADD	A,L		; add low byte
+	LD	L,A		; adjust ptr
+	POP	DE		; restore converted number
+	LD	(HL),E		; store low byte
+	INC	HL		; move ptr fwd
+	LD	A,D
+	OR	A		; test high byte
+	JP	Z,RDZCM		; ..if zero, loop
+	LD	(HL),D		;   else, store high byte too
+	JP	RDZCM
+
+RDZCM3:	CALL	RDNXBYT		; get next byte from read buffer
+	CP	CTRLZ
+	RET	NZ		; ..if not end-of-file, return
+	POP	HL		;   else, clear stack
+	POP	HL
+	RET
+
+
+; ##### CHECK: unreferenced code
+	; print HL as binary digits (w/ space inbetween)
+	;  in: HL= number
+	LD	A,H		; high byte
+	CALL	PABIN		; ..display
+	LD	A,L		; low byte
+	CALL	PABIN		; ..display
+	JP	CRLF
+
+	; print A as binary digits on CON:
+PABIN:	LD	C,A
+	LD	B,8
+PABIN1:	XOR	A		; nullify A and clear C-Flag
+	RL	C		; rotate MSB into Carry
+	RLA			; ..and from Carry to bit0 in A
+	ADD	A,'0'		; make ascii
+	CALL	COUT		; ..and display
+	DJNZ	PABIN1
+	LD	A,' '		; send <SP>
+	JP	COUT		; ..to CON: and let return from there
+; #####
+
+
+	; multiply A by 128
+	;  in:  A= # recs
+	; out: BC= size in bytes   (B= 0AAAAAAA C=A0000000)
+	;      Z-Flag set (Z) if zero, else NZ
+MULT128: OR	A		; clear C-Flag
+	RRA			; divide by 2, remainder in C-Flag
+	LD	B,A		; result in B
+	LD	A,0		; clear A
+	RRA			; get remainder in bit7
+	LD	C,A		; result in C
+	OR	B
+	RET
+
+
+	; add offset 0x03 to HL
+ADDHL3:	LD	A,3		; set initial value = 3
+				; ..then fall through
+
+	; add A to HL (result in HL)
+ADDHLA:	ADD	A,L		; add L
+	LD	L,A		; store result in L
+	RET	NC		; ..if no overflow, then return
+	INC	H		;   else, increment H
+	RET
+
+
+	; get Path addr of running ENV
+GPTHADR: LD	A,09H		; offset EXPATH
+
+	; get word at offset of running ENV
+	;  in: A= offset
+	; out: HL= 16-bit value
+GWRDENV: LD	HL,(ENVPTR)	; get addr ENV currently running system
+	CALL	ADDHLA
+
+	; get word at address (HL)
+	;  in: HL= addr
+	; out: HL= 16-bit value at addr
+GWRDHL:	LD	A,(HL)		; get low byte
+	INC	HL		; move ptr fwd
+	LD	H,(HL)		; get high byte
+	LD	L,A		; ..in L
+	RET
+
+
+	; get module id for given string
+	;  in: DE= ptr to string for comparison
+	; out:  A= id of module, Z-Flag set (Z)
+	;          or 0xFF and Z-Flag clear (NZ) if no match
+GMODID:	LD	HL,MODID	; ptr string 'CCP' (first id)
+	LD	C,0		; set start #
+GMODID1: PUSH	DE		; save regs
+	PUSH	HL
+	LD	B,3		; # of chars to compare
+GMODID2: LD	A,(DE)		; get char
+	CP	(HL)		; compare id string
+	JR	NZ,GMODID3	; ..if no match, jump
+	INC	DE		;   else, move ptr's fwd
+	INC	HL
+	DJNZ	GMODID2		; ..and loop
+	POP	HL		; restore regs
+	POP	DE
+	LD	A,C		; id # in A
+	RET
+GMODID3: POP	HL		; restore regs
+	POP	DE
+	CALL	ADDHL3		; move id string ptr 3 bytes fwd
+	LD	A,(HL)		; get byte
+	DEC	A		; test for end of list
+	RET	M		; ..if so (zero), return
+	INC	C		;   else, increase id # counter
+	JR	GMODID1		; loop
+
+
+	; get offset for environment element by name
+	;  in: name at given memory location
+	; out: A= offset, or 0xFF if not found
+GENVOFF: LD	HL,ENVTBL	; table of ENV elements (starting with 'CBIOS')
+GENVOF1: PUSH	HL
+	LD	DE,ZCMBUF+5	; ptr to symbol read from ZCM file
+GENVOF2: LD	A,(DE)		; get char
+	CP	(HL)		; compare with list of known elements
+	INC	HL		; move ptr fwd
+	JR	NZ,GENVOF3	; ..if no match, jump to fetch next entry
+	OR	A		; test
+	JR	Z,GENVOF4	; ..if reached end of name (= zero), then jump
+	INC	DE		; move ptr fwd
+	JR	GENVOF2
+GENVOF3: POP	HL		; restore ptr
+	CALL	GENVOF5		; move to next entry
+	JR	NZ,GENVOF1	; ..if not end of list, loop
+	DEC	A		;   else, set return status (A= 0xFF) not found
+	RET
+
+	; match, name found, now get offset
+GENVOF4: LD	A,(HL)		; get offset in env descriptor
+	POP	HL		; restore regs
+	RET
+
+	; move ptr to next element name
+	; out: Z-Flag set (Z) if reached end of list
+GENVOF5: LD	A,(HL)		; get byte
+	INC	HL		; move ptr fwd
+	OR	A		; test
+	JR	NZ,GENVOF5	; ..if not zero, loop
+	INC	HL		;   else, move to byte holding offset
+	LD	A,(HL)		; get it
+	OR	A		; set return status
+	RET
+
+	;---
+
+
+
+
+;::::: FILE READ
+
+
+	; read file into RDBUF
+	; out: DE= file size
+RDFILE:	LD	HL,(RDBUF)	; addr of read buffer
+	LD	A,(FCBUSE)	; flag FCB in use
+	OR	A
+	JR	NZ,RRD2ND	; ..if not primary FCB, then jump
+RDFILE1: CALL	RRDREC		; random read 1 record
+	JR	NZ,RDFILE2	; ..if error, then jump
+	LD	DE,128		;   else, move dest addr fwd by one rec
+	ADD	HL,DE
+	JR	RDFILE1		; loop
+				; ..then fall through at end of file
+RDFILE2: LD	DE,(RDBUF)	; addr of read buffer
+	SBC	HL,DE		; calculate file size (# bytes read)
+	LD	(FILESZ),HL	; ..and store it
+	EX	DE,HL		; addr of read buffer in HL
+	LD	(RDPOS),HL	; ..store read position
+	RET
+
+
+	; file random read 1 record using PRIMFCB
+	;  in: HL= DMA buffer addr
+	; out: A= 0, Z-Flag set (Z) if no error
+RRDREC:	PUSH	HL		; save HL
+	EX	DE,HL		; swap regs
+	LD	C,26		; BDOS fn #26 set DMA buffer addr
+	CALL	CPMBDOS
+	LD	DE,PRIMFCB	; set primary FCB
+	LD	C,33		; BDOS fn #33 random Read
+	CALL	CPMBDOS
+	LD	HL,RRDCNT	; memory location used as 16-bit counter
+	INC	(HL)		; +1
+	JR	NZ,RRDREC1	; ..if within byte boundary, then skip over
+	INC	HL
+	INC	(HL)		;   else, +1 high byte
+RRDREC1: OR	A		; set Z-Flag if ok
+	POP	HL		; restore HL
+	RET
+
+
+	; random read file using Secondary FCB
+RRD2ND:	CALL	SWAPFCB		; swap primary and secondary FCB
+	LD	HL,(RDBUF)	; addr of read buffer
+	LD	DE,(SECNFCB+12)	; extent + s1 in secondary FCB
+	LD	BC,(SECNFCB+14)	; s2 + rc
+	CALL	RRDFIL
+	LD	(FCBUSE),A	; reset flag FCB in use
+	PUSH	HL
+	CALL	SWAPFCB		; swap FCB's back
+	POP	HL
+	JR	RDFILE2
+
+
+	; file read random
+	;  in: BC= counter (number of records to read)
+	;      DE= random record number
+	;      HL= dest. addr
+RRDFIL:	LD	(RRDCNT),DE
+RRDFIL1: LD	A,B		; test counter
+	OR	C
+	RET	Z		; ..if counter = 0, then return
+	DEC	BC		; counter -1
+	PUSH	BC
+	CALL	RRDREC		; random read 1 record
+	POP	BC
+	LD	DE,128		; record length
+	ADD	HL,DE		; move dest ptr fwd
+	JR	RRDFIL1		; ..and loop
+
+
+	; open LBR
+	;  in: primary FCB contains FN.FT
+	; out: A= 0 Z-Flag set (Z) if ok, else not found
+OPENLBR: XOR	A		; nullify A
+	LD	(LBRREAD),A	; reset flag indicating 'read LBR'
+	LD	DE,PRIMFCB	; ptr to primary FCB
+	CALL	INITFC		; init FCB
+	CALL	OPENFIL		; try to open the file (.LBR)
+	RET	NZ		; ..if not found, return (status already set)
+	CALL	RETUD		; get currently logged drive (B) and user (C)
+	LD	(DUTEMP),BC	; save
+	LD	A,(VOPT)	; get flag
+	OR	A
+	JR	NZ,OPNLBR1	; ..if running in verbose mode, skip over
+	CALL	PDOT		;   else, just display a dot
+	JR	OPNLBR2
+OPNLBR1: CALL	PRINT		; inform user
+	DEFB	' Open '
+	DEFB	0
+
+	CALL	PDUNDR		; display drive/user or dir name
+OPNLBR2: CALL	SWAPFCB		; swap primary and secondary FCB
+	CALL	CRLF
+	OR	0FFH
+	LD	(LBRREAD),A	; set flag to read from .LBR file
+	INC	A		; set return status Ok
+	RET
+
+
+	; open file (use specified DU:, or search along path)
+	; out: A= 0xFF if not found
+OPENFIL: LD	A,(DUFILE+1)	; get drive of file being processed
+	OR	A
+	JR	NZ,OPNFIL1	; ..if drive specified, then jump
+	LD	A,(LBRREAD)	;   else, get flag reading LBR
+	OR	A
+	JR	NZ,OPNFIL2	; ..if LBR, then skip over
+
+OPNFIL1: LD	DE,PRIMFCB	; set ptr to primary FCB
+	CALL	F$OPEN		; open file
+	RET	Z		; ..and return if no error
+	LD	A,(DUFILE+1)	; get drive again
+	OR	A
+	RET	NZ		; ..if one was specified, stop here
+	CALL	MINPTH		;   else, try to find file along the minipath
+	CALL	F$OPEN		; open the file
+	RET	Z		; ..if ok, then return
+	LD	BC,(DUCURR)	;   else, login current DU
+	CALL	LOGUD
+	OR	0FFH		; set error status
+	RET			; ..and return
+
+	; attempt to open LBR file
+OPNFIL2: LD	BC,(DUTEMP)	; get previously saved DU
+	CALL	LOGUD		; ..and log in
+	CALL	SWAPFCB		; swap primary and secondary FCB
+	LD	HL,(RDBUF)	; addr of read buffer
+	PUSH	HL
+	LD	DE,0		; first rec
+	LD	BC,1		; one record
+	CALL	RRDFIL		; file random read
+	LD	L,0EH		; offset to length in LBR dir control entry
+				;  (shortcut, read buffer starts at
+				;   0x0100 boundary and HL just got +0x80)
+	LD	C,(HL)		; get low byte
+	INC	HL
+	LD	B,(HL)		; and high byte
+	DEC	BC		; length of LBR directory in records
+	LD	L,80H		; buffer addr back to previous value
+	CALL	RRDFIL1		; read LBR directory
+	LD	(HL),A		; store nul-terminator (16-bit word)
+	INC	HL
+	LD	(HL),A
+	POP	HL		; restore addr of read buffer
+
+	; search LBR directory for file
+SRCHLBR: LD	BC,32		; length of LBR dir entry
+	ADD	HL,BC		; move ptr fwd
+	PUSH	HL		; save position
+	LD	A,(HL)		; get status
+				;   (0x00= active, 0xFE= deleted, 0xFF= unused)
+	INC	A
+	JR	Z,SRCHLB2	; ..if unused, then jump
+	INC	A
+	JR	Z,SRCHLB1	; ..if deleted, then jump
+	INC	HL		;   else, move ptr fwd to name
+	LD	A,(HL)		; get char
+	OR	A
+	JR	Z,SRCHLB2	; ..if name is empty, then jump
+	LD	DE,SECNFCB+1	; ptr to filename in secondary FCB
+	LD	B,11		; # chars to compare
+	CALL	CP$HLDE		; compare file name and type
+	JR	Z,SRCHLB3	; ..if match (file found), then jump to continue
+
+	; filename not found, continue search
+SRCHLB1: POP	HL		; restore position
+	JR	SRCHLBR		; ..and continue searching
+
+	; LBR dir entry unused
+SRCHLB2: POP	HL		; clear stack
+	LD	(FCBUSE),A	; reset flag FCB in use
+	CALL	SWAPFCB		; swap FCB's back
+	LD	HL,(DUFILE)	; get file DU:
+	CALL	LOGDUHL		; ..and log in (or use current DU:)
+	JR	OPNFIL1		; jump, try to open regular file
+
+	; file found in LBR
+SRCHLB3: LD	BC,4		; copy 4 bytes (index and length)
+	LDIR
+	POP	HL		; clear stack
+	LD	A,0FFH
+	LD	(FCBUSE),A	; store indicator secondary FCB in use
+	XOR	A		; clear A, and fall through
+
+
+	;--- Support functions
+
+	; swap primary and secondary FCB
+SWAPFCB: LD	HL,PRIMFCB	; ptr to primary FCB
+	LD	DE,SECNFCB	; ptr to secondary FCB
+	LD	B,36		; # bytes to swap
+	PUSH	AF		; save AF
+
+	; get byte from primary (in C) and from secondary (in A)
+	; then save back in the opponent FCB
+SWPFCB1: LD	C,(HL)
+	LD	A,(DE)
+	LD	(HL),A		; save in primary
+	LD	A,C
+	LD	(DE),A		; save in secondary
+	INC	HL		; move ptr's fwd
+	INC	DE
+	DJNZ	SWPFCB1		; loop till done
+	POP	AF		; restore
+	RET
+
+
+	; create minipath
+	; iterate over Path (internal or running env) and build
+	; a short version containing only unique DU entries
+MINPTH:	CALL	DMARDBF		; set read buffer as DMA
+	LD	HL,IPATH	; prepare to use internal path
+	LD	A,(RUNZCOM)	; get flag
+	OR	A
+	JR	Z,MINPTH1	; ..if not running under NZ-COM, skip over
+	CALL	GPTHADR		;   else, get Path addr of active env in HL
+MINPTH1: PUSH	DE		; save regs
+	XOR	A		; clear A
+	LD	(MPATH),A	; prepare for empty path
+	EX	DE,HL		; swap regs (ptr to Path now in DE)
+
+	; iterate over Path entries
+MINPTH2: LD	A,(DE)		; drive from Path
+	OR	A		; test
+	JR	Z,MINPFX	; ..if end of path entries, then exit loop
+	LD	BC,(DUCURR)	; current drive in B
+	INC	B		; make it 1-based (A: = 1, B: = 2 etc.)
+	LD	H,B		; prepare to use current drive
+	CP	'$'		; is path element = placeholder for current ?
+	JR	Z,MINPTH3	; ..if so, skip over
+	LD	H,A		;   else, use actual drive from Path
+MINPTH3: INC	DE		; move ptr fwd
+	LD	A,(DE)		; user from Path
+	INC	DE		; move ptr to next path entry
+	LD	L,C		; prepare to use current user
+	CP	'$'		; is path element = placeholder for current ?
+	JR	Z,MINPTH4	; ..if so, skip over
+	LD	L,A		;   else, use actual user from Path
+MINPTH4: PUSH	HL
+	OR	A		; clear Carry
+	SBC	HL,BC		; compare path entry with current DU
+	POP	HL
+	JR	Z,MINPTH2	; ..if match, loop to get next Path entry
+
+	; check if DU is already in minipath
+	LD	B,H		; copy DU to BC
+	LD	C,L
+	LD	HL,MPATH	; point to minipath dest.
+
+	; loop over minipath till drive+user match, or end is reached
+MINPTH5: LD	A,(HL)		; get drive from minipath entry
+	OR	A
+	JR	Z,MINPTH6	; ..if empty, jump to add entry
+	CP	B		;   else, compare drive
+	INC	HL		; move ptr fwd
+	LD	A,(HL)		; get user from minipath entry
+	INC	HL		; move ptr fwd
+	JR	NZ,MINPTH5	; ..if drive does not match, loop
+				;   (possible candidate, skip user comparison)
+	CP	C		; compare user
+	JR	NZ,MINPTH5	; ..if no match (= possible candidate), loop
+	JR	MINPTH2		;   else, drive+user match, so don't add
+				;   ..and jump to get next Path entry
+
+	; new DU found, append to minipath
+MINPTH6: LD	(HL),B		; store drive
+	INC	HL
+	LD	(HL),C		; store user
+	INC	HL
+	LD	(HL),A		; store terminator (zero)
+	JR	MINPTH2		; ..and loop to get next Path entry
+
+
+	; now move along minipath
+	; and test if file exists
+MINPFX:	LD	HL,MPATH	; ptr to minipath
+	POP	DE		; restore regs (ptr FCB)
+MINPFX1: LD	A,(HL)		; get drive from minipath
+	OR	A
+	RET	Z		; ..if none, return
+	DEC	A		; make zero-based (A: = 0, B: = 1 etc.)
+	CP	'$'-1		; test if placeholder for current
+	JR	NZ,MINPFX2	; ..if not, skip over
+	LD	A,(DUCURR+1)	;   else, get current drive
+MINPFX2: LD	B,A		; drive in B
+	INC	HL		; move ptr fwd
+	LD	A,(HL)		; get user from minipath
+	CP	'$'		; test if placeholder for current
+	JR	NZ,MINPFX3	; ..if not, skip over
+	LD	A,(DUCURR)	;   else, get current user
+MINPFX3: LD	C,A		; user in C
+	INC	HL		; move ptr fwd
+	CALL	LOGUD		; login drive/user in BC
+	CALL	F$EXIS		; check if file exists
+	JR	Z,MINPFX1	; ..if not found, loop
+	RET			;   else, return
+
+
+	; log root drive/user
+LOGROOT: CALL	GETROOT		; get root drive/user from (int.) Path
+				;   fallback to current DU
+	JP	LOGUD		; ..and log in
+
+
+	; return root drive/user from Path
+	; default to current
+	;  in: -
+	; out: B= drive, C= user
+GETROOT: LD	BC,(DUCURR)	; current drive (B) and user (C)
+	LD	HL,IPATH	; prepare to use internal path
+	LD	A,(RUNZCOM)	; get flag
+	OR	A
+	JR	Z,GETROT1	; ..if not running under NZ-COM, skip over
+	LD	A,(PATHOPT)	;   else, get option flag
+	OR	A		; prefer Path of current system ?
+	JR	Z,GETROT1	; ..if not set, skip over
+	CALL	GPTHADR		;   else, get Path addr from current env in HL
+				;   and fall through
+
+	; iterate over Path entries till root drive/user found
+GETROT1: LD	A,(HL)		; drive from Path
+	OR	A		; test for end of entries
+	RET	Z		; ..if end reached, then return
+	LD	B,(HL)		;   else, drive in B
+	DEC	B		; make 0-based (A: = 0, B: = 1 etc.)
+	INC	HL		; move ptr fwd
+	LD	C,(HL)		; user from Path
+	INC	HL		; move ptr fwd
+	JR	GETROT1		; ..and loop
+
+
+	; set internal read buffer as DMA buffer
+DMARDBF: LD	HL,(RDBUF)	; addr of read buffer
+	JP	SETDMA		; ..and set as DMA buffer
+
+
+	; set internal read buffer as DMA buffer, and test if file exists
+DMARDFX: CALL	DMARDBF
+	JP	F$EXIS
+
+
+	; get next byte from read buffer (no bounds checking)
+	; out: A= byte
+RDNXBYT: PUSH	HL		; save regs
+	LD	HL,(RDPOS)	; get current position
+	LD	A,(HL)		; get byte at pointed location
+	INC	HL		; position +1
+	LD	(RDPOS),HL	; store new position
+	POP	HL		; restore regs
+	RET
+
+	;---
+
+
+
+
+;::::: FILE WRITE
+
+
+	; write file to disk, delete an existing file w/o backup
+	;  in:  B= length in # recs
+	;      HL= memory location of output
+WRTFILE: LD	DE,WRTFCB
+	CALL	F$DELE		; delete file, if already exists
+	CALL	F$MAKE		; create (new) file
+	INC	A
+	JP	Z,E$DIRS	; ..if error, jump display msg (no dir space)
+WRTFIL1: CALL	SETDMA		; set DMA buffer addr
+	CALL	F$WRIT		; write a record
+	JP	NZ,E$DFULL	; ..if error, jump display msg (disk full)
+	PUSH	BC		;   else, save regs
+	LD	BC,128
+	ADD	HL,BC		; move ptr fwd by 128 bytes (1 record)
+	POP	BC		; restore regs
+	DJNZ	WRTFIL1		; loop till done
+	CALL	F$CLOS		; close file
+	RET	Z		; ..if ok, return
+	JP	E$DIRS		;   else, display error msg (no dir space)
+
+
+; ##### CHECK: unreferenced code
+	PUSH	HL
+	OR	A
+	SBC	HL,DE
+	POP	HL
+	RET
+	PUSH	HL
+	OR	A
+	SBC	HL,BC
+	POP	HL
+	RET
+	CALL	HELP1
+	JP	E0AX
+; #####
+
+
+
+
+;::::: HELP SCREEN
+
+
+	; display help and exit program
+HELP:	CALL	HELP1
+	JP	EXITX
+
+HELP1:	CALL	PRINT
+	DEFB	CR,LF,'Syntax:  NZCOM [library] [descriptor] '
+	DEFB	'[filelist] [/options] [;commands]',CR,LF,CR,LF
+	DEFB	'     library    = [DU:|DIR:]lbrname.LBR',CR,LF
+	DEFB	'     descriptor = [DU:|DIR:]descname[.ZCI | .ZCM | .ENV]',CR,LF
+	DEFB	'     module     = [DU:|DIR:]modname.typ',CR,LF
+	DEFB	'     typ        = ZRL | REL | Z3T | NDR | FCP | RCP | IOP',CR,LF
+	DEFB	'     item       = library | module',CR,LF
+	DEFB	'     filelist   = item [item [item...]]',CR,LF
+	DEFB	'     options    = Q (Quiet), V (Verbose), '
+	DEFB	'Z (ZRL), R (REL), C (Clone)',CR,LF
+	DEFB	'     commands   = Multiple Command Line (CP/M or NZ-COM)',CR,LF,CR,LF
+	DEFB	'If no library given:         assume NZCOM.LBR',CR,LF
+	DEFB	'If no descriptor:            assume NZCOM',CR,LF
+	DEFB	'If no descriptor type:       assume .ZCI then .ZCM then .ENV',CR,LF,CR,LF
+	DEFB	'If no DU/DIR prefix:         search library, then current DU, then path',CR,LF
+	DEFB	'If DU/DIR prefix:            search that directory only, not library',CR,LF,CR,LF
+	DEFB	0
+
+	LD	A,(VOPT)	; get flag
+	OR	A
+	LD	A,'V'
+	JR	NZ,HELP2	; ..if running in verbose mode, skip over
+	LD	A,'Q'
+HELP2:	LD	(HLPVOPT),A	; patch 'V' / 'Q' into string
+	LD	A,(ZOPT)	; get flag
+	OR	A
+	LD	A,'Z'
+	JR	NZ,HELP3	; ..if ZRL files chosen, skip over
+	LD	A,'R'
+HELP3:	LD	(HLPZOPT),A	; patch 'Z' / 'R' into string
+	CALL	PRINT
+	DEFB	'Default Options:  '
+HLPVOPT: DEFB	'X'
+	DEFB	' and '
+HLPZOPT: DEFB	'Y'
+	DEFB	'    Default Path (CP/M):  '
+	DEFB	0
+
+	; iterate over elements of internal path, and display
+	LD	HL,IPATH
+HLPPTH1: LD	A,(HL)		; get drive
+	OR	A
+	JR	Z,HELP4		; ..if end reached (= zero), exit loop
+	LD	A,(HL)		; get byte (again)  ##### could be saved
+	INC	HL		; move ptr fwd
+	CP	'$'		; is it placeholder ?
+	JR	Z,HLPPTH2	; ..if so, skip over
+	ADD	A,40H		;   else, make ascii
+HLPPTH2: CALL	COUT		; ..and display
+	LD	A,(HL)		; get user
+	INC	HL		; move ptr fwd
+	CP	'$'		; is it placeholder ?
+	JR	Z,HLPPTH4	; ..if so, skip over
+	CALL	PAFDC		;   else, display as decimal number
+HLPPTH3: CALL	PRINT		; display colon and space
+	DEFB	': '
+	DEFB	0
+
+	JR	HLPPTH1		; ..then loop
+HLPPTH4: CALL	COUT		; display '$'
+	JR	HLPPTH3		; ..then jump to display colon and space
+HELP4:	CALL	PRINT		; finally display <CR><LF>
+	DEFB	CR,LF
+	DEFB	0
+	RET
+
+
+
+
+;::::: ERROR MESSAGES
+
+
+E$BADDU: CALL	PRINT
+	DEFB	' Bad DU: Specification'
+	DEFB	0
+	LD	C,02H		; set Z3MSG return code
+	JP	EXIT
+
+
+E$1DESC: CALL	PRINT
+	DEFB	' Only one descriptor allowed'
+	DEFB	0
+	JR	E0AEXIT
+
+
+E$CLONE: CALL	PRINT
+	DEFB	" Can't clone ZCI"
+	DEFB	0
+
+				; exit with error code 0x0A
+				;   ##### redundant - see E0AX below
+E0AEXIT: LD	C,0AH		; set Z3MSG return code
+	JP	EXIT
+
+
+E$NOENV: CALL	PRINT
+	DEFB	" Can't clone with no descriptor"
+	DEFB	0
+	JR	E0AEXIT
+
+
+E$DIRS:	CALL	PRINT
+	DEFB	' No more directory space'
+	DEFB	0
+
+				; exit with error code 0x0B
+E0BEXIT: LD	C,0BH		; set Z3MSG return code
+	JP	EXIT
+
+
+E$DFULL: CALL	PRINT
+	DEFB	' Disk Full'
+	DEFB	0
+	JR	E0BEXIT
+
+
+E$MPROT: CALL	PRINT
+	DEFB	' Memory is protected, perhaps by an RSX.',CR,LF
+	DEFB	' You must remove it before loading a new system.'
+	DEFB	0
+	JR	E0DEXIT
+
+
+E$TOBIG: CALL	CRLF
+	CALL	PDUNDR
+	CALL	PRINT
+	DEFB	' is too big'
+	DEFB	0
+
+				; exit with error code 0x0D
+E0DEXIT: LD	C,0DH		; set Z3MSG return code
+	JP	EXIT
+
+
+E$SHSZ:	CALL	PRINT
+	DEFB	' New Shell Size is too small.'
+	DEFB	0
+	JR	E0DEXIT
+
+
+E$SHSTO: CALL	PRINT
+	DEFB	' New Shell Stack overflow.'
+	DEFB	0
+	JR	E0DEXIT
+
+
+E$NDROV: CALL	PRINT
+	DEFB	' New Z3NDIR Register overflow.'
+	DEFB	0
+	JR	E0DEXIT
+
+
+E$XCL:	CALL	PRINT
+	DEFB	' Expanded command line is too long.'
+	DEFB	0
+	LD	C,0AH		; set Z3MSG return code
+	JP	EXIT
+
+
+E$NAME:	CALL	PDUNDR
+	CALL	PRINT
+	DEFB	' not properly named'
+	DEFB	0
+
+	JR	E0AX
+
+
+
+
+;::::: PROCESS FILES (CONT'D)
+
+	; Process LBR file
+PROCLBR: CALL	OPENLBR		; open .LBR file
+	RET	Z		; ..if done, then return
+
+	; .LBR file not found, test if NDR or Z3T
+PRCLBR1: PUSH	DE		; save FCB addr
+	LD	HL,9		; offset to file type
+	ADD	HL,DE		; adjust ptr
+	EX	DE,HL		; ..and put in DE
+	CALL	GMODID		; get module type
+	POP	DE		; restore FCB addr
+	CP	06H		; is NDR ?
+	JP	Z,PROCFIL	; ..if so, process file
+	CP	07H		; or Z3T ?
+	JP	Z,PROCFIL	; ..if so, process file
+	CALL	PRINT		;   else, display error and exit
+	DEFB	BEL,CR,LF," Can't find "
+	DEFB	0
+
+	CALL	PDUNDR
+
+				; exit with error code 0x0A
+				;   ##### redundant - see E0AEXIT above
+E0AX:	LD	C,0AH		; set Z3MSG return code
+	JP	EXIT
+
+
+E$TYPE:	CALL	PDUNDR3
+	CALL	PRINT
+	DEFB	' is an invalid type'
+	DEFB	0
+	JR	E0AX
+
+
+E$ADDR:	CALL	PRINT
+	DEFB	CR,LF,'  '
+	DEFB	0
+	CALL	PDUNDR
+	CALL	PRINT
+	DEFB	BEL,' Contains an Invalid Address'
+	DEFB	0
+
+	LD	C,0EH		; set Z3MSG return code
+	JP	EXIT
+
+
+	;--- Support functions
+
+	; print drive/user and name if exists in NDR buffer
+PDUNDR:	CALL	RETUD		; get drive/user
+	LD	A,'A'		; convert drive to ascii
+	ADD	A,B
+	CALL	COUT		; ..display drive letter
+	LD	A,C		; get user number
+	CALL	PAFDC		; ..display as decimal
+	CALL	PCOLON		; display Colon
+	CALL	DUTDIR		; search DU in named directories
+	JR	Z,PDUNDR3	; ..if not found, skip over
+
+	; display named directory
+	LD	B,8		; up to eight chars
+PDUNDR1: LD	A,(HL)		; get char
+	INC	HL		; move ptr fwd
+	CP	' '		; reached end (<SP>) ?
+	JR	Z,PDUNDR2	; ..if so, exit loop
+	CALL	COUT		;   else, display char
+	DJNZ	PDUNDR1		;   and loop
+PDUNDR2: LD	A,'>'
+	CALL	COUT		; display GT sign
+PDUNDR3: LD	A,(FCBUSE)	; flag FCB in use
+	OR	A
+	CALL	NZ,PFCB2FN	; ..if not primary, then jump use secondary FCB
+				;   else, fall through
+
+	; print primary FCB's filename
+PFCB1FN: LD	DE,PRIMFCB+1	; point to filename in primary FCB
+	JP	PFN2		; ..jump to display, and let return from there
+
+	; print secondary FCB's filename
+PFCB2FN: LD	DE,SECNFCB+1	; point to filename in secondary FCB
+	CALL	PFN2		; display it
+	LD	A,'|'
+	JR	PCONOUT		; jump to display pipe symbol
+
+	; print a colon ':' on console
+PCOLON:	LD	A,':'
+	JR	PCONOUT		; jump to display colon
+
+	; print a dot '.' on console
+PDOT:	LD	A,'.'
+PCONOUT: JP	COUT		; output to console, and return from there
+
+	;---
+
+
+
+
+;::::: (ERROR) MESSAGES
+
+
+M$RUNNG:	CALL	PRINT
+	DEFB	'   '
+	DEFB	0
+
+	CALL	PDUNDR
+	CALL	PRINT
+	DEFB	' is running.'
+	DEFB	0
+
+	JP	EXIT0		; exit w/o Z3MSG
+
+
+E$REL:	PUSH	AF
+	CALL	PRINT
+	DEFB	CR,LF,'  REL Error '
+	DEFB	0
+	POP	AF
+	CALL	PAFDC
+	CALL	PRINT
+	DEFB	' in file '
+	DEFB	0
+	CALL	PDUNDR
+	LD	C,0AH		; set Z3MSG return code
+	JP	EXIT
+
+
+E$SPACE: CALL	PRINT
+	DEFB	'  No Space Allocated for '
+	DEFB	0
+	CALL	PFCB1FN
+	LD	C,0DH		; set Z3MSG return code
+	JP	EXIT
+
+
+
+
+;::::: NZ-COM RAM STORAGE
+
+
+	; table of ENV elements and their offsets
+	; entry = name (as in ZCM file), nul-terminator, offset in ENV
+ENVTBL:	DEFB	'CBIOS',0,	01H
+	DEFB	'ENVTYP',0,	08H
+	DEFB	'EXPATH',0,	09H
+	DEFB	'EXPATHS',0,	0BH
+	DEFB	'RCP',0,	0CH
+	DEFB	'RCPS',0,	0EH
+	DEFB	'IOP',0,	0FH
+	DEFB	'IOPS',0,	11H
+	DEFB	'FCP',0,	12H
+	DEFB	'FCPS',0,	14H
+	DEFB	'Z3NDIR',0,	15H
+	DEFB	'Z3NDIRS',0,	17H
+	DEFB	'Z3CL',0,	18H
+	DEFB	'Z3CLS',0,	1AH
+	DEFB	'Z3ENV',0,	1BH
+	DEFB	'Z3ENVS',0,	1DH
+	DEFB	'SHSTK',0,	1EH
+	DEFB	'SHSTKS',0,	20H
+	DEFB	'SHSIZE',0,	21H
+	DEFB	'Z3MSG',0,	22H
+	DEFB	'EXTFCB',0,	24H
+	DEFB	'EXTSTK',0,	26H
+	DEFB	'QUIET',0,	28H
+	DEFB	'Z3WHL',0,	29H
+	DEFB	'SPEED',0,	2BH
+	DEFB	'MAXDRV',0,	2CH
+	DEFB	'MAXUSR',0,	2DH
+	DEFB	'DUOK',0,	2EH
+	DEFB	'CRT',0,	2FH
+	DEFB	'PRT',0,	30H
+	DEFB	'COLS',0,	31H
+	DEFB	'ROWS',0,	32H
+	DEFB	'LINS',0,	33H
+	DEFB	'DRVEC',0,	34H
+	DEFB	'SPAR1',0,	36H
+	DEFB	'PCOL',0,	37H
+	DEFB	'PROW',0,	38H
+	DEFB	'PLIN',0,	39H
+	DEFB	'FORM',0,	3AH
+	DEFB	'SPAR2',0,	3BH
+	DEFB	'SPAR3',0,	3CH
+	DEFB	'SPAR4',0,	3DH
+	DEFB	'SPAR5',0,	3EH
+	DEFB	'CCP',0,	3FH
+	DEFB	'CCPS',0,	41H
+	DEFB	'DOS',0,	42H
+	DEFB	'DOSS',0,	44H
+	DEFB	'BIO',0,	45H
+	DEFB	'PUBDRV'0,	7EH
+	DEFB	'PUBUSR',0,	7FH
+	DEFB	0
+
+
+	; module ID strings
+	; order of ID's = bit position in MODLST, and file names RELFN/ZRLFN
+MODID:	DEFB	'CCP'		; # 0
+	DEFB	'DOS'
+	DEFB	'BIO'
+	DEFB	'IOP'
+	DEFB	'RCP'
+	DEFB	'FCP'
+	DEFB	'NDR'
+	DEFB	'Z3T'		; # 7
+	; standard file types, counting continues
+	; only one routine is needed, to identify modules and file types
+FTYPES:	DEFB	'REL'		; # 8
+	DEFB	'ZCM'
+	DEFB	'ENV'
+	DEFB	'BIN'
+	DEFB	'SPR'
+	DEFB	'PRL'
+	DEFB	'   '
+	DEFB	'COM'
+	DEFB	'ZRL'
+	DEFB	'LBR'
+	DEFB	'PAT'
+	DEFB	'ZCI'		; # 19
+	DEFB	0
+
+
+	; lists of filenames, in order of MODID strings above
+	; 8 entries (CCP, DOS, BIO, IOP, RCP, FCP, NDR, Z3T)
+	; 11 bytes each, nul-terminated
+RELFN:	DEFB	'NZCPR   REL'	; REL filenames
+	DEFB	'NZDOS   REL'
+	DEFB	'NZBIO   REL'
+	DEFB	'NZIOP   REL'
+	DEFB	'NZRCP   REL'
+	DEFB	'NZFCP   REL'
+	DEFB	'NZCOM   NDR'
+	DEFB	'NZCOM   Z3T'
+	DEFB	0
+
+ZRLFN:	DEFB	'NZCPR   ZRL'	; ZRL filenames
+	DEFB	'NZDOS   ZRL'
+	DEFB	'NZBIO   ZRL'
+	DEFB	'NZIOP   ZRL'
+	DEFB	'NZRCP   ZRL'
+	DEFB	'NZFCP   ZRL'
+	DEFB	'NZCOM   NDR'
+	DEFB	'NZCOM   Z3T'
+	DEFB	0
+
+
+INSTENV: DEFB	0		; Flag: env. descriptor found and being
+				;   installed (1= yes, 0= no)
+RUNZCOM: DEFB	0		; Flag: running under NZ-COM (1= yes, 0= no)
+INSTBIO: DEFB	0		; Flag: a BIOS was installed (1= yes, 0= no)
+SAVECCP: DEFB	0		; Flag: CCP was saved to disk (1= yes, 0= no)
+
+NZID:	DEFB	'NZ-COM'	; String to identify NZ-COM
+
+PKGID:	DEFB	'Z3IOP'		; Package IDs
+	DEFB	'Z3RCP'
+	DEFB	'Z3FCP'
+	DEFB	'NZCOM'
+	DEFB	0
+
+DEFLTFN: DEFB	0,'NZCOM   LBR'	; Default file names
+	DEFB	0,'NZCOM   CCP'
+	DEFB	0,'NZCPM   COM'
+	DEFB	0,'NZCOM   ZCI'
+
+MODLST:	DEFB	0		; List of modules
+				; bits: 0-CCP, 1-DOS, 2-BIO, 3-IOP,
+				;       4-RCP, 5-FCP, 6-NDR, 7-Z3T
+
+SEGLST:	DEFB	0		; List of segments
+				; bits: 0-SHSTK, 1-MSG, 2-XFCB, 3-PATH,
+				;       4-WHL, 5-MCL, 6+7 reserved
+
+COPYWIP: DEFB	0		; Work-in-progress list of modules to copy
+MODWIP:	DEFB	0		; Work-in-progress list of modules to install
+
+PROCDON: DEFB	0FFH		; Flag: processing of files done
+				;       (0= yes, 0xFF= no)
+COMMSET: DEFB	0FFH		; Flag: base addr's of known COMMON's set
+				;       (initial = 0xFF, done = 0)
+FCBUSE:	DEFB	0		; Flag: use primary FCB, or secondary FCB
+				;       (0= primary, else secondary)
+LBRREAD: DEFB	0		; Flag: reading from .LBR file
+				;       (0= no, 0xFF= yes)
+COPT:	DEFB	0		; Cmdline C-option (0xFF= clone)
+PROCIMG: DEFB	0		; Flag: processing binary image file ZCI
+				;       (0xFF= yes, 0x00= no)
+
+BIOSREC: DEFB	2		; Size of BIOS in # recs
+				;   (value not in ENV descriptor)
+
+SECNFCB: DEFS	36		; Secondary FCB to read files (from .LBR)
+PRIMFCB: DEFS	36		; Primary FCB to read files
+RRDCNT:	EQU	PRIMFCB+33	; Random read counter (16-bit)
+
+WRTFCB:	DEFS	36		; FCB used to write an output file
+
+ZCMBUF:	DEFS	21		; Read buffer for ZCM file
+	DEFB	0
+
+STOPLNK: DEFB	0		; Flag: stop linking (0= no, 1= yes, size info)
+CLPOS:	DEFW	0		; Current position in cmdline buffer
+DUCURR:	DEFW	0		; Current drive/user
+DUFILE:	DEFW	0		; File drive/user (read from cmdline)
+DUTEMP:	DEFW	0		; Temporary storage location for drive/user
+
+ENVDEST: DEFW	0		; Destination addr for loading env descriptor
+				;   (0x0100, or 0x0200 if running under NZ-COM)
+
+WSPCADR: DEFW	0		; Addr begin workspace (as returned by CODEND)
+CMDBADR: DEFW	0		; Addr of cmd input buffer = WSPC + 0x0100
+				;   (list of files to read)
+
+RDBUF:	DEFW	0		; Addr of read buffer
+RDPOS:	DEFW	0		; Current position in read buffer
+WRTBUF:	DEFW	0		; Addr of write buffer = WSPC + 0x0100 + 0x2000
+				;   (where the new system is built, 24 kB)
+LNKDEST: DEFW	0		; Destination addr for linking,
+				;   also dest. addr when copying to new system
+LNKTRGT: DEFW	0		; Phys. target addr (ORG) for linking
+FILESZ:	DEFW	0		; File size (set after reading or linking)
+CBIOWRT: DEFW	0		; not used - CBIO base in write buffer (converted)
+OLDSHNO: DEFB	0		; Number of SHSTK entries old (running) system
+OLDSHSZ: DEFB	0		; Size of an SHSTK entry old (running) system
+NEWSHNO: DEFB	0		; Number of SHSTK entries new system
+	DEFB	0		; not used
+OLDNDRN: DEFB	0		; Number of NDR entries old (running) system
+NEWNDRN: DEFB	0		; Number of NDR entries new system
+
+
+
+
+;::::: LINKER (combined M-REL / S-REL)
+
+				; M-REL specific symbols start with 'LM_'
+				; S-REL specific symbols start with 'LS_'
+				; symbols of shared code start with 'L_'
+				; variables start with 'L' (no underscore)
+
+
+	; S-REL Linker
+LS_LINK: LD	HL,LSCBAS	; set to first COMMON base addr
+				;   (dynamic list, S-REL specific)
+	LD	(LSNXCM),HL	; point to first entry
+				;   (store next COMMON definition here)
+	LD	HL,LPNAME	; set dest ptr to Program name
+	CALL	LS_RNAM		; read name
+	CALL	LS_RWRD		; read CSEG size
+	CALL	L_PSIZ		; ..and store it
+	CALL	LS_RWRD		; read DSEG size
+	CALL	L_DSIZ		; ..and store it
+
+	; S-REL loop entry point
+	LD	HL,$		; always return here
+	PUSH	HL
+	CALL	L_GBYTE		; get 1 byte
+	LD	E,A		; save in E
+	BIT	7,A		; check item type
+	JR	NZ,LS_NABS	; ..if non-absolute, then jump
+
+	; S-REL absolute bytes
+	;       (leading byte is counter)
+	INC	E		; adjust counter +1
+LS_ABS:	CALL	L_GBYTE		; get next byte
+	CALL	L_OUT		; output
+	DEC	E		; count down
+	JR	NZ,LS_ABS	; loop till done
+	RET
+
+
+	; S-REL non-absolute item
+	;       (type 1), several checks
+LS_NABS: AND	0F0H		; mask off lower nybble, keep only upper
+	CP	80H
+	JR	Z,LS_WRD	; generate 16-bit word
+	CP	0A0H
+	JR	Z,LS_LDP	; set load pointer
+	LD	A,E		; restore item type to test special cases
+	CP	0F7H
+	JP	Z,LS_RTD	; time and date
+	CP	0FAH
+	JP	Z,LS_RPUB	; define PUBLIC
+	CP	0FBH
+	JR	Z,LS_CM		; define COMMON
+	CP	0FEH
+	JR	Z,LS_END	; end module
+	CP	0FFH
+	JP	Z,L_XITFF	; end file, jump exit
+	JP	L_XIT02		; ..if other type, then jump error
+
+
+	; S-REL end of module
+	;       (type 1 0xFE / 3 bytes optional start addr)
+LS_END:	CALL	LS_RADR		; read 3 bytes, discard result
+	JP	L_XIT00		; jump exit
+
+
+	; S-REL define COMMON
+	;       (type 1 0xFB / name, length)
+LS_CM:	CALL	LS_RCMN		; read name
+	CALL	L_CMTB		; test for known COMMON's
+	LD	A,C		; get offset
+	OR	A
+	JR	NZ,LS_CM1	; ..if match found, skip over
+	CALL	L_CMLOC		;   else, set COMMON base addr
+LS_CM1:	EX	DE,HL		; swap regs (now DE= base addr)
+	LD	HL,(LSNXCM)	; get addr of next COMMbase entry
+	LD	(HL),E		; ..and store addr
+	INC	HL
+	LD	(HL),D
+	INC	HL
+	LD	(LSNXCM),HL	; ..then update addr, point to next COMMbase slot
+	CALL	LS_RWRD		; read size/length
+	LD	A,H
+	OR	L
+	RET	Z		; ..if zero, return
+
+	; name matched, only for '_ID_' a size greater than zero is permitted
+	DEC	C		; test C= 0
+	RET	M		; ..if so, return
+	JP	L_XIT05		;   else, jump error
+
+
+	; S-REL set load pointer
+	;       (type 1 0xA0 / word)
+LS_LDP:	LD	A,E		; restore item type
+	AND	0FH		; mask off upper nybble, keep only lower
+	LD	E,A		; save back
+	CP	3
+	JR	C,LS_LDP1	; ..0xA0-0xA2 = abs/prog/data relative word
+	CALL	LS_FCM		; ..0xA3-0xAE = common relative word,
+				;        0xAF = reference ext. value
+	LD	E,A
+LS_LDP1: CALL	LS_RWRD		; get 16-bit word
+	JP	L_LDPT		; ..and continue in shared code
+
+
+	; S-REL generate 16-bit word
+	;       (type 1 0x8.. / word)
+LS_WRD:	LD	A,E
+	AND	0FH		; mask off upper nybble, keep only lower
+	JR	Z,LS_WRD1	; ..0x80 = absolute word
+	CP	0FH
+	JR	Z,LS_XRF	; ..0x8F = reference ext. value
+	CP	3
+	JR	C,LS_WRD1	; ..0x81 = prog rel. / 0x82 = data rel. word
+	CALL	LS_FCM		; ..0x83-0x8E = common relative word
+LS_WRD1: PUSH	AF		; save type and Flags
+	CALL	LS_RWRD		; read 16-bit word
+	EX	DE,HL		; swap regs (now DE= 16-bit word)
+	POP	AF		; restore
+	JP	Z,L_OUTCM	; ..if type 0x80 (abs), jump output
+				;   COMMON rel. word using shared code
+	JP	L_RELIT		;   else, process prog/data rel. item
+				;      in shared code, and return from there
+
+
+	; S-REL find referenced COMMON, determine base address,
+	;       and set type to '3' to match M-REL type
+	;   in: A= lower nybble of type
+	;  out: A= 3
+LS_FCM:	SUB	3		; make type zero-based
+	ADD	A,A		; calculate offset
+	LD	E,A		; ..and store in DE (for 16-bit math)
+	LD	D,0
+	LD	HL,LSCBAS	; ptr to first COMMON base addr
+	ADD	HL,DE		; add offset
+	LD	E,(HL)		; get low byte
+	INC	HL
+	LD	D,(HL)		; ..and high byte
+	LD	(LCOMBS),DE	; store as base addr of current COMMON
+	LD	A,3		; set item type
+				;   (mimic M-REL type to use shared code)
+	OR	A		; clear Flags
+	RET
+
+
+	; S-REL reference ext. value
+	;       (type 1 0x..F / byte, opt. name)
+LS_XRF:	CALL	L_GBYTE		; get byte
+	OR	A		; test
+	RET	NZ		; ..if zero, fall through and also read name
+				;  (discard all)
+
+
+	; S-REL read name of COMMON
+LS_RCMN: LD	HL,LCNAME	; set dest ptr
+				; ..and fall through
+
+	; S-REL read name (0-16 chars)
+	;   in: HL= dest addr
+	;  out: nul-terminated string at dest addr
+	;       HL= ptr to nul-terminator
+LS_RNAM: CALL	L_GBYTE		; get next byte from input
+	LD	(HL),A		; store it
+	INC	HL		; move ptr fwd
+	INC	A		; test if A= 0xFF
+	JR	NZ,LS_RNAM	; ..if not, loop
+	DEC	HL		; set ptr back to last byte
+	LD	(HL),A		; ..and store nul-terminator
+	RET
+
+
+	; S-REL read time and date
+	;       (type 1 0xF7 / 4 bytes)
+LS_RTD:	CALL	LS_RWRD		; 2* read word, discard result
+	JR	LS_RWRD
+
+
+	; S-REL read PUBLIC entry defintion
+	;       (type 1 0xFA / name, type (byte), offset (word))
+LS_RPUB: CALL	LS_RCMN		; read name, then fall through
+				;   read following 3 bytes, discard all
+
+
+	; S-REL read 24-bit value (optional start addr)
+LS_RADR: CALL	L_GBYTE		; get byte and fall through
+				;   get two more bytes
+
+
+	; S-REL read 16-bit value (word)
+LS_RWRD: CALL	L_GBYTE
+	LD	L,A		; low byte in L
+	CALL	L_GBYTE
+	LD	H,A		; high byte in H
+	LD	(LWORD),HL	; store 16-bit word
+	RET
+
+
+	; return pointers to certain Linker variables
+	;  in: -
+	; out: HL= ptr table of known COMMON's
+	;      DE= ptr first COMMON base addr
+	;      BC= ptr PROGRAM name
+LINKMEM: LD	HL,LCMTBL	; '_ID_'
+	LD	DE,LMCBAS
+	LD	BC,LPNAME
+	RET
+
+
+	; LINKER entry point
+	;  in: DE= phys. target addr
+	;      HL= output dest. addr in memory
+	; out: DE= location of last output
+	;      HL= PROGRAM name (REL module name)
+	;       A= return code (0= no error, 0xFD= forced quit)
+	;          Z-Flag set (Z) if no error, NZ= error
+LINK:	LD	(LSP),SP	; save Stack Pointer
+	LD	(LOBASE),HL	; set base addr
+	LD	(LOADR),HL	; ..and current addr for output
+	LD	(LORGBS),DE	; store target addr (ORG base)
+	LD	HL,0		; init variables
+	LD	(LCSGBS),HL	;   CSEG base
+	LD	(LDSGBS),HL	;   DSEG base
+	LD	(LMODSZ),HL	;   MODULE size
+	LD	(LPNAME),HL	;   PROGRAM name
+	LD	A,1
+	LD	(LOUT1ST),A
+	CALL	L_GBYTE		; read first byte from input
+	CP	0F9H		; test
+	JP	Z,LS_LINK	; ..if 0xF9 (= S-REL module def.), then jump
+				;   else, assumed to be M-REL format
+	LD	H,A
+	LD	L,9
+	AND	11111100b	; mask bits 7-2
+	CP	10000100b	; first item must be 100-0010
+				;   (special link item, prog name)
+	JP	NZ,L_XIT02	; ..if not, jump
+	LD	(LMBPOS),HL	; store input byte and bit position
+
+
+	; M-REL loop entry point
+	LD	HL,$		; always return here
+	PUSH	HL
+	LD	B,1		; get 1 bit
+	CALL	LM_GBIT		; ..from input stream
+	JR	NZ,LM_NABS	; if non-absolute, then jump
+
+
+	; M-REL absolute item
+	;       0 xxxxxxxx (byte follows)
+	LD	B,8		; get next 8 bits
+	CALL	LM_GBIT
+	JP	L_OUT		; store byte, and let loop from there
+
+
+	; M-REL non-absolute
+	;       (relative or special)
+LM_NABS: LD	B,2		; get 2 bits
+	CALL	LM_GBIT		; ..from input stream
+	JR	Z,LM_SPEC	; if special link item, then jump
+
+	; relative item 01/10/11 xxxxxxxx xxxxxxxx (16-bit offset)
+	LD	L,A		; save type in L temporarily
+	LD	B,8		; get next 8 bits
+	CALL	LM_GBIT
+	LD	E,A		; Low byte in E
+	LD	B,8		; get next 8 bits
+	CALL	LM_GBIT
+	LD	D,A		; High byte in D
+	LD	A,L		; Type in A
+				; ..fall through, using shared code
+
+	; M-REL / S-REL shared code
+	; relative item
+L_RELIT: LD	HL,(LCSGBS)	; get program segment origin (CSEG base)
+	DEC	A		; test type
+	JR	Z,L_RELAD	; ..if program relative (01), then jump
+	LD	HL,(LDSGBS)	; get data segment origin (DSEG base)
+	DEC	A
+	JR	Z,L_RELAD	; ..if data relative (10), then jump
+	LD	HL,(LCOMBS)	; get COMMON origin
+	ADD	HL,DE		; add relative (DE) to base
+	EX	DE,HL		; swap regs
+	JP	L_OUTCM		; ..and continue elsewhere
+
+	; determine absolute address of relative item
+L_RELAD: ADD	HL,DE		; add relative (DE) to origin
+	LD	DE,(LORGBS)	; get target base addr (ORG base)
+	ADD	HL,DE
+	EX	DE,HL		; swap regs
+	LD	A,E		; low byte in A
+	OR	A		; clear C-Flag
+	CALL	L_OUT		; store byte
+	LD	A,D		; high byte in A
+	SCF			; set C-Flag
+	JP	L_OUT		; store byte, and let loop from there
+
+
+	; M-REL special link item
+	;       100xxxx (next 4 bits define the type)
+LM_SPEC: LD	B,4		; get 4 bits
+	CALL	LM_GBIT		; ..from input stream
+	CP	01H
+	JR	Z,LM_CMNA	; COMMON name
+	CP	02H
+	JP	Z,LM_RPNA	; PROGRAM name
+	CP	05H
+	JP	C,LM_RCMN	; for undefined types 0011 (3) and 0100 (4)
+				;   read name, discard result
+	JR	Z,LM_RCMS	; define COMMON size
+	CP	08H
+	JR	C,LM_RWN	; for types 0110 (6) Chain ext.,
+				;   0111 (7) PUBLIC def., 1000 (8) unused
+				;   read word and name, discard result
+	CP	0FH
+	JP	Z,L_XITFF	; end file, jump exit
+	PUSH	AF		; preserve type for other cases
+	CALL	LM_RWRD		; ..and read 16-bit word
+	POP	AF
+	CP	0EH
+	JP	Z,L_XIT00	; end module, jump exit
+	CP	0BH
+	JR	Z,L_LDPT	; set load pointer
+	CP	0AH
+	JP	Z,L_DSIZ	; define data size
+	CP	0DH
+	JP	Z,L_PSIZ	; define program size
+	JP	L_XIT02		; ..if other type, jump error
+
+
+	; M-REL read (possibly name and) size of COMMON
+LM_RCMS: CALL	LM_RWN		; read size and name
+	CALL	L_CMTB		; test for known COMMON's
+	LD	HL,(LWORD)	; get size (16-bit word)
+	LD	A,H
+	OR	L
+	RET	Z		; ..if size = zero, return
+
+	; name matched, only for '_ID_' a size greater than zero is permitted
+	DEC	C		; test C= 0
+	RET	M		; ..if so, return
+	JP	L_XIT05		;   else, jump error
+
+
+	; M-REL read name of COMMON
+LM_CMNA: CALL	LM_RCMN		; read name
+	CALL	L_CMTB		; test for known COMMON's
+	LD	A,C		; get offset
+	OR	A
+	RET	NZ		; ..if match found (<> zero), return
+				;   else, fall through and get addr
+
+	; M-REL / S-REL shared code
+	; set COMMON base addr
+L_CMLOC: LD	HL,(LMCBAS)	; get first COMMON base addr
+	LD	A,H		; test it
+	OR	L
+	RET	NZ		; ..if not zero, return
+	LD	HL,(LOBASE)	;   else, get base addr for output
+	LD	DE,(LMODSZ)	;   ..and get Module size
+	ADD	HL,DE		; add base and offset
+	LD	(LMCBAS),HL	; ..store back in first COMMON base addr
+	LD	(LCOMBS),HL	;   and as base addr of current COMMON
+	RET
+
+
+	; M-REL read value field (16-bit)
+LM_RWRD: LD	B,2		; get 2 bits
+	CALL	LM_GBIT		; ..from input stream
+	LD	E,A		; Type in E
+	LD	B,8		; get next 8 bits
+	CALL	LM_GBIT
+	LD	L,A		; low byte in L
+	LD	B,8		; get next 8 bits
+	CALL	LM_GBIT
+	LD	H,A		; high byte in H
+	LD	(LWORD),HL	; store 16-bit word
+	RET
+
+
+	; M-REL read program name
+LM_RPNA: LD	DE,LPNAME	; set dest ptr
+	CALL	LM_RNAM		; read name from input
+	RET
+
+
+	; M-REL read word and name
+LM_RWN:	CALL	LM_RWRD		; read 16-bit word, and fall through
+
+
+	; M-REL read name of COMMON
+LM_RCMN: LD	DE,LCNAME	; set dest ptr
+				; ..and fall through to read name
+
+
+	; M-REL read name (0-7 chars)
+	;   in: HL= dest addr
+	;  out: nul-terminated string at dest addr
+	;       HL= ptr to nul-terminator
+LM_RNAM: LD	B,3		; get 3 bits
+	CALL	LM_GBIT		; ..from input file
+	JR	Z,LM_RNA2	; if length = zero, then skip over
+	LD	L,A		; set counter
+LM_RNA1: LD	B,8		; get next 8 bits
+	CALL	LM_GBIT
+	LD	(DE),A		; store byte
+	INC	DE		; move ptr fwd
+	DEC	L		; counter -1
+	JR	NZ,LM_RNA1	; ..loop till done
+LM_RNA2: XOR	A		; nullify A
+	LD	(DE),A		; ..and store as terminator
+	RET
+
+
+	; M-REL/S-REL shared code
+	; set load pointer (aka location counter)
+	;  in:  E= item type
+	;      HL= 16-bit value
+L_LDPT:	LD	A,E		; get item type
+	DEC	A		; type -1
+	JP	M,L_XIT02	; ..if absolute (= was zero), jump error
+	LD	DE,(LCSGBS)	; get program segment origin (CSEG base)
+	JR	Z,L_LDPT1	; ..if program relative, then jump
+	LD	DE,(LDSGBS)	; get data segment origin (DSEG base)
+	DEC	A		; type -1
+	JR	Z,L_LDPT1	; ..if data relative, then jump
+	LD	DE,(LCOMBS)	;   else, COMMON rel., get base of current
+	JR	L_LDPT2		;   ..and jump
+
+	; set load pointer for program/data relative item
+L_LDPT1: ADD	HL,DE		; add base and offset
+	LD	DE,(LOBASE)	; get base addr for output
+				; ..and fall through
+
+	; set load pointer for COMMON relative item
+L_LDPT2: ADD	HL,DE		; add base and offset
+	LD	(LOADR),HL	; store as new (current) output location
+	RET
+
+
+	; M-REL / S-REL shared code
+	; store segment sizes
+	; new CSEG size recalculates DSEG origin to place it after end of code
+	; total size of Module is always updated
+L_PSIZ:	LD	DE,(LDSGBS)	; get data segment origin (DSEG base)
+	ADD	HL,DE		; add CSEG size, so DSEG is located behind
+	LD	(LDSGBS),HL	; ..and store new DSEG base
+L_DSIZ:	LD	DE,(LMODSZ)	; get Module size
+	ADD	HL,DE		; add size(s)
+	LD	(LMODSZ),HL	; ..and store again
+	RET
+
+
+	; M-REL get bits from input file
+	;   in: B= number of bits
+	;  out: A= bits
+LM_GBIT: PUSH	HL		; save regs
+	LD	HL,(LMBPOS)	; get remainder of last input byte (H)
+				; ..and current bit position (L)
+	XOR	A		; clear A
+LM_GBI1: DEC	L		; bit pos -1
+	JR	Z,LM_GBI3	; ..if zero, jump to get new byte
+LM_GBI2: RL	H		;   else, rotate bit7 into Carry
+	RLA			;   ..and then into bit0 of A
+	DJNZ	LM_GBI1		; loop until requested # of bits fetched
+	LD	(LMBPOS),HL	; store new remainder and bit position
+	POP	HL		; restore regs
+	OR	A		; clear C-Flag
+	RET
+
+	; not enough bits in current byte, read next
+LM_GBI3: LD	C,A		; save A temporarily
+	CALL	L_GBYTE		; get next byte
+	LD	H,A		; store in H
+	LD	L,8		; set bit position
+	LD	A,C		; restore A
+	JR	LM_GBI2		; ..and return
+
+
+	; M-REL / S-REL shared code
+	; output COMMON relative 16-bit word or absolute word (only S-REL)
+L_OUTCM: OR	A		; clear C-Flag
+	LD	A,E		; low byte first
+	CALL	L_OUT		; output
+	LD	A,D		; high byte
+				; ..fall through, and let return from there
+
+
+	; M-REL / S-REL shared code
+	; output byte
+L_OUT:	PUSH	AF
+	LD	HL,LOUT1ST	; ptr to flag
+	LD	A,(HL)		; get value
+	OR	A
+	JR	Z,L_OUT1	; ..if cleared (= zero), skip over
+
+	; this code portion is excecuted only once when invoked the first time
+	LD	(HL),0		; clear flag to prevent re-execution
+	PUSH	DE
+	LD	DE,(LOADR)	; current output location
+	LD	HL,(LOBASE)	; base addr for output (should be same as DE)
+	LD	BC,(LMODSZ)	; Module size
+	LD	A,1		; no bitmap is default
+	CALL	@GMAPFL		; get flag
+	CP	0FDH		; stop linking ?
+	JP	Z,L_EXIT	; ..if so, jump exit
+	LD	(LOADR),DE	; write back current output location
+	LD	(LOBASE),HL	; write back output base addr
+	ADD	HL,BC		; calculate end addr
+	LD	(LOEND),HL	; ..and store it
+	LD	(LBMAP),A	; store flag create bitmap (0= yes, else = no)
+	POP	DE
+
+	; write byte to destination addr in ram
+L_OUT1:	POP	AF		; restore byte
+	LD	HL,(LOADR)	; get current location
+	LD	(HL),A		; store byte at pointed location
+	INC	HL		; move fwd
+	LD	(LOADR),HL	; store new location
+	RET	NC		; ..if done, return
+
+	; C-Flag set if a '1' needs to be written to bitmap
+	LD	A,(LBMAP)	; get flag
+	OR	A		; test if bitmap to be created
+	RET	NZ		; ..if not (flag <> zero), then return
+
+	; one byte in bitmap represents eight code bytes
+	; bit positions correspond to bytes in reverse order (MSB = byte0)
+	DEC	HL		; move ptr back
+	LD	DE,(LOBASE)	; get base addr for output
+	SBC	HL,DE		; calculate current offset from base
+	LD	A,L		; get low byte
+	CPL			; invert it
+	AND	00000111b	; mask lower bits (MOD 8)
+	INC	A		; +1 for loop counter
+	LD	B,A
+	XOR	A		; clear A
+	SCF			; set C-Flag
+L_OUT2:	RLA
+	DJNZ	L_OUT2		; rotate bit into correct position
+	LD	C,A		; save in C
+	LD	B,3		; 3 loops power-of-2 division
+	CALL	HLDIV2B		; ..means divide HL by 8
+	LD	DE,(LOEND)	; get base addr of bitmap
+	ADD	HL,DE		; determine byte position
+	LD	A,(HL)		; get current byte
+	OR	C		; set respective bit
+	LD	(HL),A		; ..and store byte again
+	RET
+
+	; HL power-of-2 division (HL / 2^B)
+	;  in: HL= dividend
+	;       B= exponent
+	; out: HL= quotient
+HLDIV2B: SRL	H		; divide by 2
+	RR	L
+	DJNZ	HLDIV2B		; loop till done
+	RET
+
+
+	; M-REL / S-REL shared code
+	; get next byte from input
+	; calls 'PUBLIC' function @GBYTE which returns with C-Flag set (C)
+	; to indicate end-of-file (let Linker exit immediately)
+	; -- not used/implemented here (C-Flag always clear)
+L_GBYTE: CALL	@GBYTE
+	RET	NC		; ..if not eof, then return
+				;   else, fall through and exit with error
+
+
+	; M-REL / S-REL shared code
+	; Linker exit routine
+	; out: A= status code (0 and Z-Flag set (Z) = ok, else error)
+	LD	A,1		; ret 1 = unexpected end of file
+	JR	L_EXIT
+L_XIT00: LD	A,01H
+	LD	(LMBPOS),A	; store as bit position
+	DEC	A		; ret 0 = end of module (ok)
+	JR	L_EXIT
+L_XIT02: LD	A,02H		; ret 2 = item type invalid/not supported
+	JR	L_EXIT
+L_XIT03: LD	A,03H		; ret 3 = COMMON name not known/not supported
+	JR	L_EXIT
+	LD	A,04H		; ret 4 = ?? (not implemented)
+	JR	L_EXIT
+L_XIT05: LD	A,05H		; ret 5 = COMMON size >0 not permitted
+				;   only module type _ID_ may have size >0
+	JR	L_EXIT
+	LD	A,0FDH		; ret 0xFD = ?? (not implemented, 
+				;   interpreted as 'OK' calling routine)
+	JR	L_EXIT
+L_XITFF: LD	A,0FFH		; ret 0xFF = end of file
+L_EXIT:	LD	DE,(LOADR)	; get current output location
+	LD	HL,LPNAME	; ptr to PROGRAM name
+	OR	A		; set Z-Flag to indicate status
+	LD	SP,(LSP)	; restore Stack Pointer
+	RET			; ..and return
+
+
+	; M-REL / S-REL shared code
+	; find COMMON name in list of known/supported names
+	; out: C= offset in LMCBAS (0= '_ID_' or no match)
+L_CMTB:	LD	HL,LCMTBL	; ptr to first entry in list of known COMMON's
+	LD	BC,0		; set initial count/offset
+L_CMTB1: PUSH	HL		; save regs
+	LD	DE,LCNAME	; ptr to read name
+
+	; inner loop, compare char by char
+L_CMTB2: LD	A,(DE)		; get char
+	CP	(HL)		; compare to name in list
+	JR	NZ,L_CMTB3	; ..if no match, then jump
+	OR	A		; test for nul-terminator
+	JR	Z,L_CMTB5	; ..if end reached, then exit loop
+	INC	DE		; move ptr's fwd
+	INC	HL
+	JR	L_CMTB2		; ..and test next char
+L_CMTB3: POP	HL		; restore list ptr
+
+	; move to next entry in list
+L_CMTB4: LD	A,(HL)		; get char
+	INC	HL		; move ptr fwd
+	OR	A
+	JR	NZ,L_CMTB4	; ..if end-of-string not reached, loop
+	LD	A,(HL)		; get next char
+	OR	A
+	JP	Z,L_XIT03	; ..if end-of-list (and no match), jump error
+	INC	C		; +2
+	INC	C
+	JR	L_CMTB1		; loop
+
+	; match found
+L_CMTB5: POP	HL		; clear stack, get base address
+	LD	HL,LMCBAS	; set ptr to first entry
+	ADD	HL,BC		; add offset
+	LD	A,(HL)		; get low byte
+	INC	HL		; move ptr fwd
+	LD	H,(HL)		; get high byte in H
+	LD	L,A		; ..low byte in L
+	LD	(LCOMBS),HL	; store value
+	RET
+
+
+
+
+;::::: LINKER RAM STORAGE
+
+
+	; table of known/supported named COMMONs
+LCMTBL:	DEFB	'_ID_',0
+	DEFB	'_CCP_',0
+	DEFB	'_BDOS_',0
+	DEFB	'_BIOS_',0
+	DEFB	'_ENV_',0
+	DEFB	'_SSTK_',0
+	DEFB	'_MSG_',0
+	DEFB	'_FCB_',0
+	DEFB	'_MCL_',0
+	DEFB	'_XSTK_',0
+	DEFB	'_SCB_',0
+	DEFB	'_RSX_',0
+	DEFB	'_CBIO_',0
+	DEFB	0
+	
+	DEFS	139		; 139 bytes unused (0x251e..0x25a8)
+
+	; base addresses (origin) of named COMMONs
+LMCBAS:	DEFW	0		; _ID_		  M-REL predefined
+	DEFW	0BF00H		; _CCP_
+	DEFW	0C700H		; _BDOS_
+	DEFW	0D500H		; _BIOS_
+	DEFW	0E700H		; _ENV_
+	DEFW	0E800H		; _SSTK_
+	DEFW	0E880H		; _MSG_
+	DEFW	0E8D0H		; _FCB_
+	DEFW	0E900H		; _MCL_
+	DEFW	0E9D0H		; _XSTK_
+	DEFW	0		; _SCB_
+	DEFW	0		; _RSX_
+	DEFW	0		; _CBIO_
+
+LSCBAS:	DEFW	0,0,0,0,0,0,0,0,0,0,0,0,0	; S-REL dynamic list
+
+LSNXCM:	DEFW	0		; S-REL: addr next free entry in LSCBAS
+LMBPOS:	DEFW	0		; M-REL: last input byte (H) and bit position (L)
+LOADR:	DEFW	0		; Current output addr (initially = LOBASE)
+LOEND:	DEFW	0		; Output end addr (base + size)
+
+	DEFB	0		; not used
+	DEFB	0
+
+LOBASE:	DEFW	0		; Output base addr
+LORGBS:	DEFW	0		; ORG addr (phys. target addr)
+LCSGBS:	DEFW	0		; CSEG origin (program segment base addr)
+LDSGBS:	DEFW	0		; DSEG origin (data segment base addr)
+LMODSZ:	DEFW	0		; Module size (program size + data size)
+LCOMBS:	DEFW	0		; COMMON origin (base addr of current COMMON segment)
+
+	; PROGRAM name (16 bytes + nul-terminator)
+LPNAME:	DEFB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+	DEFB	0
+
+LWORD:	DEFW	0		; Word (16-bit value) read from input,
+				; use depends on item
+
+	; COMMON name (16 bytes + nul-terminator)
+LCNAME:	DEFB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+	DEFB	0
+
+LBMAP:	DEFB	0		; Flag: Create bitmap (0= yes, else = no)
+LOUT1ST: DEFB	0		; Flag: First output (avoid code re-execution)
+LSP:	DEFW	0		; Stack Pointer storage location
+
+
+
+
+;::::: Z3LIB ROUTINES
+
+
+
+
+;::::: SYSLIB ROUTINES
+
+	END
+
+
+;************************************************************************
+; Remarks jxl:
+;   NZ-COM.COM, included in available package(s), was disassembled and
+; extensively commented. Labels are up to seven chars long to comply with
+; M-REL standards. However, it is recommended to use SLR tools that
+; support labels up to sixteen chars.
+;   In its current state, the compiled/linked file matches exactly the
+; origial NZ-COM.COM distributes as v1.2H, i.e. no changes to the source
+; Possible optimizations detected during disassembly are marked with
+; '#####' in the comment.
+;
+;   The program uses a linker, originally developed by Bridger Mitchell,
+; that can process M-REL as well as S-REL files, and supports a number
+; of named COMMON's used in Z3 Environment. Actually, it was this linker
+; that caught my interest. To call disassmbling the rest of the program
+; just a "byproduct" would be an understatement. ;)
+;
+;   A word on the application. Memory is used generously, not only for
+; buffers at different locations, but also for storing variables. This
+; could be reduced significantly. For example, the user code patch area
+; is believed to have never been used.  It seems as if some portions
+; were taken from a previous version and been enhanced, where possibly
+; a re-write would have been a better choice.  A design that can be
+; better maintained should be considered when upgrading NZ-COM.
+;
+;   The program dates back to 1987/88 and was linked with older versions
+; of libraries, namly Z3LIB v1.1 and SYSLIB v3.6 which were distributed
+; in M-REL format only. Hence, external references are limited to six
+;  chars and must be cut off. (Even though sources show longer symbol
+; names. - a bit confusing) When updating the program also the latest
+; versions of libraries (in S-REL format) should be used.
+;************************************************************************

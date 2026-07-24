@@ -353,7 +353,7 @@ let me know if I missed you!
   contributed a driver for the Xosera FPGA-based video controller.
 
 - Jörg Linder has contributed disassembled and nicely commented source
-  for ZSDOS2 and the BPBIOS utilities.
+  for ZSDOS2 and the BPBIOS utilities as well as for NZCOM.
 
 - Marshall Gates has contriubed sample program source files for all of
   the language disk images.

@@ -1,0 +1,1374 @@
+	TITLE	"MKZCM for NZ-COM The Automatic Z-System"
+;************************************************************************
+;*  M K Z C M								*
+;* MaKe ZCM System generator for Z-COM v2.0				*
+;*----------------------------------------------------------------------*
+;*  by Joe Wright							*
+;*     disassembled jxl							*
+;*----------------------------------------------------------------------*
+;* Revisions:								*
+;* Disassembly:	jxl					Jul 2025	*
+;*		public release 1.0			Jul 2025	*
+;*		see remarks at the end					*
+;*----------------------------------------------------------------------*
+;* LINK with SYSLIB v3.6						*
+;*									*
+;* A>Z80ASM MKZCM/RS							*
+;* A>SLRNK MKZCM/N,MKZCM/M,/A:100,MKZCM,SYSLIB36/S,/E			*
+;************************************************************************
+
+
+	NAME	('MKZCM')
+
+
+VER	EQU	10H
+REV	MACRO
+	DEFB	'1.2H'
+	ENDM
+
+DATE	MACRO
+	DEFB	'1987-88'
+	ENDM
+
+
+
+
+;::::: DEFINITIONS
+
+
+CTRLC	EQU	03H		; Control-C character
+BEL	EQU	07H		; Bell character
+TAB	EQU	09H		; Tab character
+LF	EQU	0AH		; Line Feed character
+CR	EQU	0DH		; carriage return character
+
+CPMBIOS	EQU	0		; CP/M BIOS warm boot (JP)
+CPMBDOS	EQU	5		; CP/M BDOS entry point (JP)
+CPMFCB	EQU	5CH		; CP/M standard FCB #1
+				;   +1 filename
+				;   +9 filetype
+CPMDMA	EQU	80H		; CP/M standard DMA buffer
+
+
+; From SYSLIB v3.6 Get..
+	EXTRN	PRINT, PSTR, COUT, CIN, CAPS, BBLINE, MOVEB
+	EXTRN	PAFDC, PADC, PHL4HC, PHLFDC, PFN2, EVAL10, FNAME
+	EXTRN	INITFC, SETDMA, F$MAKE, F$WRIT, F$CLOS
+	EXTRN	FO0$OP, FO0$CL, F0$PUT
+
+
+
+
+	ORG	100H
+	CSEG
+
+;::::: HEADER / EMBEDDED ENV
+
+				; begin of program is overwritten by
+				; the environment descriptor being built
+				; symbols start with 'B_'
+
+
+MKZCM:
+B_DESC:	JP	START		; JP CBIOS / bypass header
+	DEFB	'Z3ENV'		;          / this is a ZCPR3 utility
+B_ETYP:	DEFB	1		; ENVTYP   / show external environment
+
+ENVADR:
+B_PATH:	DEFW	0		; EXPATH   / environment storage location
+	DEFB	5		; EXPATHS
+B_RCP:	DEFW	0
+B_RCPS:	DEFB	18
+B_IOP:	DEFW	0
+B_IOPS:	DEFB	12
+B_FCP:	DEFW	0
+B_FCPS:	DEFB	5
+B_NDIR:	DEFW	0
+B_NDIRS: DEFB	21
+B_Z3CL:	DEFW	0
+	DEFB	203
+B_Z3ENV: DEFW	0
+B_Z3ENS: DEFB	2
+B_SHST:	DEFW	0
+B_SHSTS: DEFB	4
+B_SHSIZ: DEFB	32
+B_Z3MSG: DEFW	0
+B_EXFCB: DEFW	0
+B_EXSTK: DEFW	0
+	DEFB	0
+B_Z3WHL: DEFW	0
+	;
+	DEFB	4		; SPEED
+	DEFB	16
+	DEFB	31
+	DEFB	1
+	DEFB	0
+	DEFB	0
+	DEFB	80
+	DEFB	24
+	DEFB	22
+	DEFW	0FFFFH		; DRVEC
+	;
+	DEFB	0		; SPAR1
+	DEFB	80
+	DEFB	66
+	DEFB	58
+	DEFB	1
+	DEFB	0
+	DEFB	0
+	DEFB	0
+	DEFB	0		; SPAR5
+	;
+B_CCP:	DEFW	0
+B_CCPS:	DEFB	16
+B_DOS:	DEFW	0
+B_DOSS:	DEFB	28
+B_BIO:	DEFW	0
+	;
+	DEFB	'SH      VAR'
+	DEFB	'           '
+	DEFB	'           '
+	DEFB	'           '
+	DEFB	'           '
+	DEFB	0		; PUBDRV
+	DEFB	0		; PUBUSR
+
+
+	; Option flag
+SCOPT:	DEFB	0FFH		; Flag: system modules configurable (0= no, 0xFF= yes)
+				;       size of CPR, DOS, BIOS
+
+
+	; Copyright notice
+	DEFB	'MKZCM, NZCOM, NZ-COM, (New) Z-Com are Copyright '
+	DEFB	'1987, 1988 by Joe Wright and Alpha Systems Corp.'
+
+STACK:	DEFW	0		; local stack
+
+	DEFS 100H-($-B_DESC)	; start page-aligned (29 bytes free)
+
+
+
+
+;::::: PROGRAM START
+
+
+START:	JR	START0
+SERNO:	DEFB	'001-11255'	; serial no.
+	DEFB	0
+
+START0:	LD	(STACK),SP
+	LD	SP,STACK
+	LD	HL,EXIT		; addr of exit routine onto stack
+	PUSH	HL
+	LD	HL,(CPMBIOS+1)	; get BIOS warm boot addr
+	LD	L,6
+	LD	(B_DESC+1),HL	; store addr real BIOS+6
+	LD	A,80H
+	LD	(B_ETYP),A	; store env type (bit7 set = extended)
+	LD	L,3*30		; move past fn #29 (last in standard BIOS)
+	LD	DE,NZID		; ptr id string 'NZ-COM'
+	LD	B,6		; # bytes
+
+	; test if running under NZ-COM
+START1:	LD	A,(DE)		; get char
+	CP	(HL)		; compare
+	JR	NZ,CALCSYS	; ..if no match, then jump to calc system sizes+addrs
+	INC	DE		;   else, move ptr's fwd
+	INC	HL
+	DJNZ	START1		; loop
+
+	; id string found
+	LD	A,0FFH
+	LD	(RUNZCOM),A	; store flag
+	LD	HL,(ENVADR)	; get environment addr (filled by ZCPR)
+	LD	(ENVPTR),HL	; store locally
+	LD	DE,B_DESC
+	LD	BC,128		; # bytes (size env descriptor)
+	LDIR			; copy from running system to local buffer
+	LD	A,(B_IOPS)	; get IOP size (# recs)
+	LD	(IOPREC),A	; ..and store for calc
+	JP	EVALCMD
+
+
+
+
+;::::: CALCULATE SYSTEM SIZES/ADDRS
+
+
+	; calculate sizes and addrs of system
+	; downwards from CBIOS (= top of available memory)
+CALCSYS: LD	HL,(B_DESC+1)	; get CBIOS+6
+	LD	L,0		; adjust to base addr
+
+	; subtract sizes (in bytes) of elements to make room
+	LD	A,(UMAREC)	; UMA size (# recs)
+	CALL	CBASE		; calc base addr
+
+	; elements that cannot be configured with MKZCM - always present
+	LD	DE,-48		; size Ext. Stack
+	ADD	HL,DE		; subtract
+	LD	(B_EXSTK),HL	; ..and save addr
+	LD	DE,-208		; size Z3 Multiple Cmdline buffer
+	ADD	HL,DE
+	LD	(B_Z3CL),HL
+	DEC	HL		; "size" Wheel Byte
+	LD	(B_Z3WHL),HL
+	LD	DE,-11		; size Path (5 elements + nul-terminator)
+	ADD	HL,DE
+	LD	(B_PATH),HL
+	LD	DE,-36		; size Ext. FCB
+	ADD	HL,DE
+	LD	(B_EXFCB),HL
+	LD	DE,-80		; size MSG buffer
+	ADD	HL,DE
+	LD	(B_Z3MSG),HL
+	LD	A,(B_Z3ENS)	; size ENV (# recs)
+	CALL	CBASE		; calc base addr (from top)
+	LD	(B_Z3ENV),HL
+
+	; configurable elements can be removed (set to zero)
+
+	; Shell Stack
+	LD	DE,0		; clear DE, prepare for no Shell Stack
+	LD	(B_SHST),DE	; ..and store nul-addr
+	LD	A,(B_SHSTS)	; # of Shell Stack entries
+	OR	A
+	JR	Z,CALCSY1	; ..if none, skip over (nothing more to do)
+	PUSH	HL		;   else, save top addr
+	LD	HL,(B_SHSIZ)	; get size of a Shell Stack entry in L
+	LD	H,0		; clear H for 16-bit math
+	CALL	CSIZEN		; calc size in records
+	POP	HL
+	CALL	CBASE		; calc base addr
+	LD	(B_SHST),HL	; ..and store it
+
+	; Named Dirs
+CALCSY1: LD	DE,0		; clear DE, prepare for no Named Dirs
+	LD	(B_NDIR),DE	; ..and store nul-addr
+	LD	A,(B_NDIRS)	; # of NDR entries
+	OR	A
+	JR	Z,CALCSY2	; ..if none, skip over
+	PUSH	HL		;   else, save top addr
+	LD	HL,18		; size of an entry
+	CALL	CSIZEN		; calc size in records
+	POP	HL
+	CALL	CBASE		; calc base addr
+	LD	(B_NDIR),HL	; ..and store it
+
+	; FCP
+CALCSY2: LD	DE,0		; clear DE, prepare for no FCP
+	LD	(B_FCP),DE	; ..and store nul-addr
+	LD	A,(B_FCPS)	; # recs FCP
+	OR	A
+	JR	Z,CALCSY3	; ..if none, skip over
+	CALL	CBASE		; calc base addr
+	LD	(B_FCP),HL	; ..and store it
+
+	; RCP
+CALCSY3: LD	DE,0		; clear DE, prepare for no RCP
+	LD	(B_RCP),DE	; ..and store nul-addr
+	LD	A,(B_RCPS)	; # recs RCP
+	OR	A
+	JR	Z,CALCSY4	; ..if none, skip over
+	CALL	CBASE		; calc base addr
+	LD	(B_RCP),HL	; ..and store it
+
+	; IOP
+CALCSY4: LD	DE,0		; clear DE, prepare for no IOP
+	LD	(B_IOP),DE	; ..and store nul-addr
+	LD	A,(IOPREC)	; get saved IOP size (# recs)
+	LD	(B_IOPS),A	; ..and set in env
+	OR	A
+	JR	Z,CALCSY5	; ..if none, skip over
+	CALL	CBASE		; calc base addr
+	LD	(B_IOP),HL	; ..and store it
+
+	; System modules
+CALCSY5: LD	A,(BIOSINP)	; size BIOS (user input, or default 0x02)
+	CALL	CBASE		; calc base addr
+	LD	L,0		; ensure it is page-aligned
+	LD	(B_BIO),HL	; ..and store addr
+	LD	A,(B_DOSS)	; size DOS (# recs)
+	CALL	CBASE
+	LD	(B_DOS),HL
+	LD	A,(B_CCPS)	; size CCP (# recs)
+	CALL	CBASE
+	LD	(B_CCP),HL	; store
+				; ..and fall through
+
+
+	; evaluate cmdline
+EVALCMD: LD	HL,CPMFCB+1	; file name in standard FCB
+	LD	A,(HL)		; get byte
+	CP	'/'		; is this a help request ?
+	JR	Z,EVALCM1	; ..if so, skip over
+	CP	'?'		; '?' is also interpreted as a help request
+	JR	NZ,SHOWMEN	; ..if not, then jump and show menu
+EVALCM1: LD	(HL),' '	; clear char
+	JP	HELP		; ..and jump to display help
+
+
+
+
+;::::: MENU
+
+
+	; display menu
+SHOWMEN: CALL	STRTMSG		; start/copyright msg
+
+	CALL	PRINT
+	DEFB	LF,'1.',TAB,'Command Processor',TAB,'CPR',TAB
+	DEFB	0
+
+	LD	HL,(B_CCP)	; get CCP base addr
+	LD	A,(B_CCPS)	; ..and size (# recs)
+	CALL	PMODATA		; display
+
+	CALL	PRINT
+	DEFB	'2.',TAB,'Disk Operating System',TAB,'DOS',TAB
+	DEFB	0
+
+	LD	HL,(B_DOS)	; DOS base addr
+	LD	A,(B_DOSS)	; size (# recs)
+	CALL	PMODATA		; display
+
+	CALL	PRINT
+	DEFB	'3.',TAB,'NZ-COM Bios',TAB,TAB,'BIO',TAB
+	DEFB	0
+
+	LD	HL,(B_BIO)	; BIOS base addr
+	CALL	CBIOSZ	; calculate size
+	CALL	PMODATA		; display
+
+	CALL	PRINT
+	DEFB	CR,LF,'4.',TAB,'In/Output Processor',TAB,'IOP',TAB
+	DEFB	0
+
+	LD	HL,(B_IOP)	; IOP base addr
+	LD	A,(B_IOPS)	; size (# recs)
+	CALL	PMODATA		; display
+
+	CALL	PRINT
+	DEFB	'5.',TAB,'Resident Command Proc',TAB,'RCP',TAB
+	DEFB	0
+
+	LD	HL,(B_RCP)	; RCP base addr
+	LD	A,(B_RCPS)	; size (# recs)
+	CALL	PMODATA		; display
+
+	CALL	PRINT
+	DEFB	'6.',TAB,'Flow Control Processor',TAB,'FCP',TAB
+	DEFB	0
+
+	LD	HL,(B_FCP)	; FCP base addr
+	LD	A,(B_FCPS)	; size (# recs)
+	CALL	PMODATA		; display
+
+	CALL	PRINT
+	DEFB	'7.',TAB,'Named Directory Reg',TAB,'NDR',TAB
+	DEFB	0
+
+	LD	HL,(B_NDIR)	; NDR base addr
+	LD	A,(B_NDIRS)	; size (# entries)
+	CALL	PADRVAL	; display
+
+	CALL	PRINT
+	DEFB	' Names',CR,LF
+	DEFB	'8.',TAB,'Shell Stack',TAB,TAB,'SHS',TAB
+	DEFB	0
+
+	LD	HL,(B_SHST)	; Shell Stack addr
+	LD	A,(B_SHSTS)	; # entries
+	CALL	PADRVAL	; display
+	CALL	PRINT
+	DEFB	' x '
+	DEFB	0
+
+	LD	A,(B_SHSIZ)	; size of a Shell Stack entry
+	CALL	PAFDC		; display as dec
+
+	CALL	PRINT
+	DEFB	' Bytes',CR,LF,LF
+	DEFB	'9.*',TAB,'Environment Descriptor',TAB,'ENV',TAB
+	DEFB	0
+
+	LD	HL,(B_Z3ENV)	; ENV Descriptor addr
+	LD	A,(B_Z3ENS)	; size (# recs)
+	CALL	PMODATA		; display
+
+	CALL	PRINT
+	DEFB	LF,'U.',TAB,"User's Memory Area",TAB,'UMA',TAB
+	DEFB	0
+
+	; apparently Z3CL is defined as highest element
+	LD	HL,(B_Z3CL)	; addr of Z3 multiple command line buffer
+				;   (below CBIOS, or UMA respectively)
+	INC	H		; +0x0100
+	PUSH	HL		; save addr
+	EX	DE,HL		; ..and move into DE
+	LD	HL,(B_DESC+1)	; get CBIOS+6 from env
+	LD	L,0		; adjust to base addr
+	OR	A		; clear Carry
+	SBC	HL,DE		; calc difference
+	LD	A,H		; divide by 128
+	RL	L		; (rotate bit7 of low byte into Carry,
+	RLA			;  and from there into bit0 of high byte)
+	OR	A		; test
+	LD	(UMAREC),A	; store UMA size (# recs)
+	POP	HL		; restore addr
+	JR	NZ,SHOWMN1	; ..if not zero, skip over
+	LD	HL,0		;   else, clear HL
+SHOWMN1: CALL	PMODATA		; display
+	CALL	PRINT
+	DEFB	TAB,"Customer's CBIOS",TAB,'TOP',TAB
+	DEFB	0
+
+	LD	HL,(B_DESC+1)	; get CBIOS+6 from env
+	LD	L,0		; adjust to base addr
+	CALL	PHL4HC		; ..and display as hex
+	CALL	PRINT
+	DEFB	CR,LF,LF,TAB,TAB,'Effective TPA size'
+	DEFB	0
+
+	; calc resulting TPA size and display it
+	LD	HL,(B_DOS)	; get DOS base addr
+	DEC	H		; one below
+	SRL	H		; divide by 2
+	RR	L
+	SRL	H		; ..by 4
+	RR	L
+	LD	A,H		; get high byte (= effectivly divide by 1024)
+	CALL	PADC		; display as dec
+	LD	A,'.'
+	CALL	COUT		; ..display dot '.'
+	LD	A,L		; get low byte
+	RLCA			; rotate last bit0 back into position
+	RLCA
+	RLCA
+	LD	DE,125		; count in 0.125 kB steps (1/8 kB)
+	LD	HL,0		; set initial value
+CTPASZ:	DEC	A		; -1
+	JP	M,CTPASZ1	; ..if negative, exit loop
+	ADD	HL,DE		; accumulate
+	JR	CTPASZ		; ..loop
+CTPASZ1: CALL	PHLFDC		; display HL as dec
+	CALL	PRINT
+	DEFB	'k',CR,LF,LF,
+	DEFB	'* Item 9 is not changeable in this version.',CR,LF,LF
+	DEFB	0
+
+	CALL	PROMPTM		; display menu input prompt
+
+
+	; menu selection (input loop)
+SELMEN:	CALL	CIN		; get user input
+	CP	CTRLC		; <Ctrl-C> ?
+	JP	Z,EXIT
+	CALL	CAPS		; make uppercase
+	CP	'Q'
+	JP	Z,EXIT		; quit
+	CP	'X'
+	JP	Z,EXIT		; quit
+	CP	'H'
+	JP	Z,HELP		; help
+	CP	'/'
+	JP	Z,HELP		; help
+	CP	'?'
+	JP	Z,HELP		; help
+	CP	'S'
+	JP	Z,SAVFIL	; save file
+	CP	'1'
+	JP	Z,CNFCCP	; config CPR (CCP)
+	CP	'2'
+	JP	Z,CNFDOS	; config DOS
+	CP	'3'
+	JP	Z,CNFBIO	; config DOS
+	CP	'4'
+	JP	Z,CNFIOP	; config IOP
+	CP	'5'
+	JP	Z,CNFRCP	; config RCP
+	CP	'6'
+	JP	Z,CNFFCP	; config FCP
+	CP	'7'
+	JP	Z,CNFNDR	; config Named Dirs
+	CP	'8'
+	JP	Z,CNFSHS	; config Shell Stack
+	CP	'U'
+	JP	Z,CNFUMA	; config User Memory Area
+
+SELMEN1: LD	A,BEL		; signal wrong input
+	CALL	COUT
+	JR	SELMEN		; ..and loop
+
+
+	; check if system modules (CPR, DOS, BIOS) can be configured
+CHKSYCF: LD	A,(SCOPT)	; get flag
+	OR	A		; test
+	RET	NZ		; ..if can be configured, the return
+	POP	AF		;   else, clear stack (remove ret addr)
+	JR	SELMEN1		; jump to notify user, and loop menu input
+
+
+	; display menu input prompt
+PROMPTM: CALL	PRINT
+	DEFB	'Selection: (or <S>ave, <Q>uit or <H>elp) '
+	DEFB	0
+
+	RET
+
+
+	;--- Support functions
+
+	; determine BIOS size (in # recs)
+	; size is calculated from the first non-zero module
+	; (except CCP and DOS, as BIOS must be above)
+	;  in: HL= B_BIO base addr
+	; out:  A= # recs
+CBIOSZ:	EX	DE,HL		; save BIOS base addr
+	LD	HL,(B_IOP)	; base addr IOP
+	CALL	CBIOSZ1
+	LD	HL,(B_RCP)	; base addr RCP
+	CALL	CBIOSZ1
+	LD	HL,(B_FCP)	; base addr FCP
+	CALL	CBIOSZ1
+	LD	HL,(B_NDIR)	; base addr NDR buffer
+	CALL	CBIOSZ1
+	LD	HL,(B_SHST)	; base addr Shell Stack
+	CALL	CBIOSZ1
+	LD	HL,(B_Z3ENV)	; base addr ENV Descriptor
+	PUSH	HL		; "something" onto stack instead of ret addr
+
+	; early exit upon module addr <> 0
+CBIOSZ1: LD	A,H		; get high byte
+	OR	L		; test if addr invalid (= 0)
+	RET	Z		; ..if so, then return
+	SBC	HL,DE
+	RL	L		; divide by 128
+				;   (rotate bit7 of low byte into Carry)
+	LD	A,H		; get high byte
+	RLA			;   (..and Carry into bit0)
+	LD	(BIOSCAL),A	; store calculated BIOS size
+	POP	HL		; clear stack (remove ret addr for early exit)
+	EX	DE,HL		; swap regs, BIOS base addr in HL again
+	RET
+
+
+	; start/opening msg
+STRTMSG: CALL	PRINT
+	DEFB	CR,LF,LF,'MKZCM Version ',VER/16 + '0','.',VER MOD 16 + '0'
+	DEFB	' System Generator for Z-Com v2.0',CR,LF
+	DEFB	'Copyright (C) '
+	DATE
+	DEFB	' Alpha Systems     '
+	DEFB	0
+
+	LD	HL,SERNO	; point to serial no.
+	CALL	PSTR		; ..and display
+	CALL	PRINT
+	DEFB	CR,LF
+	DEFB	0
+
+	RET
+
+	;---
+
+
+
+
+;::::: HELP
+
+
+HELP:	CALL	STRTMSG		; display start/copyright msg
+
+	CALL	PRINT
+	DEFB	CR,LF,'Syntax:  MKZCM [name]',CR,LF,CR,LF
+	DEFB	'MKZCM will display the current system configuration '
+	DEFB	'and addresses and ',CR,LF
+	DEFB	'prompt you to change something, save this configuration, '
+	DEFB	'or quit.  You may ',CR,LF
+	DEFB	'select changes to the size of certain of the system '
+	DEFB	'segments.  As changes ',CR,LF
+	DEFB	'are made, the system is re-calculated and re-displayed '
+	DEFB	'to reflect your last ',CR,LF
+	DEFB	'change and prompt you for more changes or to save this '
+	DEFB	'configuration in ',CR,LF
+	DEFB	'name.ZCM and name.ENV or quit.',CR,LF,CR,LF
+	DEFB	'This version allows you to change the sizes of CPR, '
+	DEFB	'DOS and BIO segments as ',CR,LF
+	DEFB	'well as the configuration of the Shell Stack.',CR,LF,CR,LF
+	DEFB	'You may specify the output file name when you invoke '
+	DEFB	'MKZCM.  If you do not, ',CR,LF
+	DEFB	'the Save function will prompt you for the file name.'
+	DEFB	CR,LF,CR,LF
+	DEFB	'            Press any key to return to MKZCM or ^C to '
+	DEFB	'Quit now.',CR,LF,CR,LF,CR,LF,CR,LF
+	DEFB	0
+
+	CALL	CIN		; get user input
+	CP	CTRLC		; cancelled by user ?
+	JP	Z,EXIT		; ..if so, then jump exit
+	JP	SHOWMEN		;   else, display menu again
+
+
+
+
+;::::: CONFIGURE SYSTEM
+
+
+	; config CPR (CCP)
+CNFCCP:	CALL	CHKSYCF		; check if module can be configured
+	CALL	PRINT
+	DEFB	' CPR size? (Now '
+	DEFB	0
+
+	LD	A,(B_CCPS)	; get CCP # recs
+	CALL	PAFDC		; display as dec
+	CALL	PRINT
+	DEFB	') '
+	DEFB	0
+
+	CALL	BBLINE		; get user input
+	CALL	EVAL10		; convert dec digits
+	LD	(B_CCPS),A	; ..and store as new CCP size (# recs)
+	JP	CALCSYS		; jump to calc system sizes and addrs
+
+
+	; config DOS
+CNFDOS:	CALL	CHKSYCF		; check if module can be configured
+	CALL	PRINT
+	DEFB	' DOS size? (Now '
+	DEFB	0
+
+	LD	A,(B_DOSS)	; get DOS # recs
+	CALL	PAFDC		; display as dec
+	CALL	PRINT
+	DEFB	') '
+	DEFB	0
+
+	CALL	BBLINE		; get user input
+	CALL	EVAL10		; convert dec digits
+	LD	(B_DOSS),A	; ..and store new DOS size (# recs)
+	JP	CALCSYS		; jump to calc system sizes and addrs
+
+
+	; config User Memory Area
+CNFUMA:	CALL	PRINT
+	DEFB	" User's area size? (Now "
+	DEFB	0
+
+	LD	A,(UMAREC)	; get UMA # recs
+	CALL	PAFDC		; display as dec
+	CALL	PRINT
+	DEFB	') '
+	DEFB	0
+
+	CALL	BBLINE		; get user input
+	CALL	EVAL10		; convert dec digits
+	LD	(UMAREC),A	; ..and store new UMA size (# recs)
+	JP	CALCSYS		; jump to calc system sizes and addrs
+
+
+	; config BIOS
+CNFBIO:	CALL	CHKSYCF		; check if module can be configured
+	CALL	PRINT
+	DEFB	' Bios size? (Now '
+	DEFB	0
+
+	LD	A,(BIOSCAL)	; calculated BIOS # recs
+	CALL	PAFDC		; display as dec
+	CALL	PRINT
+	DEFB	') '
+	DEFB	0
+
+	CALL	BBLINE		; get user input
+	CALL	EVAL10		; convert dec digits
+	LD	A,2		; check min. size (# recs)
+	CP	E
+	JR	NC,CNFBIO1	; ..if less than 2 recs, then jump
+	LD	A,E		;   else, ensure # is page-aligned
+	INC	A
+	AND	0FEH
+CNFBIO1: LD	(BIOSCAL),A	; update calculated BIOS size (# recs)
+	LD	(BIOSINP),A	; ..and store user input separately
+	JP	CALCSYS		; jump to calc system sizes and addrs
+
+
+	; config Shell Stack
+CNFSHS:	CALL	PRINT
+	DEFB	' Entries? (Now '
+	DEFB	0
+
+	LD	A,(B_SHSTS)	; get Shell Stack # entries
+	CALL	PAFDC		; display as dec
+	CALL	PRINT
+	DEFB	') '
+	DEFB	0
+
+	CALL	BBLINE		; get user input
+	CALL	EVAL10		; convert dec digits
+	OR	A		; test
+	JR	Z,CNFSHS1	; ..if zero, then jump
+	LD	(B_SHSTS),A	;   else, store new Shell Stack # entries
+	CALL	PROMPTM		; display menu input prompt
+				;   (so following prompt starts at same pos)
+	CALL	PRINT
+	DEFB	' Shell Size? (Now '
+	DEFB	0
+
+	LD	A,(B_SHSIZ)	; get Shell Stack entry size
+	CALL	PAFDC		; display as dec
+	CALL	PRINT
+	DEFB	')  '
+	DEFB	0
+
+	CALL	BBLINE		; get user input
+	CALL	EVAL10		; convert dec digits
+	OR	A		; test
+	JR	Z,CNFSHS1	; ..if zero, then jump
+	LD	(B_SHSIZ),A	;   else, store new Shell Stack entry size
+	PUSH	AF
+	LD	HL,(B_SHSTS)	; # entries in L
+	LD	H,0
+	CALL	CSIZEN		; calc Shall Stack size in records
+	POP	AF		; restore entry size
+	CALL	CENTRS		; calc entries that fit into available space
+	LD	(B_SHSTS),A	; ..and store
+	JP	CALCSYS		; jump to calc system sizes and addrs
+
+CNFSHS1: LD	HL,0		; clear # entries and entry size of Shell Stack
+	LD	(B_SHSTS),HL
+	JP	CALCSYS		; jump to calc system sizes and addrs
+
+
+	; config IOP
+CNFIOP:	CALL	PRINT
+	DEFB	' How many IOP records? (Now '
+	DEFB	0
+
+	LD	A,(B_IOPS)	; get IOP # recs
+	CALL	PAFDC		; display as dec
+	CALL	PRINT
+	DEFB	') '
+	DEFB	0
+
+	CALL	BBLINE		; get user input
+	CALL	EVAL10		; convert dec digits
+	LD	(B_IOPS),A	; ..and store new IOP size (# recs)
+	LD	(IOPREC),A	;   also for calc
+	JP	CALCSYS		; jump to calc system sizes and addrs
+
+
+	; config RCP
+CNFRCP:	CALL	PRINT
+	DEFB	' How many RCP records? (Now '
+	DEFB	0
+
+	LD	A,(B_RCPS)	; get RCP # recs
+	CALL	PAFDC		; display as dec
+	CALL	PRINT
+	DEFB	') '
+	DEFB	0
+
+	CALL	BBLINE		; get user input
+	CALL	EVAL10		; convert dec digits
+	LD	HL,B_RCPS	; ptr to RCP size in env descriptor
+	LD	(HL),E		; ..and store new size (# recs)
+	JP	CALCSYS		; jump to calc system sizes and addrs
+
+
+	; config FCP
+CNFFCP:	CALL	PRINT
+	DEFB	' How many FCP records? (Now '
+	DEFB	0
+
+	LD	A,(B_FCPS)	; get FCP # recs
+	CALL	PAFDC		; display as dec
+	CALL	PRINT
+	DEFB	') '
+	DEFB	0
+
+	CALL	BBLINE		; get user input
+	CALL	EVAL10		; convert dec digits
+	LD	HL,B_FCPS	; ptr to FCP size in env descriptor
+	LD	(HL),E		; ..and store new size (# recs)
+	JP	CALCSYS		; jump to calc system sizes and addrs
+
+
+	; config Named Dirs
+CNFNDR:	CALL	PRINT
+	DEFB	' How many names? (Now '
+	DEFB	0
+
+	LD	A,(B_NDIRS)	; get NDR # entries
+	CALL	PAFDC		; display as dec
+	CALL	PRINT
+	DEFB	') '
+	DEFB	0
+
+	CALL	BBLINE		; get user input
+	CALL	EVAL10		; convert dec digits
+	LD	HL,18		; size of an entry
+	CALL	MLTHLA		; multiply (entries * size)
+	LD	DE,128-1	; add offset to check for partial record
+	ADD	HL,DE
+	LD	A,128
+	AND	L		; modulo 128
+	LD	L,A		; L now starts on a record boundary
+
+	; now calc how many entries fit into available space
+	LD	DE,-18
+	LD	A,0FFH		; set initial counter (loop is one ahead
+				;   and set Carry on first run)
+CNFNDR1: INC	A		; counter +1
+	ADD	HL,DE		; subtract
+	JR	C,CNFNDR1	; loop as long as Carry is set
+	LD	(B_NDIRS),A	; store # entries
+	JP	CALCSYS		; jump to calc system sizes and addrs
+
+
+
+
+;::::: SAVE FILES
+
+
+SAVFIL0: LD	A,' '		; clear first char of file name
+	LD	(CPMFCB+1),A	; in standard FCB
+	JP	HELP		; ..and display help
+
+	; save files (menu option 'S')
+SAVFIL:	LD	A,(CPMFCB+1)	; test file name in standard FCB
+	CP	' '
+	JP	NZ,SAVFIL1	; ..if first char not <SP>, then skip over
+				;   else, ask for file name
+	CALL	CLRLINE		; clear line on console
+	CALL	PRINT
+	DEFB	' Output Filename? (^C to Quit) '
+	DEFB	0
+
+	CALL	BBLINE		; get user input
+	OR	A		; check if something was entered
+	JR	Z,SAVFIL0	; ..if char count =0, then jump display help
+	LD	DE,CPMFCB	; standard CP/M FCB
+	CALL	FNAME		; parse file name and type
+
+	; test for help request
+	; ##### seems redundant as various checks done in EVALCMD and/or sFNAM
+SAVFIL1: LD	DE,CPMFCB+1	; file name in standard FCB
+	LD	A,(DE)		; get char
+	CP	'/'		; invalid char/help request ?
+	JR	NZ,SAVFIL2	; ..if not, skip over
+	INC	DE		; move ptr fwd
+	LD	A,(DE)		; get next char
+	DEC	DE		; set ptr back
+	CP	'/'
+	JR	Z,SAVFIL0	; ..if '/', then jump display help
+
+	; ambiguous file name not allowed
+SAVFIL2: LD	B,8		; # chars to test
+SAVFIL3: LD	A,(DE)		; get char
+	INC	DE		; move ptr fwd
+	CP	'?'
+	JR	Z,SAVFIL4	; ..if '?', then jump
+	DJNZ	SAVFIL3		; loop
+	DEC	B		; B -1 to clear Zero flag
+SAVFIL4: JR	Z,SAVFIL0	; ..if name ambiguous, then jump display help
+
+	; file name valid
+	LD	HL,FTYPES+3	; file type 'ZCM'
+	LD	B,3		; # bytes
+	CALL	MOVEB		; ..copy
+	CALL	CLRLINE		; clear line on console
+	CALL	PRINT
+	DEFB	' Making '
+	DEFB	0
+
+	LD	DE,CPMFCB+1	; file name in standard FCB
+	CALL	PFN2		; ..display
+
+
+	; write ZCM file, walk along env descriptor
+	; and call output routines repeatedly
+	CALL	WRFILOP		; open file for writing
+	LD	HL,ENVTBL	; addr of table containing env element names
+	LD	(ETBLPTR),HL	; store in ram
+	LD	HL,B_DESC	; begin of env descriptor (0x0100)
+	INC	HL
+	CALL	ZCMWRWO	; CBIOS addr
+	LD	A,5
+	CALL	ADDHLA		; move ptr past 'Z3ENV'
+	CALL	ZCMWRBY	; ENVTYP
+	CALL	ZCMWRWB		; EXPATH, EXPATHS
+	CALL	ZCMWRWB		; RCP, RCPS
+	CALL	ZCMWRWB		; IOP, IOPS
+	CALL	ZCMWRWB		; FCP, FCPS
+	CALL	ZCMWRWB		; Z3NDIR, Z3NDIRS
+	CALL	ZCMWRWB		; Z3CL, Z3CLS
+	CALL	ZCMWRWB		; Z3ENV, Z3ENVS
+	CALL	ZCMWRWB		; SHSTK, SHSTKS
+	CALL	ZCMWRBY		; SHSIZE
+	CALL	ZCMWRWO		; Z3MSG
+	CALL	ZCMWRWO		; EXTFCB
+	CALL	ZCMWRWO		; EXTSTK
+	CALL	ZCMWRBY		; QUIET
+	CALL	ZCMWRWO		; Z3WHL
+	CALL	ZCMWRBY		; SPEED
+	CALL	ZCMWRBY		; MAXDRV
+	CALL	ZCMWRBY		; MAXUSR
+	CALL	ZCMWRBY		; DUOK
+	CALL	ZCMWRBY		; CRT
+	CALL	ZCMWRBY		; PRT
+	CALL	ZCMWRBY		; COLS
+	CALL	ZCMWRBY		; ROWS
+	CALL	ZCMWRBY		; LINS
+	CALL	ZCMWRWO		; DRVEC
+	CALL	ZCMWRBY		; SPAR1
+	CALL	ZCMWRBY		; PCOL
+	CALL	ZCMWRBY		; PROW
+	CALL	ZCMWRBY		; PLIN
+	CALL	ZCMWRBY		; FORM
+	CALL	ZCMWRBY		; SPAR2
+	CALL	ZCMWRBY		; SPAR3
+	CALL	ZCMWRBY		; SPAR4
+	CALL	ZCMWRBY		; SPAR5
+	CALL	ZCMWRWB		; CCP, CCPS
+	CALL	ZCMWRWB		; DOS, DOSS
+	CALL	ZCMWRWO		; BIO
+	LD	A,5*11		;
+	CALL	ADDHLA		; move ptr past sh.var and system file names
+	CALL	ZCMWRBY		; PUBDRV
+	CALL	ZCMWRBY		; PUBUSR
+	CALL	WRFILCL		; flush output file to disk, and close file
+
+	; write ENV file
+	LD	DE,CPMFCB+9	; file type in standard FCB
+	LD	HL,FTYPES	; file type 'ENV'
+	LD	BC,3		; bytes to copy
+	LDIR
+	CALL	PRINT
+	DEFB	', Making '
+	DEFB	0
+
+	LD	DE,CPMFCB	; ptr to standard FCB
+	PUSH	DE		; save ptr
+	INC	DE		; move fwd to file name
+	CALL	PFN2		; ..display it
+	POP	DE
+	CALL	INITFC		; init FCB
+	CALL	F$MAKE		; create file (delete if already exists)
+	INC	A
+	JP	Z,E0BEXIT	; ..if error, then exit with code 0x0B
+	LD	HL,B_DESC	; begin of env descriptor (0x0100)
+	CALL	SETDMA		; set as DMA buffer addr
+	CALL	F$WRIT		; write file (1 record)
+	JP	NZ,E0BEXIT	; ..if error, then exit with code 0x0B
+	CALL	F$CLOS		;   else, close file
+	INC	A		; test status
+	RET	NZ		; ..if ok, then return
+	JP	E0BEXIT		;   else, exit with error code 0x0B
+
+
+	;--- Support functions
+
+; ##### CHECK: unreferenced code
+	; write file name to output file
+	LD	HL,CPMFCB+1		; file name in standard FCB
+	LD	B,8		; # of chars
+OUTFNAM: LD	A,(HL)		; get char
+	INC	HL		; move ptr fwd
+	CP	' '
+	JR	Z,OUTFNA1	; ..if <SP>, then jump to continue
+	CALL	OUTCHAR		;   else, output char to file
+	DJNZ	OUTFNAM		; loop
+OUTFNA1: LD	A,'.'
+	CALL	OUTCHAR		; output dot '.' to file
+	LD	HL,CPMFCB+9	; file type in standard FCB
+	LD	B,3		; # chars
+	JP	OUTSTR		; output to file
+; #####
+
+
+	; ZCM file - write word/byte combo incl. symbols (2 entries)
+ZCMWRWB: CALL	ZCMWRWO		; write word
+				; ..then fall through, write byte
+
+	; ZCM file - write byte (8-bit value) and symbol
+ZCMWRBY: CALL	LDEIHL		; get byte at (HL) in E (D= 0)
+	JR	ZCMWREN		; ..and jump
+
+	; ZCM file - write word (16-bit value) and symbol
+ZCMWRWO: CALL	LDDEIHL		; get word at (HL) in DE
+				; ..then fall through
+
+	; ZCM file - write one Entry (value-key pair)
+	;  in: DE= value
+	;      HL= ptr to symbol name (key)
+ZCMWREN: CALL	OUTDE4X		; value (as 4 digit hex)
+	JP	WRSYM		; name
+
+
+; ##### CHECK: unreferenced code
+	EX	(SP),HL
+	CALL	OUTSYM
+	EX	(SP),HL
+	RET
+; #####
+
+
+	; ZCM file - output Symbol (name of env element)
+OUTSYM:	LD	A,(HL)		; get byte
+	INC	HL		; move ptr fwd
+	OR	A		; test byte
+	RET	Z		; ..if nul-terminator, then exit
+	CALL	OUTCHAR		;   else, output char to file
+	JR	OUTSYM		; loop
+
+
+; ##### CHECK: only called by unreferenced code
+	; ZCM file - output sequence of bytes to file
+	;  in:  B= # of bytes
+	;      HL= ptr to chars
+OUTSTR:	LD	A,(HL)		; get char
+	INC	HL		; move ptr fwd
+	CALL	OUTCHAR		; output to file (buffered)
+	DJNZ	OUTSTR		; ..loop till done
+	RET
+; #####
+
+
+	; ZCM file - open for writing (buffered output)
+WRFILOP: LD	DE,CPMFCB	; ptr to standard FCB
+	CALL	FO0$OP		; open file for buffered output
+	RET	Z
+	JP	E0BEXIT		;   else, exit with error code 0x0B
+
+
+	; ZCM file - close file (write buffered output to disk)
+WRFILCL: CALL	FO0$CL		; close output file (buffered)
+	RET	Z
+	JP	E0BEXIT		;   else, exit with error code 0x0B
+
+
+	; ZCM file - output DE as 4-digit hex and <SP>
+OUTDE4X: LD	A,D		; high byte
+	CALL	OUTA2X
+	LD	A,E		; low byte
+	CALL	OUTA2X
+	LD	A,' '		; <SP>
+	JR	OUTCHAR
+
+
+	; ZCM file - output A as 2-digit hex
+OUTA2X:	PUSH	AF		; save regs
+	RRA			; upper nybble into lower
+	RRA
+	RRA
+	RRA
+	CALL	OUTA2X1		; output
+	POP	AF		; restore value, and fall through
+
+
+	; convert lower nybble to hex char
+OUTA2X1: AND	00001111B	; mask off upper nybble, keep lower
+	ADD	A,'0'		; make ascii
+	CP	'9'+1		; test if in range 0..9
+	JR	C,OUTCHAR	; ..if so, skip over
+	ADD	A,7		;   else, make A..F
+
+
+	; ZCM file - output char in A
+OUTCHAR: CALL	F0$PUT		; send byte to buffered file output
+	RET	Z		; ..if no error, then return
+	JP	E0BEXIT		;   else, exit with error code 0x0B
+
+
+	; ZCM file - write a symbol (name of env element) to output
+	; and additional TAB / Linebreak as needed
+WRSYM:	PUSH	HL		; save regs
+	LD	HL,(ETBLPTR)	; ptr to current element in ENVTBL
+	CALL	OUTSYM		; add symbol (name) to output file
+	LD	(ETBLPTR),HL	; ..then store new ptr
+	LD	HL,WRSYMCT	; get counter
+	DEC	(HL)		; -1
+	JR	NZ,WRSYM1	; ..if not end of line, skip over
+
+	; five symbols written, add new line
+	LD	(HL),5		; reset counter
+	CALL	WRSYMCL		; add linebreak to output file
+	JR	WRSYMX		; ..and exit
+
+	; end of line not yet reached
+WRSYM1:	CALL	WRSYMTB		; add a tab to output file
+WRSYMX:	POP	HL		; restore regs and exit
+	RET
+
+WRSYMCT: DEFB	5		; counter for symbols per line
+
+WRSYMTB: LD	A,TAB		; add <TAB>
+	JR	OUTCHAR		; ..to output file, and let return from there
+
+WRSYMCL: LD	A,CR		; add <CR><LF> (new line)
+	CALL	OUTCHAR
+	LD	A,LF
+	JR	OUTCHAR
+
+
+	; indirect load LD DE,(HL)
+	; get 16-bit word at location addressed by HL into DE
+	;  in: HL= addr
+	; out: DE= value
+	;      HL= addr+2
+LDDEIHL: LD	E,(HL)		; get low byte
+	INC	HL
+	LD	D,(HL)		; ..and high byte
+	INC	HL
+	RET
+
+
+	; indirect load LD E,(HL)
+	; get byte at location addressed by HL into E
+	;  in: HL= addr
+	; out:  D= 0, E= byte
+	;      HL= addr+1
+LDEIHL:	LD	E,(HL)		; get low byte
+	INC	HL
+	LD	D,0		; set high byte to zero
+	RET
+
+
+	; clear line on console (print <CR> 40*<SP> <CR>)
+	; before output of following input request
+CLRLINE: CALL	CLRLIN2
+	LD	B,40		; counter
+	LD	A,' '
+CLRLIN1: CALL	COUT
+	DJNZ	CLRLIN1
+CLRLIN2: LD	A,CR		; send <CR>
+	JP	COUT		; ..to console, and let return from there
+
+
+	; print env module data on console
+	;  in: HL= base addr
+	;       A= # recs
+PMODATA: PUSH	AF		; save regs
+	CALL	PADRVAL		; display addr and # recs
+	CALL	PRINT
+	DEFB	' Record'
+	DEFB	0
+
+	POP	AF		; restore # recs
+	DEC	A		; -1
+	LD	A,'s'		; prepare to display plural 's'
+	CALL	NZ,COUT		; ..if # was greater than zero, display char
+	CALL	PRINT		; and output <CR><LF>
+	DEFB	CR,LF
+	DEFB	0
+
+	RET
+
+
+	; print addr (hex) and value (dec) on console
+	;  in:  A= value
+	;      HL= addr
+PADRVAL: PUSH	AF		; save regs
+	CALL	PHL4HC		; display word in HL as hex
+	CALL	PRINT
+	DEFB	TAB
+	DEFB	0
+
+	POP	AF		; restore byte
+	JP	PADC		; ..and display, let return from there
+
+
+	; add A to HL (result in HL)
+ADDHLA:	ADD	A,L		; add L
+	LD	L,A		; store result in L
+	RET	NC		; ..if no overflow, then return
+	INC	H		;   else, increment H
+	RET
+
+
+	; calculate number of entries that fit into given space
+	;  in:  A= size of entry
+	;      HL= available space (bytes)
+	; out:  A= # entries
+CENTRS:	CPL			; one's complement
+	INC	A		; +1
+	LD	E,A		; in DE for 16-bit math (as neg. value)
+	LD	D,0FFH
+	XOR	A		; clear A (counter) and Carry
+CENTRS1: ADD	HL,DE		; subtract
+	RET	NC		; ..if no more borrow, then exit
+	INC	A		; counter +1
+	JR	CENTRS1		; loop
+
+
+	; calculate size in bytes and # recs
+	; of elements that don't have a fixed size (Shell Stack, Named Dirs)
+	;  in:  A= # of entries
+	;      HL= size of an entry
+	; out:  A= # recs
+	;      HL= size in bytes
+CSIZEN:	CALL	MLTHLA
+	LD	DE,128-1	; add offset to check for partial record
+	ADD	HL,DE
+	LD	A,128
+	AND	L		; modulo 128
+	LD	L,A		; L now starts on a record boundary
+	PUSH	HL
+	LD	A,H		; divide by 128 to calc # recs
+	RL	L		; (rotate bit7 of low byte into Carry,
+	RLA			;  and from there into bit0 of high byte)
+	POP	HL		; restore size
+	RET
+
+
+	; calculate base addr from upper boundary
+	; support routines for CALCSYS
+	;  in:  A= # recs
+	;      HL= addr upper bound
+CBASE:	LD	DE,-128		; size of a record
+	JR	MLTLOOP
+
+
+	; multiply A * HL, result in HL
+MLTHLA:	EX	DE,HL		; swap regs
+	LD	HL,0		; set initial result
+				; ..then fall through
+
+	; loop for multiplication
+MLTLOOP: OR	A		; test
+	RET	Z		; ..if zero, then exit
+	DEC	A		;   else, counter -1
+	ADD	HL,DE		; add/subtract
+	JR	MLTLOOP		; ..and loop
+
+	;---
+
+
+
+
+;::::: EXIT
+
+
+	; exit with error code 0x0B
+E0BEXIT: LD	A,(RUNZCOM)	; get flag
+	OR	A		; test
+	JR	Z,EXIT		; ..if not running under NZ-COM, then jump
+	LD	HL,(ENVPTR)	; addr env descriptor currently running system
+	LD	L,22H		; offset to MSG buffer addr
+	LD	A,(HL)
+	INC	HL
+	LD	H,(HL)		; addr in HL
+	LD	L,A
+	LD	(HL),0BH	; store return code
+	INC	HL		; move ptr fwd to Command Status flag
+	INC	HL
+	INC	HL
+	LD	A,00001110b	; bits: error, extendend cp, ext. program flag
+	OR	(HL)		; merge with current value
+	LD	(HL),A		; ..and store it
+
+EXIT:	LD	SP,(STACK)	; restore Stack Pointer
+	RET			; ..and return to system
+
+
+
+
+;::::: RAM STORAGE
+
+
+RUNZCOM: DEFB	0		; Flag: running under NZ-COM (0= no, 0xFF= yes)
+ENVPTR:	DEFW	0		; Addr ENV Descriptor currently running system
+UMAREC:	DEFB	0		; Size of UMA User Memory Area in # recs
+BIOSCAL: DEFB	2		; Calculated size of BIOS in # recs
+				;   (value not in ENV descriptor)
+BIOSINP: DEFB	2		; Entered (by user) size of BIOS in # recs
+IOPREC:	DEFB	12		; Size of IOP in # recs
+				;   (used when calc new system sizes/addrs)
+
+FTYPES:	DEFB	'ENV'		; File types
+	DEFB	'ZCM'
+
+NZID:	DEFB	'NZ-COM'	; String to identify NZ-COM
+
+ETBLPTR: DEFW	ENVTBL		; ptr to ENVTBL
+
+	; table of ENV element names, entries are nul-terminated
+ENVTBL:	DEFB	'CBIOS',0
+	DEFB	'ENVTYP',0
+	DEFB	'EXPATH',0
+	DEFB	'EXPATHS',0
+	DEFB	'RCP',0
+	DEFB	'RCPS',0
+	DEFB	'IOP',0
+	DEFB	'IOPS',0
+	DEFB	'FCP',0
+	DEFB	'FCPS',0
+	DEFB	'Z3NDIR',0
+	DEFB	'Z3NDIRS',0
+	DEFB	'Z3CL',0
+	DEFB	'Z3CLS',0
+	DEFB	'Z3ENV',0
+	DEFB	'Z3ENVS',0
+	DEFB	'SHSTK',0
+	DEFB	'SHSTKS',0
+	DEFB	'SHSIZE',0
+	DEFB	'Z3MSG',0
+	DEFB	'EXTFCB',0
+	DEFB	'EXTSTK',0
+	DEFB	'QUIET',0
+	DEFB	'Z3WHL',0
+	DEFB	'SPEED',0
+	DEFB	'MAXDRV',0
+	DEFB	'MAXUSR',0
+	DEFB	'DUOK',0
+	DEFB	'CRT',0
+	DEFB	'PRT',0
+	DEFB	'COLS',0
+	DEFB	'ROWS',0
+	DEFB	'LINS',0
+	DEFB	'DRVEC',0
+	DEFB	'SPAR1',0
+	DEFB	'PCOL',0
+	DEFB	'PROW',0
+	DEFB	'PLIN',0
+	DEFB	'FORM',0
+	DEFB	'SPAR2',0
+	DEFB	'SPAR3',0
+	DEFB	'SPAR4',0
+	DEFB	'SPAR5',0
+	DEFB	'CCP',0
+	DEFB	'CCPS',0
+	DEFB	'DOS',0
+	DEFB	'DOSS',0
+	DEFB	'BIO',0
+	DEFB	'PUBDRV',0
+	DEFB	'PUBUSR',0
+
+
+
+
+;::::: SYSLIB ROUTINES
+
+	END
+
+
+
+;************************************************************************
+; Remarks jxl:
+;   MKZCM.COM, included in available NZ-COM package(s), was disassembled
+; and extensively commented. Labels are up to seven chars long to comply
+; with M-REL standards. However, it is recommended to use SLR tools that
+; support labels up to sixteen chars.
+;   In its current state, the compiled/linked file matches exactly the
+; origial MKZCM.COM distributes along with NZ-COM v1.2H, i.e. no changes
+; to the source were made. Possible optimizations detected during dis-
+; assembly are marked with '#####' in the comment.
+;
+;   The program dates back to 1987/88 and was linked with SYSLIB v3.6
+; which was distributed in M-REL format only. Hence, external references
+; are limited to six chars and must be cut off. (Even though sources
+; show longer symbol names. - a bit confusing) When updating the program
+; also the latest SYSLIB version (in S-REL format) should be used.
+;************************************************************************
