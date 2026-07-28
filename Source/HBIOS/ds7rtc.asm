@@ -5,8 +5,8 @@
 ;
 ;==================================================================================================
 ;
-#IF (!PCFENABLE)
-	.ECHO	"*** DS7 DRIVER REQUIRES PCF DRIVER.  SET PCFENABLE!!!\n"
+#IF (!(PCFENABLE | I2CBITENABLE))
+	.ECHO	"*** DS7 DRIVER REQUIRES PCFENABLE OR I2CBITENABLE!!!\n"
 	!!!	; FORCE AN ASSEMBLY ERROR
 #ENDIF
 ;
