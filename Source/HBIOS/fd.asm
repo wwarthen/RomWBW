@@ -124,6 +124,10 @@ FRC_TOGETRES	.EQU	-13H		; ED
 FRC_TOEXEC	.EQU	-14H		; EC
 FRC_TOSEEKWT	.EQU	-15H		; EB
 ;
+; CONSTANTS
+;
+FCD_LEN		.EQU	13
+;
 ;--------------------------------------------------------------------------------------------------
 ;   HBIOS MODULE HEADER
 ;--------------------------------------------------------------------------------------------------
@@ -2221,7 +2225,10 @@ FCD_SRTHUT	.DB	000H		; STEP RATE, IBM PS/2 CALLS FOR 3ms, 0DH = 3ms SRT, HEAD UN
 FCD_HLTND	.DB	000H		; HEAD LOAD TIME, IBM PS/2 CALLS FOR 15ms 08H = 16ms HUT
 FCD_DOR		.DB	000H		; DOR VALUE
 FCD_DCR		.DB	000H		; DCR VALUE
-FCD_LEN		.EQU	$ - FCD
+#IF (($ - FCD) != FCD_LEN)
+	.ECHO	"*** ERROR: FCD LENGTH MISMATCH!!!\n"
+	!!!	; FORCE AN ASSEMBLY ERROR
+#ENDIF
 		; DYNAMICALLY MANAGED (PUBLIC)
 FCD_DS		.DB	001H		; DRIVE SELECT (UNIT NUMBER 0-3)
 FCD_C		.DB	000H		; CYLINDER

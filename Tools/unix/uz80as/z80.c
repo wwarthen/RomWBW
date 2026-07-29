@@ -201,6 +201,7 @@ static const struct matchtab s_matchtab_z80[] = {
 	{ "TST a", "ED.64.d0.", 2, 0, "e8" },
 	{ "TSTIO a", "ED.74.d0.", 2, 0, "e8" },
 	/* Z280 added instructions */
+	/* VERY incomplete, just enuough to build RomWBW */
 	{ "PCACHE", "ED.65.", 4, 0 },
 	{ "LDCTL (C),HL", "ED.6E.", 4, 0 },
 	{ "LDCTL HL,(C)", "ED.66.", 4, 0 },

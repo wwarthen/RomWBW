@@ -12,8 +12,9 @@
 #define SYMLEN		32
 
 enum {
-	SYM_FLAG_EQU = 1,
-	SYM_FLAG_EXPORT = 2
+	SYM_FLAG_ADR = 1,
+	SYM_FLAG_EQU = 2,
+	SYM_FLAG_EXPORT = 4
 };
 
 struct sym {

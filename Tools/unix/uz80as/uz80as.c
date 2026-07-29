@@ -50,6 +50,7 @@ static const char *d_eject(const char *);
 static const char *d_export(const char *);
 static const char *d_end(const char *);
 static const char *d_equ(const char *);
+static const char *d_set(const char *);
 static const char *d_fill(const char *);
 static const char *d_list(const char *);
 static const char *d_lsfirst(const char *);
@@ -58,7 +59,6 @@ static const char *d_msfirst(const char *);
 static const char *d_nocodes(const char *);
 static const char *d_nolist(const char *);
 static const char *d_org(const char *);
-static const char *d_set(const char *);
 static const char *d_text(const char *);
 static const char *d_title(const char *);
 static const char *d_word(const char *);
@@ -123,6 +123,9 @@ static char s_line[LINESZ];
 /* Label defined on this line. */
 static struct sym *s_lastsym;
 
+/* Flag indicates current line is an equate. */
+static int s_isequ;
+
 /* Output words the most significant byte first */
 static int s_msbword;
 
@@ -144,21 +147,6 @@ static const char *sync(const char *p)
 	while (*p != '\0' && *p != '\\' && *p != ';')
 		p++;
 	return p;
-}
-
-/* the written bitmap */
-unsigned char membit[65536 / 8];
-
-void
-setbit(int pc)
-{
-	membit[pc / 8] |= (1 << (pc % 8));
-}
-
-int
-isset(int pc)
-{
-	return membit[pc / 8] & (1 << (pc % 8));
 }
 
 void
@@ -187,7 +175,6 @@ void genb(int b, const char *ep)
 		exit(EXIT_FAILURE);
 	}
 	s_mem[s_pc] = (unsigned char) b;
-	setbit(s_pc);
 
 	if (s_pass == 1) {
 		list_genb(b);
@@ -580,24 +567,36 @@ static const char *d_equ(const char *p)
 {
 	int n;
 	enum expr_ecode ecode;
-	const char *ep;
+	const char *ep, *eps;
 
+	s_isequ = 1;
+	
+	eps = p;
 	p = expr(p, &n, s_pc, 0, &ecode, &ep);
 	if (p == NULL) {
 		exprint(ecode, s_pline, ep);
 		newerr();
 		return NULL;
 	}
-
+	
 	if (s_lastsym == NULL) {
 		eprint(_(".EQU without label\n"));
 		eprcol(s_pline, s_pline_ep);
 		newerr();
+
 	} else {
-		/* TODO: check label misalign? */
+		if (s_pass == 0 && (s_lastsym->flags & SYM_FLAG_EQU) && (s_lastsym->val != n)) {
+			eprint(_("redefinition of equate (%s)\n"), s_lastsym->name);
+			fprintf(stderr, _(" Previous value was %XH, "
+				"new value %XH.\n"), s_lastsym->val, n);
+			eprcol(s_pline, eps);
+			newerr();
+		}
+
 		s_lastsym->val = n;
 		s_lastsym->flags |= SYM_FLAG_EQU;
 	}
+
 	return p;
 }
 
@@ -607,6 +606,8 @@ static const char *d_set(const char *p)
 	enum expr_ecode ecode;
 	const char *ep;
 
+	s_isequ = 1;
+	
 	p = expr(p, &n, s_pc, 0, &ecode, &ep);
 	if (p == NULL) {
 		exprint(ecode, s_pline, ep);
@@ -615,14 +616,20 @@ static const char *d_set(const char *p)
 	}
 
 	if (s_lastsym == NULL) {
-		eprint(_(".EQU without label\n"));
+		eprint(_(".SET without label\n"));
 		eprcol(s_pline, s_pline_ep);
 		newerr();
 	} else {
-		/* TODO: check label misalign? */
+		if (s_pass == 0 && !(s_lastsym->flags & SYM_FLAG_EQU)) {
+			eprint(_("label must pre-exist for .SET (%s)\n"), s_lastsym->name);
+			eprcol(s_pline, s_pline_ep);
+			newerr();
+		}
+
 		s_lastsym->val = n;
 		s_lastsym->flags |= SYM_FLAG_EQU;
 	}
+
 	return p;
 }
 
@@ -719,6 +726,8 @@ static const char *d_org(const char *p)
 	enum expr_ecode ecode;
 	const char *ep, *eps;
 
+	s_isequ = 1;
+	
 	eps = p;
 	p = expr(p, &n, s_pc, 0, &ecode, &ep);
 	if (p == NULL) {
@@ -740,7 +749,14 @@ static const char *d_org(const char *p)
 		list_setpc(s_pc);
 
 	if (s_lastsym != NULL) {
-		/* TODO: check label misalign? */
+		if (s_pass == 0 && (s_lastsym->flags & SYM_FLAG_EQU) && (s_lastsym->val != n)) {
+			eprint(_("equate redefinition\n"));
+			fprintf(stderr, _(" Previous value was %XH, "
+				"new value %XH.\n"), s_lastsym->val, n);
+			eprcol(s_pline, eps);
+			newerr();
+		}
+
 		s_lastsym->val = s_pc;
 		s_lastsym->flags |= SYM_FLAG_EQU;
 	}
@@ -798,8 +814,7 @@ dnlst:
 
 static const char *d_align(const char *p)
 {
-	int n, v, er;
-	const char *q;
+	int n, er;
 	enum expr_ecode ecode;
 	const char *ep, *eps;
 
@@ -988,17 +1003,27 @@ static void parselin(const char *cp)
 start:	s_lastsym = NULL;
 	alloweq = 0;
 	col0 = 1;	
+	s_isequ = 0;
 loop:
-	if (*cp == '\0' || *cp == ';') {
-		return;
-	} else if (*cp == '\\') {
-		if (s_pass == 1) {
-			list_endln();
-			list_startln(s_empty_line, curfile()->linenum, s_pc,
-				nfiles());
+	if (*cp == '\0' || *cp == ';' || *cp == '\\') {
+		/* If this line was not handled as an equate, flag it as a label */
+		if (s_lastsym != NULL && !s_isequ)
+			s_lastsym->flags |= SYM_FLAG_ADR;
+		if (s_pass == 0 && s_lastsym != NULL && (s_lastsym->flags & SYM_FLAG_EQU)
+			&& (s_lastsym->flags & SYM_FLAG_ADR)) {
+			eprint(_("label used as both equate and address (%s)\n"), s_lastsym->name);
+			newerr();
 		}
-		cp++;
-		goto start;
+		if (*cp == '\\') {
+			if (s_pass == 1) {
+				list_endln();
+				list_startln(s_empty_line, curfile()->linenum, s_pc,
+					nfiles());
+			}
+			cp++;
+			goto start;
+		}
+		return;
 	} else if (*cp == '.') {
 		s_pline_ep = cp;
 		cp++;
@@ -1045,10 +1070,10 @@ loop:
 			if (s_pass == 1 && !(s_lastsym->flags & SYM_FLAG_EQU)
 				&& s_lastsym->val != s_pc)
 			{
-				eprint(_("misaligned label %s\n"),
+				eprint(_("misaligned label (%s)\n"),
 					s_lastsym->name);
 				fprintf(stderr, _(" Previous value was %XH, "
-					"new value %XH."), s_lastsym->val,
+					"new value %XH.\n"), s_lastsym->val,
 					s_pc);
 				eprcol(s_pline, s_pline_ep);
 				newerr();
@@ -1168,20 +1193,12 @@ static void dopass(const char *fname)
 /* Write the object file. */
 static void output(void)
 {
-	int i;
-
-	// fprintf(stderr, "output: min: %x max: %x\n", s_minpc, s_maxpc);
-
 	if (s_minpc < 0)
 		s_minpc = 0;
 	if (s_maxpc < 0)
 		s_maxpc = 0;
 
-	for (i = s_minpc; i < s_maxpc; i++) {
-		if (isset(i)) {
-			fwrite(&s_mem[i], 1, 1, fout);
-		}
-	}
+	fwrite(s_mem + s_minpc, 1, s_maxpc - s_minpc, fout);
 	if (ferror(fout)) {
 		eprint(_("cannot write to file %s\n"), s_objfname);
 		clearerr(fout);
@@ -1202,7 +1219,7 @@ void uz80as(void)
 	}
 
 	for (s_pass = 0; s_nerrors == 0 && s_pass < 2; s_pass++) {
-		if ((s_pass > 0) && (s_nerrors == 0)) {
+		if ((b_flag) && (s_pass > 0) && (s_nerrors == 0)) {
 			open_output();
 		}
 		dopass(s_asmfname);
@@ -1219,6 +1236,7 @@ void uz80as(void)
 	}
 
 	if (!b_flag) {
+		open_output();
 		output();
 	}
 

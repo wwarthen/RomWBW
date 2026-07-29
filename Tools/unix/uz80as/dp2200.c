@@ -7,7 +7,7 @@
 
 /*
  * Datapoint 2200 Version I, 2K to 8K mem (program counter 13 bits).
- * Datapoint 2200 Version II, 2K to 16K mem (protram counter 14 bits).
+ * Datapoint 2200 Version II, 2K to 16K mem (program counter 14 bits).
  */
 
 #include "pp.h"

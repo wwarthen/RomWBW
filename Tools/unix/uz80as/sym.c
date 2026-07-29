@@ -74,7 +74,7 @@ struct sym *lookup(const char *p, const char *q, int insert, int pc)
 	for (k = s_symtab[h]; k != 0; k = s_symlist[k].next) {
 		if (scmp(p, q, s_symlist[k].name) == 0) {
 			if (insert) {
-				if (!s_symlist[k].flags & SYM_FLAG_EQU) {
+				if (!(s_symlist[k].flags & SYM_FLAG_EQU)) {
 					wprint("duplicate label (%s)\n",
 						s_symlist[k].name);
 				}

@@ -34,7 +34,7 @@
  * 	b: (op << 3) | lastbyte
  * 	c: op | lastbyte
  * 	d: lastbyte = op as 8 bit value
- * 	e: output op as word (no '.' should follow)
+ * 	e: (not used) output op as word (no '.' should follow)
  * 	f: ouput op as big endian word (no '.' should follow)
  * 	g: if op<=$ff output lastbyte and output op as byte
  * 	   else output (lastbyte | 0x20) and output op as big endian word
