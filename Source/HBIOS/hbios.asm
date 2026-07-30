@@ -9097,7 +9097,8 @@ HB_MODSTART	.EQU	$
 ;  - CHNATIVE
 ;  - KIO
 ;  - CTC
-;  - PCF
+;  - I2CPCF
+;  - I2CBIT
 ;  - DMA
 ;  - NABU
 ;  - EZ80TMR
@@ -9122,8 +9123,8 @@ HB_MODSTART	.EQU	$
   #INCLUDE "sctim.asm"
 #ENDIF
 ;
-#IF (PCFENABLE)
-  #INCLUDE "pcf.asm"
+#IF (I2CPCFENABLE)
+  #INCLUDE "i2cpcf.asm"
 #ENDIF
 ;
 #IF (I2CBITENABLE)
