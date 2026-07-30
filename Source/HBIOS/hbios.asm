@@ -9126,6 +9126,10 @@ HB_MODSTART	.EQU	$
   #INCLUDE "pcf.asm"
 #ENDIF
 ;
+#IF (I2CBITENABLE)
+  #INCLUDE "i2cbit.asm"
+#ENDIF
+;
 #IF (DMAENABLE)
   #INCLUDE "dma.asm"
 #ENDIF
