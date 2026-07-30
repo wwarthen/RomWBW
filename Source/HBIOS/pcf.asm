@@ -2,6 +2,11 @@
 ; PCF8584 I2C CLOCK DRIVER
 ;==================================================================================================
 ;
+#IF (I2CBITENABLE)
+	.ECHO	"*** I2CBIT DRIVER CANNOT BE USED WITH PCF DRIVER!!!\n"
+	!!!	; FORCE AN ASSEMBLY ERROR
+#ENDIF
+;
 PCF_BASE  	.EQU  PCFBASE
 PCF_ID   	.EQU  0AAH
 ;

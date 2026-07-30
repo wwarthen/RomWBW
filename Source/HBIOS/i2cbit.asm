@@ -62,7 +62,11 @@
 ; SCL      | |   | |   | |   | |   | |   | |   | |   | |   | |
 ;     -----+ +---+ +---+ +---+ +---+ +---+ +---+ +---+ +---+ +---------
 ;
-
+#IF (PCFENABLE)
+	.ECHO	"*** PCF DRIVER CANNOT BE USED WITH I2CBIT DRIVER!!!\n"
+	!!!	; FORCE AN ASSEMBLY ERROR
+#ENDIF
+;
 I2CBIT_BASE	.EQU	I2CBITBASE
 I2CBIT_SDA	.EQU	7		; SDA BIT NUMBER, READ AND WRITE
 I2CBIT_SCL	.EQU	0		; SCL BIT NUMBER, READ AND WRITE
