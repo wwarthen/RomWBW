@@ -71,6 +71,6 @@ References
 http://www.primrosebank.net/computers/mtx/tools/PD/vgmplayer.zip - Paul Daniels MTX SN76489 interrupt version with embedded VGM tune.
 https://github.com/jblang/SN76489/blob/master/examples/vgmplayer.asm - J.B. Langston RCBus polled version with file loading.
 https://groups.google.com/g/rc2014-z80/c/9nHnETJzGKU - Marco Maccaferri P8X180 & AY-3-8910 support
-https://github.com/electrified/rc2014-ym2151/tree/main/software/vgmplay - Ed Brindly RCBus & YM2151 support
+https://github.com/electrified/rc2014-ym2151/tree/main/software/vgmplay - Ed Brindley RCBus & YM2151 support
 
 ROMWBW version by Phil Summers. VGM Player is still in development. The ECB-VGM is also still under development.

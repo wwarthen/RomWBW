@@ -2251,7 +2251,7 @@ Z180 CPU (eg. SC722) with 1MB linear memory (eg. SC721)
 
 ## Z80-Retro SBC
 
-The system comprises a Z80 retro computer board, and optonal VGA text video card, 
+The system comprises a Z80 retro computer board, and optional VGA text video card, 
 and PIO Keyboard and Sound Card. The system uses a custom 60 pin bus on a standard header.
 
 (Not to be confused with a similar named project by 

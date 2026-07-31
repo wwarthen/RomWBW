@@ -134,7 +134,7 @@ Disk Images (hd1k_prefix.dat, *_std_hd1k_prefix.dat)
 
 The hd1k_prefix.dat file is part of the combo disk images and is
 applied to hd1k image files as a prefix, it contains the standard
-partion table.
+partition table.
 
 The *_std_hd1k_prefix.dat files are platform specific prefixes
 typically used in romless platforms, they also contain RomWBW binary code

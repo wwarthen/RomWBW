@@ -124,7 +124,7 @@ The basic steps to create a custom ROM are:
 
   3) Run the build scripts and confirm there are no errors.
 
-  4) Program the resultant ROM image and/or write thedisk images.
+  4) Program the resultant ROM image and/or write the disk images.
 
 Note that steps 1 and 2 are performed to customize your ROM as 
 desired.  If you want to simply build a standard configuration, it is 

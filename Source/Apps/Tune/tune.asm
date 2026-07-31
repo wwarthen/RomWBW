@@ -748,7 +748,7 @@ OCTAVEADJ	.DB	0	; AMOUNT TO ADJUST OCTAVE UP OR DOWN
 
 USEPORTS	.DB	0	; AUDIO CHIP PORT SELECTION MODE
 
-MSGBAN		.DB	"Tune Player for RomWBW v3.16, 5-fEB-2026",0
+MSGBAN		.DB	"Tune Player for RomWBW v3.16, 5-Feb-2026",0
 MSGUSE		.DB	"Copyright (C) 2026, Wayne Warthen, GNU GPL v3",13,10
 		.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 		.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
