@@ -292,7 +292,7 @@ cpm_word fcb_read(cpm_byte* fcb, cpm_byte* dma)
 	}
 
 	/* if not multiple of 128 bytes, pad sector with 0x1A */
-	for (n = rv; n < rd_len; n++) dma[n] = 0x1A;
+	for (n = rv; n < redir_rec_len; n++) dma[n] = 0x1A;
 
 	/* Less was read in than asked for. Report the number of 128-byte
 	 * records that _were_ read in.
@@ -514,7 +514,7 @@ cpm_word fcb_randrd(cpm_byte* fcb, cpm_byte* dma)
 	rd_len = ((rv + 127) / 128) * 128;
 
 	/* PMO: pad partial sector to 128 bytes, even if EOF reached in multi sector read */
-	for (n = rv; n < rd_len; n++) dma[n] = 0x1A;	/* pad last read to 128 boundary with 0x1A*/
+	for (n = rv; n < redir_rec_len; n++) dma[n] = 0x1A;	/* pad last read to 128 boundary with 0x1A*/
 
 	if (rd_len < redir_rec_len)  /* eof */
 	{
