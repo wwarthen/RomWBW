@@ -923,7 +923,7 @@ Users should not remove this check from the templated code.
 
 If required, the user application may make use of the Z80 interrupt system
 but if the user application wishes to rely on HBIOS functionality then it
-must adhere to the HBIOS framework for managing interupts. Alternatively,
+must adhere to the HBIOS framework for managing interrupts. Alternatively,
 if the user application has no need for the HBIOS then it may use its own
 custom code for handling interrupts. In that case, a hard reset, rather
 than an HBIOS warm start, would be necessary to return control to RomWBW.
@@ -1023,7 +1023,7 @@ of additional applications stored in the ```USER 2``` area of the disk. These ap
 do not form part of CP/M, but rather are small utilities used for test purposes during development work.
 They may, or may not, function correctly with any given hardware or software configuration.
 Documentation for these utilities is very limited, though the source files may be found
-in the /Source folder. Note that these utiltites are not available when starting CP/M
+in the /Source folder. Note that these utilities are not available when starting CP/M
 from the ROM image or from a floppy disk.
 
 A number of the CP/M applications available are described in more detail in
@@ -1159,7 +1159,7 @@ Will first assign drives `A:(Boot), B:(RAM), C:(ROM)` this leaves 13 drives
 which will be assigned to slices from the boot hard drive (D: thru P:),
 leaving no unused drives.
 
-'H'ard drive assignment will attempt to fill all remaining drive letters
+`H`ard drive assignment will attempt to fill all remaining drive letters
 by splitting the number of drives remaining evenly across all.
 
 e.g. `ASSIGN /B=BAOH`
@@ -1502,7 +1502,7 @@ and unused blocks are not copied.
 If a filesystem is not found, (or the /F option is chosen) all data is
 copied.
 
-Verification (if option chosen) will do an aditional read (after write)
+Verification (if option chosen) will do an additional read (after write)
 and compare the data read matches what was written. This compare is only
 on every 32'nd byte. This is done for efficiency.
 
@@ -2156,7 +2156,7 @@ of files; the storage capacity occupied by those files; and the capacity
 remaining on that drive.
 
 1. Information about the the 64KByte CP/M memory map, which is shown
-diagramatically, and includes: locations and sizes of the TPA (Transient Program Area),
+diagrammatically, and includes: locations and sizes of the TPA (Transient Program Area),
 CP/M's CCP (Console Command Processor),and BDOS (Basic Disk Operating System).
 
 1. The addresses of active CPU I/O ports.
@@ -2781,7 +2781,7 @@ CPU speed: Autodetected
 | YM2151    |  1st    | 0cah     | stereo
 | YM2151    |  2nd    | 0cbh     | stereo
 
-Inconsistant, garbled or distorted playback can be an indication that
+Inconsistent, garbled or distorted playback can be an indication that
 your CPU clock speed is too high for your sound chip. In this case, if
 your platform supports speed switching, then the CPUSPD application
 can be used to reduce your processor speed.
@@ -2856,7 +2856,7 @@ Show a summary of the command-line usage.
 #### Notes
 
 I've tested this utility with the DS1302 clock board designed by Ed
-Brindly, and on the interrupt-driven timer built into my Z180 board.
+Brindley, and on the interrupt-driven timer built into my Z180 board.
 However, it does not interact with hardware, only BIOS; I would expect
 it to work with other hardware.
 

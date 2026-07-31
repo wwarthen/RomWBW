@@ -340,7 +340,7 @@ please let me know if I missed you!
   source for ZSDOS2 and the BPBIOS utilities as well as for
   NZCOM.
 
-* Marshall Gates has contriubed sample program source files for all
+* Marshall Gates has contributed sample program source files for all
   of the language disk images.
 
 * Randy Merkel provided the ZSDOS Programmer's Manual as translated

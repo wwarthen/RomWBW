@@ -69,7 +69,7 @@ styles.  When making changes to existing code, please try to be
 consistent with the existing coding style.  You may not like the current
 style, but no one likes mixed styles in one file/module.
 
-Be careful with white space.  RomWBW is primarily assembly langauge
+Be careful with white space.  RomWBW is primarily assembly language
 code.  The use of tab stops at every 8 characters is pretty standard for
 assembler.  If you use something else, then your code will look odd
 when viewed by others.
@@ -96,7 +96,7 @@ not magically added by the tools that generate the disk images.
 	LD	A,0+(5+5)	; Load A with the value 10
 ```
 
-- The RomWBW documewntation in the Doc directory is generated with a
+- The RomWBW documentation in the Doc directory is generated with a
   process outside of the normal build process.  To update documentation,
   please update the .md files in Source/Doc.  Those are the Markdown
   source files for the documentation.  The PDF files will be updated

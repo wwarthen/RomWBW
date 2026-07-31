@@ -68,7 +68,7 @@ build process will generate a binary file system image.
 The resultant disk images (.img files) can be written to the start of
 a disk using your Windows/Linux/Mac computer and will then be usable
 in your RomWBW computer.  On Windows, you can use Win32DiskImager to
-do this (see Tools\Win32DiskImager).  On Linux/Mac, you can usee dd.
+do this (see Tools\Win32DiskImager).  On Linux/Mac, you can use dd.
 
 The fd_xxx.txt and hd_xxx.txt files may contain the following:
 

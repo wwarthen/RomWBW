@@ -306,7 +306,7 @@ refer to the documentation of your hardware provider for that.
 
 Z2:
 
-: Memory memory manager introduced by Sergey Kiselv in the Zeta 2 SBC.
+: Memory manager introduced by Sergey Kiselev in the Zeta 2 SBC.
 Popular in many RCBus systems.
 
 Z180:
@@ -346,7 +346,7 @@ The memory manager used is determined by the configuration choices
 that are part of a RomWBW build process.  A given ROM can only have a
 single memory manager -- it is not selected dynamically.
 
-The configuration variable `MEMMGR` sets the memory mannager used by
+The configuration variable `MEMMGR` sets the memory manager used by
 the ROM build.  It must be set to one of the above memory manager
 types.  For example, for the Z2 memory manager, `MEMMGR` should be set
 to `MM_Z2`.
@@ -358,7 +358,7 @@ are used interchangeably in the documentation and code.
 
 ## Floppy Disk Layout
 
-RomWBVW generally handles floppy disks in the same physical formats
+RomWBW generally handles floppy disks in the same physical formats
 as MS-DOS.  However, the filesystem will normally be CP/M.  The following
 table lists the floppy disk formats used by RomWBW.  In all cases,
 the sector size is 512 bytes.
@@ -2531,7 +2531,7 @@ The Device Attributes (B) are the same as defined in
 
 If the Unit specified is not a hard disk the Media ID will be returned and
 the slice parameter ignored. If there is no media in device, or the slice
-number is invaid (Parameter Out Of Range) the function will return an error status.
+number is invalid (Parameter Out Of Range) the function will return an error status.
 
 **NOTE:** This function was placed in HBIOS to be shared between the different CP/M
 variants supported by RomWBW. It is not strictly a BIOS function,
@@ -3041,7 +3041,7 @@ Wait States (D) is the actual number of wait states, not the number
 of wait states added.  The returned Status (A) is a standard HBIOS 
 result code.
 
-#### SYSGET Subfunction 0xF4 -- Get Front Panel Swithes (PANEL)
+#### SYSGET Subfunction 0xF4 -- Get Front Panel Switches (PANEL)
 
 | **Entry Parameters**                   | **Returned Values**                    |
 |----------------------------------------|----------------------------------------|

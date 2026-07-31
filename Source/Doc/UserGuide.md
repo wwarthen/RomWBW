@@ -80,7 +80,7 @@ of this document.
 
 ### Disk Loaded ROM Images
 
-Some hardware platforms do not have suffieient ROM capacity for RomWBW.  These
+Some hardware platforms do not have sufficient ROM capacity for RomWBW.  These
 platforms have their own ROM which can load the RomWBW ROM Image from disk.  The
 platforms that work this way are annotated in $doc_hardware$.  For these
 platforms, you will write a special disk image to the boot disk of your
@@ -445,7 +445,7 @@ Play which uses `Q`.
 **NOTE:** Of the ROM Applications, only the operating systems (CP/M and 
 Z-System) have the ability to interact with disk drives. So, other than 
 these 2 OSes, the ROM Applications do **not** have any way to save or 
-load data from peristent/disk storage.  For example, if you launch BASIC
+load data from persistent/disk storage.  For example, if you launch BASIC
 from the Boot Loader, you will not be able to save or load your 
 programs.  You will need to start an operating system first and then run
 BASIC in order to save or load programs.
@@ -1639,7 +1639,7 @@ CP/M 2.2 or Z-System from ROM again.
 #### FAT Partition
 
 At this point you may want to consider creating a FAT partition
-Please see the section [FAT Filesystem Preparation] for detils on how
+Please see the section [FAT Filesystem Preparation] for details on how
 to setup the FAT partition.
 
 ### Slice Initialization
@@ -2041,7 +2041,7 @@ ready to write to your media.
 
 You can add slices to the Combo Disk Images simply by tacking
 slices onto the end.  For example, if you want to add a slice
-containing the Fortran compilerto the end of the combo image, you could
+containing the Fortran compiler to the end of the combo image, you could
 use one of the following command lines depending on your operating
 system:
 
@@ -2088,7 +2088,7 @@ Linux/MacOS:
 `cat hd1k_prefix.dat hd1k_cpm22.img hd1k_cpm3.img hd1k_ws >hd.img`
 
 > **Note**: Apart from the hd1k_prefix.dat file (mentioned above)
-> there are actaully a number of other `hd1k_*_prefix.dat` files. These
+> there are actually a number of other `hd1k_*_prefix.dat` files. These
 > additional prefix files are platform (generally romless) specific,
 > and should be ignored unless you are on one of these platforms.
 > If you are on one of these platforms you must use the correct prefix file
@@ -3235,7 +3235,7 @@ update the date/time of the RTC in the RomWBW Boot Loader or Monitor.
 
 ## Date/Time Utilities
 
-RomwWBW includes two utilities for displaying or setting the date/time
+RomWBW includes two utilities for displaying or setting the date/time
 stored by the RTC.  They are both a bit different and are briefly
 described below.
 
@@ -3269,7 +3269,7 @@ Like `WDATE`, the `RTC` utility (contributed by Andrew Lynch) will let
 you display and set the current date/time.  However, this utility only
 works with the DSRTC hardware (DS1302 chip).  It is a "direct to
 hardware application".  Its operation is described in $doc_apps$.  Here
-is an example of displaying and updatting the date/time with this
+is an example of displaying and updating the date/time with this
 utility:
 
 ```
@@ -3368,7 +3368,7 @@ Press any key to quit...
 Since this runs at the CPM driver level it is useful as an end-to-end test
 to prove that date time stamping is able to read the correct time
 
-The `TESTCLOK` utility is provided by ZSDOS, plese see the ZSDOS Manual 
+The `TESTCLOK` utility is provided by ZSDOS, please see the ZSDOS Manual 
 for further information
 
 ## Date/Time File Stamping
@@ -3795,7 +3795,7 @@ provided by the network server.  The supported hardware is:
 - RCBus System w/ MT011 including:
   - Featherwing WizNet W5500
   - SPI FRAM on secondary SPI interface (CS2)
-- Doudyne Disk I/O Board including:
+- Duodyne Disk I/O Board including:
   - WIZ850io Module
   - 25LCxxx Serial SPI EEPROM
   
@@ -4409,7 +4409,7 @@ ROM image.
 From the Boot Loader menu select X (Xmodem Flash Updater) and then
 U (Begin Update). Then initiate the Xmodem transfer of the `.rom` file.
 Since the XModem Flash Updater will be relatively slow, you may wish
-to use the `.upd` varient of the ROM.
+to use the `.upd` variant of the ROM.
 
 More information can be found in the ROM Applications document.
 
