@@ -1,6 +1,6 @@
 RomWBW Introduction
 Wayne Warthen (wwarthen@gmail.com)
-24 Jul 2026
+31 Jul 2026
 
 
 
@@ -362,7 +362,7 @@ let me know if I missed you!
 - Jörg Linder has contributed disassembled and nicely commented source
   for ZSDOS2 and the BPBIOS utilities as well as for NZCOM.
 
-- Marshall Gates has contriubed sample program source files for all of
+- Marshall Gates has contributed sample program source files for all of
   the language disk images.
 
 - Randy Merkel provided the ZSDOS Programmer’s Manual as translated by
