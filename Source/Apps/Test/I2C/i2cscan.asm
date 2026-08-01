@@ -341,7 +341,10 @@ PCF_WAIT_FOR_BB:
 PCF_WFBB0:
 	IN     A,(PCF_RS1)
         AND    PCF_BB
-        RET    Z		; BUS IS FREE RETURN ZERO
+        JR     Z,PCF_WFBBCONT	; BB=0 MEANS BUSY
+	CP	A
+	RET
+PCF_WFBBCONT:
         DEC    HL
         LD     A,H
         OR     L
