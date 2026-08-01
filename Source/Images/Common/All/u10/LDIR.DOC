@@ -1,0 +1,72 @@
+
+                              LDIRB
+                           Version 2.2C
+
+                        September 6, 1991 & May 29, 2026
+
+
+LDIRB, originally written by Steven Greenberg, is a library 
+directory utility that shows member files along with their create 
+and modify dates, sizes, compression method, and their 
+uncompressed filenames.  It will run under vanilla CP/M 2.2 and 
+CP/M Plus, but offers several enhancements when run under ZCPR3.
+
+USAGE:
+
+     LDIRB {dir:}lbrname {afn.typ}
+
+A DIR (named directory) or DU (drive/user) specification is 
+accepted under ZCPR3.  Under vanilla CP/M only the drive is 
+significant.  If an ambiguous file specification is given 
+following the library name, only matching member files will be 
+shown.  If no member file specification is given, all member 
+files will be shown.
+
+A final summary line shows the number of matching member files 
+found.   If the wheel byte is set, the summary also shows the 
+number of active files in the library, the number of deleted 
+files, the number of free directory entries, and the total 
+directory entries.
+
+If a crunched file contains an embedded comment, it will be 
+displayed up to 18 characters.  Otherwise, the uncrunched or 
+unsqueezed filename will be shown.
+
+The length of member files is shown in records (sectors) and in 
+kilobytes, including fractional parts of a kilobyte (.00, .12, 
+.25, .37, .50, .62, .75, or .87, indicating 0 to 7 additional 
+records.
+
+If no dates are found in the library directory, crunched files 
+are checked to see if they contain embedded datestamps.  If so, 
+they are displayed instead.
+
+LDIRB pauses with a "[more]" prompt after each screenful until a 
+key is pressed.  Entering ^K, K, k, ^X, X, x, ^C, C, or c anytime 
+aborts the program.  Except at the "[more]" prompt, a ^S pauses 
+the display until another key is pressed.  Typing a space at any 
+time sets the line counter to one for a "line by line" advance.
+
+For additional system security, LBR files with the SYS attribute 
+set will be ignored if the wheel byte is reset.
+
+Under ZCPR3 the program error flag is set to FFh if no matching 
+member files are found, to 10 if the library file is not found, 
+or to 4 if the library is corrupt.
+
+CONFIGURATION:  LDIRB should be ready to use "as is" with  no 
+configuration necessary for either RCP/M systems or individual 
+use.  There are three configuration bytes, however, that may be 
+changed if necessary.
+
+Setting the byte at 10Bh to a non-zero value will force LDIRB to 
+warm boot on exit.
+
+Under ZCPR3 the number of screen lines and the wheel byte address 
+are obtained from the environment descriptor.  On other systems 
+the number of screen lines can be set at 10Ch.  The default is 
+22.  The wheel byte address can also be installed at 10Dh-10Eh 
+(low byte first).  The default address is 3Eh.
+
+For version history, see LDIRBnn.HIS.
+

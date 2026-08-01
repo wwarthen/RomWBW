@@ -38,7 +38,7 @@ master and which is the target directory.
    When re-logging from  within  SCOPY,  the  syntax has the same meaning, but
 remember that you will not  necessarily be  currently  logged  into  the  same
 directory as at startup.
-:2 :SCOPY10F
+:2 :SCOPY10G
 :3
  SCOPY Notes  
 

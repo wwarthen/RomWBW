@@ -1,0 +1,292 @@
+            BU - Backup Utility 12/08/1984 by Kim Levitt
+                   (based on NEWBACK by G. Young)
+
+recent changes:
+v1.9    Fixed disk space bug when running under ZSDOS 2.  ZSDOS 2 like
+        CP/M+ puts the allocation vectors is banked memory so a BDOS
+        is needed to get free disk space.  However ZSDOS returns K bytes
+        free while CP/M+ returns allocation blocks free.
+v1.8    Made datestamping universal/  Now works with DateStamper (TM),
+        ZSDOS and CP/M Pkus,  Removed all DateStamper specific code.  Now
+        use ZSLIB, DSLIB and SYSLIB routines.
+v1.7	Minor bug fix.
+v1.6    Added CP/M Plus capability:
+          - Gets CP/M Plus free space.
+          - User 15 is maximum under CP/M Plus.
+          - Gets true disk space remaining under ANY version of CP/M.
+          - Detects lack of DateStamper clock (was assuming clock present).
+          - Multi-sector i/o
+          - Advanced error handling
+          - Fixed disk erase routine (CP/M+ aborts on wildcard SFA).
+        Now sets destination file attributes only if there were attributes
+          other than Archive in the source file for greater throughput.
+        Several prompts now have default values - hit RETURN for the displayed
+          default.
+        Now uses DSLIB to read CP/M Plus/DateStamper/ZSDOS clock.
+        Various minor bugs fixed and performance improved; now uses Z80 
+          opcodes.
+        Now prints " read" and "write" messages only ONCE for each buffer-
+          full, rather than for each record read.
+        Now resets ANY output drive, including ones with "fixed" disks that
+          are actually removable, such as the Konica 10-meg. floppy.
+v1.5    Fixed bug with user 26.
+v1.4    Added ZCPR3 support and Plu*Perfect DateStamper(TM)
+        support.  Exclude code changed to use full filenames with 
+        wildcards for more exact exclusion.
+v1.3    Added suppression of printer output.  Changed F4 bit to T3 
+        for compatibility with ZRDOS, P2DOS, and other programs 
+        that use the CP/M plus archive bit.
+v1.2a   Restored original appearance
+v1.2    Improved top-of-form, compressed or normal printing, no 
+        need to send printer escape sequences. Added RBYANC 
+        support, if desired.
+v1.1    File attributes kept, erase RO files on destination, 
+        VT100 code, 'k left' routine.  More exclude files added.
+
+-----------------------------------------------------------------
+Changes in v1.3 - 1.5
+---------------------
+The major changes are support for ZCPR3 (BU15 installs as a ZCPR3 
+utility  using Z3INS) and Plu*Perfect's DateStamper.  BU15  still 
+runs   correctly  on  non  ZCPR3  systems  and  systems   without 
+DateStamper,  and is still coded in 8080 assembly language.   Jay 
+Sage's  DateStamper routines from PPIP15 were used as  the  basis 
+for  the  DateStamper code (why  re-invent  the  wheel?).
+
+If BU15 is running under ZCPR3, the wheel byte is checked and  BU 
+exits immediately if the user is not wheel (user is informed  why 
+he  was kicked out).  If there is a valid clear screen string  in 
+TERMCAPS, it will be used, otherwise the string at 10BH is used.
+
+If  DateStamper  is found, the user is not  prompted  for  backup 
+date.   If a !!!TIME&DAT file is found on the backup  disk,  each 
+file's  original datestamps will be retained on the  backup.   If 
+DateStamper is running, a (Date OK) message will be printed after 
+each  file  is copied.  The floppy erase routine was  changed  so 
+that  !!!TIME&DAT will not be erased.  This has  the  unfortunate 
+side  effect of slowing down the erase, so dots are  now  printed 
+while  the erase routine is running in user 0 just  to  re-assure 
+the  operator that the program has not crashed and  burned.   The 
+slower  erase  is limited to user 0,  while all other user  areas 
+continue  to  use the faster wildcard attribute clear and  erase.  
+If  BU15  is assembled without DateStamper  support,  the  faster 
+erase method is used in all user areas.
+
+In line with these additions,  the skip file section has changed.  
+Instead of just checking an extent, an entire filename (which can 
+be ambiguous) is specified.   This allows for better  selectivity 
+in skipped files.
+
+The  hard coding for maximum user was removed and made an  equate 
+in  the source code.  The .COM file has MAXUSR set to  31.   Note 
+that  when running under ZCPR3, BU15 does not respect  what  ZCPR 
+calls  MAXUSER.   Due to the nature of this  utility,  it  seemed 
+foolish to me to respect this value.
+
+The  archive  bit  was  changed  from  the  F4  bit  to  T3   for 
+compatibility with ZRDOS, P2DOS, and other programs that use  the 
+CP/M plus archive bit.
+
+A  question  was added to the startup dialogue to  allow  printer 
+output to be suppressed.
+
+The  .COM  file has the printer initialization enabled,  but  all 
+bytes are set to 0.  The sequence for your printer can be patched 
+in  using  a debugger.  The printer initialization  string  is  8 
+bytes long and starts at 114H.  RBYANC is set false, and 80  col, 
+66 lines/page print format is selected.
+
+Updated  text in the body of this document to reflect BU15 as  it 
+stands.
+
+                                  - Cameron W. Cotrill
+-----------------------------------------------------------------
+
+Changes added in v1.2
+---------------------
+Installed  top-of-forms  for printer where  needed.   Added  left 
+print margin to allow copy to be put in notebook (very handy). If 
+RBYANC support chosen, then second filename added to output disk, 
+'--BACKUP.nnn' where 'nnn' is the volume ID asked during  BACKUP.  
+This  will avoid using the first file name added   '+YYMMDDy.nnn'  
+where  YY=year,  MM=month, DD=day, YY=output  drive  letter,  and 
+nnn=volume ID.  RBYANC does not include a volume delete  feature. 
+If  you  use the volume date file as volume label,  the  MAST.CAT 
+will fill up very quickly.  The second volume label is always the 
+same  therefore no new volumes are created each time  the  BACKUP 
+floppies are added to catalog.
+
+The  BU-V12A.LBR  includes the v1.2a source code,  this  document  
+file and BU12A.COM file.
+
+     BU12A.COM   Normal Printing (66 lines/page, 80 columns). No 
+                 escape sequences sent to printer.  Most generic 
+                 version.
+
+                            ** NOTE **
+
+The  printer  set  routine  can  be  easily  modified  for  other 
+printers.  The sequences are close to the top of BU.ASM.  Be sure 
+to  set  the  'PRNTSET'  flag to 'YES'  and  enter  the  code  at 
+'SETPRINTER' label.
+					- Greg Teater
+
+-----------------------------------------------------------------
+
+Changes added in v1.1
+--------------------
+Changed  BU to keep file-attributes when moving files to floppy - 
+makes it easier to use NSWEEP to restore. Changed ERASE algorithm 
+to  allow to wipe files with attributes.  Changed   SPACE-routine  
+and added "k left" output to screen to know how long the specific 
+floppy  might  last.  Added some more "excluded"  file-types  and 
+VT100 as the "default terminal".
+					- B. G. Eiben
+
+*****************************************************************
+
+BU.COM  is  a simple, but effective hard disk backup utility.  It 
+will  back  up  most hard disk systems without  any  need  for  a 
+modification of the  .ASM source  code  (although  it  has   been  
+provided  if  you  need to change). Unless you have installed  BU 
+for ZCPR3 and have a TERMCAPS definition loaded, location 10BH in 
+the  .COM  file  contains a ten byte  area  that  contains   your 
+terminal's  clear  screen  control  code  or escape sequence,  if 
+your  clear screen/home cursor is something other than  a  Ctrl-Z  
+(1AH)  then  you  will have  to  patch this.  Location  11EH  has 
+the  number  of filenames which you wish to  have  excluded  from 
+backup.  BU is currently configured to skip 9 different filenames 
+which are stored in memory starting at location 11FH:
+
+          !!!TIME&.DAT   - DateStamper stamp file
+          !!BG    .SWP   - BackGrounder swap file
+          ????????.PRN   - Listing files
+          ????????.HEX   - Intermediate hex files
+          ????????.SYM   - Symbol files
+          ????????.BAK   - Backup files
+          ????????.$?$   - Scratch files
+          ????????.TMP   - Temporary files
+          [??????].???   - Bad block files
+
+6  blanks  are provided for extension of the excluded  filenames.  
+These  may  be entered with a debugger.   Be sure to  change  the 
+count at 11EH if you add any filenames!
+
+When   you  run  BU, it will ask you first which drives you  wish 
+to  backup.  Specify these altogether  with  no  spaces,   commas  
+or  other separating characters  as in: "ABC".  It will then  ask 
+for  the   floppy  drive to backup to.  Specify  just  the  drive 
+letter  with  no   colon  on  the  end   as   in:   "D".    After  
+displaying   this  information,  you will be asked to  verify  it 
+before continuing.
+
+Next   you  will be asked if you wish all user areas  backed  up.   
+Answer 'Y' if you wish user areas 0-31 automatically scanned.  If   
+you   specify   'N',  you will only scan the user  area  you  are  
+currently in.
+
+The  following  question  concerns  whether or not you wish files  
+with  the archive attribute (T3) set (the archive file  attribute 
+bit  not supported under CP/M 2.2) to be skipped  during  backup.   
+This  feature can be used so that you will only backup new  files 
+(ones that haven't had the T3 bit set by BU or some other utility 
+or by a replacement BDOS such as ZRDOS or P2DOS which support the 
+archive  attribute).  The next prompt asks whether you  want  the  
+archive  bit set after backup (normally yes,  but  you   may  not 
+want to set the bit for some reason.)
+
+Next, BU will ask if you wish to supress printer output.  If  you 
+answer 'N', you must have a printer on line or things will freeze 
+up.
+
+Finally,  unless DateStamper is running, you  are  prompted   for  
+the  current  date which you must enter in using  the  "MM/DD/YY" 
+format.   If your system has a realtime clock, you may  be   able  
+to write a routine to get the date and/or time for display on the 
+reports without prompting you, but this requires modification  of 
+the  source code, of course.  Adding DateStamper is  easier,  and 
+will  do this and more.  However, the CLOCK equate and  code  has 
+been retained in source if you INSIST on this nonsense....
+
+After  these preliminary questions, the hard disk directories are 
+scanned,  duplicates are eliminated from  the  list,   a   report   
+listing  sorted   by disk/user  is  printed  out  and   then  the 
+user  is   asked  whether or not to  begin  the  backup  process.  
+Answer  'Y'  to  continue and then  you  will   be  prompted   to  
+enter   the   first  floppy   volume  for backup and  enter  a  3 
+character volume ID.  The backup  process begins and you will  be  
+prompted to  change diskettes  whenever the disks fill up  and/or 
+the  hard disk being backed up  changes (to facilitate  restoring 
+files it  is  recommended  that different drives be backed up  on 
+separate floppies).
+
+As   each  file  is backed up, its filename  is  printed  on  the 
+printer   (you DO NOT have to have a printer on-line to use  this 
+program  -  just  be sure to answer 'Y' to  the  supress  printer 
+output  question) as part of a report listing files backed up  by  
+diskette.
+
+At  each prompt for a new diskette, you can enter "END" to  abort  
+the  backup process.   Provided you are skipping files  with  the 
+archive  bit set and setting the archive attribute after  backup, 
+you  should be  able to resume backup  later and  skip  all   the  
+files   you  previously  backed up. Before beginning  a  complete 
+disk backup session, you  can either just specify  that   archive  
+files are  NOT  to  be  skipped or  you can clear the archive bit 
+on all the files you will want to backup  before running BU  (use 
+NSWP  for  this   purpose).    Note  that   if   you    are   not  
+skipping  archive  files, you will not be able to  resume  backup  
+after  aborting,  so a "noskip" backup has to be  done   all   at  
+once.   (I  do a weekly "noskip" backup to get EVERYTHING  and  a 
+daily or  so "skip" backup to get only the new stuff..)
+
+After   all   files  selected  for  backup have  been  copied  to 
+disk, BU will automatically terminate.
+
+NOTE: BU will skip files which are too large to be backed up onto  
+a  single floppy.    Unlike   some   other    backup    programs,   
+this   is  strictly file-oriented, which  leaves  you  large-file 
+people   without backup via  this program,  but   the   advantage  
+is  that  it is  easy to restore files without doing  a  complete 
+restore  of   EVERYTHING  like some other  PD  hard  disk  backup 
+programs  do.  There are file splitting utilities that  could  be 
+used to get around this limitation.
+
+Hope  you enjoy using BU, oh yeah, P.S.  I assume you run this on 
+a  CRT or console monitor, as it uses backspaces and  overwriting   
+which  would look real  funny on a printer and may wear holes  in  
+the paper during backups!!!  (The printer reports which go to the  
+LST:  device are OK, of course,  just the console displays get  a  
+little fancy..)
+
+If  you  find  any  bugs  you want to fix or want to improve this  
+baby,  go  ahead  and feel free, but try  to  keep  the  hardware  
+specific  stuff  out  of  BU itself, (I  will  release  some  RTC  
+routines  later  which can be included  in the .ASM file  in  the  
+GETDATE  area),  and  try  to keep  it  "universal".   Ideas  for   
+enhancements:  CRC check with CRC displayed on floppy-report  and  
+CRC  verification  of backup file.  I would add the  code  but  I 
+don't    have   time (have  to  work on MBBS).   Of  course,  the 
+added code would  reduce the size of the TPA space available  for 
+the  sort  table,  which might be  a  problem,  so   maybe   it's  
+just   as   well   kept  simple,  short,  sweet  and  fast..   (A 
+verifying  backup program would take more than twice as long   to  
+run,   but  would,  of course be nice to   have  as  an  OPTIONAL 
+feature.)   Try  to  keep the  user   interface    (prompts   and 
+displays)  looking  clean.  Pass along any updates to  my  RCP/M: 
+MBBS Headquarters RCP/M; (213) 653-6398 (300/1200).
+
+If  you  appreciate  this program, I would appreciate a  donation 
+of  $10 or more to support my public-domain software  efforts  as 
+well  as  my  RCP/M.  Send  your  donations  to:  Micro  Bulletin 
+Board   Systems; 8033 Sunset Blvd.,#975; Los Angeles,  CA  90046.  
+(Make checks payable to "Micro Bulletin Board Systems".)
+
+                                     Thanks,
+
+                                     Kim Levitt 12/08/84
+                                     MBBS HQ RCPM (213) 653-6398
+
+Trademarks:  VT100,  DEC; CP/M, Digital Research;  ZCPR3,  ZRDOS, 
+Echelon; BackGrounder ii, DateStamper, Plu*Perfect.
+
