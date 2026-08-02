@@ -1,10 +1,7 @@
 In general, the BPBIOS for RomWBW is incomplete.  This is
-mostly just a proof of concept that it can work.  As such,
-it is not built or included in the default builds of
-RomWBW.  You *must* review and adjust the file romwbw.lib
-before building BPBIOS.  To include BPBIOS in the build
-process, you need to uncomment the corresponding line
-in the Build.cmd file in the Source directory.
+mostly just a proof of concept that it can work.  You
+should review and adjust the file romwbw.lib
+before building BPBIOS.
 
 For now, BPBIOS does not understand the dynamic disk assignment
 mechanism of RomWBW.  This means that you need to explicitly
@@ -18,4 +15,4 @@ always from the first slice.
 BPBIOS is hard-coded to use the 1024 directory entry hard disk
 format (hd1k).  The hd512 format is not supported at all.
 
---WBW 5:04 PM 6/16/2025
+--WBW 12:55 PM 8/2/2026
