@@ -560,7 +560,7 @@ IOLoop:	push	bc
 	call	NEWLINE
 	ld	hl,DMABUF
 	ld	a,(tstport)
-	ld	bc,16
+	ld	bc,16-1
 ;
 	call	DMAOTIR
 ;
