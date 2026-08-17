@@ -18,26 +18,43 @@ DMAMODE_VDG	.EQU	7		; VELESOFT DATAGEAR
 DMAMODE		.EQU	DMAMODE_DUO	; SELECT DMA DEVICE FOR TESTING
 ;
 ;==================================================================================================
-; SOME DEFAULT PLATFORM CONFIGURATIONS
-;==================================================================================================
-;
-DMABASE		.EQU	$E0		; DMA: DMA BASE ADDRESS
-DMALATCH	.EQU	DMABASE+1	; DMA: DMA LATCH ADDRESS
-DMAIOTST	.EQU	$68		; AN OUTPUT PORT FOR TESTING - 16C450 SERIAL OUT
-;
-#IF (DMAMODE==DMAMODE_DUO)
-DMABASE		.SET	$40		; DMA: DMA0 BASE ADDRESS
-DMALATCH	.SET	$43		; DMA: DMA LATCH ADDRESS
-DMAIOTST	.SET	$58		; AN OUTPUT PORT FOR TESTING - 16C450 SERIAL OUT
-;DMAIOTST	.SET	$94		; AN ALT OUTPUT PORT FOR TESTING - RTC/SPEAKER/LEDS PORT
-#ENDIF
-;
-;==================================================================================================
 ; HELPER MACROS AND EQUATES
 ;==================================================================================================
 ;
 FALSE		.EQU	0
 TRUE		.EQU	~FALSE
+;
+;==================================================================================================
+; SOME DEFAULT PLATFORM CONFIGURATIONS
+;==================================================================================================
+;
+#IF ((DMAMODE == DMAMODE_ECB) | (DMAMODE == DMAMODE_MBC))
+DMABASE		.EQU	$E0		; DMA: DMA BASE ADDRESS
+DMALATCH	.EQU	DMABASE+1	; DMA: DMA LATCH ADDRESS
+LATCHENABLE	.EQU	TRUE
+DMAIOTST	.EQU	$68		; AN OUTPUT PORT FOR TESTING - 16C450 SERIAL OUT
+#ENDIF
+;
+#IF (DMAMODE == DMAMODE_RC)
+DMABASE		.EQU	$04		; DMA: DMA0 BASE ADDRESS
+LATCHENABLE	.EQU	FALSE
+DMAIOTST	.EQU	$81		; AN OUTPUT PORT FOR TESTING - SIO/2 SERIAL OUT
+;DMAIOTST	.EQU	$80		; AN ALT OUTPUT PORT FOR TESTING - 16C550 SERIAL OUT
+#ENDIF
+;
+#IF (DMAMODE == DMAMODE_DUO)
+DMABASE		.EQU	$40		; DMA: DMA0 BASE ADDRESS
+DMALATCH	.EQU	$43		; DMA: DMA LATCH ADDRESS
+LATCHENABLE	.EQU	TRUE
+DMAIOTST	.EQU	$58		; AN OUTPUT PORT FOR TESTING - 16C450 SERIAL OUT
+;DMAIOTST	.EQU	$94		; AN ALT OUTPUT PORT FOR TESTING - RTC/SPEAKER/LEDS PORT
+#ENDIF
+;
+#IF (DMAMODE == DMAMODE_VDG)
+DMABASE		.EQU	$0B		; DMA: DMA0 BASE ADDRESS
+LATCHENABLE	.EQU	FALSE
+DMAIOTST	.EQU	$68		; AN OUTPUT PORT FOR TESTING - 16C450 SERIAL OUT
+#ENDIF
 ;
 #DEFINE	PRTC(C)	CALL PRTCH \ .DB C	; PRINT CHARACTER C TO CONSOLE - PRTC('X')
 #DEFINE	PRTS(S)	CALL PRTSTRD \ .TEXT S	; PRINT STRING S TO CONSOLE - PRTD("HELLO")
@@ -173,16 +190,20 @@ MENULP1:
 	JP	Z,DMATST_N		; MEMORY COPY ITER
 	CP	'0'
 	JP	Z,DMATST_0		; PULSE DMA PORT
+#IF (LATCHENABLE)
 	CP	'1'
 	JP	Z,DMATST_1		; PULSE LATCH PORT
+#ENDIF
 	CP	'O'
 	JP	Z,DMATST_O
 	CP	'R'
 	JP	Z,DMATST_R		; TOGGLE RESET
+#IF (LATCHENABLE)
 	CP	'Y'
 	JP	Z,DMATST_Y
 	cp	'L'
 	jp	z,DMACFG_L		; SET LATCH PORT
+#ENDIF
 	cp	'S'
 	jp	z,DMACFG_S		; SET PORT
 	cp	'V'
@@ -222,6 +243,7 @@ DMACFG_S:
 #ENDIF
 	jp	MENULP
 ;
+#IF (LATCHENABLE)
 DMACFG_L:
 	call	PRTSTRD
 	.db	"\n\rSet Latch port address\n\rPort:$"
@@ -229,6 +251,7 @@ DMACFG_L:
 	ld	hl,dmalach
 	ld	(hl),a
 	jp	MENULP
+#ENDIF
 ;
 DMATST_I:
 	call	PRTSTRD
@@ -263,12 +286,14 @@ DMATST_0:
 	.db	"\n\rPerforming DMA Port Selection Test\n\r$"
 	CALL	DMA_Port0
 	ret
-
+;
+#IF (LATCHENABLE)
 DMATST_1:
 	call	PRTSTRD
 	.db	"\n\rPerforming Latch Port Selection Test\n\r$"
 	CALL	DMA_Port1
 	ret
+#ENDIF
 ;
 DMATST_O:
 	call	PRTSTRD
@@ -282,11 +307,13 @@ DMATST_D:
 	CALL	DMARegDump
 	JP	MENULP
 ;
+#IF (LATCHENABLE)
 DMATST_Y:
 	call	PRTSTRD
 	.db	"\n\rPerforming Ready Bit Test\n\r$"
 	CALL	DMA_ReadyY
 	JP	MENULP
+#ENDIF
 ;
 DMATST_R:
 	call	PRTSTRD
@@ -319,10 +346,12 @@ DISPM:	call	PRTSTRD
 	.db	", Port=0x$"
 	LD	A,(dmaport)		; DISPLAY
 	CALL	PRTHEXBYTE		; DMA PORT
+#IF (LATCHENABLE)
 	call	PRTSTRD
 	.db	", Latch Port=0x$"
 	ld	A,(dmalach)
 	CALL	PRTHEXBYTE		; DMA PORT
+#ENDIF
 ;
 #IF (INTENABLE)
 ;
@@ -345,7 +374,7 @@ DISPM_INT:
 ;
 #ENDIF
 ;
-#IF (DMAMODE==DMAMODE_VDG)
+#IF (!LATCHENABLE)
 	call	PRTSTRD
 	.db	"\n\rReset\\Ready Latch unsupported.$"
 #ENDIF
@@ -384,7 +413,7 @@ DMA_INIT:
 	LD	A,(dmaport)
 	CALL	PRTHEXBYTE
 ;
-#IF !(DMAMODE==DMAMODE_VDG)
+#IF (LATCHENABLE)
 	ld	a,(dmalach)
 	ld	c,a
 	LD	A,DMA_FORCE
@@ -476,12 +505,14 @@ MENU_OPT:
 	.TEXT	"N) Test Memory-Memory Copy Iteratively\n\r"
 	.TEXT	"O) Memory to I/O Test\n\r"
 	.TEXT	"0) Test DMA Port Selection\n\r"
-#IF !(DMAMODE==DMAMODE_VDG)
+#IF (LATCHENABLE)
 	.TEXT	"1) Test DMA Latch Port Selection\n\r"
 	.TEXT	"Y) Test Ready Bit\n\r"
 #ENDIF
 	.TEXT	"S) Set DMA port\n\r"
+#IF (LATCHENABLE)
 	.TEXT	"L) Set Latch port\n\r"
+#ENDIF
 	.TEXT	"V) Verbose status toggle\n\r"
 	.TEXT	"X) Exit\n\r"
 
@@ -529,7 +560,7 @@ IOLoop:	push	bc
 	call	NEWLINE
 	ld	hl,DMABUF
 	ld	a,(tstport)
-	ld	bc,16
+	ld	bc,16-1
 ;
 	call	DMAOTIR
 ;
@@ -544,10 +575,12 @@ IOLoop:	push	bc
 ;
 DMA_Port0:
 	ld	a,(dmaport)
+#IF (LATCHENABLE)
 	jr	DMA_Port
 DMA_Port1:
 	ld	a,(dmalach)
 DMA_Port:
+#ENDIF
 	call	PRTSTRD
 	.db	"\r\nPulsing port 0x$"
 	call	PRTHEXBYTE
@@ -581,6 +614,7 @@ dlylp:	dec	bc
 ; TOGGLE READY BIT
 ;==================================================================================================
 ;
+#IF (LATCHENABLE)
 DMA_ReadyY:
 	call	NEWLINE
 	ld	a,(dmalach)
@@ -604,6 +638,7 @@ portlp2:push	bc
 	pop	bc
 	djnz	portlp2
 	ret
+#ENDIF
 ;
 ;==================================================================================================
 ; DMA MEMORY MOVE
@@ -1209,7 +1244,9 @@ CST:
 ;
 USEINT	.DB	FALSE		; USE INTERRUPTS FLAG
 dmaport	.db	DMABASE
+#IF (LATCHENABLE)
 dmalach	.db	DMALATCH
+#ENDIF
 dmaxfer	.db	DMA_XMODE
 tstport	.db	DMAIOTST
 dmavbs	.db	0
