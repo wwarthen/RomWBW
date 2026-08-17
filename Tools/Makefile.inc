@@ -60,6 +60,62 @@ CPM=$(TOOLS)/cpm/bin80/
 .ONESHELL:
 .SHELLFLAGS = -ce
 
+#
+# Hi-Tech C (CP/M-80), used by some Apps/Test tools
+#
+HITECHDIR=$(TREEROOT)/Source/Images/d_hitechc/u0/
+HITECHOPTIONS=--N
+ifdef HITECHOBJS
+export BINDIR80=$(HITECHDIR)
+export LIBDIR80=$(HITECHDIR)
+export INCDIR80=$(HITECHDIR)
+
+GREEN = \033[32m
+RED   = \033[31m
+NC    = \033[0m
+
+define HITECHSTATUS
+	if $(1); then \
+		printf "[ $(GREEN)OK$(NC) ]\n"; \
+	else \
+		printf "[ $(RED)FAIL$(NC) ]\n"; \
+		echo "$$OUT"; \
+		exit 1; \
+	fi
+endef
+
+%.com: $(HITECHOBJS)
+	@rm -f $@
+	@printf "[  LNK  ] ==> %-30s " "$@"
+	@OUT=$$($(ZXCC) C --V --N $(HITECHOBJS) 2>&1); \
+	$(call HITECHSTATUS,[ -f $@ ])
+
+%.obj: %.c
+	@rm -f $@ $*.OBJ
+	@printf "[  C    ] ==> %-30s " "$@"
+	@OUT=$$($(ZXCC) C --C $(HITECHOPTIONS) $< 2>&1); \
+	$(call HITECHSTATUS,[ -f $@ ] || [ -f $*.OBJ ])
+
+%.asm: %.c
+	@rm -f $@
+	@printf "[  ASM  ] ==> %-30s " "$@"
+	@OUT=$$($(ZXCC) CPP --DCPM --DHI_TECH_C --Dz80 --IC: $< 'ctmp1.$$$$$$' 2>&1; \
+		$(ZXCC) P1 'ctmp1.$$$$$$' 'ctmp2.$$$$$$' 'ctmp3.$$$$$$' 2>&1; \
+		$(ZXCC) CGEN 'ctmp2.$$$$$$' $@ 2>&1); \
+	rm -f 'ctmp1.$$$$$$' 'ctmp2.$$$$$$' 'ctmp3.$$$$$$'; \
+	$(call HITECHSTATUS,[ -z "$$OUT" ])
+
+%.lst: %.c
+	@rm -f $@
+	@printf "[  LST  ] ==> %-30s " "$@"
+	@OUT=$$($(ZXCC) CPP --DCPM --DHI_TECH_C --Dz80 --IC: $< 'ctmp1.$$$$$$' 2>&1; \
+		$(ZXCC) P1 'ctmp1.$$$$$$' 'ctmp2.$$$$$$' 'ctmp3.$$$$$$' 2>&1; \
+		$(ZXCC) CGEN 'ctmp2.$$$$$$' 'ctmp1.$$$$$$' 2>&1; \
+		$(ZXCC) ZAS --N --O$*.obj --L$@ 'ctmp1.$$$$$$' 2>&1); \
+	rm -f 'ctmp1.$$$$$$' 'ctmp2.$$$$$$' 'ctmp3.$$$$$$' $*.obj $*.OBJ; \
+	$(call HITECHSTATUS,[ -z "$$OUT" ])
+endif
+
 %.com: %.asm
 	@if [ "$(USETASM)" = 1 ] ; then \
 		$(TASM) $(TASMFLAGS) $< $@ $*.lst ; \

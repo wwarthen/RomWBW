@@ -9638,6 +9638,10 @@ HB_MODSTART	.EQU	$
   #INCLUDE "hdsk.asm"
 #ENDIF
 ;
+#IF (I2CEEPROMENABLE)
+  #INCLUDE "i2ceeprom.asm"
+#ENDIF
+;
 #IF (PPAENABLE)
   #INCLUDE "ppa.asm"
 #ENDIF
