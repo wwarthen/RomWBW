@@ -114,6 +114,22 @@ static char *copypp(char *dp, char *dq, const char *p, const char *q)
 	return dp;
 }
 
+/* Skip a quoted string at 'p', honoring \" escapes; else return 'p'. */
+static const char *skipstring(const char *p)
+{
+	if (*p == '\"') {
+		p++;
+		while (*p != '\0' && *p != '\"') {
+			if (*p == '\\' && *(p + 1) != '\0')
+				p++;
+			p++;
+		}
+		if (*p == '\"')
+			p++;
+	}
+	return p;
+}
+
 /*
  * Find the 'argnum' argument in 'args' and return a pointer to it.
  *
@@ -133,7 +149,10 @@ static const char *findarg(const char *args, int argnum)
 			while (*args != '\0' && *args != ','
 				&& *args != ')')
 			{
-				args++;
+				if (*args == '\"')
+					args = skipstring(args);
+				else
+					args++;
 			}
 		} while (*args == ',');
 	}
@@ -150,14 +169,21 @@ static const char *findarg(const char *args, int argnum)
  */
 static char *copyarg(char *dp, char *dq, const char *args, int argnum)
 {
-	const char *p;
+	const char *p, *e;
 
 	p = findarg(args, argnum);
 	if (p == NULL)
 		return dp;
 
-	while (dp < dq && *p != '\0' && *p != ',' && *p != ')')
-		*dp++ = *p++;
+	while (dp < dq && *p != '\0' && *p != ',' && *p != ')') {
+		if (*p == '\"') {
+			e = skipstring(p);
+			while (dp < dq && p < e)
+				*dp++ = *p++;
+		} else {
+			*dp++ = *p++;
+		}
+	}
 	return dp;
 }
 
@@ -247,8 +273,12 @@ static char *expandid(char *dp, char *dq, struct macro *pps, const char *args)
 static const char *skipargs(const char *p)
 {
 	if (*p == '(') {
-		while (*p != '\0' && *p != ')')
-			p++;
+		while (*p != '\0' && *p != ')') {
+			if (*p == '\"')
+				p = skipstring(p);
+			else
+				p++;
+		}
 		if (*p == ')')
 			p++;
 	}
