@@ -3,11 +3,13 @@
 
 **/*.[Bb][Ii][Nn]
 **/*.[Cc][Oo][Mm]
+**/*.[Oo][Bb][Jj]
 **/*.[Rr][Oo][Mm]
 **/*.com
 **/*.eeprom
 **/*.hex
 **/*.img
+**/$$exec.$$$
 **/*.lib
 **/*.lst
 **/*.o
