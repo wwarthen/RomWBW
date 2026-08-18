@@ -23,3 +23,4 @@ pushd banktest && call Clean || exit /b 1 & popd
 pushd portscan && call Clean || exit /b 1 & popd
 pushd sound && call Clean || exit /b 1 & popd
 pushd testh8p && call Clean || exit /b 1 & popd
+pushd i2ceeprom && call Clean || exit /b 1 & popd
