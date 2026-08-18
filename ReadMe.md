@@ -7,7 +7,7 @@
 **RomWBW Introduction** \
 Version 3.7 \
 Wayne Warthen  ([wwarthen@gmail.com](mailto:wwarthen@gmail.com)) \
-31 Jul 2026
+18 Aug 2026
 
 # Overview
 
@@ -366,7 +366,8 @@ let me know if I missed you!
 - Jay Cotton provided the SCSI transport code upon which the SCSI driver
   is based.
 
-- Willy De la Court added an I2C variant of the LCD driver.
+- Willy De la Court added an I2C variant of the LCD driver and an I2C
+  EEPROM driver w/ test application. He also made some fixes to uz80as.
 
 ## Related Projects
 

@@ -5,6 +5,7 @@ Version 3.7
 - HJB: Add HBIOS FastPath support into CP/NET
 - WDC: Added I2C LCD driver
 - J?L: Source for NZCOM (from disassembly)
+- WDC: Added I2C EEPROM driver and test application
 
 Version 3.6
 -----------
