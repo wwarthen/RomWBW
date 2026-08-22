@@ -65,7 +65,7 @@ CPM=$(TOOLS)/cpm/bin80/
 #
 HITECHDIR=$(TREEROOT)/Source/Images/d_hitechc/u0/
 HITECHOPTIONS=--N
-ifdef HITECHOBJS
+ifdef USEHITECHC
 export BINDIR80=$(HITECHDIR)
 export LIBDIR80=$(HITECHDIR)
 export INCDIR80=$(HITECHDIR)
@@ -84,17 +84,17 @@ define HITECHSTATUS
 	fi
 endef
 
-%.com: $(HITECHOBJS)
+%.com:
 	@rm -f $@
 	@printf "[  LNK  ] ==> %-30s " "$@"
-	@OUT=$$($(ZXCC) C --V --N $(HITECHOBJS) 2>&1); \
-	$(call HITECHSTATUS,[ -f $@ ])
+	@OUT=$$($(ZXCC) C --V --N $^ 2>&1); \
+	$(call HITECHSTATUS,[ -s $@ ])
 
 %.obj: %.c
 	@rm -f $@ $*.OBJ
 	@printf "[  C    ] ==> %-30s " "$@"
 	@OUT=$$($(ZXCC) C --C $(HITECHOPTIONS) $< 2>&1); \
-	$(call HITECHSTATUS,[ -f $@ ] || [ -f $*.OBJ ])
+	$(call HITECHSTATUS,[ -s $@ ] || [ -s $*.OBJ ])
 
 %.asm: %.c
 	@rm -f $@

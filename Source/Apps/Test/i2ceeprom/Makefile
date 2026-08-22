@@ -3,8 +3,9 @@ OTHERS = *.obj *.OBJ *.asm *.hex *.lst *exec.*
 DEST = ../../../../Binary/Apps/Test
 TOOLS = ../../../../Tools
 
-HITECHOBJS = rndtest.obj hbio.obj
+USEHITECHC = 1
 
 include $(TOOLS)/Makefile.inc
 
+rndtest.com: rndtest.obj hbio.obj
 rndtest.obj hbio.obj: hbio.h
