@@ -3571,6 +3571,20 @@ FPLED_IO	.SET	$nn	    	; USE PORT ADDRESS nn
 FPLED_INV	.SET	FALSE		; INVERTED LED BITS
 ```
 
+#### I2C Front Panel
+
+Instead of an 8-bit I/O port, the front panel LEDs and switches can be driven
+over I2C through a single TCA9555 I/O expander. This requires a working I2C
+bus master already enabled (`I2CPCFENABLE` or `I2CBITENABLE`).
+
+```
+FP_USE_I2C	.SET	TRUE		; DRIVE FRONT PANEL OVER I2C
+FP_I2CADR	.SET	$nn		; I2C ADDRESS OF THE TCA9555
+```
+
+`FPLED_IO`/`FPSW_IO` are unused in this mode; `FPLED_ENABLE`/`FPSW_ENABLE`
+still control whether the LEDs/switches are active.
+
 #### Platform Status LEDS
 
 These status LEDs use preexisting status LEDs on each platform.

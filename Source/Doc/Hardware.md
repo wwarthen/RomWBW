@@ -1027,6 +1027,11 @@ The RC2014 ROM is for the official RC2014 Kits by Spencer Owen.
 * Google Groups: [RC2014-Z80](https://groups.google.com/g/rc2014-z80)
 * Github: [RC2014](https://github.com/RC2014Z80/RC2014)
 
+The front panel LEDs/switches can also be driven over I2C through a single
+TCA9555 I/O expander instead of the Z80 I/O bus (see `FP_USE_I2C` in the
+System Guide), one example adapter board is
+[Front Panel I2C Adapter, Designed For RC2014](https://github.com/wdl1908/RC2014-front-panel-i2c).
+
 ### RC2014 Z80 CPU Module
 
 Generic Rom Image.
