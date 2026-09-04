@@ -5,3 +5,4 @@ include $(TOOLS)/Makefile.inc
 
 clean::
 	@rm -f *.com
+	@rm -f *.doc

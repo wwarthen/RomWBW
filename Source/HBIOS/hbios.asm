@@ -9498,6 +9498,7 @@ HB_MODSTART	.EQU	$
 ;  - SN76489
 ;  - YM2612
 ;  - SPKENABLE
+;  - SAA
 ;
 #IF (AY38910ENABLE)
   #INCLUDE "ay38910.asm"
@@ -9513,6 +9514,10 @@ HB_MODSTART	.EQU	$
 ;
 #IF (SPKENABLE)
   #INCLUDE "spk.asm"
+#ENDIF
+;
+#IF (SAAENABLE)
+  #INCLUDE "saa.asm"
 #ENDIF
 ;
 ;--------------------------------------------------------------------------------------------------
