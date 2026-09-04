@@ -17,8 +17,8 @@
 ;
 ;	REGISTERS (16-BIT I/O)
 ;
-SAA_DATA	.EQU	SAABASE << 8 + $00
-SAA_ADR		.EQU	SAABASE << 8 + $01
+SAA_DATA	.EQU	$00 << 8 + SAABASE
+SAA_ADR		.EQU	$01 << 8 + SAABASE
 ;
 ;--------------------------------------------------------------------------------------------------
 ;   HBIOS MODULE HEADER
