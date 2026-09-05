@@ -94,7 +94,7 @@ SCTIM_INIT1:
 	; ENABLE THE TIMER
 	OR	$FF			; $FF TO ACCUM
 	OUT	(SCTIMIO),A		; ENABLE INTS
-	XOR				; SIGNAL SUCCESS
+	XOR	A			; SIGNAL SUCCESS
 	RET				; DONE
 ;
 ;==================================================================================================

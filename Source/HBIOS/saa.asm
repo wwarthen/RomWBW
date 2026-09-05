@@ -1,17 +1,17 @@
 ;======================================================================
 ;
-;	SAA1906A SOUND CHIP DRIVER
+;	SAA1099 SOUND CHIP DRIVER
 ;
 ;======================================================================
 ;
 ; THIS IS CURRENTLY JUST A DUMMY DRIVER TO IMPLEMENT A SIMPLE
-; HARDWARE RESET AT BOOT FOR THE SAA1906A.
+; HARDWARE RESET AT BOOT FOR THE SAA1099.
 ;
 ; THE DRIVER IS NOT REGISTERED AND THERE IS NO FUNCTION DISPATCHING.
 ;
 	DEVECHO	"SAA: IO="
 	DEVECHO SAABASE
-	DEVECHO	" HZ\n"
+	DEVECHO	"\n"
 ;
 ;======================================================================
 ;
@@ -76,10 +76,18 @@ SAA_INIT:
 ;======================================================================
 ;
 SAA_RESET:
-	;
-	; ADD HARDWARE RESET HERE...
-	;
-	XOR	A			; SIGNAL SUCCESS
+
+	LD A,$20		;CLEAR ALL 32 REGISTERS
+
+SAA_RESET_LP:
+	LD BC,SAA_ADR	;BC=ADDR PORT ($01xx)
+	DEC A
+	OUT (C),A
+	DEC B			;BC=DATA PORT ($00xx)
+	OUT (C),B
+	AND A
+	JR NZ,SAA_RESET_LP
+;	XOR	A			; SIGNAL SUCCESS
 	RET				; DONE
 ;
 ;--------------------------------------------------------------------------------------------------
