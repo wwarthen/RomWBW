@@ -1082,26 +1082,27 @@ All character units are assigned a Device Type ID which indicates
 the specific hardware device driver that handles the unit.  The table
 below enumerates their values.
 
-| **Device Type** | **ID** | **Description**                          | **Driver** |
-|-----------------|-------:|------------------------------------------|------------|
-| DIODEV_MD       | 0x00   | Memory Disk                              | md.asm     |
-| DIODEV_FD       | 0x01   | Floppy Disk                              | fd.asm     |
-| DIODEV_RF       | 0x02   | RAM Floppy                               | rf.asm     |
-| DIODEV_IDE      | 0x03   | IDE Disk                                 | ide.asm    |
-| DIODEV_ATAPI    | 0x04   | ATAPI Disk (not implemented)             |            |
-| DIODEV_PPIDE    | 0x05   | PPIDE Disk                               | ppide.asm  |
-| DIODEV_SD       | 0x06   | SD Card                                  | sd.asm     |
-| DIODEV_PRPSD    | 0x07   | PropIO SD Card                           | prp.asm    |
-| DIODEV_PPPSD    | 0x08   | ParPortProp SD Card                      | ppp.asm    |
-| DIODEV_HDSK     | 0x09   | SIMH HDSK Disk                           | hdsk.asm   |
-| DIODEV_PPA      | 0x0A   | Iomega PPA Disk                          | ppa.asm    |
-| DIODEV_IMM      | 0x0B   | Iomega IMM Disk                          | imm.asm    |
-| DIODEV_SYQ      | 0x0C   | Syquest Sparq Disk                       | syq.asm    |
-| DIODEV_CHUSB    | 0x0D   | CH375/376 USB Disk                       | ch.asm     |
-| DIODEV_CHSD     | 0x0E   | CH375/376 SD Card                        | ch.asm     |
-| DIODEV_USB      | 0x0F   | CH376 Native USB Device                  | ch376.asm  |
-| DIODEV_ESPSD    | 0x10   | S100 ESP32 SD Card                       | espsd.asm  |
-| DIODEV_SCSI     | 0x11   | 5380 SCSI Interface                      | scsi.asm   |
+| **Device Type** | **ID** | **Description**                          | **Driver**    |
+|-----------------|-------:|------------------------------------------|---------------|
+| DIODEV_MD       | 0x00   | Memory Disk                              | md.asm        |
+| DIODEV_FD       | 0x01   | Floppy Disk                              | fd.asm        |
+| DIODEV_RF       | 0x02   | RAM Floppy                               | rf.asm        |
+| DIODEV_IDE      | 0x03   | IDE Disk                                 | ide.asm       |
+| DIODEV_ATAPI    | 0x04   | ATAPI Disk (not implemented)             |               |
+| DIODEV_PPIDE    | 0x05   | PPIDE Disk                               | ppide.asm     |
+| DIODEV_SD       | 0x06   | SD Card                                  | sd.asm        |
+| DIODEV_PRPSD    | 0x07   | PropIO SD Card                           | prp.asm       |
+| DIODEV_PPPSD    | 0x08   | ParPortProp SD Card                      | ppp.asm       |
+| DIODEV_HDSK     | 0x09   | SIMH HDSK Disk                           | hdsk.asm      |
+| DIODEV_PPA      | 0x0A   | Iomega PPA Disk                          | ppa.asm       |
+| DIODEV_IMM      | 0x0B   | Iomega IMM Disk                          | imm.asm       |
+| DIODEV_SYQ      | 0x0C   | Syquest Sparq Disk                       | syq.asm       |
+| DIODEV_CHUSB    | 0x0D   | CH375/376 USB Disk                       | ch.asm        |
+| DIODEV_CHSD     | 0x0E   | CH375/376 SD Card                        | ch.asm        |
+| DIODEV_USB      | 0x0F   | CH376 Native USB Device                  | ch376.asm     |
+| DIODEV_ESPSD    | 0x10   | S100 ESP32 SD Card                       | espsd.asm     |
+| DIODEV_SCSI     | 0x11   | 5380 SCSI Interface                      | scsi.asm      |
+| DIODEV_I2CEEPROM| 0x12   | I2C Serial EEPROM (24CXX)                | i2ceeprom.asm |
 
 A fixed set of media types are defined. The currently defined media 
 types identifiers are listed below. Each driver will support one or
@@ -1334,7 +1335,8 @@ The non-Floppy specific bits are:
 | 4        | LBA Capable                                      |
 | 3-0      | Media Type: 0=Hard Disk, 1=CF, 2=SD, 3=USB,      |
 |          |   4=ROM, 5=RAM, 6=FLASH, 7=RAMF, 8=CD-ROM,       |
-|          |   9=Cartridge                                    |
+|          |   9=Cartridge, 10=SCSI, 11=UFI, 12=Other,        |
+|          |   13=EEPROM                                      |
 
 Device Type (D) indicates the specific hardware driver that handles the 
 specified Disk Unit (C).  Values are listed at the start of this 
