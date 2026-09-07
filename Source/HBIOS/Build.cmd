@@ -91,7 +91,6 @@ tasm -t%CPUType% -g3 -dAPPBOOT hbios.asm hbios_app.bin hbios_app.lst || exit /b
 call :asm dbgmon || exit /b
 call :asm romldr || exit /b
 
-call :asm invntdev || exit /b
 call :asm invntslc || exit /b
 call :asm eastaegg || exit /b
 call :asm nascom || exit /b
@@ -100,6 +99,11 @@ call :asm game || exit /b
 call :asm usrrom || exit /b
 call :asm updater || exit /b
 call :asm romfonts || exit /b
+
+:: InvntDev builds as both BIN and COM files
+
+tasm -t%CPUType% -g3 -fFF -dROMWBW invntdev.asm invntdev.bin invntdev_bin.lst || exit /b
+tasm -t%CPUType% -g3 -fFF -dCPM invntdev.asm invntdev.com invntdev_com.lst || exit /b
 
 :: Sysconf builds as both BIN and COM files
 
@@ -176,6 +180,7 @@ if exist %ROMName%.upd copy %ROMName%.upd ..\..\Binary || exit /b
 if exist %ROMName%.com copy %ROMName%.com ..\..\Binary || exit /b
 
 if exist sysconf.com copy sysconf.com ..\..\Binary\Apps\ || exit /b
+if exist invntdev.com copy invntdev.com ..\..\Binary\Apps\ || exit /b
 
 goto :eof
 
