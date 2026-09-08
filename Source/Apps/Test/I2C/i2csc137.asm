@@ -1,0 +1,11 @@
+;
+; I2C BUS SCANNER -- BITBANG ON SC137/SC608/SC704 (SEE i2cscan.asm)
+;
+PCFECB		.EQU	0
+PCFDUO		.EQU	0
+PCFPYCIO	.EQU	0
+P8X180		.EQU	0
+SC126		.EQU	0
+SC137		.EQU	1
+;
+#include "i2cscan.asm"
