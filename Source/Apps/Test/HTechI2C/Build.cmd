@@ -37,6 +37,7 @@ zxcc C --C --N i2clcd.c || exit /b
 zxcc C --C --N vk16text.c || exit /b
 zxcc C --C --N rtcds7.c || exit /b
 zxcc C --C --N ledsw.c || exit /b
+zxcc C --C --N i2cscan.c || exit /b
 
 zxcc LIBR -r -common.lib -bfi2c.obj || exit /b
 zxcc LIBR -r -common.lib -tick.obj || exit /b
@@ -45,8 +46,10 @@ zxcc C --V --N i2clcd.obj common.lib || exit /b
 zxcc C --V --N vk16text.obj common.lib || exit /b
 zxcc C --V --N rtcds7.obj bfi2c.obj || exit /b
 zxcc C --V --N ledsw.obj bfi2c.obj || exit /b
+zxcc C --V --N i2cscan.obj bfi2c.obj || exit /b
 
 copy /Y i2clcd.com ..\..\..\..\Binary\Apps\Test\ || exit /b
 copy /Y vk16text.com ..\..\..\..\Binary\Apps\Test\ || exit /b
 copy /Y rtcds7.com ..\..\..\..\Binary\Apps\Test\ || exit /b
 copy /Y ledsw.com ..\..\..\..\Binary\Apps\Test\ || exit /b
+copy /Y i2cscan.com ..\..\..\..\Binary\Apps\Test\ || exit /b
