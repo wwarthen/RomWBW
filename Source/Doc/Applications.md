@@ -1053,6 +1053,7 @@ to display, assign, reassign, or remove the drive letter assignments.
 | `ASSIGN `
 | `ASSIGN [`*`<drv>`*`],...`
 | `ASSIGN ` *`<drv>`*`=[`*`<device>`*`:[`*`<slice>`*`]],...`
+| `ASSIGN ` *`<drv>`*`=[`*`<unit>`*`.[`*`<slice>`*`]],...`
 | `ASSIGN ` *`<tgtdrv>`*`=`*`<srcdrv>`*`,...`
 | `ASSIGN /B='*'<option>'*'['*'<option>'*'['*'<option>'*'...]]`
 
@@ -1084,6 +1085,11 @@ reassign) a drive letter to a new device and (optionally) slice. If no
 slice is specified, then slice 0 is assumed. For example, `ASSIGN
 C:=IDE0` will assign drive letter C: to device IDE0, slice 0. `ASSIGN
 D:=IDE0:3` will assign drive letter D: to device IDE0 slice 3.
+
+`ASSIGN ` *`<drv>`*`=[`*`<unit>`*`.[`*`<slice>`*`]],...` is an alternate
+form of above allowing you to specify an HBIOS unit number instead of
+the device name.  `ASSIGN D:=3.1` will assign drive letter D: to HBIOS
+disk unit #3 slice 1.
 
 The `ASSIGN` command will not allow you to specify a slice (other than
 zero) for devices that do not support slices.
