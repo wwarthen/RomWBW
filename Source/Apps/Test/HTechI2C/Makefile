@@ -10,7 +10,7 @@ include $(TOOLS)/Makefile.inc
 .PHONY: FORCE
 FORCE:
 
-# Regenerated every build, fails on a dirty tree.
+# Regenerated every build, a dirty tree gets a '+' marker, not a refusal.
 buildid.h: FORCE
 	@./gen-buildid.sh
 
