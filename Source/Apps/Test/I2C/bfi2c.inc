@@ -33,7 +33,7 @@ BF_SYSGETBNK	.EQU	0F3H		; GET CURRENT BANK (BF_SYS+3)
 BF_I2CDEV:
 	LD	C,0
 	LD	B,BF_I2CDEVICE
-	RST	8
+	RST	08
 	RET
 ;
 ;-----------------------------------------------------------------------------
@@ -45,7 +45,7 @@ BF_START:
 	LD	E,A
 	LD	C,0
 	LD	B,BF_I2CSTART
-	RST	8
+	RST	08
 	RET
 ;
 ;-----------------------------------------------------------------------------
@@ -55,7 +55,7 @@ BF_REPSTART:
 	LD	E,A
 	LD	C,0
 	LD	B,BF_I2CREPSTART
-	RST	8
+	RST	08
 	RET
 ;
 ;-----------------------------------------------------------------------------
@@ -67,7 +67,7 @@ BF_WRITE:
 	LD	E,A
 	LD	C,0
 	LD	B,BF_I2CWRITE
-	RST	8
+	RST	08
 	RET
 ;
 ;-----------------------------------------------------------------------------
@@ -79,12 +79,12 @@ BF_READ:
 	LD	E,A
 	LD	C,0
 	LD	B,BF_I2CREAD
-	RST	8
+	RST	08
 	RET
 ;
 ;-----------------------------------------------------------------------------
 ; TRANSFER COUNT BYTES FROM A BUFFER, WRITE-ONLY. ASSUMES BF_START WAS
-; ALREADY CALLED SEPARATELY. ONE RST 8 CALL FOR THE WHOLE BUFFER, NOT ONE
+; ALREADY CALLED SEPARATELY. ONE RST 08 CALL FOR THE WHOLE BUFFER, NOT ONE
 ; PER BYTE, SAME BULK PATH bfi2c.c'S bf_i2cxfer() USES.
 ;   ENTRY: HL=BUFFER, B=BYTE COUNT (0-255, 0 MEANS 256)
 ;   EXIT: A=STATUS
@@ -99,7 +99,7 @@ BF_XFER:
 	LD	E,B
 	LD	C,0
 	LD	B,BF_I2CXFER
-	RST	8
+	RST	08
 	RET
 ;
 ;-----------------------------------------------------------------------------
@@ -109,7 +109,7 @@ BF_XFER:
 BF_BUSBUSY:
 	LD	C,0
 	LD	B,BF_I2CBUSBUSY
-	RST	8
+	RST	08
 	RET
 ;
 ;-----------------------------------------------------------------------------
@@ -121,7 +121,7 @@ BF_STOP:
 	LD	C,0
 	LD	B,BF_I2CSTOP
 	LD	E,0
-	RST	8
+	RST	08
 	RET
 ;
 ;-----------------------------------------------------------------------------
@@ -130,6 +130,6 @@ BF_STOP:
 ;
 BF_GETBANK:
 	LD	B,BF_SYSGETBNK
-	RST	8
+	RST	08
 	LD	A,C
 	RET
