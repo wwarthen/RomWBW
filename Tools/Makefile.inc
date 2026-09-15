@@ -114,6 +114,14 @@ endef
 		$(ZXCC) ZAS --N --O$*.obj --L$@ 'ctmp1.$$$$$$' 2>&1); \
 	rm -f 'ctmp1.$$$$$$' 'ctmp2.$$$$$$' 'ctmp3.$$$$$$' $*.obj $*.OBJ; \
 	$(call HITECHSTATUS,[ -z "$$OUT" ])
+
+%.lib:
+	@rm -f $@
+	@printf "[  LIB  ] ==> %-30s " "$@"
+	@OUT=$$(for m in $^; do $(ZXCC) LIBR -r -$@ -$$m 2>&1; done); \
+	LIST=$$($(ZXCC) LIBR -m -$@ 2>&1); \
+	MISS=0; for m in $^; do echo "$$LIST" | grep -q "$$m" || MISS=1; done; \
+	$(call HITECHSTATUS,[ -s $@ ] && [ $$MISS -eq 0 ])
 endif
 
 %.com: %.asm
