@@ -9,4 +9,5 @@ if exist *.hex del *.hex
 if exist *.sym del *.sym
 if exist *.$$$ del *.$$$
 if exist *.obj del *.obj
+if exist *.lib del *.lib
 if exist buildid.h del buildid.h
