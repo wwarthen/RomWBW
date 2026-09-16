@@ -32,7 +32,7 @@ else ifeq ($(CPUFAM),3)
 	TASM=$(BINDIR)/uz80as -t z280
 endif
 
-DEPS=prereq dbgmon.bin romldr.bin nascom.bin tastybasic.bin invntdev.bin invntslc.bin game.bin eastaegg.bin updater.bin sysconf.bin sysconf.com invntdev.com usrrom.bin romfonts.bin
+DEPS=prereq dbgmon.bin romldr.bin nascom.bin tastybasic.bin devlist.bin invntslc.bin game.bin eastaegg.bin updater.bin sysconf.bin usrrom.bin romfonts.bin
 
 ifeq ($(ROM_PLATFORM),UNA)
 	ROMDEPS=romldr.bin dbgmon.bin
@@ -72,7 +72,7 @@ $(OBJECTS) : $(ROMDEPS)
 	cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$(BIOS).bin >appboot.bin
 	if [ $(ROM_PLATFORM) != UNA ] ; then \
 		cat camel80.bin nascom.bin tastybasic.bin game.bin eastaegg.bin $(NETBOOT) updater.bin sysconf.bin usrrom.bin >rom2.bin ; \
-		cat $(HWMON) invntdev.bin invntslc.bin romfonts.bin >rom3.bin ; \
+		cat $(HWMON) devlist.bin invntslc.bin romfonts.bin >rom3.bin ; \
 		for f in hbios_rom.bin rom1.bin rom2.bin rom3.bin ; do \
 			srec_cat $$f -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o $$f -Binary ; \
 		done \
@@ -102,15 +102,18 @@ camel80.bin:
 	cp ../Forth/$@ .
 
 sysconf.bin:
-	@$(TASM) -dROMWBW sysconf.asm sysconf.bin sysconf_bin.lst
+	@$(TASM) -dHBIOS ../Apps/sysconf/sysconf.asm sysconf.bin sysconf.lst
 
-sysconf.com:
-	@$(TASM) -dCPM sysconf.asm sysconf.com sysconf_com.lst
-	cp $@ $(DEST)/Apps
+devlist.bin:
+	@$(TASM) -dHBIOS ../Apps/devlist/devlist.asm devlist.bin devlist.lst
 
-invntdev.com:
-	@$(TASM) -dCPM invntdev.asm invntdev.com invntdev_com.lst
-	cp $@ $(DEST)/Apps
+# sysconf.com:
+# 	@$(TASM) -dCPM sysconf.asm sysconf.com sysconf_com.lst
+# 	cp $@ $(DEST)/Apps
+# 
+# invntdev.com:
+# 	@$(TASM) -dCPM invntdev.asm invntdev.com invntdev_com.lst
+# 	cp $@ $(DEST)/Apps
 
 sz180mon.bin:
 	$(ZXCC) $(CPM)/SLR180 -sz180mon/FH
@@ -137,7 +140,7 @@ hbios_env.sh: hbios_env.com
 romldr.bin:	build.inc
 dbgmon.bin:	build.inc
 nascom.bin:	build.inc
-invntdev.bin:	build.inc
+devlist.bin:	build.inc
 invntslc.bin:	build.inc
 eastaegg.bin:	build.inc
 updater.bin:	build.inc

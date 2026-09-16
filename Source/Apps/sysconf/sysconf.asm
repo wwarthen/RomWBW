@@ -29,8 +29,14 @@
 ;
 ;-----------------------------------------------------------------------
 ;
+
+#ifdef CPM
+#include "../../ver.inc"
+#include "../../HBIOS/hbios.inc"
+#else
 #include "../ver.inc"
 #include "hbios.inc"
+#endif
 ;
 ;=======================================================================
 ;
@@ -39,8 +45,7 @@
 NVR_LOC		.equ	0100h
 #endif
 ;
-#ifdef ROMWBW
-;
+#ifdef HBIOS
 #define PLATFORM "ROMWBW"
 #include "layout.inc"
 #endif
@@ -64,7 +69,7 @@ DEL		.EQU	127		; ASCII del/rubout
 ;
 		.ORG	NVR_LOC
 ;
-#ifdef ROMWBW
+#ifdef HBIOS
 	; Reuse the stack provided by Rom LDR
 	; PLACE STACK AT THE TOP OF AVAILABLE RAM (JUST BELOW THE HBIOS PROXY).
 	; LD	SP,HBX_LOC
@@ -84,7 +89,7 @@ exit:
 	; clean up and return to command processor
 	; call	crlf			; formatting
 ;
-#ifdef ROMWBW
+#ifdef HBIOS
 	RET				; Return to Rom LDR
 	; LD	B,BF_SYSRESET		; SYSTEM RESTART
 	; LD	C,BF_SYSRES_WARM	; WARM START
@@ -983,7 +988,7 @@ prtchr:
 	push	bc		; save registers
 	push	de
 	push	hl
-#ifdef ROMWBW
+#ifdef HBIOS
 	LD	BC, BF_CIOOUT<<8 | CIO_CONSOLE
 	LD	E,A
 	RST	08
@@ -1004,7 +1009,7 @@ prtchr:
 CIN:	PUSH	BC
 	PUSH	DE
 	PUSH	HL
-#ifdef ROMWBW
+#ifdef HBIOS
 	LD	BC, BF_CIOIN << 8 | CIO_CONSOLE
 	RST	08
 	LD	A,E
@@ -1031,7 +1036,7 @@ cmdbuf:		.FILL	cmdmax,0	; cmd input buffer
 		.fill	stksiz,0	; stack
 stack		.equ	$		; stack top
 ;
-#ifdef ROMWBW
+#ifdef HBIOS
 ;
 ;=======================================================================
 ; IT IS CRITICAL THAT THE FINAL BINARY BE EXACTLY NVR_SIZ BYTES.
@@ -1041,10 +1046,10 @@ stack		.equ	$		; stack top
 ;
 SLACK	.EQU	(NVR_END - $)
 ;
-#IF (SLACK < 0)
+  #IF (SLACK < 0)
 	.ECHO	"*** SYSCONF APP IS TOO BIG!!!\n"
 	!!!	; FORCE AN ASSEMBLY ERROR
-#endif
+  #endif
 ;
 	.FILL	SLACK,$00
 	.ECHO	"SYSCONF space remaining: "

@@ -1950,7 +1950,6 @@ chkdrv:
 ; Check that the unit value in A is valid
 ; according to active BIOS support.
 ;
-;
 chkdev:		; HBIOS variant
 	push	af		; save incoming unit
 	ld	bc,BC_SYSGET_DIOCNT ; hbios func: sysget subfunc: diocnt
@@ -2591,7 +2590,7 @@ msgdrv1	.db	"Invalid drive letter (",0
 msgdrv2	.db	":)",0
 msgdisk	.db	"Disk ",0
 msgswp	.db	"Invalid drive swap request",0
-msgdev	.db	"Invalid device name (ASSIGN /L for device list)",0
+msgdev	.db	"Invalid device name or unit number (ASSIGN /L for device list)",0
 msgslc	.db	"Specified device does not support slices",0
 msgnum	.db	"Unit or slice number invalid",0
 msgovf	.db	"Disk buffer exceeded in CBIOS, aborted",0

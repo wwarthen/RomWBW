@@ -1530,6 +1530,47 @@ by Mark Pruden.
 
 `\clearpage`{=latex}
 
+## DEVLIST (Device List)
+
+| DEVLIST             |   |
+| --------------------|---|
+| ROM-based           |No |
+| Disk-based          |Yes|
+
+This utility will display the list of devices configured into the
+running system along with a summary of their current status and
+configuration.
+
+This display is essentially the same as the display that occurs
+at system boot.  This is just a CP/M application version of it.
+
+#### Syntax
+
+The syntax (similar to copy) for the command is:
+
+| `DEVLIST`
+
+E.g.
+
+| DEVLIST
+
+#### Options
+
+There are no options for this program.
+
+#### Usage
+
+When run, the device list will be printed to the current CP/M console.
+
+#### Notes
+
+#### Etymology
+
+This application was derived from the HBIOS ROM code.  It is specific
+to RomWBW (not a generic CP/M utility).
+
+`\clearpage`{=latex}
+
 ## FAT (FAT Utility)
 
 | FAT                 |   |

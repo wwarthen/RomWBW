@@ -31,6 +31,8 @@ call :build BBCBASIC || exit /b
 call :build copysl || exit /b
 call :build slabel || exit /b
 call :build ZDE || exit /b
+call :build devlist || exit /b
+call :build sysconf || exit /b
 
 goto :eof
 

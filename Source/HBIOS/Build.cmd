@@ -99,16 +99,8 @@ call :asm game || exit /b
 call :asm usrrom || exit /b
 call :asm updater || exit /b
 call :asm romfonts || exit /b
-
-:: InvntDev builds as both BIN and COM files
-
-tasm -t%CPUType% -g3 -fFF -dROMWBW invntdev.asm invntdev.bin invntdev_bin.lst || exit /b
-tasm -t%CPUType% -g3 -fFF -dCPM invntdev.asm invntdev.com invntdev_com.lst || exit /b
-
-:: Sysconf builds as both BIN and COM files
-
-tasm -t%CPUType% -g3 -fFF -dROMWBW sysconf.asm sysconf.bin sysconf_bin.lst || exit /b
-tasm -t%CPUType% -g3 -fFF -dCPM sysconf.asm sysconf.com sysconf_com.lst || exit /b
+tasm -t80 -g3 -fFF -dHBIOS ../Apps/devlist/devlist.asm devlist.bin devlist.lst || exit /b
+tasm -t80 -g3 -fFF -dHBIOS ../Apps/sysconf/sysconf.asm sysconf.bin sysconf.lst || exit /b
 
 :: Create platform specific hardware monitor
 
@@ -130,7 +122,7 @@ if %Platform%==SZ180 (
 
 copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_wbw.bin + ..\cpm22\cpm_wbw.bin rom1.bin || exit /b
 copy /b ..\Forth\camel80.bin + nascom.bin + ..\tastybasic\src\tastybasic.bin + game.bin + eastaegg.bin + %NETBOOT% + updater.bin + sysconf.bin + usrrom.bin rom2.bin || exit /b
-copy /b %HwMon% + invntdev.bin + invntslc.bin + romfonts.bin rom3.bin
+copy /b %HwMon% + devlist.bin + invntslc.bin + romfonts.bin rom3.bin
 copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_wbw.bin appboot.bin || exit /b
 
 ::
@@ -178,9 +170,6 @@ if %ROMSize% gtr 0 (
 if exist %ROMName%.rom copy %ROMName%.rom ..\..\Binary || exit /b
 if exist %ROMName%.upd copy %ROMName%.upd ..\..\Binary || exit /b
 if exist %ROMName%.com copy %ROMName%.com ..\..\Binary || exit /b
-
-if exist sysconf.com copy sysconf.com ..\..\Binary\Apps\ || exit /b
-if exist invntdev.com copy invntdev.com ..\..\Binary\Apps\ || exit /b
 
 goto :eof
 

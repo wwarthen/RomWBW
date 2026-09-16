@@ -26,6 +26,8 @@ call :clean BBCBASIC || exit /b
 call :clean copysl || exit /b
 call :clean slabel || exit /b
 call :clean ZDE || exit /b
+call :clean devlist || exit /b
+call :clean sysconf || exit /b
 
 goto :eof
 
