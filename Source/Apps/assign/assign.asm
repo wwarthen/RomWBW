@@ -42,6 +42,7 @@
 ;   2025-08-09 [WBW] Support for ESPSD driver
 ;   2025-11-10 [WBW] Support for SCSI driver
 ;   2026-09-15 [WBW] Support <unit>.<slice> specification
+;   2026-09-24 [WBW] Include <unit>.<slice> specification in assignment list
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -1829,7 +1830,7 @@ showone:
 	ld	a,'='		; use '=' to represent assignment
 	call 	prtchr		; print it
 ;
-	; render the map entry
+	; render the map entry in mnemonic:slice format
 	ld	a,(hl)		; load unit
 	cp	$FF		; empty?
 	ret	z		; yes, bypass
@@ -1841,6 +1842,21 @@ showone:
 	inc	hl		; point to slice num
 	ld	a,(hl)		; load slice num
 	call	prtdecb		; print it
+;
+	; render the map entry in unit.slice format
+	ld	a,' '
+	call	prtchr
+	ld	a,'['
+	call	prtchr
+	dec	hl		; point to unit number
+	ld	a,(hl)		; get unit number
+	call	prtdecb		; print it
+	call	prtdot		; separator
+	inc	hl		; point to slice number
+	ld	a,(hl)		; get slice number
+	call	prtdecb		; print it
+	ld	a,']'
+	call	prtchr
 ;
 	ret
 ;
@@ -2565,10 +2581,10 @@ stack	.equ	$		; stack top
 ; Messages
 ;
 indent	.db	"   ",0
-msgban1	.db	"ASSIGN v2.4 for RomWBW CP/M ",0
+msgban1	.db	"ASSIGN v2.5 for RomWBW CP/M ",0
 msg22	.db	"2.2",0
 msg3	.db	"3",0
-msbban2	.db	",15-Sep-2026",0
+msbban2	.db	",24-Sep-2026",0
 msghb	.db	" (HBIOS Mode)",0
 msgub	.db	" (UBIOS Mode)",0
 msgban3	.db	"Copyright 2026, Wayne Warthen, GNU GPL v3",0
@@ -2581,7 +2597,7 @@ msguse	.db	"Usage: ASSIGN D:[=[{D:|<device>[<unitnum>]:[<slicenum>]|<unit>.<slic
 	.db	"      ASSIGN C:=D:     (swaps C: and D:)",13,10
 	.db	"      ASSIGN C:=FD0:   (assign C: to floppy unit 0)",13,10
 	.db	"      ASSIGN C:=IDE0:1 (assign C: to IDE unit 0, slice 1)",13,10
-	.db	"      ASSIGN C:=3.1    (assign C: to HBIOS disk unit #3, slice 1)",13,10
+	.db	"      ASSIGN C:=3.1    (assign C: to HBIOS disk unit 3, slice 1)",13,10
 	.db	"      ASSIGN C:=       (unassign C:)",0
 msgprm	.db	"Parameter error (ASSIGN /? for usage)",0
 msginv	.db	"Unexpected CBIOS (signature missing)",0
