@@ -495,8 +495,8 @@ DS7_CLKDATA:
 	.DB	01H		; DATE
 	.DB	01H		; MONTH
 	.DB	21H		; YEAR
-        .DB     DS7_CTL		; CONTROL (00010011B)
-        .DB     0FFH            ; END FLAG  
+	.DB     DS7_CTL		; CONTROL (00010011B)
+	.DB     0FFH            ; END FLAG  
 ;
 ;-----------------------------------------------------------------------------
 ; DISPLAY CLOCK INFORMATION FROM DATA STORED IN BUFFER
@@ -511,7 +511,7 @@ DS7_CLP:LD	C,(HL)
 	LD	A,(HL)
 	OR      A
 	RET	Z
-        CALL	COUT
+	CALL	COUT
 	INC	HL
 	JR	DS7_CLP
 	RET
