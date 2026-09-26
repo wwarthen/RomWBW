@@ -371,7 +371,7 @@ process1:	; handle other side of '='
 	call	isnum		; is this a number
 	jr	z,process3	; if so, handle it
 ;
-	call	getalpha	; gobble all alpha characters (devname)
+	call	getdev		; get devname, may contain digits
 	dec	b		; decrement num chars parsed
 	jr	nz,process2	; more than 1 char, handle as device name
 ;
@@ -2257,6 +2257,86 @@ delim1:
 	xor	a		; set Z
 	ret			; return
 ;
+; Get a device name and save in tmpstr.  The longest devtbl name
+; that the text starts with and that is followed by a digit (the
+; unit number) wins, so names may contain digits.  Otherwise fall
+; back to getalpha (drive letters, UNA ROM/RAM, unknown names).
+; return with terminating char in A and flags set
+; return with num chars in B
+;
+getdev:
+	ld	(gdtxt),hl
+	xor	a
+	ld	(gdlen),a
+	ld	b,devcnt	; number of entries in devtbl
+	ld	hl,devtbl
+;
+getdev1:	; compare one devtbl name to the text
+	push	bc
+	push	hl
+	ld	e,(hl)
+	inc	hl
+	ld	d,(hl)
+	ld	hl,(gdtxt)
+	ld	c,0
+;
+getdev2:
+	ld	a,(de)
+	or	a
+	jr	z,getdev3
+	cp	(hl)
+	jr	nz,getdev4
+	inc	de
+	inc	hl
+	inc	c
+	jr	getdev2
+;
+getdev3:	; name matched, a unit number must follow
+	call	isnum
+	jr	nz,getdev4
+	ld	a,(gdlen)
+	cp	c
+	jr	nc,getdev4	; not longer, skip
+	ld	a,c
+	ld	(gdlen),a
+	pop	hl
+	push	hl
+	ld	e,(hl)
+	inc	hl
+	ld	d,(hl)
+	ld	(gdname),de
+;
+getdev4:
+	pop	hl
+	pop	bc
+	inc	hl
+	inc	hl
+	djnz	getdev1
+;
+	ld	hl,(gdtxt)
+	ld	a,(gdlen)
+	or	a
+	jr	z,getalpha	; no match, plain alpha name
+	ld	b,a
+	ld	e,a
+	ld	d,0
+	add	hl,de
+	push	hl
+	ld	hl,(gdname)
+	ld	de,tmpstr	; copy name to tmpstr
+;
+getdev5:
+	ld	a,(hl)
+	ld	(de),a
+	inc	hl
+	inc	de
+	or	a
+	jr	nz,getdev5
+	pop	hl
+	ld	a,(hl)		; terminating char (the unit digit)
+	or	a
+	ret
+;
 ; Get alpha chars and save in tmpstr
 ; return with terminating char in A and flags set
 ; return with num chars in B
@@ -2520,6 +2600,9 @@ srcptr	.dw	0		; source pointer for copy
 dstptr	.dw	0		; destination pointer for copy
 tmpent	.fill	4,0		; space to save a table entry
 tmpstr	.fill	17,0		; temporary string of up to 16 chars, zero term
+gdtxt	.dw	0		; getdev: text pointer
+gdname	.dw	0		; getdev: best matching devtbl name
+gdlen	.db	0		; getdev: length of best match
 ;
 heaptop	.dw	0		; current address of top of heap memory
 heaplim	.dw	0		; heap limit address
