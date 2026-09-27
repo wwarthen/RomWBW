@@ -11,62 +11,7 @@
 #include <stdio.h>
 #include "hbio.h"
 
-#define DIODEV_I2CEEPROM 0x12
-#define MAXBLKSIZ	128	/* driver caps SHIFT at 7, BLKSIZ can't exceed this */
-#define MAXUNITS	16	/* devinfo() scan range, 0-15 */
-
 unsigned char wbuf[MAXBLKSIZ], rbuf[MAXBLKSIZ];
-
-unsigned char *tail = (unsigned char *)0x80;
-unsigned char tailidx, taillen;
-
-nexttoken(buf, maxlen)
-char *buf;
-unsigned char maxlen;
-{
-    unsigned char n;
-
-    while (tailidx <= taillen && tail[tailidx] == ' ')
-	tailidx++;
-    n = 0;
-    while (tailidx <= taillen && tail[tailidx] != ' ' && n < maxlen - 1) {
-	buf[n] = tail[tailidx];
-	n++;
-	tailidx++;
-    }
-    buf[n] = 0;
-    return n;
-}
-
-parsenum(s)
-char *s;
-{
-    unsigned int v;
-
-    v = 0;
-    while (*s >= '0' && *s <= '9') {
-	v = v * 10 + (*s - '0');
-	s++;
-    }
-    return v;
-}
-
-dumpbuf(label, buf, len)
-char *label;
-unsigned char *buf;
-unsigned int len;
-{
-    unsigned char i;
-
-    printf("%s:", label);
-    for (i = 0; i < len; i++) {
-	if ((i & 0x0F) == 0)
-	    printf("\n%5u: ", i);
-	printf("%02x", buf[i]);
-	putchar(' ');
-    }
-    putchar('\n');
-}
 
 /* Z80 R register into rseed -- free-running refresh counter, a cheap
    seed source with no dedicated hardware RNG available */
@@ -80,41 +25,6 @@ getrseed()
 #endasm
 }
 
-/* scan all DIO units for I2CEEPROM devices, filling units[] with their
-   unit numbers. returns the count found (0 if none) */
-scanunits(units)
-unsigned char *units;
-{
-    unsigned char u, dtype, cnt;
-    unsigned int addr;
-
-    cnt = 0;
-    for (u = 0; u < MAXUNITS; u++) {
-	if (devinfo(u, &dtype, &addr) == 0 && dtype == DIODEV_I2CEEPROM) {
-	    units[cnt] = u;
-	    cnt++;
-	}
-    }
-    return cnt;
-}
-
-/* print one line per active unit: number, I2C address, geometry */
-listunits(units, cnt)
-unsigned char *units;
-unsigned char cnt;
-{
-    unsigned char i, u, dtype;
-    unsigned int addr, blksz, blkcnt;
-
-    for (i = 0; i < cnt; i++) {
-	u = units[i];
-	devinfo(u, &dtype, &addr);
-	blksz = blksize(u, &blkcnt);
-	printf("Unit %u: I2C ADDR=0x%02x BLKSIZ=%u BLKCNT=%u\n",
-	    u, addr, blksz, blkcnt);
-    }
-}
-
 main()
 {
     char unitstr[8];
@@ -126,8 +36,7 @@ main()
     bank = getbank();
     getrseed();
 
-    taillen = tail[0];
-    tailidx = 1;
+    inittail();
 
     if (nexttoken(unitstr, sizeof(unitstr)) != 0) {
 	/* explicit unit given, use it directly */

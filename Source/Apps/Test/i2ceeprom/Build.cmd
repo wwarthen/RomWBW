@@ -10,7 +10,10 @@ set LIBDIR80=%HITECHDIR%
 set INCDIR80=%HITECHDIR%
 
 zxcc C --C --N rndtest.c || exit /b
+zxcc C --C --N eeblank.c || exit /b
 zxcc C --C --N hbio.c || exit /b
 zxcc C --V --N rndtest.obj hbio.obj || exit /b
+zxcc C --V --N eeblank.obj hbio.obj || exit /b
 
 copy /Y rndtest.com ..\..\..\..\Binary\Apps\Test\ || exit /b
+copy /Y eeblank.com ..\..\..\..\Binary\Apps\Test\ || exit /b
