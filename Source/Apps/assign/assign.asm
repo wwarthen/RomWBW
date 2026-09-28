@@ -45,6 +45,7 @@
 ;   2026-09-24 [WBW] Include <unit>.<slice> specification in assignment list
 ;   2026-09-27 [WBW] Handle numerics in device names
 ;                    Improve formatting of assigned output
+;   2026-09-28 [WBW] Add column header for full assignment listing
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -1654,6 +1655,11 @@ drvswap:
 ; Assign drive to specified unit/slice
 ;
 drvmap:
+	; check for UNA mode
+	ld	a,(unamod)	; get UNA mode flag
+	or	a		; set flags
+	jr	nz,drvmapu	; do UNA mode drvmap
+;
 	; check for valid unit (supported by BIOS)
 	ld	a,(unit)	; unit to A
 	call	chkdev		; check validity
@@ -1763,15 +1769,12 @@ drvmapu1:
 ; Display all active drive letter assignments
 ;
 showall:
+	ld	de,msgasn	; point to assignment col headings
+	call	prtstr		; print it
+;
 	ld	b,16		; 16 drives possible
 	ld	c,0		; map index (drive letter)
-;
-;	ld	a,b		; load count
-;	or	$FF		; signal no action
-;	ret	z		; bail out if zero
-;
 showall1:	; loop
-;	ld	a,c		;
 	push	bc		; save loop control
 	call	showass
 	pop	bc		; restore loop control
@@ -1786,7 +1789,6 @@ showall1:	; loop
 showass:
 ;
 	; setup HL to point to desired entry in table
-;	ld	c,a		; save incoming drive in C
 	ld	hl,mapwrk	; HL = address of drive map
 	ld	a,c
 	rlca
@@ -2662,10 +2664,10 @@ stack	.equ	$		; stack top
 ; Messages
 ;
 indent	.db	"   ",0
-msgban1	.db	"ASSIGN v2.6 for RomWBW CP/M ",0
+msgban1	.db	"ASSIGN v2.7 for RomWBW CP/M ",0
 msg22	.db	"2.2",0
 msg3	.db	"3",0
-msbban2	.db	",27-Sep-2026",0
+msbban2	.db	",28-Sep-2026",0
 msghb	.db	" (HBIOS Mode)",0
 msgub	.db	" (UBIOS Mode)",0
 msgban3	.db	"Copyright 2026, Wayne Warthen, GNU GPL v3",0
@@ -2696,6 +2698,8 @@ msgint	.db	"Multiple drive letters reference one filesystem, aborting!",0
 msgnoa	.db	"Drive A: is unassigned, aborting!",0
 msgdos	.db	"DOS error, return code=0x",0
 msgmem	.db	" Disk Buffer Bytes Free",0
+msgasn	.db	"\r\n   Device:Slice     Unit.Slice"
+	.db	"\r\n   ---------------  ----------",0
 msglst	.db	"\r\n   Unit        Device"
 	.db	"\r\n   ----------  ------------",0
 ;

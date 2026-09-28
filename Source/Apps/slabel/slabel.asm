@@ -48,6 +48,7 @@
 ;   2025-04-21 [MAP] Initial v1.0 release for distribution, fixing all issues
 ;   2025-07-12 [MR]  Minor tweak to partially tidy up output formatting
 ;   2026-02-08 [WBW] Avoid waiting on floppy drives with no media
+;   2026-09-28 [WBW] Preclear disk buffer to avoid stale data (see diskread)
 ;______________________________________________________________________________
 ;
 ; Include Files
@@ -68,6 +69,9 @@ cmdbuf		.equ	$0081		; CPM command buffer
 bf_sysreset	.equ	$F0		; restart system
 bf_sysres_int	.equ	$00		; reset hbios internal
 bf_sysres_warm	.equ	$01		; warm start (restart boot loader)
+;
+cr	.equ	13			; carriage return char
+lf	.equ	10			; line feed char
 ;
 ident		.equ	$FFFC		; loc of RomWBW HBIOS ident ptr
 ;
@@ -269,19 +273,8 @@ prtslc3:
 	call 	pdot			; print a DOT
 	ld	a, (currslice)		; fetch the current slice numeric
 	call	prtdecb
-;
-;-------------------------------------------------------------------------------
-; Added by MartinR, July 2025, to help neaten the output formatting.
-; Note - this is not a complete fix and will still result in misaligned output
-; where the unit number exceeds 9 (ie - uses 2 digits).
-	cp	10			; is it less than 10?
-	ld	a,' '
-	jr	nc,jr01			; If not, then we don't need an extra space printed
-	call	cout			; print the extra space	necessary
-jr01:	call	cout			; print a space
-	call	cout			; print a space
-;-------------------------------------------------------------------------------
-;
+	ld	b,11			; column 11 for label
+	call	pad			; move cursor
 	ld	hl,bb_label		; point to label
 	call	pvol			; print it
 	call	crlf
@@ -471,11 +464,44 @@ cout:
 	push	bc
 	push	de
 	push	hl
+;
+	push	af		; save output char
 	ld	e,a		; character to print in E
 	ld	c,$02		; BDOS function to output a character
 	call	bdos		; do it
+	pop	af		; restore output char
+;
+	; update current screen column
+	ld	hl,col		; hl points to col value
+	cp	cr		; carriage return?
+	jr	z,prtchr1	; handle cr
+	cp	lf		; linefeed?
+	jr	z,prtchr2	; ignore linefeed
+	inc	(hl)		; else inc col
+	jr	prtchr2		; and continue
+prtchr1:
+	xor	a		; zero accum
+	ld	(hl),a		; reset col counter
+prtchr2:
 	pop	hl		; restore registers
 	pop	de
+	pop	bc
+	pop	af
+	ret
+;
+; Pad output with blanks to column specified in B
+;
+pad:
+	push	af
+	push	bc
+pad1:
+	ld	a,(col)
+	cp	b
+	jr	nc,pad2
+	ld	a,' '
+	call	prtchr
+	jr	pad1
+pad2:
 	pop	bc
 	pop	af
 	ret
@@ -662,6 +688,25 @@ initdiskio:
 ;
 diskread:
 ;
+	; Pre-clear the disk buffer.  There are some ugly scenarios
+	; (mostly emulators) where a disk driver cannot report a read
+	; error.  This avoids using stale data.
+	push	af			; save all registers
+	push	bc
+	push	de
+	push	hl
+	ld	hl,(dma)		; source pointer to buffer
+	ld	de,(dma)		; dest pointer to buffer
+	xor	a			; clear accum
+	ld	(de),a			; set first byte to zero
+	inc	de			; bump dest ptr
+	ld	bc,512 - 1		; count for remaining bytes
+	ldir				; use ldir to do the rest
+	pop	hl			; recover all registers
+	pop	de
+	pop	bc
+	pop	af
+;
 	; Seek to requested sector in DE:HL
 	ld	a,(currunit)
 	ld	c,a			; from the specified unit
@@ -713,7 +758,7 @@ diskwrite:
 ;===============================================================================
 ;
 str_banner	.db	"\r\n"
-		.db	"Slice Label, v1.2, February 2026 - M.Pruden",0
+		.db	"Slice Label, v1.3, September 2026 - M.Pruden",0
 ;
 str_err_una	.db	"  ERROR: UNA not supported by application",0
 str_err_inv	.db	"  ERROR: Invalid BIOS (signature missing)",0
@@ -732,8 +777,8 @@ str_usage	.db	"\r\n\r\n"
 		.db	"         Options are case insensitive.\r\n",0
 ;
 PRTSLC_HDR	.TEXT	"\r\n\r\n"
-		.TEXT	"Un.Sl Label           \r\n"
-		.TEXT	"----- ----------------\r\n"
+		.TEXT	"Unit.Slice Label           \r\n"
+		.TEXT	"---------- ----------------\r\n"
 		.DB	0
 ;
 ;===============================================================================
@@ -744,6 +789,7 @@ currunit	.db	0		; parameters for disk unit, current unit
 currslice	.db	0		; parameters for disk slice, current slice
 lba		.dw	0, 0		; lba address (4 bytes), of slice
 newlabel	.dw	0		; address of parameter, new label to write
+col		.db	0		; current screen column
 ;
 BID_USR		.db	0		; Bank ID for user bank
 dma		.dw	bl_infosec	; address for disk buffer
