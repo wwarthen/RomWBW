@@ -8,22 +8,28 @@
 ;   HBIOS MODULE HEADER
 ;--------------------------------------------------------------------------------------------------
 ;
-ORG_CHNATIVE	.EQU	$
+ORG_USB	.EQU	$
 ;
-	.DW	SIZ_CHNATIVE		; MODULE SIZE
-	.DW	CHNATIVE_INITPHASE	; ADR OF INIT PHASE HANDLER
+	.DW	SIZ_USB			; MODULE SIZE
+	.DW	USB_INITPHASE		; ADR OF INIT PHASE HANDLER
 ;
-CHNATIVE_INITPHASE:
+USB_INITPHASE:
 	; INIT PHASE HANDLER, A=PHASE
 	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
-	;JP	Z,CHNATIVE_PREINIT	; DO PREINIT
+	;JP	Z,USB_PREINIT		; DO PREINIT
 	CP	HB_PHASE_INIT		; INIT PHASE?
-	JP	Z,CHNATIVE_INIT		; DO INIT
+	JP	Z,USB_INIT		; DO INIT
 	RET				; DONE
 
 #DEFINE DEFM	.DB
 #DEFINE DEFB	.DB
 #DEFINE DEFW	.DW
+
+CHNATIVEEZ80		.EQU	USB_EZ80
+
+_CH376_DATA_PORT	.EQU	USB_DAT_PORT
+_CH376_COMMAND_PORT	.EQU	USB_CMD_PORT
+_USB_MODULE_LEDS	.EQU	USB_LED_PORT
 
 _CH376_DAT_PORT_ADDR	.EQU	_CH376_DATA_PORT
 _CH376_CMD_PORT_ADDR	.EQU	_CH376_COMMAND_PORT
@@ -40,7 +46,7 @@ _dio_add_entry:
 	LD	C, L
 	JP	DIO_ADDENT		; ADD ENTRY TO GLOBAL DISK DEV TABLE
 
-#IF (CHNATIVEEZ80)
+#IF (USB_EZ80)
 
 #include "./ch376-native/ez80-firmware.asm"
 
@@ -77,17 +83,20 @@ _delay_medium	.EQU	LDELAY
 #include "./ch376-native/print.asm"
 #include "./ch376-native/base-drv.s"
 
-CHNATIVE_INIT	.EQU	_chnative_init
-CHNATIVE_INITF	.EQU	_chnative_init_force
+#IF (USB_FORCE)
+USB_INIT	.EQU	_chnative_init_force
+#ELSE
+USB_INIT	.EQU	_chnative_init
+#ENDIF
 
 ;
 ;--------------------------------------------------------------------------------------------------
 ;   HBIOS MODULE TRAILER
 ;--------------------------------------------------------------------------------------------------
 ;
-END_CHNATIVE	.EQU	$
-SIZ_CHNATIVE	.EQU	END_CHNATIVE - ORG_CHNATIVE
+END_USB		.EQU	$
+SIZ_USB		.EQU	END_USB - ORG_USB
 ;	
-	MEMECHO	"CHNATIVE occupies "
-	MEMECHO	SIZ_CHNATIVE
+	MEMECHO	"USB occupies "
+	MEMECHO	SIZ_USB
 	MEMECHO	" bytes.\n"

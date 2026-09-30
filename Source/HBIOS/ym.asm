@@ -17,10 +17,10 @@
 ; Octave range is A#0-B7+3/4 HBIOS note 0..343
 ;------------------------------------------------------------------------------
 ;
-YMSEL		.EQU	VGMBASE+00H		; Primary YM2162 11000000 a1=0 a0=0
-YMDAT		.EQU	VGMBASE+01H		; Primary YM2162 11000001 a1=0 a0=1
-YM2SEL		.EQU	VGMBASE+02H		; Secondary YM2162 11000010 a1=1 a0=0
-YM2DAT		.EQU	VGMBASE+03H		; Secondary YM2162 11000011 a1=1 a0=1
+YMSEL		.EQU	YMBASE+00H		; Primary YM2162 11000000 a1=0 a0=0
+YMDAT		.EQU	YMBASE+01H		; Primary YM2162 11000001 a1=0 a0=1
+YM2SEL		.EQU	YMBASE+02H		; Secondary YM2162 11000010 a1=1 a0=0
+YM2DAT		.EQU	YMBASE+03H		; Secondary YM2162 11000011 a1=1 a0=1
 
 ;
 ;--------------------------------------------------------------------------------------------------
@@ -35,9 +35,9 @@ ORG_YM	.EQU	$
 YM_INITPHASE:
 	; INIT PHASE HANDLER, A=PHASE
 	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
-	;JP	Z,YM2612_PREINIT	; DO PREINIT
+	;JP	Z,YM_PREINIT		; DO PREINIT
 	CP	HB_PHASE_INIT		; INIT PHASE?
-	JP	Z,YM2612_INIT		; DO INIT
+	JP	Z,YM_INIT		; DO INIT
 	RET				; DONE
 
 ;------------------------------------------------------------------------------
@@ -90,7 +90,7 @@ YM_IDAT	.EQU	0				; NO INSTANCE DATA FOR THIS DEVICE
 ;	Return initialization status
 ;------------------------------------------------------------------------------
 ;
-YM2612_INIT:	CALL	NEWLINE			; ANNOUNCE
+YM_INIT:	CALL	NEWLINE			; ANNOUNCE
 		PRTS("YM:$")
 ;
 		PRTS(" IO=0x$")
@@ -102,7 +102,7 @@ YM2612_INIT:	CALL	NEWLINE			; ANNOUNCE
 		LD	DE, YM_IDAT		; BC := FUNCTION TABLE ADDRESS
 		CALL	SND_ADDENT		; DE := INSTANCE DATA PTR
 ;
-YM_INIT:	ld	hl,ym_cfg
+YM_INIT1:	ld	hl,ym_cfg
 ;		call	ym_prog
 ;		ret
 ;
@@ -197,7 +197,7 @@ YM_QUERY_VOLUME:LD	A, (YM_PENDING_VOLUME)	; RETURN 8-BIT VOLUME
 ;		LD	H, A
 		RET
 ;
-YM_QUERY_DEV:	LD	B, SNDDEV_YM2612	; RETURN DEVICE IDENTIFIER
+YM_QUERY_DEV:	LD	B, SNDDEV_YM		; RETURN DEVICE IDENTIFIER
 		LD	DE, +(YMSEL*256)+YMDAT	; AND ADDRESS AND DATA PORT
 		LD	HL, +(YM2SEL*256)+YM2DAT	
 		XOR	A
@@ -207,7 +207,7 @@ YM_QUERY_DEV:	LD	B, SNDDEV_YM2612	; RETURN DEVICE IDENTIFIER
 ; Sound driver function - DEVICE
 ;------------------------------------------------------------------------------
 ;
-YM_DEVICE:	LD	D,SNDDEV_YM2612		; D := DEVICE TYPE
+YM_DEVICE:	LD	D,SNDDEV_YM		; D := DEVICE TYPE
 		LD	E,0			; E := PHYSICAL UNIT
 		LD	C,$00			; C := DEVICE TYPE
 		LD	H,0			; H := MODE
@@ -231,7 +231,7 @@ YM_RESET:	;CALL	AY_CHKREDY		; RETURNS TO OUR CALLER IF NOT READY
 ;
 		PUSH	DE
 		PUSH	HL
-		CALL	YM_INIT			; SET DEFAULT CHIP CONFIGURATION
+		CALL	YM_INIT1			; SET DEFAULT CHIP CONFIGURATION
 ;
 		XOR	A			; SIGNAL SUCCESS
 		LD	(YM_RDY_RST),A		; IN RESET STATE

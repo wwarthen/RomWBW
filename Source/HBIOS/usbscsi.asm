@@ -3,59 +3,57 @@
 ; CH376 NATIVE MASS STORAGE DRIVER
 ;==================================================================================================
 ;
-
 ;
 ;--------------------------------------------------------------------------------------------------
 ;   HBIOS MODULE HEADER
 ;--------------------------------------------------------------------------------------------------
 ;
-ORG_CHUFI	.EQU	$
+ORG_USB_SCSI	.EQU	$
 ;
-	.DW	SIZ_CHUFI		; MODULE SIZE
-	.DW	CHUFI_INITPHASE		; ADR OF INIT PHASE HANDLER
+	.DW	SIZ_USB_SCSI		; MODULE SIZE
+	.DW	USB_SCSI_INITPHASE	; ADR OF INIT PHASE HANDLER
 ;
-CHUFI_INITPHASE:
+USB_SCSI_INITPHASE:
 	; INIT PHASE HANDLER, A=PHASE
 	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
-	;JP	Z,CHUFI_PREINIT		; DO PREINIT
+	;JP	Z,USB_SCSI_PREINIT	; DO PREINIT
 	CP	HB_PHASE_INIT		; INIT PHASE?
-	JP	Z,CHUFI_INIT		; DO INIT
+	JP	Z,USB_SCSI_INIT		; DO INIT
 	RET				; DONE
 
+#include "./ch376-native/scsi-drv.s"
 
-#include "./ch376-native/ufi-drv.s"
-_ufi_seek	.EQU	_usb_scsi_seek
-
-	; find and mount all floppy USB drives
-CHUFI_INIT	.EQU	_chufi_init
+	; find and mount all Mass Storage USB devices
+USB_SCSI_INIT	.EQU	_chscsi_init
 
 ; DRIVER FUNCTION TABLE
 ;
-_ch_ufi_fntbl
-CH_UFI_FNTBL:
-	.DW	CH_UFI_STATUS
-	.DW	CH_UFI_RESET
-	.DW	CH_UFI_SEEK
-	.DW	CH_UFI_READ
-	.DW	CH_UFI_WRITE
-	.DW	CH_UFI_VERIFY
-	.DW	CH_UFI_FORMAT
-	.DW	CH_UFI_DEVICE
-	.DW	CH_UFI_MEDIA
-	.DW	CH_UFI_DEFMED
-	.DW	CH_UFI_CAP
-	.DW	CH_UFI_GEOM
-#IF (($ - CH_UFI_FNTBL) != (DIO_FNCNT * 2))
-	.ECHO	"*** INVALID CH_UFI_FNTBL FUNCTION TABLE ***\n"
+_ch_scsi_fntbl
+CH_SCSI_FNTBL:
+	.DW	CH_SCSI_STATUS
+	.DW	CH_SCSI_RESET
+	.DW	CH_SCSI_SEEK
+	.DW	CH_SCSI_READ
+	.DW	CH_SCSI_WRITE
+	.DW	CH_SCSI_VERIFY
+	.DW	CH_SCSI_FORMAT
+	.DW	CH_SCSI_DEVICE
+	.DW	CH_SCSI_MEDIA
+	.DW	CH_SCSI_DEFMED
+	.DW	CH_SCSI_CAP
+	.DW	CH_SCSI_GEOM
+#IF (($ - CH_SCSI_FNTBL) != (DIO_FNCNT * 2))
+	.ECHO	"*** INVALID CH_SCSI_FNTBL FUNCTION TABLE ***\n"
 #ENDIF
 
-CH_UFI_STATUS:
+CH_SCSI_STATUS:
 	XOR	A
 	RET
 
-CH_UFI_RESET:
+CH_SCSI_RESET:
 	XOR	A
 	RET
+
 ; ### Function 0x12 -- Disk Seek (DIOSEEK)
 ;
 ; Inputs:
@@ -67,7 +65,7 @@ CH_UFI_RESET:
 ;
 ; This function will set the desired sector to be used for the next I/O
 ; operation. The returned Status (A) is a standard HBIOS result code.
-;if
+;
 ; The double-word Sector Address (DEHL) can represent either a Logical
 ; Block Address (LBA) or a Cylinder/Head/Sector (CHS).  Bit 7 of D is
 ; set (1) for LBA mode and cleared (0) for CHS mode.
@@ -79,7 +77,7 @@ CH_UFI_RESET:
 ; interpreted as: D=Head, E=Sector, and HL=Track.  All values (including
 ; sector) are 0 relative.
 ;
-CH_UFI_SEEK:
+CH_SCSI_SEEK:
 	EXX
 	LD	D, 0
 	LD	E, (IY+1)		; usb_device
@@ -88,56 +86,18 @@ CH_UFI_SEEK:
 	EXX
 
 	BIT	7,D			; CHECK FOR LBA FLAG
-	CALL	Z,CH_UFI_CHS2LBA	; CLEAR MEANS CHS, CONVERT TO LBA
+	CALL	Z,HB_CHS2LBA		; CLEAR MEANS CHS, CONVERT TO LBA
 	RES	7,D			; CLEAR FLAG REGARDLESS (DOES NO HARM IF ALREADY LBA)
 
 	PUSH	DE
 	PUSH	HL
 	PUSH	IY
-	CALL	_ufi_seek
+	CALL	_usb_scsi_seek
 	POP	IY
 	POP	HL
 	POP	DE
 
 	XOR	A
-	RET
-;
-; Helper function to convert CHS address in DE:HL to LBA.
-; Currently assumes 1.44MB floppy media
-; LBA = (TRACK * #HDS * #SPT) + (HEAD * #SPT)  + SECTOR
-; For 1.44MB FLOPPY, #HDS = 2, #SPT = 18
-; LBA = (TRACK * 36) + (HEAD * 18) + SECTOR
-; Algorithm uses B=#HDS*SPT, C=#SPT.  For now, hard coded B=36, C=18
-; for 1.44MB media.  In future, BC could be passed in to accommodate
-; different media geometry.
-;
-CH_UFI_CHS2LBA:
-	LD	B,2 * 18		; #HDS * #SPT (SECTORS PER CYLINDER)
-	LD	C,18			; #SPT
-
-	; TRACK * #HDS * #SPT
-	PUSH	DE			; SAVE DE
-	LD	E,B			; SECTORS PER CYLINDER
-	LD	H,L			; LSB OF TRACK TO H, H IS NEVER USED BY FLOPPY CHS
-	CALL	MULT8			; HL = H * E; TRACK LBA
-	POP	DE			; RECOVER DE
-	PUSH	HL			; SAVE TRACK LBA
-	
-	; HEAD * #SPT
-	PUSH	DE			; SAVE DE
-	LD	E,C			; SECTORS PER TRACK
-	LD	H,D			; HEADS
-	CALL	MULT8			; HL = H * E; HEAD LBA
-	POP	DE			; RECOVER DE
-
-	; COMPUTE LBA (HL) = SECTOR (E) + HEAD LBA (HL) + TRACK LBA (TOS)
-	LD	A,E			; SECTOR
-	CALL	ADDHLA			; SECTOR * HEAD LBA
-	POP	DE			; RECOVER TRACK LBA
-	ADD	HL,DE			; ADD IN TRACK LBA
-
-	; FINISH UP
-	LD	DE,0			; DE IS ALWAYS ZERO
 	RET
 ;
 ; ### Function 0x13 -- Disk Read (DIOREAD)
@@ -156,7 +116,7 @@ CH_UFI_CHS2LBA:
 ; at Buffer Address (HL) starting at the Current Sector.  The returned 
 ; Status (A) is a standard HBIOS result code.
 ;
-CH_UFI_READ:
+CH_SCSI_READ:
 	EXX
 	LD	D, 0
 	LD	E, (IY+1)		; usb_device
@@ -166,10 +126,11 @@ CH_UFI_READ:
 
 	CALL	HB_DSKREAD		; HOOK HBIOS DISK READ SUPERVISOR
 
+	; call scsi_read(IY, HL);
+	; HL = HL + 512
 	PUSH	HL
 	PUSH	IY
-	CALL	_usb_ufi_read
-	LD	L, 0
+	CALL	_usb_scsi_read
 	LD	A, L
 	POP	IY
 	POP	HL
@@ -194,21 +155,21 @@ CH_UFI_READ:
 ; at Buffer Address (HL) starting at the Current Sector.  The returned 
 ; Status (A) is a standard HBIOS result code.
 ;
-CH_UFI_WRITE:
+CH_SCSI_WRITE:
 	EXX
 	LD	D, 0
 	LD	E, (IY+1)		; usb_device
 	PUSH	DE
 	POP	IY
 	EXX
-
+	
 	CALL	HB_DSKWRITE		; HOOK HBIOS DISK WRITE SUPERVISOR
 
 	; call scsi_write(IY, HL);
 	; HL = HL + 512
 	PUSH	HL
 	PUSH	IY
-	CALL	_usb_ufi_write
+	CALL	_usb_scsi_write
 	LD	A, L
 	POP	IY
 	POP	HL
@@ -217,15 +178,12 @@ CH_UFI_WRITE:
 	OR	A
 	RET
 
-CH_UFI_VERIFY:
-CH_UFI_FORMAT:
-	LD	HL, 0
-	LD	DE, 0
-	LD	BC, 0
+CH_SCSI_VERIFY:
+CH_SCSI_FORMAT:
 	LD	A, $FF
 	OR	A
 	RET
-
+;
 ; ### Function 0x17 -- Disk Device (DIODEVICE)
 ;
 ; Inputs
@@ -267,10 +225,10 @@ CH_UFI_FORMAT:
 ; |          |   4=ROM, 5=RAM, 6=RAMF, 7=FLASH, 8=CD-ROM,       |
 ; |          |   9=Cartridge, 10=usb-scsi, 11=usb-ufi           |
 ;
-CH_UFI_DEVICE:
-	LD	C, %11010110
+CH_SCSI_DEVICE:
+	LD	C, %00111010
 	LD	D, DIODEV_USB
-	LD	E, (IY+0)			; drive_index
+	LD	E, (IY+0) 			; drive_index
 	DEC	E
 	LD	HL, 0
 	XOR	A
@@ -291,19 +249,15 @@ CH_UFI_DEVICE:
 ; (A) is a standard HBIOS result code. If there is no media in device,
 ; function will return an error status.
 ;
-CH_UFI_MEDIA:
-	LD	E, MID_FD144	;todo verify device still active?
+CH_SCSI_MEDIA:
+	LD	E, MID_HD	;todo verify device still active?
 	XOR	A
 	RET
 
-CH_UFI_DEFMED:
-	LD	HL, 0
-	LD	DE, 0
-	LD	BC, 0
+CH_SCSI_DEFMED:
 	LD	A, $FF
 	OR	A
 	RET
-
 ;
 ; ### Function 0x1A -- Disk Capacity (DIOCAPACITY)
 ;
@@ -318,36 +272,75 @@ CH_UFI_DEFMED:
 ;
 ; Report the current media capacity information.
 ;
-CH_UFI_CAP:
+;
+CH_SCSI_CAP:
 	EXX
 	LD	D, 0
-	LD	E, (IY+1)		; usb_device
+	LD	E, (IY+1)	; usb_device
 	PUSH	DE
 	POP	IY
 	EXX
 
-	PUSH	IY
-	CALL	_usb_ufi_get_cap
-	POP	IY
-	LD	BC, 512
-	XOR	A
-	RET
+	PUSH	IX
+	LD	IX, -8		; reserve 8 bytes for 
+	ADD	IX, SP		; scsi_read_capacity_result
+	LD	SP, IX
 
-CH_UFI_GEOM:
-	LD	HL, 0
-	LD	DE, 0
-	LD	BC, 0
-	LD	A, $FF
-	OR	A
+	PUSH	IX
+	PUSH	IY
+	CALL	_usb_scsi_read_capacity
+	POP	IY
+	POP	IX
+
+	LD	D, (IX)		; response.number_of_blocks[0]
+	LD	E, (IX+1)	; response.number_of_blocks[1]
+	LD	H, (IX+2)	; response.number_of_blocks[2]
+	LD	L, (IX+3)	; response.number_of_blocks[3]
+	LD	B, (IX+6)	; response.block_size[2]
+	LD	C, (IX+7)	; response.block_size[3]
+
+	LD	IX, 8
+	ADD	IX, SP
+	LD	SP, IX
+	POP	IX
+
+	XOR	A		; todo determine a drive status
 	RET
+;
+; ### Function 0x1B -- Disk Geometry (DIOGEOMETRY)
+;
+; Inputs
+; IY: device config pointer
+;
+; Outputs
+; A: Status
+; D: Heads
+; E: Sectors
+; HL: Cylinder Count
+; BC: Block Size
+;
+; Report the simulated geometry for the media. The Status (A) is a
+; standard HBIOS result code.  If the media is unknown, an error will be returned.
+;
+; ** Does not appear to be used??
+;
+CH_SCSI_GEOM:
+	; FOR LBA, WE SIMULATE CHS ACCESS USING 16 HEADS AND 16 SECTORS
+	; RETURN HS:CC -> DE:HL, SET HIGH BIT OF D TO INDICATE LBA CAPABLE
+	CALL	CH_SCSI_CAP		; GET TOTAL BLOCKS IN DE:HL, BLOCK SIZE TO BC
+	LD	L,H			; DIVIDE BY 256 FOR # TRACKS
+	LD	H,E			; ... HIGH BYTE DISCARDED, RESULT IN HL
+	LD	D,16 | $80		; HEADS / CYL = 16, SET LBA CAPABILITY BIT
+	LD	E,16			; SECTORS / TRACK = 16
+	RET				; DONE, A STILL HAS CHUSB_CAP STATUS
 ;
 ;--------------------------------------------------------------------------------------------------
 ;   HBIOS MODULE TRAILER
 ;--------------------------------------------------------------------------------------------------
 ;
-END_CHUFI	.EQU	$
-SIZ_CHUFI	.EQU	END_CHUFI - ORG_CHUFI
+END_USB_SCSI	.EQU	$
+SIZ_USB_SCSI	.EQU	END_USB_SCSI - ORG_USB_SCSI
 ;	
-	MEMECHO	"CHUFI occupies "
-	MEMECHO	SIZ_CHUFI
+	MEMECHO	"USB_SCSI occupies "
+	MEMECHO	SIZ_USB_SCSI
 	MEMECHO	" bytes.\n"

@@ -4036,8 +4036,8 @@ DBG_NOTE:
 	PRTS(" SN: $")
 	CALL	PRTDEC16
 	PRTS("=$")
-	CALL	SN7_NOTE
-	LD	HL,(SN7_PENDING_PERIOD)
+	CALL	SN_NOTE
+	LD	HL,(SN_PENDING_PERIOD)
 	CALL	PRTDEC16
 ;
 	RET
@@ -9151,8 +9151,8 @@ HB_MODSTART	.EQU	$
   #INCLUDE "ez80cpu.asm"
 #ENDIF
 ;
-#IF (CHNATIVEENABLE)
-  #INCLUDE "ch376.asm"
+#IF (USBENABLE)
+  #INCLUDE "usb.asm"
 #ENDIF
 ;
 #IF (KIOENABLE)
@@ -9225,22 +9225,22 @@ HB_MODSTART	.EQU	$
 ;   SOUND MODULES
 ;--------------------------------------------------------------------------------------------------
 ;
-;  - AY38910
-;  - SN76489
-;  - YM2612
-;  - SPKENABLE
+;  - AY
+;  - SN
+;  - YM
+;  - SPK
 ;  - SAA
 ;
-#IF (AY38910ENABLE)
-  #INCLUDE "ay38910.asm"
+#IF (AYENABLE)
+  #INCLUDE "ay.asm"
 #ENDIF
 ;
-#IF (SN76489ENABLE)
-  #INCLUDE "sn76489.asm"
+#IF (SNENABLE)
+  #INCLUDE "sn.asm"
 #ENDIF
 ;
-#IF (YM2612ENABLE)
-  #INCLUDE "ym2612.asm"
+#IF (YMENABLE)
+  #INCLUDE "ym.asm"
 #ENDIF
 ;
 #IF (SPKENABLE)
@@ -9483,7 +9483,7 @@ HB_MODSTART	.EQU	$
 #ENDIF
 ;
 #IF (USBKYBENABLE)
-  #INCLUDE "ch376kyb.asm"
+  #INCLUDE "usbkyb.asm"
 #ENDIF
 ;
 ;--------------------------------------------------------------------------------------------------
@@ -9574,12 +9574,12 @@ HB_MODSTART	.EQU	$
   #INCLUDE "scsi.asm"
 #ENDIF
 ;
-#IF (CHSCSIENABLE)
-  #INCLUDE "ch376scsi.asm"
+#IF (USB_SCSI)
+  #INCLUDE "usbscsi.asm"
 #ENDIF
 ;
-#IF (CHUFIENABLE)
-  #INCLUDE "ch376ufi.asm"
+#IF (USB_UFI)
+  #INCLUDE "usbufi.asm"
 #ENDIF
 ;
 ;--------------------------------------------------------------------------------------------------

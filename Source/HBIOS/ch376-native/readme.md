@@ -40,19 +40,18 @@ will need to build a new HBIOS image customised for your platform.  Please famil
 
 The usb driver is divided into a few sub-system, which can be individually enabled within the standard HBIOS config files.
 
-For activating the full native USB support, the non native CH365 drivers need to be disabled and the relevant `CHNATIVE` drivers enabled
+For activating the full native USB support, the non native CH365 drivers need to be disabled and the relevant `USB` drivers enabled
 
 Example:
 
 ```
-CHENABLE       .SET    FALSE    ; CH: ENABLE CH375/376 USB SUPPORT
-CH0USBENABLE   .SET    FALSE    ; CH375: ENABLE CH375 USB DRIVER
-CH1USBENABLE   .SET    FALSE    ; CH376: ENABLE CH376 USB DRIVER
-CHNATIVEENABLE .SET    TRUE     ; CH376: ENABLE CH376 NATIVE USB DRIVER
-CHSCSIENABLE   .SET    TRUE     ; CH376: ENABLE CH376 NATIVE MASS STORAGE DEVICES (REQUIRES CHNATIVEENABLE)
-CHUFIENABLE    .SET    TRUE     ; CH376: ENABLE CH376 NATIVE UFI FLOPPY DISK DEVICES (REQUIRES CHNATIVEENABLE)
-CHNATIVEEZ80   .SET    FALSE    ; CH376: DELEGATE USB DRIVERS TO EZ80'S FIRMWARE
-CHNATIVEFORCE  .SET    TRUE     ; CH376: DISABLE AUTO-DETECTION OF MODULE - ASSUME ITS INSTALLED
+CHENABLE	.SET	FALSE		; CH: ENABLE CH375/376 USB SUPPORT
+;
+USBENABLE	.SET	TRUE		; USB: ENABLE CH376 NATIVE USB DRIVER
+USB_FORCE	.SET	TRUE		; USB: DISABLE AUTO-DETECTION OF MODULE - ASSUME ITS INSTALLED (REQUIRES USBENABLE)
+USB_EZ80	.SET	FALSE		; USB: DELEGATE USB DRIVERS TO EZ80'S FIRMWARE
+USB_SCSI	.SET	TRUE		; USB: ENABLE CH376 NATIVE MASS STORAGE DEVICES (REQUIRES USBENABLE)
+USB_UFI		.SET	TRUE		; USB: ENABLE CH376 NATIVE UFI FLOPPY DISK DEVICES (REQUIRES USBENABLE)
 ```
 
 As the USB driver is a fairly large, you may need to disable other HBIOS drivers in your configuration.  As such, it is
@@ -74,21 +73,21 @@ IDEENABLE     .SET    FALSE     ; IDE: ENABLE IDE DISK DRIVER (IDE.ASM)
 PPIDEENABLE   .SET    FALSE     ; PPIDE: ENABLE PARALLEL PORT IDE DISK DRIVER (PPIDE.ASM)
 ```
 
-### base-drv `CHNATIVEENABLE`
+### base-drv `USBENABLE`
 
 The `base-drv` system contains the core code to discover, enumerate, and communicate with USB devices.
 
 It also includes the driver code to enumerate and operating USB devices through a USB hub.
 
-### scsi-drv `CHSCSIENABLE`
+### scsi-drv `USB_SCSI`
 
-The `scsi-drv` system can be enabled with the HBIOS config `CHSCSIENABLE`
+The `scsi-drv` system can be enabled with the HBIOS config `USB_SCSI`
 
 When activated, access to most USB mass storage devices (thumb drives, magnetic usb drives) is enabled.
 
-### ufi-drv `CHUFIENABLE`
+### ufi-drv `USB_UFI`
 
-The `ufi-drv` system can be enabled with the HBIOS config `CHUFIENABLE`
+The `ufi-drv` system can be enabled with the HBIOS config `USB_UFI`
 
 When activated, access to 3.5" Floppy USB devices will be enabled.
 
@@ -109,17 +108,17 @@ TMSTIMENABLE .SET   TRUE              ; TMS: ENABLE TIMER INTERRUPTS (REQUIRES I
 
 When activated, usb keyboards can be used as input devices.
 
-### Force activation `CHNATIVEFORCE`
+### Force activation `USB_FORCE`
 
 The CH376 module, during a cold power on boot, can take many seconds before it will
 respond to the CPU.  As such, the CPU may fail to detect the presence of the module.
 
 A manual reset (without power cycling) generally enables detection.  The config entry
-`CHNATIVEFORCE` can be enabled to force the CPU to always wait for the module to come online.
+`USB_FORCE` can be enabled to force the CPU to always wait for the module to come online.
 
 
-### eZ80 support `CHNATIVEEZ80`
+### eZ80 support `USB_EZ80`
 
 If you have the eZ80 CPU installed with onboard USB firmware support, you 
 can gain performance by delegating HBIOS to the firmware implementation.  To enable
-delegation, enable the config entry `CHNATIVEEZ80`
+delegation, enable the config entry `USB_EZ80`.
