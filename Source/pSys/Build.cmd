@@ -52,4 +52,10 @@ echo Generating p-System Disk Image...
 echo.
 copy /b ..\Images\hd1k_prefix.dat + trk0.bin + psys.vol + trk0.bin + blank.vol psys.img || exit /b
 
+echo.
+echo Generating p-System Floating Point Disk Image...
+echo.
+copy /b ..\Images\hd1k_prefix.dat + trk0.bin + psys_fp.vol + trk0.bin + blank.vol psys_fp.img || exit /b
+
 copy psys.img ..\..\Binary  || exit /b
+copy psys_fp.img ..\..\Binary  || exit /b

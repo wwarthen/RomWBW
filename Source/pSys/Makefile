@@ -1,4 +1,4 @@
-OBJECTS = psys.img psystest.img
+OBJECTS = psystest.img psys.img psys_fp.img
 TOOLS = ../../Tools
 DEST = ../../Binary
 OTHERS = *.bin *.lst *.img
@@ -11,12 +11,14 @@ trk0.bin: loader.bin bios.bin boot.dat fill.bin
 psys.img: ../Images/hd1k_prefix.dat trk0.bin psys.vol trk0.bin blank.vol
 	cat $+  >$@
 
+psys_fp.img: ../Images/hd1k_prefix.dat trk0.bin psys_fp.vol trk0.bin blank.vol
+	cat $+  >$@
+
 testldr.bin: loader.asm
 	$(TASM) -dTESTBIOS $< $@ testldr.lst
 
 testfill.bin: fill.asm
 	$(TASM) -dTESTBIOS $< $@ testfill.lst
-
 
 psystest.img: ../Images/hd1k_prefix.dat testldr.bin bios.bin biostest.dat testfill.bin
 	cat $+ >$@

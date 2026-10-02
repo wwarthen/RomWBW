@@ -11,6 +11,7 @@ bios.asm       p-System BIOS for RomWBW HBIOS source (TASM)
 biostest.dat   binary image of SBIOSTESTER
 boot.dat       binary image of p-System bootstrap
 psys.vol       first (boot) slice, all p-System dist files
+psys_fp.vol    alternate boot slice w/ floating point support
 blank.vol      a generic blank p-System volume
 fill.asm       used to complete the track 0 build (see below)
 
@@ -147,3 +148,12 @@ Davidson's Python script that will extract/insert volumes from/to
 a disk image.
 
 1:31 PM Thursday, May 11, 2023
+
+Added an alternate boot volume called psys_fp provided by
+Giancarlo Ferluga.  This volume is equivalent to the normal psys
+volume, but is enhanced with BASIC and Fortran compilers.  A utility
+called UNICOMP is provided to switch between the compilers.  The
+interpreter has been rebuilt with floating point support as required
+by BASIC and Fortran.
+
+10:04 AM Friday, October 2, 2026

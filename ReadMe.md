@@ -7,7 +7,7 @@
 **RomWBW Introduction** \
 Version 3.7 \
 Wayne Warthen  ([wwarthen@gmail.com](mailto:wwarthen@gmail.com)) \
-16 Sep 2026
+02 Oct 2026
 
 # Overview
 
@@ -368,6 +368,9 @@ let me know if I missed you!
 
 - Willy De la Court added an I2C variant of the LCD driver and an I2C
   EEPROM driver w/ test application. He also made some fixes to uz80as.
+
+- Giancarlo Ferluga provided an alternate pSystem disk image that
+  includes the BASIC and Fortran compilers and floating point support.
 
 ## Related Projects
 

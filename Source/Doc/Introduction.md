@@ -355,6 +355,9 @@ please let me know if I missed you!
   I2C EEPROM driver w/ test application.  He also made some fixes
   to uz80as.
 
+* Giancarlo Ferluga provided an alternate pSystem disk image that
+  includes the BASIC and Fortran compilers and floating point support.
+
 `\clearpage`{=latex}
 
 ## Related Projects

@@ -6,6 +6,7 @@ Version 3.7
 - WDC: Added I2C LCD driver
 - J?L: Source for NZCOM (from disassembly)
 - WDC: Added I2C EEPROM driver and test application
+- G?F: Added BASIC and Fortran to pSystem
 
 Version 3.6
 -----------
