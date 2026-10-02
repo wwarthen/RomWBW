@@ -38,16 +38,16 @@ _usb_kyb_flush:
 #DEFINE DEFB	.DB
 #DEFINE DEFW	.DW
 
-#IF (!CHNATIVEEZ80)
-#IF (SYSTIM == TM_NONE)
+#IF (!USB_EZ80)
+  #IF (SYSTIM == TM_NONE)
 	.ECHO	"*** ERROR: MKY REQUIRES SYSTEM TIMER -- NONE CONFIGURED!!!\n"
 	!!!	; FORCE AN ASSEMBLY ERROR
-#ENDIF
+  #ENDIF
 #ENDIF
 
 #include "./ch376-native/keyboard.s"
 
-#IF (CHNATIVEEZ80)
+#IF (USB_EZ80)
 USB_KYB_INIT	.EQU	_keyboard_init
 
 #ELSE
