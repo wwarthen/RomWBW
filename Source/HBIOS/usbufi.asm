@@ -3,7 +3,10 @@
 ; CH376 NATIVE MASS STORAGE DRIVER
 ;==================================================================================================
 ;
-
+#IF (!USBENABLE)
+	.ECHO	"*** ERROR: USB_UFI REQUIRES USBENABLE!!!\n"
+	!!!	; FORCE AN ASSEMBLY ERROR
+#ENDIF
 ;
 ;--------------------------------------------------------------------------------------------------
 ;   HBIOS MODULE HEADER
