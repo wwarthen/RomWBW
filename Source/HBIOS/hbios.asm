@@ -9138,6 +9138,7 @@ HB_MODSTART	.EQU	$
 ;  - CTC
 ;  - I2CPCF
 ;  - I2CBIT
+;  - I2CEZ80
 ;  - DMA
 ;  - NABU
 ;  - EZ80TMR
@@ -9172,6 +9173,10 @@ HB_MODSTART	.EQU	$
 ;
 #IF (I2CBITENABLE)
   #INCLUDE "i2cbit.asm"
+#ENDIF
+;
+#IF (I2CEZ80ENABLE)
+  #INCLUDE "i2cez80.asm"
 #ENDIF
 ;
 #IF (DMAENABLE)

@@ -2506,7 +2506,7 @@ backpacks, etc.) without duplicating bus-master protocol code per
 client program.
 
 Unlike the other function classes, there is only ever one logical I2C
-bus, so the I2C Unit number (C) is always 0. Two mutually-exclusive
+bus, so the I2C Unit number (C) is always 0. Three mutually-exclusive
 backend drivers exist and are selected at build time, at most one is
 ever present on a given ROM image.
 Future plans may include multiple bus masters and multiple busses per
@@ -2517,8 +2517,9 @@ bus master.
 | (PCF8584)       | 1      | NXP PCF8584 I2C bus controller             | i2cpcf.asm |
 | (bitbang)       | 2      | Software bit-banged I2C                    | i2cbit.asm |
 |                 |        | (SC137/SC608/SC704 I2C bus master modules) |            |
+| (eZ80)          | 3      | eZ80 on-chip I2C controller, 100kHz        | i2cez80.asm|
 
-Both backends expose the exact same function set below, so a program
+All backends expose the exact same function set below, so a program
 written against these functions runs unmodified regardless of which
 physical bus-master chip is actually installed, confirmed in
 practice by swapping the physical board and re-running an unmodified
@@ -2527,7 +2528,7 @@ any, is actually present before use.
 
 **These functions do not return a standard HBIOS result code.** Status
 (A) is I2C-protocol-specific instead, and **the two backends do not
-support the same set of status codes**, the bit-bang backend has no
+support the same set of status codes**. The bit-bang backend has no
 internal polling or timeout logic at all, so several codes that are
 real on the PCF8584 backend can never occur on the bit-bang backend:
 
@@ -2587,7 +2588,25 @@ be possible on START; only DEVICE, START, and BUSBUSY check for the
 ERR_NOHW case, so REPSTART/WRITE/XFER can only see the real-timeout
 0xFF, never ERR_NOHW.
 
-**READ (0x64) never returns Status=1 (NAK) on either backend** a
+#### Status codes -- eZ80 on-chip backend (i2cez80.asm)
+
+| **Function**  | **0**         | **1** | **2**     | **4**            | **ERR_NOHW** | **0xFF** |
+|---------------|---------------|-------|-----------|------------------|--------------|----------|
+| 0x60 DEVICE   | OK, HW OK     | --    | --        | --               | HW failed    | --       |
+| 0x61 START    | OK            | NAK   | bus error | lost arbitration | HW failed    | timeout  |
+| 0x62 REPSTART | OK            | NAK   | bus error | lost arbitration | --           | timeout  |
+| 0x63 WRITE    | OK            | NAK   | bus error | lost arbitration | --           | timeout  |
+| 0x64 READ     | OK            | --    | bus error | lost arbitration | --           | timeout  |
+| 0x65 XFER     | OK            | NAK   | bus error | lost arbitration | --           | timeout  |
+| 0x66 BUSBUSY  | free (always) | --    | --        | --               | HW failed    | --       |
+| 0x67 STOP     | OK (always)   | --    | --        | --               | --           | --       |
+
+Status=4 (lost arbitration) exists only on this backend. After Status=2,
+4 or 0xFF, later steps of the same transaction return that status
+without touching the bus; STOP ends it as usual. Status=3 cannot occur:
+a bus held by another master shows up as a START timeout (0xFF).
+
+**READ (0x64) never returns Status=1 (NAK) on any backend** a
 read has no acknowledge direction to fail the way a write does; the
 master sends ACK/NAK to the slave during a read, not the reverse.
 **On bit-bang, READ also never returns ERR_NOHW** unlike START/DEVICE,
@@ -2633,11 +2652,11 @@ HBIOS B=67 C=00 E=$00     ; Stop condition, single stop
 
 ### Function 0x60 -- I2C Device (I2CDEVICE)
 
-| **Entry Parameters** | **Returned Values**               |
-|----------------------|-----------------------------------|
-| B: 0x60              | A: Status                         |
-| C: I2C Unit (0x00)   | B: Backend (1=PCF8584, 2=bitbang) |
-|                      | HL: Device I/O Base Address       |
+| **Entry Parameters** | **Returned Values**                       |
+|----------------------|-------------------------------------------|
+| B: 0x60              | A: Status                                 |
+| C: I2C Unit (0x00)   | B: Backend (1=PCF8584, 2=bitbang, 3=eZ80) |
+|                      | HL: Device I/O Base Address               |
 
 Reports whether an I2C bus master is configured and, if so, which
 backend and base I/O port it uses. Status (A) is 0 if a backend is
@@ -3847,7 +3866,7 @@ FPLED_INV	.SET	FALSE		; INVERTED LED BITS
 
 Instead of an 8-bit I/O port, the front panel LEDs and switches can be driven
 over I2C through a single TCA9555 I/O expander. This requires a working I2C
-bus master already enabled (`I2CPCFENABLE` or `I2CBITENABLE`).
+bus master already enabled (`I2CPCFENABLE`, `I2CBITENABLE` or `I2CEZ80ENABLE`).
 
 ```
 FP_USE_I2C	.SET	TRUE		; DRIVE FRONT PANEL OVER I2C
