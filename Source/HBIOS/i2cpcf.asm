@@ -2,11 +2,6 @@
 ; PCF8584 I2C DRIVER
 ;==================================================================================================
 ;
-#IF (I2CBITENABLE)
-	.ECHO	"*** I2CBIT DRIVER CANNOT BE USED WITH I2CPCF DRIVER!!!\n"
-	!!!	; FORCE AN ASSEMBLY ERROR
-#ENDIF
-;
 I2CPCF_BASE  	.EQU  I2CPCFBASE
 I2CPCF_ID   	.EQU  0AAH
 ;

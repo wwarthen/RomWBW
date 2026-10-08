@@ -1,12 +1,12 @@
 ;==================================================================================================
 ; DS1307 I2C CLOCK DRIVER
 ;
-; LABELS STARTING WITH I2C ARE REFERENCING THE I2C LIBRARY (I2CPCF OR I2CBIT)
+; LABELS STARTING WITH I2C ARE REFERENCING THE I2C BUS MASTER DRIVER
 ;
 ;==================================================================================================
 ;
-#IF (!(I2CPCFENABLE | I2CBITENABLE))
-	.ECHO	"*** DS7 DRIVER REQUIRES I2CPCFENABLE OR I2CBITENABLE!!!\n"
+#IF (!I2CENABLE)
+	.ECHO	"*** DS7 DRIVER REQUIRES AN I2C BUS MASTER DRIVER!!!\n"
 	!!!	; FORCE AN ASSEMBLY ERROR
 #ENDIF
 ;
