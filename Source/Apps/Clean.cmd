@@ -28,6 +28,7 @@ call :clean slabel || exit /b
 call :clean ZDE || exit /b
 call :clean devlist || exit /b
 call :clean sysconf || exit /b
+call :clean rzsz || exit /b
 
 goto :eof
 
