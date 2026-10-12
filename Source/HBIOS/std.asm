@@ -30,6 +30,7 @@
 ; 26. N8PC	MSX-ish Z180 ATX SBC w/ onboard video and sound
 ; 27. RC2014	Official RC2014 Z80 Kits
 ; 28. MECB	Digicool Things MECB Kits
+; 29. MRZ80	MiSTer FPGA
 ;
 ; INCLUDE BUILD VERSION
 ;

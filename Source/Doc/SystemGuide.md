@@ -2914,6 +2914,7 @@ The hardware Platform (L) is identified as follows:
 | PLT_N8PC      |     26 | MSX-like Z180 ATX SBC                   |
 | PLT_RC2014    |     27 | Official RC2014 Z80 Kits                |
 | PLT_MECB      |     28 | Digicool Things MECB Kits               |
+| PLT_MRZ80     |     29 | MiSTer FPGA                             |
 
 
 For more information on these platforms see $doc_hardware$
