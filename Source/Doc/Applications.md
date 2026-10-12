@@ -981,6 +981,7 @@ included within RomWBW may be found within the Binary/Apps directory.
 | MODE        | Yes      | Yes        |
 | REBOOT      | Yes      | Yes        |
 | RTC         | Yes      | Yes        |
+| RZSZ        | No       | Yes        |
 | SURVEY      | Yes      | Yes        |
 | SYSCOPY     | Yes      | Yes        |
 | TALK        | Yes      | Yes        |
@@ -2124,6 +2125,171 @@ bypassing HBIOS.
 The `RTC` application was originally written by Andrew Lynch as part of
 the original ECB SBC board development.  It has since been modified to
 support most of the hardware variations included with RomWBW.
+
+`\clearpage`{=latex}
+
+## RZ / SZ (Z-Modem Receive / Send)
+
+| RZ / SZ             |   |
+| --------------------|---|
+| ROM-based           |No |
+| Disk-based          |Yes|
+
+`RZ` and `SZ` are a pair of applications that receive and send files
+using the XModem, YModem and ZModem protocols.  They work like the
+well-known Unix `rz` and `sz` tools.  They run **only** under CP/M 3
+(including Z3PLUS) and communicate through the CP/M `AUX` device, so a
+modem (or a null-modem cable to your host computer) must be connected
+to the serial port that is assigned to `AUX`.
+
+#### Syntax
+
+| `RZ` [`-`*\<options\>*] [*\<filespec\>*]
+| `SZ` [`-`*\<options\>*] *\<filespec\>*
+
+*\<options\>* is one or more of the option letters below, written
+together after a single `-`.  Without a protocol letter, `RZ` offers
+ZModem and falls back to YModem if the sender does not answer with
+ZModem.  `SZ` starts a ZModem/YModem session and uses ZModem or YModem
+according to the answer of the receiving program.
+
+The `RZ` options are:
+
+| Option      | Function                                               |
+| ----------- | ------------------------------------------------------ |
+| `?`         | displays a short description of the options.           |
+| `p`         | protects an existing file: it is not overwritten (ZModem). |
+| `b`         | stores the received data exactly as it arrives (binary). |
+| `c`         | converts line ends to the local CP/M convention (not if the sender asks for a binary file). |
+| `r`         | resumes an interrupted transfer (ZModem).              |
+| `x`,`y`,`z` | selects the XModem, YModem or ZModem protocol.         |
+
+The `p`, `b` and `r` options override the corresponding requests made
+by the sending program.  Because XModem does not carry file names, giving
+a *\<filespec\>* selects XModem; `-y` skips the ZModem attempt and goes
+straight to YModem.
+
+The `SZ` options are:
+
+| Option      | Function                                               |
+| ----------- | ------------------------------------------------------ |
+| `?`         | displays a short description of the options.           |
+| `p`         | asks the receiver to protect an existing file (ZModem). |
+| `a`         | asks the receiver to append to an existing file (ZModem). |
+| `b`         | sends the file as a binary file.                       |
+| `c`         | asks the receiver to convert line ends to its local convention. |
+| `x`         | forces XModem.                                         |
+| `y`,`z`     | have the same effect as giving no protocol letter: ZModem or YModem is chosen from the receiver's answer. |
+
+*\<filespec\>* for `RZ` is the name to give to the received file.
+Specifying a name selects XModem because XModem does not transmit file
+names.  With YModem and ZModem the sender supplies the file names, so no
+*\<filespec\>* is needed.
+
+*\<filespec\>* for `SZ` is the file to send.  It may contain the
+wildcard characters `*` and `?` to send several files in one session
+(ZModem and YModem), and it may start with a drive/user prefix
+(`du:`).  When running under Z3PLUS, named directories can be used.
+
+For example, the following command will receive a file using XModem
+and will name the received file `MYFILE.TXT`.
+
+`RZ MYFILE.TXT`
+
+The following command will send all of the `.COM` files in the current
+drive and user area as binary files using ZModem.
+
+`SZ -b *.COM`
+
+#### Usage
+
+To transfer a file from your host computer to your RomWBW computer, do
+the following:
+
+1. Enter an `RZ` command.  For ZModem enter `RZ` alone, for YModem enter
+`RZ -y`, and for XModem enter `RZ` followed by the name you want to give
+to the received file.  `RZ` will ask you to start your local sending
+program.
+
+2. On your host computer select the file to send and initiate the
+corresponding send operation (ZModem, YModem or XModem).
+
+To transfer a file from your RomWBW computer to your host computer, do
+the following:
+
+1. Enter an `SZ` command specifying the file or files to be sent (add
+`-x` if the receiving program uses XModem).
+`SZ` will report the number of files found and will ask you to start your
+local receiving program.
+
+2. On your host computer initiate the corresponding receive operation
+(ZModem, YModem or XModem).  For XModem you must also specify the name
+to assign to the received file.
+
+Please refer to the documentation of your host computer's terminal
+emulation software for specific instructions on how to use these
+protocols.
+
+To abort a transfer, press the `Esc` key.  The program may take a few
+seconds to terminate.  A transfer can also be aborted from the other
+end using the method defined by the protocol in use.
+
+#### Notes
+
+`RZ` and `SZ` require CP/M 3.  If you run them under another operating
+system, they will display `sorry, CP/M 3 Tool` and exit.
+
+Unlike `XM`, `RZ` and `SZ` do not yet use the RomWBW HBIOS character unit
+selection.  They transfer data only through the CP/M 3 `AUX` device and 
+use nothing but standard CP/M 3 BDOS calls.  You must ensure that `AUX` 
+is assigned to the serial port that is connected to the other computer, 
+and that this port is not also being used as the console.
+
+While a transfer is running, both applications remove the physical
+device(s) used for `AUX` output from the console input and output
+redirection vectors in the CP/M 3 System Control Block.  This keeps the
+console from using the transfer port.  The original assignments are
+restored when the application ends.
+
+`RZ` and `SZ` are dependent on a reliable communications channel.  You
+must ensure that the serial port can be serviced fast enough by either
+using a baud rate that is low enough or ensuring that hardware flow
+control is fully functional (end to end).
+
+Both applications use the free memory of the TPA as a transfer buffer.
+`RZ` tells the sender the size of its buffer and writes the received
+data to disk each time a buffer has been filled, so the sender pauses
+for an acknowledgement at the end of every buffer rather than
+streaming continuously.  The more free memory there is, the fewer
+pauses occur.
+
+Received files are created in the current drive and user area.  With
+ZModem, an existing file of the same name is replaced unless the
+sender asks for the file to be protected or appended, or you specify
+`p` (skip the file) or `r` (resume).  With XModem and YModem an
+existing file is always replaced.
+
+Time-outs are produced by software delay loops rather than a hardware
+timer.  The loops are tuned for a fast CPU, roughly the
+equivalent of a 12 MHz Z80.  On a slower CPU, such as a 4 MHz Z80,
+time-outs take proportionally longer (roughly three times as long at
+4 MHz), so a stalled transfer may take quite a while to give up.  This
+does not affect transfers that are going well.
+
+#### Etymology
+
+`RZ` (version 1.04) and `SZ` (version 1.11) were written for CP/M 3 by
+Wilfried Schmitten of Hamburg, Germany, and released in June 1992.
+Their names and behavior follow the well-known Unix `rz` and `sz`
+programs of Chuck Forsberg, which implement his ZModem protocol.
+
+The applications are not specific to RomWBW.  They are included here as
+originally released.
+
+The source code of the applications were lost.  The source code in the
+RomWbW distribution is from a disassembly by Claude AI.  However, the
+resulting binaries are byte identical to the original versions.  The
+program internal documentation (rzsz.md) was created by Claude AI.
 
 `\clearpage`{=latex}
 
