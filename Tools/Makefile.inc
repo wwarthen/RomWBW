@@ -131,8 +131,7 @@ endif
 		$(ZXCC) $(CPM)/MAC -$< -$$PO ; \
 		$(ZXCC) $(CPM)/MLOAD25 -tmp.bin=$*.hex ; \
 		mv tmp.bin $@ ; \
-		rm -f /tmp/casefn.cache ; \
-		rm -f $$($(CASEFN) $*.hex) ; \
+		rm -f $*.hex ; \
 	fi
 
 %.rom: %.asm
@@ -142,16 +141,13 @@ endif
 	@$(ZXCC) $(CPM)/MAC -$< -$$PO
 
 %.bin: %.ASM
-	@$(ZXCC) $(CPM)/MAC -$< -$$PO
-	$(ZXCC) $(CPM)/MLOAD25 -tmp.bin=$*.hex
-	mv tmp.bin $@
-	rm -f /tmp/casefn.cache
-	rm -f $$($(CASEFN) $*.hex)
+	@$(ZXCC) $(CPM)/MAC -$< -$$PO ; \
+	$(ZXCC) $(CPM)/MLOAD25 -tmp.bin=$*.hex ; \
+	mv tmp.bin $@ ; \
+	rm -f $*.hex
 
 %.com: %.z80
 	@$(ZXCC) $(CPM)/Z80ASM -$(basename $<)/F
-	rm -f /tmp/casefn.cache
-	mv $$($(CASEFN) $@) tmp.com ; mv tmp.com $@
 
 %.bin: %.asm
 	@$(TASM) $(TASMFLAGS) $< $@ $(basename $<).lst
@@ -190,20 +186,19 @@ all:: $(OBJECTS)
 	@for dir in $(SUBDIRS) ; do \
 		$(MAKE) --directory $$dir ; \
 	done
-	rm -f /tmp/casefn.cache
 	@if [ "$(DEST)" ] && [ "$(OBJECTS)" ] ; then for file in $(filter-out $(NOCOPY),$(OBJECTS)) ; do \
 		mkdir -p $(DEST) ; \
 		echo Copying $$file to $(DEST) ; \
-		cp $$($(CASEFN) $$file) $(DEST) ; \
+		cp $$file $(DEST) ; \
 	done ; fi
 	@if [ "$(DOCDEST)" ] && [ "$(DOCS)" ] ; then for file in $(DOCS) ; do \
 		mkdir -p $(DOCDEST) ; \
 		echo Copying $$file to $(DOCDEST) ; \
-		cp $$($(CASEFN) $$file) $(DOCDEST) ; \
+		cp $$file $(DOCDEST) ; \
 	done ; fi
 
 clean::
-	@-rm -f $$($(CASEFN) make.out *.sym *.lst *.prn *.diff *.dump $(OTHERS) $(filter-out $(NODELETE),$(OBJECTS)))
+	@-rm -f make.out *.sym *.lst *.prn *.diff *.dump $(OTHERS) $(filter-out $(NODELETE),$(OBJECTS))
 	@for dir in $(SUBDIRS) ; do \
 		$(MAKE) --directory $$dir clean ; \
 	done

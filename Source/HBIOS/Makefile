@@ -5,7 +5,7 @@ MOREDIFF = game.bin hbios_rom.bin nascom.bin usrrom.bin \
 
 DEST = ../../Binary
 TOOLS =../../Tools
-OTHERS =  *.img *.rom *.com *.upd *.bin *.hex cpm.sys zsys.sys Build.inc font*.asm *.dat hbios_env.sh
+OTHERS =  *.img *.rom *.com *.upd *.bin *.hex cpm.sys zsys.sys build.inc font*.asm *.dat hbios_env.sh
 
 # DIFFMAKE = 1
 
