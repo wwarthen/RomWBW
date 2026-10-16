@@ -3,11 +3,11 @@
 #
 # Add the ReadMe document
 #
-d_msx/Readme.txt 0:
+d_msx/ReadMe.txt 0:
 #
 # Add CP/M 2.2 commands
 #
-d_cpm22/u0/submit.com 0:
+d_cpm22/u0/SUBMIT.COM 0:
 #
 # Add RomWBW utilities
 #
