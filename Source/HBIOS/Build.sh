@@ -109,13 +109,6 @@ cat <<- EOF > build.inc
 ;
 EOF
 
-# Some environments do not have good file timestamp granularity
-# within make.  The following is used to force a completely
-# new hbios_env.sh to be generated.  Yes, I know this could
-# be improved.
-rm -f hbios_env.com
-rm -f hbios_env.sh
-
 make hbios_env.sh
 
 source hbios_env.sh
