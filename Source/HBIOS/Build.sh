@@ -83,6 +83,12 @@ if [ -z "${ROMNAME}" ] ; then
 	ROMNAME=${ROM_PLATFORM}_${ROM_CONFIG}
 fi
 
+# Work around poor file timestamp granularity issues
+# in some build environments
+
+rm -f build.inc
+sleep 1
+
 echo -e "\n\nBuilding $ROM_PLATFORM $ROM_CONFIG\n\n"
 
 TIMESTAMP=$(date +%Y-%m-%d)

@@ -11,8 +11,6 @@ OTHERS =  *.img *.rom *.com *.upd *.bin *.hex cpm.sys zsys.sys build.inc font*.a
 
 # DIFFPATH = $(DIFFTO)/Binary
 
-.PHONY: force
-
 ifeq ($(DIFFMAKE),1)
 	DIFFBUILD := -d $(DIFFTO)/Source/HBIOS
 endif
@@ -133,10 +131,10 @@ hbios_app.bin:	hbios.asm build.inc  $(DEPS)
 hbios_img.bin:	hbios.asm build.inc  $(DEPS)
 	@$(TASM) -dIMGBOOT hbios.asm hbios_img.bin hbios_img.lst
 
-hbios_env.com:	force hbios_env.asm build.inc
+hbios_env.com:	hbios_env.asm build.inc
 	@$(TASM) -dBASH hbios_env.asm hbios_env.com hbios_env.lst
 
-hbios_env.sh: force hbios_env.com
+hbios_env.sh: hbios_env.com
 	@$(ZXCC) hbios_env.com >hbios_env.sh
 
 romldr.bin:	build.inc
