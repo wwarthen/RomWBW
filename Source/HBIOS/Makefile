@@ -18,7 +18,7 @@ endif
 ifeq ($(OBJECTS),)
 start:
 	@chmod +x Build.sh
-	bash Build.sh $(DIFFBUILD)
+	./Build.sh $(DIFFBUILD)
 endif
 
 include $(TOOLS)/Makefile.inc
@@ -57,6 +57,9 @@ endif
 DEPS += $(HWMON) $(NETBOOT)
 
 ROMNAME=${ROM_PLATFORM}_${ROM_CONFIG}
+
+export MAKE
+export MAKEFLAGS
 
 # $(info DEPS=$(DEPS))
 # $(info ROM_PLATFORM=$(ROM_PLATFORM))

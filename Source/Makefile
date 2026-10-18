@@ -39,7 +39,7 @@ images:
 	$(MAKE) --directory Images $(ACTION)
 
 rom:
-	@$(MAKE) --directory HBIOS $(ACTION)
+	$(MAKE) --directory HBIOS $(ACTION)
 
 zrc:
 	$(MAKE) --directory ZRC $(ACTION)
