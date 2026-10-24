@@ -6,4 +6,4 @@ USETASM=1
 
 include $(TOOLS)/Makefile.inc
 
-TASM=$(BINDIR)/uz80as -t hd64180
+TASMFLAGS=-t hd64180

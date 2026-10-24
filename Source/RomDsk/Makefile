@@ -4,8 +4,6 @@ OTHERS=*.dat *.cat
 TOOLS = ../../Tools
 include $(TOOLS)/Makefile.inc
 
-.SHELLFLAGS = -ce
-
 ROMAPPS1 := assign mode rtc syscopy xm
 ROMAPPS2 := fdu format survey sysgen talk timer cpuspd reboot
 

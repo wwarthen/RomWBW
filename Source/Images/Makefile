@@ -51,8 +51,6 @@ TOOLS = ../../Tools
 
 include $(TOOLS)/Makefile.inc
 
-.SHELLFLAGS = -ce
-
 DIFFPATH = $(DIFFTO)/Binary
 
 hd512_%.img: %.def

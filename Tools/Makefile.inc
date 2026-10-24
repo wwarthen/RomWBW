@@ -39,8 +39,8 @@ CASEFN = $(TOOLS)/unix/casefn.sh
 #
 ZXCC=$(BINDIR)/zxcc
 export CPMDIR80=$(TOOLS)/cpm/
-TASM=$(BINDIR)/uz80as -t z80
-TASMFLAGS=
+TASM=$(BINDIR)/uz80as
+TASMFLAGS=-t z80
 OPENSPIN=$(BINDIR)/openspin
 CPMCP=$(BINDIR)/cpmcp
 CPMLS=$(BINDIR)/cpmls
@@ -53,11 +53,10 @@ COMPRESS=$(BINDIR)/compress
 CPM=$(TOOLS)/cpm/bin80/
 
 #
-# .ONESHELL uses a single shell instance for all shell scripts.
-# .SHELLFLAGS is used to cause all shell scripts to echo ("e") and to
-#    exit if any command returns a non-zero result ("x").
+# .SHELLFLAGS:
+#   -c: read command from the shell operand (make default) 
+#   -e: exit immediately on error
 #
-.ONESHELL:
 .SHELLFLAGS = -ce
 
 #

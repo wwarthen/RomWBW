@@ -26,7 +26,7 @@ transpile-c-code:
 	$(MAKE) -j --directory Source/HBIOS/ch376-native
 
 dist:
-	$(MAKE) ROM_PLATFORM=dist
+	$(MAKE) ROM=dist
 	$(MAKE) --directory Tools clean
 	$(MAKE) --directory Source clean
 

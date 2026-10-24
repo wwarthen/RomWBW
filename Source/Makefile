@@ -4,7 +4,6 @@
 
 .PHONY: doc prop shared bp images rom zrc z1rcc zzrcc zrc512 sz80 ez512 msx
 
-.ONESHELL:
 .SHELLFLAGS = -ce
 
 all: prop shared bp images rom zrc z1rcc zzrcc zrc512 sz80 ez512 msx
