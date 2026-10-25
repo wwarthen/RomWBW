@@ -10,8 +10,9 @@ param([string]$Image)
 $ErrorAction = 'Stop'
 
 $CpmToolsPath = '../../Tools/cpmtools'
+$SRecordPath = '../../Tools/srecord'
 
-$env:PATH = $CpmToolsPath + ';' + $env:PATH
+$env:PATH = $CpmToolsPath + ';' + $SRecordPath + ';' + $env:PATH
 
 $Format, $Disk = $Image.Split("_")
 
@@ -67,6 +68,8 @@ if (-not (Test-Path("d_${Disk}/")))
 
 "Generating $Disk $Desc..."
 
+# Ingest all @ prefixed directives in the disk configuratioun file
+
 if (Test-Path("${Type}_${Disk}.txt"))
 {
 	foreach($Line in Get-Content "${Type}_${Disk}.txt")
@@ -85,33 +88,36 @@ if (Test-Path("${Type}_${Disk}.txt"))
 # "Label: '$Label'"
 # "SysImage: '$SysImage'"
 
-if ($SysImage.Length -gt 0) 
-	{ [byte[]]$SysImg = [System.IO.File]::ReadAllBytes($SysImage) }
-else 
-	{ [byte[]]$SysImg = @() }
+# Generate the empty disk image file
 
-$ImageBin = ($SysImg + ([byte[]](0xE5) * ($Size - $SysImg.length)))
+$Cmd = "srec_cat -generate 0x0 $Size -constant 0xE5 -o $ImgFile -Binary"
+$Cmd
+Invoke-Expression $Cmd
+
+# Insert boot image if specified
+
+if ($SysImage.Length -gt 0)
+{
+	$Cmd = "mkfs.cpm -f $Format $ImgFile -b $SysImage"
+	$Cmd
+	Invoke-Expression $Cmd
+}
+
+# Inject label into disk image if specified
 
 if ($Label.Length -gt 0)
 {
-	$LabelBytes = [System.Text.Encoding]::ASCII.GetBytes($Label)
-	$nLabel = 0;
-	for ($nImg = 0x5E7; $nImg -lt 0x5F7; $nImg++)
-	{
-		if ($nLabel -lt $Label.Length)
-		{
-			$ImageBin[$nImg] = $LabelBytes[$nLabel]
-		}
-		else
-		{
-			$ImageBin[$nImg] = [byte][char]'$'
-		}
-		$nLabel++
-	}
-	$ImageBin[0x5F7] = [byte][char]'$'
+	$Offset = 0x5E7
+	$Stream = New-Object System.IO.FileStream($ImgFile, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Write)
+	$Label = $Label.Substring(0, [System.Math]::Min(16, $Label.Length))
+	$Label = $Label.PadRight(17, '$')
+	$Bytes = [System.Text.Encoding]::UTF8.GetBytes($Label)
+	[void]$Stream.Seek($Offset, [System.IO.SeekOrigin]::Begin)
+	$stream.Write($Bytes, 0, $Bytes.Length)
+	$stream.Close()
 }
 
-[System.IO.File]::WriteAllBytes($ImgFile, $ImageBin)
+# Copy all files in all user areas from associated disk directory into image
 
 for ($Usr=0; $Usr -lt 16; $Usr++)
 {
@@ -123,6 +129,8 @@ for ($Usr=0; $Usr -lt 16; $Usr++)
 		if ($LASTEXITCODE -gt 0) {throw "Command returned exit code $LASTEXITCODE"}
 	}
 }
+
+# Copy supplemental files based on instructions in the associated disk configuration file
 
 if (Test-Path("${Type}_${Disk}.txt"))
 {
@@ -139,9 +147,13 @@ if (Test-Path("${Type}_${Disk}.txt"))
 	}
 }
 
+# Dump a disk catalog for diagnostics
+
 $Cmd = "cpmls -f $Format -D $ImgFile"
 $Cmd
 Invoke-Expression $Cmd > $CatFile
+
+# Move the final image into the output directory
 
 # "Moving image $ImgFile into output directory..."
 
