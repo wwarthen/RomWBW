@@ -34,6 +34,7 @@ while ! echo ${configs} | grep -q -w -s "${ROM_CONFIG}" ; do
 done
 
 echo "ROM := ${ROM_PLATFORM}_${ROM_CONFIG}" >${ROMFILE}
+
 exit 0
 
 
