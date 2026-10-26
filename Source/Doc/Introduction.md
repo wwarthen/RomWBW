@@ -397,6 +397,23 @@ RomWBW HBIOS programming and bare metal programming.  The latest copy
 of this document is hosted at
 [http://w8bh.net/Assembly for RC2014Z.pdf](http://w8bh.net/Assembly%20for%20RC2014Z.pdf).
 
+#### CP/M File Manager
+
+Gary Hammond has created a cross-platform PySide6 desktop app for
+transferring files between a modern host and legacy CP/M systems over a 
+serial link, using the X-Modem protocol.  This project is found
+at <https://github.com/turbo-gecko/CPM_FM>.
+
+#### RomWBW Disk Explorer
+
+Joao Miguel Duraes has created a "disk explorer" tool that runs under
+Windows and allows you to view and manipulate RomWBW disk images
+(hd1k only).  It can work on disk image files or on actual RomWBW
+disk media (CF/SD/USB).  Moving files in and out of RomWBW
+disk images is very easy.  This project is found at
+<https://github.com/jduraes/RomWBWDE>.  Note that this tool was
+created with the assistance of AI.
+
 # Licensing
 
 ## License Terms
