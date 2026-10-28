@@ -247,6 +247,7 @@ call Build RCZ280 ext_std || exit /b
 call Build RCZ280 nat_std || exit /b
 call Build RCZ280 zz80mb_std || exit /b
 call Build RCZ280 zzrcc_std || exit /b
+call Build RCZ280 rcbus_std || exit /b
 call Build SCZ180 sc126_std || exit /b
 call Build SCZ180 sc130_std || exit /b
 call Build SCZ180 sc131_std || exit /b

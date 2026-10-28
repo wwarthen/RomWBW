@@ -13,6 +13,7 @@ call BuildZRC512 || exit /b
 call BuildSZ80 || exit /b
 call BuildEZ512 || exit /b
 call BuildMSX || exit /b
+call BuildZ280_RCBUS || exit /b
 
 if "%1" == "dist" (
   call Clean || exit /b

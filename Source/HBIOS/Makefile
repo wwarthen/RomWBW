@@ -25,6 +25,7 @@ DIST_ROMS := \
 	RCZ280_nat_std \
 	RCZ280_zz80mb_std \
 	RCZ280_zzrcc_std \
+	RCZ280_rcbus_std \
 	SCZ180_sc126_std \
 	SCZ180_sc130_std \
 	SCZ180_sc131_std \

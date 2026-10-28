@@ -1,0 +1,33 @@
+Z280_rcbus Disk Layout
+======================
+
+Identical to the standard hd1k, but with the RomWBW ROM image
+imbedded starting at sector 288.
+
+Additionally, the following bytes are
+overlaid at the end of the zero page of the HBIOS bank:
+
+ED BF ED B7 CB 7C 20 FA 2E 00 0E 08 ED 6E C3 00 00
+
+These bytes are required by the serial loader bootstrap
+
+---- Bytes ----   --- Sectors ---
+Start   Length    Start   Length    Description
+------- -------   ------- -------   ---------------------------
+0x00000 0x001BE   0       1         Unused
+0x001B8 0x00048                     RomWBW Partition Table
+0x00200 0x1EE00   1       287       Unused
+0x24000 0x80000   288     1024      RomWBW
+0xA4000 0x5C000   1312    736       Unused  
+0x100000          2048              Start of slices (partition 0x1E)
+
+Notes
+-----
+
+- At startup, the Z280 serial bootstrap is fed a bootloader by the
+  onboard ATtiny4313 AVR and associated serial ROM.
+- The bootloader loads 512KB (RomWBW) from sectors 0x120-0x51F of CF
+  into first 512KB of physical RAM
+- Execution starts at 0x0000
+
+-WBW 2:10 PM 10/28/2026
