@@ -8,10 +8,10 @@
  *		resulting from backporting features from V4.11
  */
 
-#define _HTC_VERSION	"3.09-19"
+#define _HTC_VERSION	"3.09-21"
 #define _HTC_MAJOR	3
 #define _HTC_MINOR	9
-#define _HTC_REV	19
+#define _HTC_REV	21
 
 #if	z80
 #define	BUFSIZ		512
@@ -129,4 +129,3 @@ extern char	*fgets(char *, int, FILE *);
 extern char	*_bufallo(void);
 
 #endif _HTC_STDIO_H
-
