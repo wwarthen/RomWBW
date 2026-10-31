@@ -105,7 +105,7 @@ The supplied specification predates 32-bit CRC.  The CRC-32 frame format (`ZBIN3
 |---|---|---|
 | Direction | receive | send |
 | Version / date | 1.04 (1992) | 1.11 (1992) |
-| Image size at 0100H | 5,888 bytes (0100-17FF) | 7,808 bytes (0100-1F7F) |
+| Image size at 0100H | 5,792 bytes (0100-179F) | 7,802 bytes (0100-1F79) |
 | Work RAM above the image | 1808-2D10 | 2000-28DB |
 | First free memory | 2D11 | 28DC |
 | AUX input ring buffer | 4096 bytes | 512 bytes |
@@ -146,7 +146,7 @@ Each program is organized in layers.  The top layer is a protocol driver (receiv
 
 ### 1.3 Shared code
 
-Roughly two thirds of each program is shared.  About 65 routines are the same in both images apart from the addresses and a few constants (for example the ring size) that they refer to.  The differences are the protocol drivers, the file layer (RZ writes through a single sector buffer; SZ has a general buffered file object and a directory scanner and sorter) and the sizes of the buffers.
+Roughly two thirds of each program is shared.  Of the 159 named routines, entry points and tables that exist in both listings, 139 are identical line for line, including their labels and comments; they carry a `Common routine` or `Common data` note in `rz.asm` and `sz.asm`.  The remaining shared routines differ only in constants (for example the ring size), variable names or a few instructions.  The differences between the programs are the protocol drivers, the file layer (RZ writes through a single sector buffer; SZ has a general buffered file object and a directory scanner and sorter) and the sizes of the buffers.
 
 ### 1.4 Conventions used in the code
 
@@ -168,8 +168,9 @@ CP/M loads the `.COM` file at 0100H.  Both programs keep all their variables, ta
 
 | Address | Size | Contents |
 |---|---|---|
-| 0100-17FF | 5,888 | Program image: code, tables, strings, a few variables |
-| 17C8-1807 | 64 | Stack (the 56 zero bytes ending the image plus 8 unused bytes); SP starts at 1808 |
+| 0100-179F | 5,792 | Program image: code, tables, strings and the word `arg_table_ptr` |
+| 17A0-17C7 | 40 | `default_user`, `default_drive`, `saved_user`, the work FCB (`work_fcb`, `work_fcb_r0`) and the extra byte `work_fcb_r3` |
+| 17C8-1807 | 64 | `stack`; `stack_top` (1808) is the initial SP |
 | 1808-180D | 6 | AUX receive ring control block |
 | 180E-280D | 4,096 | AUX receive ring data |
 | 280E-2810 | 3 | Output sector buffer count / write index / read index |
@@ -177,16 +178,17 @@ CP/M loads the `.COM` file at 0100H.  Both programs keep all their variables, ta
 | 2891-289C | 12 | `ltoa_value`, `ltoa_temp`, `crc32_value` |
 | 289D-2C9C | 1,024 | CRC-32 lookup table |
 | 2C9D-2D10 | 116 | Protocol state variables (appendix C) |
-| 2D11-BDOS | rest | Free memory: argument table, then the receive buffer |
+| 2D11-BDOS | rest | Free memory: `arg_table` (6 bytes) at the start, which the receive buffer overwrites |
 
 **SZ memory map**
 
 | Address | Size | Contents |
 |---|---|---|
-| 0100-1F7F | 7,808 | Program image |
+| 0100-1F79 | 7,802 | Program image |
+| 1F7A-1FFF | 134 | Not referenced by the code |
 | 2000-2002 | 3 | Default user, default drive, user to select |
-| 2003-2026 | 36 | Work FCB |
-| 2027-2066 | 64 | Stack; SP starts at 2067 |
+| 2003-2026 | 36 | Work FCB (`work_fcb`, 33 bytes, and `work_fcb_r0`, 3 bytes) |
+| 2027-2066 | 64 | `stack`; `stack_top` (2067) is the initial SP |
 | 2067-206C | 6 | AUX receive ring control block |
 | 206D-226C | 512 | AUX receive ring data |
 | 226D-2292 | 38 | Current file-list entry user byte and send FCB (name at 226F) |
@@ -195,11 +197,11 @@ CP/M loads the `.COM` file at 0100H.  Both programs keep all their variables, ta
 | 269F-2764 | 198 | Protocol state, directory, sort and parse variables (appendix C) |
 | 2765-28B4 | 336 | Two buffered file objects: `in_file` and `out_file` (168 bytes each) |
 | 28B5-28DB | 39 | File-object pointer, character buffer, scratch FCB |
-| 28DC-BDOS | rest | Free memory: argument table / file list, then the file buffer |
+| 28DC-BDOS | rest | Free memory: `arg_table` (6 bytes) at the start, then the file list and the file buffer |
 
 ### 2.2 Stack
 
-Both programs set `SP` to the address of the AUX ring control block at start (`ld sp,aux_ring`), so the stack grows downward into 64 bytes of otherwise unused space.  In RZ these are the last 56 bytes of the image (which the file stores as zeros) plus 8 unused bytes; in SZ they are a 64-byte block below the ring.  The stack is shallow: the deepest nesting is a handful of calls with a few registers saved at each level.
+Both programs set `SP` to the label `stack_top` at start (`ld sp,stack_top`), which has the same address as the AUX ring control block, so the stack grows downward into the 64-byte `stack` area.  In both programs it is the 64-byte `stack` area just below the ring (RZ 17C8H, SZ 2027H).  In the original RZ.COM the lower 56 bytes of this area, and the other variables from 17A0H, are stored as zero padding at the end of the file; the listings no longer emit that padding.  The stack is shallow: the deepest nesting is a handful of calls with a few registers saved at each level.
 
 ### 2.3 The SZ program header
 
@@ -213,7 +215,7 @@ Both programs set `SP` to the address of the AUX ring control block at start (`l
 010B  main:
 ```
 
-`RZ.COM` has no header and begins directly with `ld sp,aux_ring`.
+`RZ.COM` has no header and begins directly with `ld sp,stack_top`.
 
 ### 2.4 Self-modifying code
 
@@ -263,7 +265,7 @@ Both programs run the same start-up steps:
 
 ### 3.2 Command tail
 
-The command tail at 0080H is split into at most two whitespace-separated tokens by `tokenize_args`, which builds a table of token pointers at the start of free memory (RZ clears the first 20 bytes of it beforehand).  More than two tokens print the usage text and exit.
+The command tail at 0080H is split into at most two whitespace-separated tokens by `tokenize_args`, which builds the **argument pointers table** `arg_table` at the start of free memory (its address is held in `arg_table_ptr`; RZ clears the first 20 bytes of it beforehand).  The table is six bytes: the maximum number of tokens (2), the number found, and two 16-bit token pointers.  Free memory is reused later, so the receive buffer (RZ) and the file list (SZ) overwrite the table once the command line has been processed.  More than two tokens print the usage text and exit.
 
 * If the **first token begins with `-`**, it is the option string.  `parse_options` scans it one character at a time (the `-` itself is skipped) and looks each character up in a dispatch table.  Characters that are not options are silently ignored.  The **second token**, if present, is then the file specification.
 * If the first token does not begin with `-`, it is the file specification and there are no options.
@@ -404,7 +406,7 @@ The timeouts used by the protocol code, in nominal time:
 
 | Where | Timeout |
 |---|---|
-| First character of a ZModem header (`get_header`) | 10 s |
+| First character of a ZModem header (`get_header`) | 10 s in RZ, 25.5 s in SZ |
 | Each further character of a header or data subpacket | 10 s |
 | The CR and LF after a hex header | 1 s |
 | ZModem sender waiting for the receiver to start (`wait_rx_start`) | 25.5 s per wait |
@@ -563,9 +565,9 @@ idle ---ZPAD(2AH/AAH)---> got_zpad ---ZPAD---> (stay)
   +--other--> junk counter (1024 characters => give up, code 0FCH)
 ```
 
-* Waiting for the first character allows 10 seconds.  A timeout returns `0FEH` with carry set.
+* Waiting for the first character allows 10 seconds in RZ and 25.5 seconds in SZ (the two copies of the routine differ only in this constant).  A timeout returns `0FEH` with carry set.
 * `ZPAD` in the idle state, with or without bit 7, starts a header.  In `got_zpad` the characters are read with parity stripped and with XON and XOFF ignored (and, when `ESCCTL` is active, other control characters as well); further pads are skipped, so a header may be preceded by any number of them, and anything other than a pad or ZDLE counts as junk.
-* The format character selects `get_hex_header`, `get_bin16_header` or `get_bin32_header`; `crc_mode` is set to 10H (CRC-16) or 20H (CRC-32) accordingly, so that the following data subpackets use the same CRC.
+* The format character selects `get_hex_header`, `get_bin16_header` or `get_bin32_header`; `rx_crc_mode` is set to 10H (CRC-16) or 20H (CRC-32) accordingly, so that the following data subpackets use the same CRC.
 * A valid header is copied to `rx_header_data` and the frame type is returned with carry clear and `header_ok_flag` set.
 * The pseudo return codes `0FFH` (error), `0FEH` (timeout), `0FCH` (junk limit) and `GOTCAN` (converted to `ZCAN`), and the frame types `ZNAK` and `ZCAN`, are returned with carry set.
 
@@ -575,7 +577,7 @@ Five CAN characters in a row anywhere in the scan return `ZCAN`; this is the rec
 
 `rx_data_subpkt` reads escaped data into the receive buffer until a terminator arrives.  At each character it
 
-1. updates the CRC (CRC-16 or CRC-32 according to `crc_mode`);
+1. updates the CRC (CRC-16 or CRC-32 according to `rx_crc_mode`);
 2. stores the byte at `rx_buffer_ptr`, counting it in `rx_buffer_count` and in `subpacket_len`.
 
 If the buffer fills before a terminator arrives the routine returns an error: the sender is expected to end each buffer-full with `ZCRCW`.  On a terminator it includes the terminator in the CRC, reads the two or four CRC bytes through the same decoder, and checks the result (CRC-16 must be zero; CRC-32 must equal the residue).  The return code is `GOTCRCE`, `GOTCRCG`, `GOTCRCQ` or `GOTCRCW` with carry clear when the CRC is good, `0FFH` (error), `0FEH` (timeout) or `ZCAN` with carry set otherwise.
@@ -613,8 +615,8 @@ If the buffer fills before a terminator arrives the routine returns an error: th
 `receive_main` (RZ 08D1) prepares the session and then chooses the protocol.
 
 1. Clear 97 bytes of protocol state starting at `escape_ctl_flag`, empty the AUX ring, and build the CRC-32 table.
-2. Set up the receive buffer: it starts at the first free byte (`argv_ptr`, 2D11H) and extends to the BDOS; `calc_buffer_mask` rounds the size down to a power of two (section 2.5) and stores it in `rx_buffer_size`.
-3. If `-p` was given, set `protect_option` to `ZMPROT` (7).  Set `crc_mode` to 10H (CRC-16).
+2. Set up the receive buffer: it starts at the first free byte (`arg_table`, 2D11H) and extends to the BDOS; `calc_buffer_mask` rounds the size down to a power of two (section 2.5) and stores it in `rx_buffer_size`.
+3. If `-p` was given, set `protect_option` to `ZMPROT` (7).  Set `rx_crc_mode` to 10H (CRC-16).
 4. Choose the protocol:
 
 ```
@@ -747,7 +749,7 @@ RZ writes with one 128-byte sector buffer (`file_sector_buf`, controlled by `fil
 
 For XModem the file name comes from the command line.  For YModem the name arrives in **block 0**, which RZ requests with `xmodem_rx_start`:
 
-* RZ sends `C` (CRC mode, `crc_mode` = 10H) or NAK (checksum mode) and waits up to 10 s for a block.
+* RZ sends `C` (CRC mode, `rx_crc_mode` = 10H) or NAK (checksum mode) and waits up to 10 s for a block.
 * On success it acknowledges and goes on to `prep_output_file`, which takes the file name from the block exactly as it takes it from a ZFILE packet.
 * If an EOT arrives, it is acknowledged and the start sequence is repeated.
 * An empty block 0 (no name) ends the batch.  `prep_output_file` returns carry in that case, so the batch ends through `abort_receive` (which sends a cancel string after the sender has already finished).
@@ -1159,6 +1161,7 @@ Addresses are those of the commented disassembly.  The last column gives the cou
 | 0643 | `clear_fcb` | Zero the 37-byte FCB at HL. |  |
 | 064A | `file_buf_reset` | Reset the 128-byte file sector buffer control block. |  |
 | 064E | `ring_reset` | Clear the 6-byte ring buffer control block at HL. |  |
+| 0650 | `memset_a` | Fill using A and B. |  |
 | 0654 | `file_buf_get` | Get next byte from the sector buffer; carry/zero indicates empty. |  |
 | 0669 | `file_buf_put` | Store byte C in the sector buffer; NZ when a sector is full. |  |
 
@@ -1605,7 +1608,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 
 ### B.1 RZ
 
-**03B1: Option letters**
+**03B1 `opt_tab`: Option letters**
 
 | Key | Meaning | Handler |
 |---|---|---|
@@ -1618,7 +1621,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | 5AH | 'Z' | `opt_zmodem` |
 | 52H | 'R' | `opt_resume` |
 
-**0B96: ZRINIT handshake: frame type of the reply**
+**0B96 `zri_reply_tab`: ZRINIT handshake: frame type of the reply**
 
 | Key | Meaning | Handler |
 |---|---|---|
@@ -1633,7 +1636,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | 08H | ZFIN | `zri_got_zfin` |
 | 10H | ZCAN | `zri_abort` |
 
-**0CE4: ZModem file receive: frame type of the header**
+**0CE4 `rx_hdr_tab`: ZModem file receive: frame type of the header**
 
 | Key | Meaning | Handler |
 |---|---|---|
@@ -1645,7 +1648,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | 0AH | ZDATA | `rx_got_zdata` |
 | FCH | junk limit | `rx_header_error` |
 
-**0CF9: ZModem file receive: result of a data subpacket**
+**0CF9 `rx_data_tab`: ZModem file receive: result of a data subpacket**
 
 | Key | Meaning | Handler |
 |---|---|---|
@@ -1657,14 +1660,14 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | FEH | timeout | `rx_header_error` |
 | 10H | ZCAN | `rx_got_cancel` |
 
-**0E2A: Read filter: ignored characters**
+**0E2A `filter7_keys`: Read filter: ignored characters**
 
 | Key | Meaning |
 |---|---|
 | 11H |  |
 | 13H |  |
 
-**0EA2: ZDLE filter: characters ignored**
+**0EA2 `zdl_ign_keys`: ZDLE filter: characters ignored**
 
 | Key | Meaning |
 |---|---|
@@ -1673,7 +1676,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | 13H |  |
 | 93H |  |
 
-**0EA6: ZDLE escape: character after ZDLE**
+**0EA6 `zdl_esc_tab`: ZDLE escape: character after ZDLE**
 
 | Key | Meaning | Handler |
 |---|---|---|
@@ -1689,7 +1692,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | 6CH | ZRUB0 | `zdl_rub0` |
 | 6DH | ZRUB1 | `zdl_rub1` |
 
-**0F0E: Data subpacket end, CRC-16**
+**0F0E `crc16_end_tab`: Data subpacket end, CRC-16**
 
 | Key | Meaning | Handler |
 |---|---|---|
@@ -1701,7 +1704,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | FFH | error | `rx_err_return` |
 | FEH | timeout | `rx_timeout` |
 
-**0F23: Data subpacket end, CRC-32**
+**0F23 `crc32_end_tab`: Data subpacket end, CRC-32**
 
 | Key | Meaning | Handler |
 |---|---|---|
@@ -1713,7 +1716,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | FFH | error | `rx_err_return` |
 | FEH | timeout | `rx_timeout` |
 
-**109E: Header scan: idle state**
+**109E `hdr_idle_tab`: Header scan: idle state**
 
 | Key | Meaning | Handler |
 |---|---|---|
@@ -1721,21 +1724,21 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | AAH | ZPAD (bit 7 set) | `hdr_got_zpad` |
 | 2AH | ZPAD | `hdr_got_zpad` |
 
-**10A7: Header scan: after ZDLE**
+**10A7 `hdr_zdle_tab`: Header scan: after ZDLE**
 
 | Key | Meaning | Handler |
 |---|---|---|
 | 6BH | ZCRCW after CAN: no header follows | `hdr_zdle_zcrcw` |
 | 18H | ZDLE | `hdr_zdle_zdle` |
 
-**10AD: Header scan: after ZPAD**
+**10AD `hdr_pad_tab`: Header scan: after ZPAD**
 
 | Key | Meaning | Handler |
 |---|---|---|
 | 2AH | ZPAD | `hdr_pad_loop` |
 | 18H | ZDLE | `hdr_zpad_zdle` |
 
-**10B3: Header scan: after ZPAD ZDLE (format character)**
+**10B3 `hdr_fmt_tab`: Header scan: after ZPAD ZDLE (format character)**
 
 | Key | Meaning | Handler |
 |---|---|---|
@@ -1744,7 +1747,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | 42H | ZHEX (hex header) | `hdr_hex` |
 | 18H | ZDLE | `hdr_got_zdle` |
 
-**10BF: Header result codes that return with carry set**
+**10BF `hdr_ret_keys`: Header result codes that return with carry set**
 
 | Key | Meaning |
 |---|---|
@@ -1755,7 +1758,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | FEH | timeout |
 | FCH | junk limit |
 
-**12AE: XModem block start character**
+**12AE `xm_start_tab`: XModem block start character**
 
 | Key | Meaning | Handler |
 |---|---|---|
@@ -1764,7 +1767,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | 04H | EOT | `xm_got_eot` |
 | 18H | CAN | `xm_got_can` |
 
-**1477: ZDLE escape set (sender)**
+**1477 `esc_set_tab`: ZDLE escape set (sender)**
 
 | Key | Meaning | Handler |
 |---|---|---|
@@ -1780,7 +1783,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 
 ### B.2 SZ
 
-**03CA: Option letters**
+**03CA `opt_tab`: Option letters**
 
 | Key | Meaning | Handler |
 |---|---|---|
@@ -1793,7 +1796,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | 59H | 'Y' | `opt_ymodem` |
 | 5AH | 'Z' | `opt_zmodem` |
 
-**0A31: wait_rx_start: first character from the receiver**
+**0A31 `start_char_tab`: wait_rx_start: first character from the receiver**
 
 | Key | Meaning | Handler |
 |---|---|---|
@@ -1803,7 +1806,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | 15H | NAK | `got_nak` |
 | 18H | CAN | `wait_can_confirm` |
 
-**0A40: xmodem_wait_rx: start character from the receiver**
+**0A40 `xm_start_tab`: xmodem_wait_rx: start character from the receiver**
 
 | Key | Meaning |
 |---|---|
@@ -1812,7 +1815,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | FEH | TIMEOUT |
 | 18H | CAN |
 
-**0A40: xmodem_wait_rx: start character from the receiver**
+**0A40 `xm_start_tab`: xmodem_wait_rx: start character from the receiver**
 
 | Key | Meaning | Handler |
 |---|---|---|
@@ -1821,7 +1824,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | FEH | TIMEOUT | `xw_timeout` |
 | 18H | CAN | `xw_got_can` |
 
-**0B9C: XModem sender: response to a block**
+**0B9C `xs_reply_tab`: XModem sender: response to a block**
 
 | Key | Meaning | Handler |
 |---|---|---|
@@ -1832,7 +1835,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | 06H | ACK | `xs_got_ack` |
 | FFH | ERROR | `xs_got_garbage` |
 
-**0BAE: XModem sender: response after garbage**
+**0BAE `xs_garbage_tab`: XModem sender: response after garbage**
 
 | Key | Meaning | Handler |
 |---|---|---|
@@ -1841,7 +1844,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | 43H | 'C' (CRC requested) | `xs_wait_ack` |
 | 18H | CAN | `xs_chk_can` |
 
-**0C79: ZModem start: frame type received**
+**0C79 `send_init_tab`: ZModem start: frame type received**
 
 | Key | Meaning | Handler |
 |---|---|---|
@@ -1852,7 +1855,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | FEH | timeout | `zi_abort` |
 | 00H | ZRQINIT | `zi_got_zrqinit` |
 
-**0D2F: ZFILE: frame type of the answer**
+**0D2F `zfile_reply_tab`: ZFILE: frame type of the answer**
 
 | Key | Meaning | Handler |
 |---|---|---|
@@ -1865,7 +1868,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | 05H | ZSKIP | `zf_skip` |
 | 09H | ZRPOS | `zf_got_zrpos` |
 
-**0D6E: After a ZCRCW: frame type of the answer**
+**0D6E `zcrcw_reply_tab`: After a ZCRCW: frame type of the answer**
 
 | Key | Meaning | Handler |
 |---|---|---|
@@ -1875,7 +1878,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | 09H | ZRPOS | `zd_got_zrpos` |
 | 01H | ZRINIT | `zd_ok` |
 
-**0DA7: After a ZACK: character from the receiver**
+**0DA7 `after_ack_tab`: After a ZACK: character from the receiver**
 
 | Key | Meaning |
 |---|---|
@@ -1885,7 +1888,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | 13H | XOFF |
 | 93H | XOFF (bit 7 set) |
 
-**0DA7: After a ZACK: character from the receiver**
+**0DA7 `after_ack_tab`: After a ZACK: character from the receiver**
 
 | Key | Meaning | Handler |
 |---|---|---|
@@ -1895,7 +1898,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | 13H | XOFF | `zd_got_xoff` |
 | 93H | XOFF (bit 7 set) | `zd_got_xoff` |
 
-**0E84: Reverse-channel sampling: character from the receiver**
+**0E84 `rev_sample_tab`: Reverse-channel sampling: character from the receiver**
 
 | Key | Meaning | Handler |
 |---|---|---|
@@ -1905,7 +1908,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | 13H | XOFF | `zs_got_xoff` |
 | 93H | XOFF (bit 7 set) | `zs_got_xoff` |
 
-**0EC5: After ZEOF: frame type of the answer**
+**0EC5 `zeof_reply_tab`: After ZEOF: frame type of the answer**
 
 | Key | Meaning | Handler |
 |---|---|---|
@@ -1914,7 +1917,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | 01H | ZRINIT | `zeof_ok` |
 | 05H | ZSKIP | `zeof_skip` |
 
-**0F74: zmodem_get_resp: frame type received**
+**0F74 `resp_frame_tab`: zmodem_get_resp: frame type received**
 
 | Key | Meaning | Handler |
 |---|---|---|
@@ -1928,7 +1931,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | 05H | ZSKIP | `resp_return` |
 | FFH | error | `resp_send_znak` |
 
-**12C1: ZDLE escape set (sender)**
+**12C1 `esc_set_tab`: ZDLE escape set (sender)**
 
 | Key | Meaning | Handler |
 |---|---|---|
@@ -1942,7 +1945,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | 13H | XOFF | `zdl_escape` |
 | 93H | XOFF with bit 7 | `zdl_escape` |
 
-**13B8: Header scan: idle state**
+**13B8 `hdr_idle_tab`: Header scan: idle state**
 
 | Key | Meaning | Handler |
 |---|---|---|
@@ -1950,21 +1953,21 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | AAH | ZPAD (bit 7 set) | `hdr_got_zpad` |
 | 2AH | ZPAD | `hdr_got_zpad` |
 
-**13C1: Header scan: after ZDLE**
+**13C1 `hdr_zdle_tab`: Header scan: after ZDLE**
 
 | Key | Meaning | Handler |
 |---|---|---|
 | 6BH | ZCRCW after CAN: no header follows | `hdr_zdle_zcrcw` |
 | 18H | ZDLE | `hdr_zdle_zdle` |
 
-**13C7: Header scan: after ZPAD**
+**13C7 `hdr_pad_tab`: Header scan: after ZPAD**
 
 | Key | Meaning | Handler |
 |---|---|---|
 | 2AH | ZPAD | `hdr_pad_loop` |
 | 18H | ZDLE | `hdr_zpad_zdle` |
 
-**13CD: Header scan: after ZPAD ZDLE (format character)**
+**13CD `hdr_fmt_tab`: Header scan: after ZPAD ZDLE (format character)**
 
 | Key | Meaning | Handler |
 |---|---|---|
@@ -1973,7 +1976,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | 42H | ZHEX (hex header) | `hdr_hex` |
 | 18H | ZDLE | `hdr_got_zdle` |
 
-**13D9: Header result codes that return with carry set**
+**13D9 `hdr_ret_keys`: Header result codes that return with carry set**
 
 | Key | Meaning |
 |---|---|
@@ -1984,14 +1987,14 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | FEH | timeout |
 | FCH | junk limit |
 
-**14F6: Read filter: ignored characters**
+**14F6 `filter7_keys`: Read filter: ignored characters**
 
 | Key | Meaning |
 |---|---|
 | 11H |  |
 | 13H |  |
 
-**156E: ZDLE filter: characters ignored**
+**156E `zdl_ign_keys`: ZDLE filter: characters ignored**
 
 | Key | Meaning |
 |---|---|
@@ -2000,7 +2003,7 @@ Each table lists the key, its meaning and the routine (or entry point) that hand
 | 13H |  |
 | 93H |  |
 
-**1572: ZDLE escape: character after ZDLE**
+**1572 `zdl_esc_tab`: ZDLE escape: character after ZDLE**
 
 | Key | Meaning | Handler |
 |---|---|---|
@@ -2042,19 +2045,21 @@ Sizes are those of the `.ds` reservations in the listings.  Addresses between en
 | 08B2 | `opt_binary_flag` | FFH if -b (binary) was given |
 | 08B3 | `opt_resume_flag` | FFH if -r (resume) was given |
 | 08B4 | `buffer_mask` | Receive buffer size mask (power of two minus one) |
-| 179E | `argv_ptr` | Pointer to the argument table built by tokenize_args |
-| 17A0 | `default_user` | User number at program start |
-| 17A1 | `default_drive` | Drive (1 = A:) at program start |
-| 17A2 | `saved_user` | User number to select (pair with work_fcb drive byte) |
-| 17A3 | `work_fcb` | FCB for the file being received (starts with the drive byte) |
-| 17C4 | `work_fcb_r0` | Random record number r0-r2 of work_fcb |
-| 17C7 | `work_fcb_r3` | Random record overflow byte of work_fcb |
+| 179E | `arg_table_ptr` | Address of arg_table, the start of the free memory (initialised in the image) |
 
 **Work area above the image**
 
 | Address | Size | Name | Description |
 |---|---|---|---|
+| 17A0 | 1 | `default_user` | User number at program start |
+| 17A1 | 1 | `default_drive` | Drive (1 = A:) at program start |
+| 17A2 | 1 | `saved_user` | User number to select (pair with work_fcb drive byte) |
+| 17A3 | 33 | `work_fcb` | FCB for the file being received (starts with the drive byte; r0-r2 follow) |
+| 17C4 | 3 | `work_fcb_r0` | Random record number r0-r2 of work_fcb (FCB offsets 33-35) |
+| 17C7 | 1 | `work_fcb_r3` | Extra byte after the 36-byte FCB (offset 36), not a standard FCB field: kept zero so r0-r3 can be used as one 32-bit number |
+| 17C8 | 64 | `stack` | Stack: grows down from stack_top |
 | 1808 | 6 | `aux_ring` | AUX receive ring buffer control block: count, head, tail (6 bytes); 4096 data bytes follow at 180EH-280DH |
+| 1808 | 0 | `stack_top` | Initial stack pointer: the stack grows down from here (same address as aux_ring) |
 | 180E | 4096 | `aux_ring_data` | Data area of the AUX receive ring (4096 bytes) |
 | 280E | 1 | `file_buf_count` | Output sector buffer: number of bytes currently held (0-128) |
 | 280F | 1 | `file_buf_wr` | Output sector buffer: write index |
@@ -2065,7 +2070,7 @@ Sizes are those of the `.ds` reservations in the listings.  Addresses between en
 | 2899 | 4 | `crc32_value` | Running CRC-32 accumulator (4 bytes) |
 | 289D | 1024 | `crc32_table` | CRC-32 lookup table, 256 x 4 bytes (289DH-2C9CH) |
 | 2C9D | 1 | `escape_ctl_flag` | Nonzero (40H) if the sender requested escaping of all control characters (TESCCTL) |
-| 2C9E | 1 | `crc_mode` | Link CRC type: 10H = CRC-16, 20H = CRC-32, 0 = XMODEM checksum |
+| 2C9E | 1 | `rx_crc_mode` | Link CRC type: 10H = CRC-16, 20H = CRC-32, 0 = XMODEM checksum |
 | 2C9F | 1 | `zfile_zf3` | ZFILE header bytes ZF3,ZF2,ZF1,ZF0 as received (2C9FH-2CA2H); ZF2 = transport option, unused |
 | 2CA0 | 1 | `zfile_zf2` | ZFILE header byte ZF2 (transport option), not used by the code |
 | 2CA1 | 1 | `zfile_zf1` | ZFILE ZF1, management option: ZMAPND 3 = append to existing file, ZMPROT 7 = protect existing file, ... |
@@ -2108,6 +2113,7 @@ Sizes are those of the `.ds` reservations in the listings.  Addresses between en
 | 2D0D | 1 | `parsed_drive` | Drive from the file spec (0 = default) |
 | 2D0E | 1 | `parsed_user` | User number from the file spec |
 | 2D0F | 2 | `z3env_ptr` | Address of the ZCPR3 environment descriptor (0 if none) |
+| 2D11 | 6 | `arg_table` | Argument pointers table built by tokenize_args: maximum count, count found, two token pointers; the receive buffer starts here and overwrites it later |
 
 ### C.2 SZ
 
@@ -2118,6 +2124,8 @@ Sizes are those of the `.ds` reservations in the listings.  Addresses between en
 | 0109 | `z3env_addr` | ZCPR3 environment address, patched in by Z3INS |
 | 04E7 | `name_line_buf` | Console line buffer: CR LF, "d:" and file name |
 | 051B | `pos_line_buf` | Console line buffer for the position display |
+| 055F | `pending_char` | Queued input character (see set_pending_char) |
+| 0560 | `pending_count` | Number of times pending_char is still to be delivered |
 | 078F | `crc32_poly` | CRC-32 polynomial 0EDB88320H (little endian) |
 | 0793 | `crc32_residue` | CRC-32 residue 0DEBB20E3H expected after a good frame |
 | 084A | `const_1024` | 32-bit constant 1024 |
@@ -2126,7 +2134,7 @@ Sizes are those of the `.ds` reservations in the listings.  Addresses between en
 | 0853 | `window_default` | Default receiver window: value x 4 x 256 bytes |
 | 1C35 | `in_file_active` | Flag byte: input file object in use |
 | 1C36 | `out_file_active` | Flag byte: output file object in use |
-| 1F78 | `argv_ptr` | Pointer to the argument table built by tokenize_args |
+| 1F78 | `arg_table_ptr` | Address of arg_table, the start of the free memory (initialised in the image) |
 
 **Work area above the image**
 
@@ -2135,9 +2143,11 @@ Sizes are those of the `.ds` reservations in the listings.  Addresses between en
 | 2000 | 1 | `default_user` | User number at program start |
 | 2001 | 1 | `default_drive` | Drive (1 = A:) at program start |
 | 2002 | 1 | `saved_user` | User number to select (pair with work_fcb drive byte) |
-| 2003 | 36 | `work_fcb` | Work FCB / DU pair for the command line file spec |
-| 2027 | 64 | `stack_area` | Stack: grows down from aux_ring (SP is set to aux_ring at start) |
-| 2067 | 6 | `aux_ring` | AUX receive ring buffer control block: count, write index, read index; 512 data bytes follow (also initial stack top) |
+| 2003 | 33 | `work_fcb` | Work FCB / DU pair for the command line file spec (FCB offsets 0-32) |
+| 2024 | 3 | `work_fcb_r0` | Random record number r0-r2 of work_fcb (FCB offsets 33-35) |
+| 2027 | 64 | `stack` | Stack: grows down from stack_top |
+| 2067 | 6 | `aux_ring` | AUX receive ring buffer control block: count, write index, read index; 512 data bytes follow |
+| 2067 | 0 | `stack_top` | Initial stack pointer: the stack grows down from here (same address as aux_ring) |
 | 206D | 512 | `aux_ring_data` | Data area of the AUX receive ring (512 bytes) |
 | 226D | 1 | `entry_user` | User number of the current file list entry |
 | 226E | 36 | `send_fcb` | FCB of the file being sent |
@@ -2192,7 +2202,7 @@ Sizes are those of the `.ds` reservations in the listings.  Addresses between en
 | 26FE | 4 | `reposition_temp` | Temporary position used while repositioning the file |
 | 2702 | 4 | `chunk_len` | Number of bytes in the current chunk |
 | 2706 | 1 | `data_terminator` | Terminator byte of the data subpacket being sent |
-| 2707 | 1 | `out_frame_type` | Frame type of the header being sent |
+| 2707 | 1 | `tx_frame_type` | Frame type of the header being sent |
 | 2708 | 2 | `hdr_junk_limit` | get_header: remaining number of junk characters tolerated |
 | 270A | 1 | `hdr_can_count` | get_header: remaining CAN characters before abort |
 | 270B | 1 | `rx_frame_type` | Frame type of the last header received |
@@ -2233,6 +2243,7 @@ Sizes are those of the `.ds` reservations in the listings.  Addresses between en
 | 28B5 | 2 | `cur_file_ptr` | Pointer to the file object being operated on |
 | 28B7 | 1 | `file_io_char` | Character passed through file get/put |
 | 28B8 | 36 | `fcb_copy` | Scratch copy of a 36-byte FCB |
+| 28DC | 6 | `arg_table` | Argument pointers table built by tokenize_args: maximum count, count found, two token pointers; the file list starts here and overwrites it later |
 
 
 ## Appendix D: BDOS functions used
@@ -2269,110 +2280,111 @@ Sizes are those of the `.ds` reservations in the listings.  Addresses between en
 
 ## Appendix E: Shared routines
 
-Routines present in both programs under the same name, with their addresses.  Differences between the two copies are limited to constants such as the ring size.
+Routines present in both programs under the same name, with their addresses.  "Identical" means that the code, labels and comments are the same line for line in `rz.asm` and `sz.asm` (such routines carry a `Common routine` note in the listings).  Where the copies differ, the difference is in a constant or variable name (for example the ring size) or in a few instructions.
 
-| Routine | RZ | SZ |
-|---|---|---|
-| `start` | 0100 | 0100 |
-| `get_default_du` | 0195 | 01F1 |
-| `set_du` | 01B0 | 020C |
-| `err_need_cpm3` | 01C2 | 021E |
-| `usage_exit` | 01CA | 0226 |
-| `parse_options` | 039A | 03B3 |
-| `opt_xmodem` | 03C9 | 03E2 |
-| `opt_ymodem` | 03CD | 03E6 |
-| `opt_zmodem` | 03D1 | 03EA |
-| `set_protocol` | 03D3 | 03EC |
-| `opt_protect` | 03D7 | 03F0 |
-| `opt_binary` | 03DD | 03FC |
-| `opt_convert` | 03E3 | 0402 |
-| `scb_setup` | 03EF | 0408 |
-| `scb_restore` | 0451 | 046A |
-| `print_err_count` | 0482 | 048A |
-| `print_filename` | 04A4 | 04AC |
-| `print_position` | 050B | 0508 |
-| `print_cant_open` | 054D | 0526 |
-| `print_skipped` | 0552 | 052B |
-| `set_pending_char` | 057F | 0558 |
-| `aux_poll_input` | 0588 | 0561 |
-| `aux_get_char` | 05B4 | 058D |
-| `aux_putc` | 05C7 | 05A0 |
-| `aux_out_ready` | 05CD | 05A6 |
-| `aux_wait_input` | 05D4 | 05AD |
-| `delay_short` | 05EB | 05C4 |
-| `ring_get` | 05F7 | 05D0 |
-| `ring_put` | 061C | 05F5 |
-| `clear_fcb` | 0643 | 061C |
-| `ring_reset` | 064E | 0623 |
-| `dispatch` | 067F | 0629 |
-| `zero32` | 0688 | 0632 |
-| `copy32` | 0692 | 063C |
-| `cmp32_signed` | 06A1 | 064B |
-| `cmp32_unsigned` | 06C2 | 066C |
-| `eq32` | 06D3 | 067D |
-| `add32` | 06E4 | 068E |
-| `sub32` | 06FA | 06A4 |
-| `inc32` | 0712 | 06BC |
-| `set32_minus1` | 0726 | 06D0 |
-| `dec32` | 0729 | 06D3 |
-| `and32` | 073B | 06E5 |
-| `ltoa32` | 0774 | 071E |
-| `checksum_add` | 07DD | 0787 |
-| `crc32_update` | 07ED | 0797 |
-| `crc32_table_init` | 0825 | 07CF |
-| `crc16_update` | 0885 | 082F |
-| `crc_init` | 08A0 | 12DC |
-| `calc_buffer_mask` | 08B6 | 088A |
-| `send_can_string` | 0DD9 | 15A8 |
-| `send_string` | 0DDC | 15AB |
-| `aux_getc_timeout` | 0DE7 | 15B6 |
-| `getc_7bit_filt` | 0E05 | 14D1 |
-| `getc_zdl_filt` | 0E2F | 14FB |
-| `zdlread_escape` | 0E50 | 151C |
-| `get_header` | 0FD1 | 12EB |
-| `get_bin32_header` | 10C5 | 13DF |
-| `get_bin16_header` | 1100 | 141A |
-| `get_hex_header` | 113F | 1454 |
-| `get_hex_byte` | 1194 | 14A4 |
-| `hex_digit_value` | 11B3 | 14C3 |
-| `send_hex_header` | 13BA | 1204 |
-| `put_hex_byte` | 1418 | 1262 |
-| `put_zdle_char` | 1438 | 1282 |
-| `aux_putc_wait` | 145C | 12A6 |
-| `parse_filespec` | 1492 | 15D4 |
-| `parse_fcb` | 14A7 | 15E9 |
-| `parse_fcb_field` | 1522 | 1664 |
-| `inc_wild_count` | 1543 | 1685 |
-| `parse_du` | 154A | 168C |
-| `parse_du_inner` | 1552 | 1694 |
-| `parse_named_dir` | 159D | 16DF |
-| `named_dir_lookup` | 15A5 | 16E7 |
-| `is_delimiter` | 15D9 | 171B |
-| `parse_decimal` | 15FA | 173C |
-| `digit_value` | 1625 | 1767 |
-| `clear_dirspec` | 162C | 176E |
-| `clear_fcb_tail` | 1632 | 1774 |
-| `fill_clear` | 1645 | 1787 |
-| `z3env_duok` | 164A | 178C |
-| `z3env_max_drive` | 1652 | 1794 |
-| `z3env_max_user` | 165A | 179C |
-| `z3env_ndr_ptr` | 1662 | 17A4 |
-| `set_z3env` | 1683 | 17C5 |
-| `get_drive_user` | 1687 | 1D8C |
-| `console_read` | 16A5 | 1E07 |
-| `console_status` | 16AA | 1E0C |
-| `bdos_save_regs` | 16AF | 1E11 |
-| `bdos_call_a` | 16B8 | 1E1A |
-| `fcb_to_name` | 16C4 | 1E26 |
-| `copy_name_part` | 16DA | 1E3C |
-| `a_to_decimal` | 16E7 | 1E49 |
-| `decimal_digit` | 1703 | 1E65 |
-| `decimal_emit` | 1717 | 1E79 |
-| `upcase_string` | 171E | 1E80 |
-| `tokenize_args` | 172E | 1EAB |
-| `skip_blanks` | 176B | 1EE8 |
-| `skip_token` | 1779 | 1EF6 |
-| `memset` | 1786 | 1F03 |
-| `memset_inner` | 178C | 1F09 |
-| `to_upper` | 1793 | 1F3F |
+| Routine | RZ | SZ | Identical |
+|---|---|---|---|
+| `start` | 0100 | 0100 |  |
+| `get_default_du` | 0195 | 01F1 | yes |
+| `set_du` | 01B0 | 020C | yes |
+| `err_need_cpm3` | 01C2 | 021E | yes |
+| `usage_exit` | 01CA | 0226 | yes |
+| `parse_options` | 039A | 03B3 | yes |
+| `opt_xmodem` | 03C9 | 03E2 | yes |
+| `opt_ymodem` | 03CD | 03E6 | yes |
+| `opt_zmodem` | 03D1 | 03EA | yes |
+| `set_protocol` | 03D3 | 03EC | yes |
+| `opt_protect` | 03D7 | 03F0 | yes |
+| `opt_binary` | 03DD | 03FC | yes |
+| `opt_convert` | 03E3 | 0402 | yes |
+| `scb_setup` | 03EF | 0408 | yes |
+| `scb_restore` | 0451 | 046A | yes |
+| `print_err_count` | 0482 | 048A | yes |
+| `print_filename` | 04A4 | 04AC |  |
+| `print_position` | 050B | 0508 |  |
+| `print_cant_open` | 054D | 0526 | yes |
+| `print_skipped` | 0552 | 052B | yes |
+| `set_pending_char` | 057F | 0558 | yes |
+| `aux_poll_input` | 0588 | 0561 |  |
+| `aux_get_char` | 05B4 | 058D | yes |
+| `aux_putc` | 05C7 | 05A0 | yes |
+| `aux_out_ready` | 05CD | 05A6 | yes |
+| `aux_wait_input` | 05D4 | 05AD | yes |
+| `delay_short` | 05EB | 05C4 | yes |
+| `ring_get` | 05F7 | 05D0 |  |
+| `ring_put` | 061C | 05F5 |  |
+| `clear_fcb` | 0643 | 061C |  |
+| `ring_reset` | 064E | 0623 | yes |
+| `memset_a` | 0650 | 0625 | yes |
+| `dispatch` | 067F | 0629 | yes |
+| `zero32` | 0688 | 0632 | yes |
+| `copy32` | 0692 | 063C | yes |
+| `cmp32_signed` | 06A1 | 064B | yes |
+| `cmp32_unsigned` | 06C2 | 066C | yes |
+| `eq32` | 06D3 | 067D | yes |
+| `add32` | 06E4 | 068E | yes |
+| `sub32` | 06FA | 06A4 | yes |
+| `inc32` | 0712 | 06BC | yes |
+| `set32_minus1` | 0726 | 06D0 | yes |
+| `dec32` | 0729 | 06D3 | yes |
+| `and32` | 073B | 06E5 | yes |
+| `ltoa32` | 0774 | 071E | yes |
+| `checksum_add` | 07DD | 0787 | yes |
+| `crc32_update` | 07ED | 0797 | yes |
+| `crc32_table_init` | 0825 | 07CF | yes |
+| `crc16_update` | 0885 | 082F | yes |
+| `crc_init` | 08A0 | 12DC | yes |
+| `calc_buffer_mask` | 08B6 | 088A |  |
+| `send_can_string` | 0DD9 | 15A8 | yes |
+| `send_string` | 0DDC | 15AB | yes |
+| `aux_getc_timeout` | 0DE7 | 15B6 | yes |
+| `getc_7bit_filt` | 0E05 | 14D1 | yes |
+| `getc_zdl_filt` | 0E2F | 14FB | yes |
+| `zdlread_escape` | 0E50 | 151C | yes |
+| `get_header` | 0FD1 | 12EB |  |
+| `get_bin32_header` | 10C5 | 13DF | yes |
+| `get_bin16_header` | 1100 | 141A |  |
+| `get_hex_header` | 113F | 1454 |  |
+| `get_hex_byte` | 1194 | 14A4 | yes |
+| `hex_digit_value` | 11B3 | 14C3 | yes |
+| `send_hex_header` | 13BA | 1204 | yes |
+| `put_hex_byte` | 1418 | 1262 | yes |
+| `put_zdle_char` | 1438 | 1282 | yes |
+| `aux_putc_wait` | 145C | 12A6 | yes |
+| `parse_filespec` | 1492 | 15D4 | yes |
+| `parse_fcb` | 14A7 | 15E9 | yes |
+| `parse_fcb_field` | 1522 | 1664 | yes |
+| `inc_wild_count` | 1543 | 1685 | yes |
+| `parse_du` | 154A | 168C | yes |
+| `parse_du_inner` | 1552 | 1694 | yes |
+| `parse_named_dir` | 159D | 16DF | yes |
+| `named_dir_lookup` | 15A5 | 16E7 | yes |
+| `is_delimiter` | 15D9 | 171B | yes |
+| `parse_decimal` | 15FA | 173C | yes |
+| `digit_value` | 1625 | 1767 | yes |
+| `clear_dirspec` | 162C | 176E | yes |
+| `clear_fcb_tail` | 1632 | 1774 | yes |
+| `fill_clear` | 1645 | 1787 | yes |
+| `z3env_duok` | 164A | 178C | yes |
+| `z3env_max_drive` | 1652 | 1794 | yes |
+| `z3env_max_user` | 165A | 179C | yes |
+| `z3env_ndr_ptr` | 1662 | 17A4 | yes |
+| `set_z3env` | 1683 | 17C5 | yes |
+| `get_drive_user` | 1687 | 1D8C | yes |
+| `console_read` | 16A5 | 1E07 | yes |
+| `console_status` | 16AA | 1E0C | yes |
+| `bdos_save_regs` | 16AF | 1E11 | yes |
+| `bdos_call_a` | 16B8 | 1E1A | yes |
+| `fcb_to_name` | 16C4 | 1E26 | yes |
+| `copy_name_part` | 16DA | 1E3C | yes |
+| `a_to_decimal` | 16E7 | 1E49 | yes |
+| `decimal_digit` | 1703 | 1E65 | yes |
+| `decimal_emit` | 1717 | 1E79 | yes |
+| `upcase_string` | 171E | 1E80 |  |
+| `tokenize_args` | 172E | 1EAB | yes |
+| `skip_blanks` | 176B | 1EE8 | yes |
+| `skip_token` | 1779 | 1EF6 | yes |
+| `memset` | 1786 | 1F03 | yes |
+| `memset_inner` | 178C | 1F09 | yes |
+| `to_upper` | 1793 | 1F3F | yes |
 

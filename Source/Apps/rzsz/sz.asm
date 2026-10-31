@@ -1,16 +1,12 @@
 ; SZ.COM  --  X/Y/ZMODEM send program for CP/M 3 (sz v1.11, W. Schmitten 1992)
 ; SZ.COM v1.11
-; Disassembly of the CP/M 3 ZMODEM/YMODEM/XMODEM program (Z80). Reassembles byte-identical to the original .COM.
+; Derived from a byte-identical disassembly of the CP/M 3 ZMODEM/YMODEM/XMODEM program (Z80).
 ; Source is in TASM syntax (dotted directives); assembled and verified with uz80as.
 ; Modem is on the CP/M AUX device (BDOS 3/4/7/8). Option letters: ? P A B C X Y Z (A = append).
 ; Tables: key bytes searched with CPIR, then N vectors in REVERSE key order, jumped to via the dispatch routine.
-; Labels L#### = code, D#### = data, V#### = work RAM above the image, X#### = patched operand bytes.
-; Comments were cross-checked against an independent disassembly of the same binaries (rzsz2),
+; Labels are descriptive; patched operand bytes are named with .equ <label>+n.
+; Comments were cross-checked against an independent disassembly of the same binaries,
 ; the ZMODEM specification and the rz.c / sz.c sources.
-
-; Constants: names and values come from rzsz2 (cpm3.inc and zmodem.inc), descriptions are quoted as written;
-; entries marked "added in this disassembly" are not defined by rzsz2.
-; rzsz2 also defines SCB_QERR, SCB_DMAERR and SCB_DISKERR; this program does not use them and they are not adopted.
 
 ; ----------------------------------------------------------------------
 ; CP/M 3 page zero locations
@@ -18,7 +14,7 @@
 CPM			.equ 0000H	; Warm Boot Jump Vector (0000h: JP BIOS+3)
 IOBYTE			.equ 0004H	; Intel I/O Byte (CP/M 2.2) / Current Drive & User (CP/M 3)
 BDOS			.equ 0005H	; BDOS Function Call Entry Point (0005h: JP BDOS)
-BDOSVEC			.equ 0006H	; BDOS address = top of the TPA  (added in this disassembly)
+BDOSVEC			.equ 0006H	; BDOS address = top of the TPA
 DEFAULT_FCB		.equ 005CH	; Default File Control Block 1 (FCB)
 DEFAULT_FCB2		.equ 006CH	; Default File Control Block 2 (FCB)
 DEFAULT_DMA		.equ 0080H	; Default DMA / Command Tail Buffer (128 bytes)
@@ -88,10 +84,9 @@ CIO_SIZE		.equ 0A8H	; Total channel control block size (168 bytes)
 ; ----------------------------------------------------------------------
 ; System Control Block (SCB) offsets (read and written with BDOS S_SYSVAR)
 ; ----------------------------------------------------------------------
-SCB_CIVEC		.equ 22H	; SCB offset 22H: console input redirection vector  (added in this disassembly)
-SCB_COVEC		.equ 24H	; SCB offset 24H: console output redirection vector  (added in this disassembly)
-SCB_AOVEC		.equ 28H	; SCB offset 28H: auxiliary (modem) output redirection vector (added in this
-					; disassembly)
+SCB_CIVEC		.equ 22H	; SCB offset 22H: console input redirection vector
+SCB_COVEC		.equ 24H	; SCB offset 24H: console output redirection vector
+SCB_AOVEC		.equ 28H	; SCB offset 28H: auxiliary (modem) output redirection vector
 
 ; ----------------------------------------------------------------------
 ; ZCPR3 environment descriptor offsets
@@ -99,9 +94,7 @@ SCB_AOVEC		.equ 28H	; SCB offset 28H: auxiliary (modem) output redirection vecto
 Z3_NDR_OFF		.equ 15H	; Named Directory table pointer offset (16-bit word)
 Z3_MDRV_OFF		.equ 2CH	; Maximum drive number offset (1 byte)
 Z3_MUSR_OFF		.equ 2DH	; Maximum user number offset (1 byte)
-Z3_DUOK_OFF		.equ 2EH	; ZCPR3 environment: "DU: form allowed" flag (called Z3_WHEEL_OFF in rzsz2) (added in
-					; this disassembly)
-Z3_WHEEL_OFF		.equ Z3_DUOK_OFF	; the name rzsz2 uses for the same offset
+Z3_DUOK_OFF		.equ 2EH	; ZCPR3 environment: "DU: form allowed" flag
 
 ; ----------------------------------------------------------------------
 ; ZMODEM framing characters
@@ -152,11 +145,10 @@ ZRUB1			.equ 6DH	; 'm' Translate next character to rubout (0377h)
 ; Data subpacket return codes (terminator with bit 7 set)
 ; ----------------------------------------------------------------------
 GOTCRCE			.equ ZCRCE+80H	; ZCRCE with bit 7 set: data subpacket ended with ZCRCE (return code of rx_data_subpkt)
-					; (added in this disassembly)
-GOTCRCG			.equ ZCRCG+80H	; ZCRCG received  (added in this disassembly)
-GOTCRCQ			.equ ZCRCQ+80H	; ZCRCQ received  (added in this disassembly)
-GOTCRCW			.equ ZCRCW+80H	; ZCRCW received  (added in this disassembly)
-GOTCAN			.equ ZDLE+80H	; CAN CAN received while reading a header or subpacket  (added in this disassembly)
+GOTCRCG			.equ ZCRCG+80H	; ZCRCG received
+GOTCRCQ			.equ ZCRCQ+80H	; ZCRCQ received
+GOTCRCW			.equ ZCRCW+80H	; ZCRCW received
+GOTCAN			.equ ZDLE+80H	; CAN CAN received while reading a header or subpacket
 
 ; ----------------------------------------------------------------------
 ; ZMODEM header byte positions (flag bytes ZF0-ZF3, position bytes ZP0-ZP3)
@@ -228,7 +220,7 @@ z3env_addr:
 ; drive/user and exit.
 ; ----------------------------------------------------------------------
 main:
-	ld sp,aux_ring			; the stack grows down from the work area
+	ld sp,stack_top			; the stack grows down from stack_top
 	ld hl,(z3env_addr)		; pick up the ZCPR3 environment address patched in by Z3INS
 	call set_z3env			; store HL as the ZCPR3 environment pointer
 	ld c,S_BDOSVER			; this program needs CP/M 3 (BDOS 3.0)
@@ -242,13 +234,13 @@ main:
 	ld a,(DEFAULT_DMA)		; is there a command tail?
 	or a				; Are there any command-line arguments?
 	jp z,usage_exit			; no: show the usage text
-	ld hl,(argv_ptr)		; argument table in free memory
+	ld hl,(arg_table_ptr)		; argument table in free memory
 	ld (hl),02H			; at most two arguments
 	ld de,0082H			; DE -> command tail text
 	ex de,hl			; swap pointers
 	ld a,0FFH			; terminate each argument with a zero
 	call tokenize_args		; split the command tail
-	ld hl,(argv_ptr)		; get pointer to the argument table built by tokenize_args
+	ld hl,(arg_table_ptr)		; get address of arg_table, the start of the free memory
 	inc hl				; HL -> argument count
 	ld a,(hl)			; A = number of parsed tokens
 	or a				; no arguments?
@@ -260,25 +252,25 @@ main:
 	inc hl				; HL++
 	ld a,(de)			; does it start with "-" ?
 	cp 2DH				; Does first argument begin with dash '-'?
-	jr nz,L0157			; no: it is the file specification
+	jr nz,main_1			; no: it is the file specification
 	call parse_options		; yes: process the option letters
 	ld e,(hl)			; DE -> second argument (the file specification)
 	inc hl				; HL++
 	ld d,(hl)			; DE = pointer to filename argument string
-L0157:
+main_1:
 	ld a,d				; no file specification?
 	or e				; Was a target filespec supplied?
-	jr z,L0196			; none
+	jr z,main_3			; none
 	ld hl,work_fcb			; point HL at work FCB / DU pair for the command line file spec
 	ex de,hl			; swap pointers
 	call parse_filespec		; parse [du:]filename (wildcards allowed)
 	ld hl,work_fcb			; point HL at work FCB / DU pair for the command line file spec
 	xor a				; no drive given?
 	or (hl)				; Did filespec specify an explicit drive?
-	jr nz,L016D			; if result is nonzero goto L016D
+	jr nz,main_2			; if result is nonzero goto main_2
 	ld a,(default_drive)		; use the current drive
 	ld (hl),a			; store into work FCB / DU pair for the command line file spec
-L016D:
+main_2:
 	ld (entry_drive),a		; drive for the file list entries
 	ld bc,FCB_S1			; Offset 13: point to user number field in FCB
 	add hl,bc			; HL += BC
@@ -287,8 +279,8 @@ L016D:
 	ld de,work_fcb			; point DE at work FCB / DU pair for the command line file spec
 	call set_du			; select that drive and user
 	or a				; Check if drive and user selection succeeded
-	jp nz,L01E1			; cannot select it
-	ld hl,(argv_ptr)		; list of files goes after the argument table
+	jp nz,main_4			; cannot select it
+	ld hl,(arg_table_ptr)		; list of files goes after the argument table
 	ld a,(saved_user)		; get user number to select
 	or 0C0H				; selection mask: user | C0H = DIR and SYS files, this user only
 	ld de,work_fcb			; point DE at work FCB / DU pair for the command line file spec
@@ -296,7 +288,7 @@ L016D:
 	ld (file_list_ptr),hl		; HL = end of the list
 	ld a,c				; C = number of matching files
 	ld (file_count),a		; save as number of files in the list to send
-L0196:
+main_3:
 	push af				; tell the user how many files were found
 	push bc				; preserve BC
 	push de				; preserve DE
@@ -311,7 +303,7 @@ L0196:
 	pop bc				; restore BC
 	pop af				; restore AF
 	or a				; no files?
-	jp z,L01E1			; nothing to send: exit
+	jp z,main_4			; nothing to send: exit
 	ex de,hl			; swap pointers
 	ld h,b				; BC = number of files
 	ld l,c				; L = C
@@ -328,17 +320,17 @@ L0196:
 	sbc hl,de			; Calculate total free bytes available in TPA
 	ld (file_buffer_size),hl	; save as size of the file data ring buffer
 	ld hl,0000H			; HL = 0000H
-	ld (unused_26F1),hl		; save as cleared at startup, never read
-	ld (unused_26F5),hl		; save as cleared at startup, never read
+	ld (file_buffer_base_hi),hl	; clear the high word of file_buffer_base
+	ld (file_buffer_size_hi),hl	; clear the high word of file_buffer_size
 	ld de,msg_start_rx		; ask the user to start the receiving program
 	ld c,C_WRITESTR			; BDOS function: C_WRITESTR
 	call BDOS			; C_WRITESTR: display the $-terminated message
 	call scb_setup			; change console settings for the transfer
 	call send_main			; send the files
 	call scb_restore		; restore the console settings
-L01E1:
+main_4:
 	ld bc,0000H			; BC = original user/drive (patched at start)
-restore_du		.equ L01E1+1	; default user/drive restored at exit (patched operand)
+restore_du		.equ main_4+1	; default user/drive restored at exit (patched operand)
 	ld (saved_user),bc		; save as user number to select
 	ld de,work_fcb			; point DE at work FCB / DU pair for the command line file spec
 	call set_du			; go back to the original drive and user
@@ -347,6 +339,7 @@ restore_du		.equ L01E1+1	; default user/drive restored at exit (patched operand)
 ; ----------------------------------------------------------------------
 ; get_default_du: Save the current user number and drive (from
 ; IOBYTE/0004H) so they can be restored at exit.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 get_default_du:
 	ld a,(IOBYTE)			; get IOBYTE
@@ -368,6 +361,7 @@ get_default_du:
 ; ----------------------------------------------------------------------
 ; set_du: Select user number and drive from a (user,drive+1) pair
 ; addressed by DE (BDOS F_USERNUM, DRV_SET).
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 set_du:
 	ld a,(de)			; Load drive number byte (1-based: 1=A, 2=B...)
@@ -385,6 +379,7 @@ set_du:
 
 ; ----------------------------------------------------------------------
 ; err_need_cpm3: Print "sorry, CP/M 3 Tool" and exit.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 err_need_cpm3:
 	ld de,msg_need_cpm3		; point DE at "sorry, CP/M 3 Tool"
@@ -393,12 +388,13 @@ err_need_cpm3:
 
 ; ----------------------------------------------------------------------
 ; usage_exit: Print the usage/help text and exit to CP/M.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 usage_exit:
 	ld de,msg_usage			; point DE at usage / help text
 	ld c,C_WRITESTR			; BDOS function: C_WRITESTR
 	call BDOS			; C_WRITESTR: display the $-terminated message
-	jp CPM				; loop back to L0000
+	jp CPM				; warm boot: return to CP/M
 ; Banner text
 msg_banner:
 	.db "SZ for CP/M 3   V 1.11",0DH,0AH
@@ -406,6 +402,7 @@ msg_banner:
 	.db 0AH
 	.db 24H
 ; "sorry, CP/M 3 Tool"
+; Common data: identical in RZ and SZ.
 msg_need_cpm3:
 	.db "sorry, CP/M 3 Tool",0DH,0AH
 	.db 24H
@@ -434,25 +431,27 @@ msg_start_rx:
 ; ----------------------------------------------------------------------
 ; parse_options: Scan a "-xyz" option string; each letter is looked up in
 ; the option key table and its handler is run.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 parse_options:
 	push hl				; preserve HL
 	push de				; preserve DE
-L03B5:
+parse_options_1:
 	inc de				; Advance to next character in argument string
 	ld a,(de)			; A = (DE)
 	or a				; Test for null terminator (end of string)
-	jr z,L03C7			; if result is zero goto L03C7
-	ld hl,D03CA			; point HL at D03CA
+	jr z,parse_options_2		; if result is zero goto parse_options_2
+	ld hl,opt_tab			; point HL at option letters and their handlers
 	ld bc,0008H			; 8 keys in the table
 	cpir				; look A up in the key table
 	call z,dispatch			; if A is in the key list goto dispatch
-	jr L03B5			; loop back to L03B5
-L03C7:
+	jr parse_options_1		; loop back to parse_options_1
+parse_options_2:
 	pop de				; restore DE
 	pop hl				; restore HL
 	ret				; return
-D03CA:
+; Option letters and their handlers (vectors are stored in reverse key order)
+opt_tab:
 	.db 3FH,50H,41H,42H,43H,58H,59H,5AH	; keys: ?PABCXYZ
 	.dw opt_zmodem			; key 5AH 'Z'
 	.dw opt_ymodem			; key 59H 'Y'
@@ -465,6 +464,7 @@ D03CA:
 
 ; ----------------------------------------------------------------------
 ; opt_xmodem: Option X: select XMODEM.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 opt_xmodem:
 	ld a,01H			; protocol 1 = XMODEM
@@ -472,6 +472,7 @@ opt_xmodem:
 
 ; ----------------------------------------------------------------------
 ; opt_ymodem: Option Y: select YMODEM.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 opt_ymodem:
 	ld a,03H			; protocol 3 = YMODEM
@@ -479,12 +480,14 @@ opt_ymodem:
 
 ; ----------------------------------------------------------------------
 ; opt_zmodem: Option Z: select ZMODEM.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 opt_zmodem:
 	ld a,04H			; protocol 4 = ZMODEM
 
 ; ----------------------------------------------------------------------
 ; set_protocol: Store protocol number in A (1=XMODEM, 3=YMODEM, 4=ZMODEM).
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 set_protocol:
 	ld (protocol),a			; save as selected protocol
@@ -492,6 +495,7 @@ set_protocol:
 
 ; ----------------------------------------------------------------------
 ; opt_protect: Option P: protect existing files (do not overwrite).
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 opt_protect:
 	ld a,0FFH			; set the -p flag (protect an existing file)
@@ -505,6 +509,7 @@ opt_append:
 
 ; ----------------------------------------------------------------------
 ; opt_binary: Option B: binary transfer.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 opt_binary:
 	ld a,0FFH			; set the -b flag (binary transfer)
@@ -513,6 +518,7 @@ opt_binary:
 
 ; ----------------------------------------------------------------------
 ; opt_convert: Option C: convert to local linefeed convention.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 opt_convert:
 	ld a,0FFH			; set the -c flag (convert line ends)
@@ -523,6 +529,7 @@ opt_convert:
 ; scb_setup: Detach the modem port from the console: read AOVEC (SCB 28H)
 ; via BDOS 49 and clear its devices from COVEC (24H) and CIVEC (22H),
 ; keeping the originals.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 scb_setup:
 	xor a				; prepare "get" requests (set code 0) for the three SCB fields
@@ -562,7 +569,7 @@ scb_setup:
 	and e				; A &= E
 	ld l,a				; L = A
 	ld (scb_civec_val),hl		; new CIVEC value (console and modem no longer share a device)
-L0450:
+scb_setup_1:
 	ld a,0FEH			; set code FEH = write a word into the SCB
 	ld (scb_covec_code),a		; S_SCB set code for the COVEC block = FEH
 	ld de,scb_pb_covec		; point DE at S_SCB parameter block
@@ -577,50 +584,62 @@ L0450:
 ; ----------------------------------------------------------------------
 ; scb_restore: Put the original console input/output redirection vectors
 ; (CIVEC, COVEC) back into the System Control Block.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 scb_restore:
 	ld hl,(scb_sv_covec)		; put the original COVEC and CIVEC back into the parameter blocks ...
 	ld (scb_covec_val),hl		; save as COVEC value word of its parameter block
 	ld hl,(scb_sv_civec)		; get original CIVEC value, restored at exit
 	ld (scb_civec_val),hl		; save as CIVEC value word of its parameter block
-	jr L0450			; ... and write them to the System Control Block
+	jr scb_setup_1			; ... and write them to the System Control Block
 ; S_SCB parameter block: SCB offset 28H = AOVEC, the auxiliary (modem) output redirection vector
+; Common data: identical in RZ and SZ.
 scb_pb_aovec:
 	.db SCB_AOVEC
 ; S_SCB set code for the AOVEC block (0 = get)
+; Common data: identical in RZ and SZ.
 scb_aovec_code:
 	.db 00H
 	.db 00H
 	.db 00H
 ; S_SCB parameter block: SCB offset 24H = COVEC, the console output redirection vector
+; Common data: identical in RZ and SZ.
 scb_pb_covec:
 	.db SCB_COVEC
 ; S_SCB set code for the COVEC block (0 = get, FEH = set word)
+; Common data: identical in RZ and SZ.
 scb_covec_code:
 	.db 00H
 ; COVEC value word of its parameter block
+; Common data: identical in RZ and SZ.
 scb_covec_val:
 	.db 00H
 	.db 00H
 ; S_SCB parameter block: SCB offset 22H = CIVEC, the console input redirection vector
+; Common data: identical in RZ and SZ.
 scb_pb_civec:
 	.db SCB_CIVEC
 ; S_SCB set code for the CIVEC block (0 = get, FEH = set word)
+; Common data: identical in RZ and SZ.
 scb_civec_code:
 	.db 00H
 ; CIVEC value word of its parameter block
+; Common data: identical in RZ and SZ.
 scb_civec_val:
 	.db 00H
 	.db 00H
 ; Original COVEC value, restored at exit
+; Common data: identical in RZ and SZ.
 scb_sv_covec:
 	.db 00H
 	.db 00H
 ; Original CIVEC value, restored at exit
+; Common data: identical in RZ and SZ.
 scb_sv_civec:
 	.db 00H
 	.db 00H
 ; Complement of AOVEC: keeps the devices that are not used for AUX output
+; Common data: identical in RZ and SZ.
 scb_aovec_mask:
 	.db 00H
 	.db 00H
@@ -628,18 +647,20 @@ scb_aovec_mask:
 ; ----------------------------------------------------------------------
 ; print_err_count: Print the current error count / retry message on the
 ; console.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 print_err_count:
 	ld a,(error_count)		; get consecutive error/retry counter
-	ld de,D049D			; point DE at D049D
+	ld de,print_err_d1		; point DE at print_err_d1
 	call a_to_decimal		; convert A to up to three decimal digits at DE
 	ld de,msg_errors		; point DE at " error
 	ld c,C_WRITESTR			; BDOS function: C_WRITESTR
 	jp BDOS				; C_WRITESTR: display " error
 ; " error(s)" message
+; Common data: identical in RZ and SZ.
 msg_errors:
 	.db 0DH,0AH
-D049D:
+print_err_d1:
 	.db 00H
 	.db 00H
 	.db 00H
@@ -651,43 +672,43 @@ D049D:
 ; ----------------------------------------------------------------------
 print_filename:
 	ld de,send_fcb			; point DE at FCB of the file being sent
-	ld hl,D04ED			; point HL at D04ED
-	ld (hl),3AH			; store into D04ED
-	inc hl				; HL++
-	xor a				; Clear accumulator
+	ld hl,print_filenam_d3		; point HL at print_filenam_d3
+	ld (hl),3AH			; store into print_filenam_d3
+	inc hl				; Advance to filename buffer
+	xor a				; Fill byte = 00h
 	ld b,0DH			; fill 13 bytes
 	call memset			; fill B bytes at HL with A
-	inc de				; Advance past drive byte to filename field (8+3)
+	inc de				; Advance DE past drive byte to filename field (8+3)
 	call fcb_to_name		; format the FCB name at DE as NAME.EXT at HL
 	dec de				; Back up DE to drive byte
-	ld a,(de)			; Load 1-based drive number
+	ld a,(de)			; Load 1-based drive number (1=A, 2=B...)
 	add a,40H			; Convert to ASCII letter ('A'..'P')
-	ld (D04E9),a			; save as D04E9
+	ld (print_filenam_d1),a		; save as print_filenam_d1
 	dec de				; Back up DE to user number byte
 	ld a,(de)			; Load user number (0..15)
-	ld de,D04EA			; point DE at D04EA
+	ld de,print_filenam_d2		; point DE at print_filenam_d2
 	call a_to_decimal		; convert A to up to three decimal digits at DE
 	ld hl,file_size			; point HL at size of the current file in bytes
-	ld de,D04FC			; point DE at D04FC
-	call ltoa32			; convert file_size to decimal text at D04FC
+	ld de,print_filenam_d4		; point DE at print_filenam_d4
+	call ltoa32			; convert file_size to decimal text at print_filenam_d4
 	ld (hl),0DH			; Append CR
 	inc hl				; HL++
 	ld (hl),0AH			; Append LF
 	inc hl				; HL++
-	ld (hl),24H			; Append '$' terminator for BDOS output
+	ld (hl),24H			; Replace null with '$' terminator for BDOS output
 	ld de,name_line_buf		; point DE at console line buffer
 	ld c,C_WRITESTR			; BDOS function: C_WRITESTR
-	jp BDOS				; C_WRITESTR: display console line buffer
+	jp BDOS				; C_WRITESTR: display the $-terminated message
 ; Console line buffer: CR LF, "d:" and file name
 name_line_buf:
 	.db 0DH,0AH
-D04E9:
+print_filenam_d1:
 	.db 00H
-D04EA:
+print_filenam_d2:
 	.db 00H
 	.db 00H
 	.db 00H
-D04ED:
+print_filenam_d3:
 	.db 00H
 	.db 00H
 	.db 00H
@@ -703,7 +724,7 @@ D04ED:
 	.db 00H
 	.db 00H
 	.db 20H
-D04FC:
+print_filenam_d4:
 	.fill 12,0
 
 ; ----------------------------------------------------------------------
@@ -712,38 +733,43 @@ D04FC:
 ; ----------------------------------------------------------------------
 print_position:
 	ld hl,pos_display		; point HL at copy of the file position shown on the console
-	ld de,D051C			; point DE at D051C
-	call ltoa32			; convert pos_display to decimal text at D051C
+	ld de,print_positio_d1		; point DE at print_positio_d1
+	call ltoa32			; convert pos_display to decimal text at print_positio_d1
 	ld (hl),24H			; Append '$' string terminator
 	ld de,pos_line_buf		; point DE at console line buffer for the position display
 	ld c,C_WRITESTR			; BDOS function: C_WRITESTR
 	jp BDOS				; C_WRITESTR: display console line buffer for the position display
 ; Console line buffer for the position display
+; Common data: identical in RZ and SZ.
 pos_line_buf:
 	.db 0DH
-D051C:
+print_positio_d1:
 	.fill 10,0
 
 ; ----------------------------------------------------------------------
 ; print_cant_open: Print "can't open any file".
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 print_cant_open:
 	ld de,msg_cant_open		; point DE at "can't open any file"
-	jr L052E			; continue at L052E
+	jr print_skipped_1		; continue at print_skipped_1
 
 ; ----------------------------------------------------------------------
 ; print_skipped: Print "File skipped".
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 print_skipped:
 	ld de,msg_file_skipped		; point DE at "File skipped"
-L052E:
+print_skipped_1:
 	ld c,C_WRITESTR			; BDOS function: C_WRITESTR
 	jp BDOS				; C_WRITESTR: display the $-terminated message
 ; "File skipped"
+; Common data: identical in RZ and SZ.
 msg_file_skipped:
 	.db "File skipped",0DH,0AH
 	.db 24H
 ; "can't open any file"
+; Common data: identical in RZ and SZ.
 msg_cant_open:
 	.db "can",27H,"t open any file",0DH,0AH
 	.db 24H
@@ -751,16 +777,21 @@ msg_cant_open:
 ; ----------------------------------------------------------------------
 ; set_pending_char: Queue A (count in C) as pending input characters; used
 ; to inject CANs when ESC is pressed.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 set_pending_char:
-	ld hl,D055F			; point HL at D055F
-	ld (hl),a			; store into D055F
+	ld hl,pending_char		; point HL at queued input character
+	ld (hl),a			; store into queued input character
 	inc hl				; Advance HL to buffer count byte
-	ld (hl),c			; store into D055F
+	ld (hl),c			; store into queued input character
 	ret				; return
-D055F:
+; Queued input character (see set_pending_char)
+; Common data: identical in RZ and SZ.
+pending_char:
 	.db 00H
-D0560:
+; Number of times pending_char is still to be delivered
+; Common data: identical in RZ and SZ.
+pending_count:
 	.db 00H
 
 ; ----------------------------------------------------------------------
@@ -770,21 +801,21 @@ D0560:
 aux_poll_input:
 	or a				; test A (sets Z if A = 0)
 	ld hl,(aux_ring)		; get AUX receive ring buffer control block
-	ld de,0200H			; DE = maximum receive ring buffer capacity (512 bytes)
+	ld de,0200H			; DE = maximum receive ring buffer capacity
 	sbc hl,de			; Test if buffer is full
-	jr z,L0582			; If buffer full, do not read; check available count
+	jr z,aux_poll_input_1		; If buffer is full, do not read; check available count
 	ld c,A_STATIN			; BDOS function: A_STATIN
 	call BDOS			; A_STATIN: is a character waiting at the AUX port?
 	or a				; test A (sets Z if A = 0)
-	jr z,L0582			; if result is zero goto L0582
+	jr z,aux_poll_input_1		; if result is zero goto aux_poll_input_1
 	ld c,A_READ			; BDOS function: A_READ
 	call BDOS			; A_READ: read a character from the AUX (modem) port
 	ld c,a				; C = received character byte
 	ld hl,aux_ring			; point HL at AUX receive ring buffer control block
 	call ring_put			; insert byte C into the receive ring buffer
 	jr aux_poll_input		; loop back to aux_poll_input
-L0582:
-	ld hl,D0560			; point HL at D0560
+aux_poll_input_1:
+	ld hl,pending_count		; point HL at number of times pending_char is still to be delivered
 	or (hl)				; Test if single-byte buffer holds a character
 	ret nz				; Return NZ if character ready
 	ld hl,(aux_ring)		; get AUX receive ring buffer control block
@@ -795,22 +826,24 @@ L0582:
 ; ----------------------------------------------------------------------
 ; aux_get_char: Fetch next input character: pending queued char first,
 ; otherwise from the ring buffer. NZ if a char was returned.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 aux_get_char:
-	ld a,(D0560)			; get D0560
+	ld a,(pending_count)		; get number of times pending_char is still to be delivered
 	or a				; Is single-byte buffer empty?
 	ld hl,aux_ring			; point HL at AUX receive ring buffer control block
-	jp z,ring_get			; if D0560 is zero/clear goto ring_get
+	jp z,ring_get			; if number of times pending_char is still to be delivered is zero/clear goto ring_get
 	push af				; preserve AF
-	ld hl,D0560			; point HL at D0560
-	dec (hl)			; count down D0560
+	ld hl,pending_count		; point HL at number of times pending_char is still to be delivered
+	dec (hl)			; count down number of times pending_char is still to be delivered
 	dec hl				; Point back to input index
 	pop af				; restore AF
-	ld a,(hl)			; get a byte of D0560
+	ld a,(hl)			; get a byte of number of times pending_char is still to be delivered
 	ret				; return
 
 ; ----------------------------------------------------------------------
 ; aux_putc: Write the character in A to the AUX (modem) device.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 aux_putc:
 	ld c,A_WRITE			; BDOS function: A_WRITE
@@ -819,6 +852,7 @@ aux_putc:
 
 ; ----------------------------------------------------------------------
 ; aux_out_ready: Test whether the AUX output is ready (BDOS A_STATOUT).
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 aux_out_ready:
 	ld c,A_STATOUT			; BDOS function: A_STATOUT
@@ -829,34 +863,36 @@ aux_out_ready:
 ; ----------------------------------------------------------------------
 ; aux_wait_input: Wait roughly 100 ms-steps for an input character;
 ; returns it in A with NZ, Z on timeout.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 aux_wait_input:
 	push bc				; preserve BC
 	ld b,5FH			; repeat count = 95
-L05B0:
+aux_wait_input_1:
 	push bc				; preserve BC
 	call aux_poll_input		; poll the AUX device
 	pop bc				; restore BC
-	jr nz,L05BF			; if input was waiting goto L05BF
+	jr nz,aux_wait_input_2		; if input was waiting goto aux_wait_input_2
 	call delay_short		; short software delay loop
-	djnz L05B0			; repeat until all B items are done
+	djnz aux_wait_input_1		; repeat until all B items are done
 	call aux_poll_input		; poll the AUX device
-L05BF:
+aux_wait_input_2:
 	call nz,aux_get_char		; If byte ready (NZ), fetch it into A
 	pop bc				; restore BC
 	ret				; return
 
 ; ----------------------------------------------------------------------
 ; delay_short: Short software delay loop.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 delay_short:
 	push bc				; preserve BC
 	ld a,04H			; Outer delay loop count = 4
 	ld b,00H			; repeat count = 0
-L05C9:
-	djnz L05C9			; repeat until all B items are done
+delay_short_1:
+	djnz delay_short_1		; repeat until all B items are done
 	dec a				; Decrement outer loop count
-	jr nz,L05C9			; Loop until outer count reaches 0
+	jr nz,delay_short_1		; Loop until outer count reaches 0
 	pop bc				; restore BC
 	ret				; return
 
@@ -941,25 +977,28 @@ ring_put:
 ; ----------------------------------------------------------------------
 clear_fcb:
 	ld hl,entry_user		; point HL at user number of the current file list entry
-	ld b,25H			; B = 25H
+	ld b,25H			; Count = 37 (25h) bytes to clear
 	jr memset_a			; continue at memset_a
 
 ; ----------------------------------------------------------------------
 ; ring_reset: Clear the 6-byte ring buffer control block at HL.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 ring_reset:
 	ld b,06H			; Count = 6 bytes to clear
 
 ; ----------------------------------------------------------------------
 ; memset_a: Fill using A and B.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 memset_a:
-	xor a				; Fill byte = 00h
+	xor a				; A = 00h (fill byte)
 	jp memset			; continue at memset
 
 ; ----------------------------------------------------------------------
 ; dispatch: Table dispatcher: after CPIR over N keys, jump to the matching
 ; vector stored (in reverse order) after the key list.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 dispatch:
 	add hl,bc			; HL += BC
@@ -973,6 +1012,7 @@ dispatch:
 
 ; ----------------------------------------------------------------------
 ; zero32: Set the 32-bit value at (HL) to 0.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 zero32:
 	xor a				; A = 00h (clear value)
@@ -983,17 +1023,18 @@ zero32:
 	ld d,h				; DE = HL + 1 (destination for block clear)
 	ld e,l				; E = L
 	inc de				; DE++
-	jr L0641			; continue at L0641
+	jr copy32_1			; continue at copy32_1
 
 ; ----------------------------------------------------------------------
 ; copy32: Copy 32-bit value (HL) to (DE).
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 copy32:
 	push bc				; preserve BC
 	push de				; preserve DE
 	push hl				; preserve HL
 	ldi				; Copy byte 1: (DE) = (HL), increment pointers, dec BC
-L0641:
+copy32_1:
 	ldi				; Copy byte 2
 	ldi				; Copy byte 3
 	ldi				; Copy byte 4
@@ -1005,6 +1046,7 @@ L0641:
 ; ----------------------------------------------------------------------
 ; cmp32_signed: Signed compare of 32-bit values (HL) and (DE); sets
 ; carry/zero.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 cmp32_signed:
 	push hl				; preserve HL
@@ -1013,21 +1055,22 @@ cmp32_signed:
 	pop iy				; restore IY
 	ld a,(ix+3)			; Compare most significant bytes (signs)
 	xor (iy+3)			; A ^= (iy+3)
-	jp p,L0660			; If signs are identical, do unsigned compare
+	jp p,cmp32_signed_2		; If signs are identical, do unsigned compare
 	xor (ix+3)			; Restore sign byte
-L065D:
+cmp32_signed_1:
 	ret m				; return if negative
 	ccf				; complement carry
 	ret				; return
-L0660:
+cmp32_signed_2:
 	xor (ix+3)			; Restore sign byte
 	jp p,cmp32_unsigned		; If positive, perform standard 32-bit subtract compare
 	call cmp32_unsigned		; unsigned compare of 32-bit values
 	scf				; flag failure to caller (carry set)
-	jr L065D			; loop back to L065D
+	jr cmp32_signed_1		; loop back to cmp32_signed_1
 
 ; ----------------------------------------------------------------------
 ; cmp32_unsigned: Unsigned compare of 32-bit values (HL) and (DE).
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 cmp32_unsigned:
 	push bc				; preserve BC
@@ -1036,12 +1079,12 @@ cmp32_unsigned:
 	ex de,hl			; swap pointers
 	or a				; test A (sets Z if A = 0)
 	ld b,04H			; repeat count = 4
-L0673:
+cmp32_unsigned_1:
 	ld a,(de)			; Load subtrahend byte
 	sbc a,(hl)			; Subtract with borrow minuend byte
 	inc de				; Advance subtrahend pointer
 	inc hl				; Advance minuend pointer
-	djnz L0673			; repeat until all B items are done
+	djnz cmp32_unsigned_1		; repeat until all B items are done
 	pop hl				; restore HL
 	pop de				; restore DE
 	pop bc				; restore BC
@@ -1049,20 +1092,21 @@ L0673:
 
 ; ----------------------------------------------------------------------
 ; eq32: Compare 32-bit values (HL) and (DE) for equality (Z if equal).
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 eq32:
 	push bc				; preserve BC
 	push de				; preserve DE
 	push hl				; preserve HL
 	ld b,04H			; repeat count = 4
-L0682:
+eq32_1:
 	ld a,(de)			; Load byte from first buffer
 	xor (hl)			; Compare with byte from second buffer
-	jr nz,L068A			; If mismatch found, exit with NZ
+	jr nz,eq32_2			; If mismatch found, exit with NZ
 	inc de				; Advance first pointer
 	inc hl				; Advance second pointer
-	djnz L0682			; repeat until all B items are done
-L068A:
+	djnz eq32_1			; repeat until all B items are done
+eq32_2:
 	pop hl				; restore HL
 	pop de				; restore DE
 	pop bc				; restore BC
@@ -1070,6 +1114,7 @@ L068A:
 
 ; ----------------------------------------------------------------------
 ; add32: (BC) = (DE) + (HL), 32-bit.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 add32:
 	push bc				; preserve BC
@@ -1078,7 +1123,7 @@ add32:
 	or a				; test A (sets Z if A = 0)
 	ex af,af'			; Save cleared carry in alternate AF
 	ld a,04H			; 4 bytes to add (32 bits)
-L0695:
+add32_1:
 	ex af,af'			; Restore carry from previous byte addition
 	ld a,(de)			; Load addend byte from (DE)
 	adc a,(hl)			; Add with carry addend byte from (HL)
@@ -1088,7 +1133,7 @@ L0695:
 	inc hl				; Advance source pointer 2
 	ex af,af'			; Preserve carry in alternate AF
 	dec a				; Decrement loop byte count
-	jr nz,L0695			; Continue for all 4 bytes
+	jr nz,add32_1			; Continue for all 4 bytes
 	pop hl				; restore HL
 	pop de				; restore DE
 	pop bc				; restore BC
@@ -1096,6 +1141,7 @@ L0695:
 
 ; ----------------------------------------------------------------------
 ; sub32: (BC) = (HL) - (DE), 32-bit.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 sub32:
 	push bc				; preserve BC
@@ -1105,7 +1151,7 @@ sub32:
 	or a				; test A (sets Z if A = 0)
 	ex af,af'			; Save cleared borrow in alternate AF
 	ld a,04H			; 4 bytes to subtract (32 bits)
-L06AC:
+sub32_1:
 	ex af,af'			; Restore borrow from previous byte subtraction
 	ld a,(de)			; Load minuend byte from (DE)
 	sbc a,(hl)			; Subtract with borrow subtrahend byte from (HL)
@@ -1115,7 +1161,7 @@ L06AC:
 	inc de				; Advance minuend pointer
 	ex af,af'			; Preserve borrow in alternate AF
 	dec a				; Decrement loop byte count
-	jr nz,L06AC			; Continue for all 4 bytes
+	jr nz,sub32_1			; Continue for all 4 bytes
 	ex af,af'			; swap AF with AF'
 	pop hl				; restore HL
 	pop de				; restore DE
@@ -1124,6 +1170,7 @@ L06AC:
 
 ; ----------------------------------------------------------------------
 ; inc32: Increment the 32-bit value at (HL).
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 inc32:
 	push bc				; preserve BC
@@ -1131,27 +1178,29 @@ inc32:
 	ld a,01H			; Add 1 to lowest byte
 	add a,(hl)			; A += (HL)
 	ld (hl),a			; Store updated low byte
-	jr nc,L06CD			; If no overflow, increment complete
+	jr nc,inc32_2			; If no overflow, increment complete
 	ld b,03H			; repeat count = 3
-L06C6:
+inc32_1:
 	inc hl				; Advance to next higher byte
 	ld a,00H			; Add carry bit
 	adc a,(hl)			; A += (HL) + carry
 	ld (hl),a			; Store updated byte
-	djnz L06C6			; repeat until all B items are done
-L06CD:
+	djnz inc32_1			; repeat until all B items are done
+inc32_2:
 	pop hl				; restore HL
 	pop bc				; restore BC
 	ret				; return
 
 ; ----------------------------------------------------------------------
 ; set32_minus1: Set the 32-bit value at (HL) to -1 (0FFFFFFFFH).
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 set32_minus1:
 	call zero32			; set the 32-bit value at
 
 ; ----------------------------------------------------------------------
 ; dec32: Decrement the 32-bit value at (HL).
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 dec32:
 	push bc				; preserve BC
@@ -1160,18 +1209,19 @@ dec32:
 	sub 01H				; Subtract 1 from lowest byte
 	ld (hl),a			; Store updated low byte
 	ld b,03H			; repeat count = 3
-L06DB:
+dec32_1:
 	inc hl				; Advance to next higher byte
 	ld a,(hl)			; Load byte
 	sbc a,00H			; Subtract borrow bit
 	ld (hl),a			; Store updated byte
-	djnz L06DB			; repeat until all B items are done
+	djnz dec32_1			; repeat until all B items are done
 	pop hl				; restore HL
 	pop bc				; restore BC
 	ret				; return
 
 ; ----------------------------------------------------------------------
 ; and32: (BC) = (DE) AND (HL), 32-bit.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 and32:
 	push bc				; preserve BC
@@ -1179,7 +1229,7 @@ and32:
 	push hl				; preserve HL
 	ex de,hl			; swap pointers
 	ld a,04H			; Process 4 bytes (32 bits)
-L06EB:
+and32_1:
 	push af				; preserve AF
 	ld a,(de)			; Load byte from source 1
 	and (hl)			; Bitwise AND with byte from source 2
@@ -1189,12 +1239,13 @@ L06EB:
 	inc hl				; Advance source 2 pointer
 	pop af				; restore AF
 	dec a				; Decrement byte counter
-	jr nz,L06EB			; Repeat for all 4 bytes
+	jr nz,and32_1			; Repeat for all 4 bytes
 	pop hl				; restore HL
 	pop de				; restore DE
 	pop bc				; restore BC
 	ret				; return
 ; Powers of ten for ltoa32: 10^9 down to 10, each a 32-bit little-endian value
+; Common data: identical in RZ and SZ.
 pow10_table:
 	.db 00H,0CAH,9AH,3BH		; 1000000000
 	.db 00H,0E1H,0F5H,05H		; 100000000
@@ -1209,16 +1260,17 @@ pow10_table:
 ; ----------------------------------------------------------------------
 ; ltoa32: Convert the 32-bit value at (HL) to decimal ASCII at (DE) (zero
 ; terminated).
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 ltoa32:
 	ld (ltoa_outptr),de		; remember where the text goes
-	ld de,ltoa_value		; point DE at working copy of the value being converted
+	ld de,ltoa_value		; point DE at working copy of the 32-bit value being converted
 	call copy32			; work on a copy of the value
 	ld c,09H			; up to nine digits plus the final one
 	ld de,pow10_table-4		; DE -> 4 bytes before the table of powers of ten (stepped forward before each use)
 	xor a				; A = 0
 	ld (ltoa_started),a		; no digit emitted yet (suppress leading zeros)
-L0731:
+ltoa32_1:
 	ld a,30H			; start the digit at "0"
 	ld (ltoa_digit),a		; digit character being built = 30H
 	inc de				; step to the next power of ten (4 bytes)
@@ -1226,43 +1278,43 @@ L0731:
 	inc de				; DE++
 	inc de				; DE++
 	ld b,0AH			; at most ten subtractions per digit
-L073C:
+ltoa32_2:
 	push bc				; preserve BC
-	ld hl,ltoa_value		; point HL at working copy of the value being converted
-	ld bc,ltoa_temp			; point BC at temporary subtraction result
+	ld hl,ltoa_value		; point HL at working copy of the 32-bit value being converted
+	ld bc,ltoa_temp			; point BC at temporary 32-bit subtraction result
 	call sub32			; temp = value - power of ten
 	pop bc				; restore BC
-	jr c,L075D			; value is smaller than the power: this digit is complete
+	jr c,ltoa32_3			; value is smaller than the power: this digit is complete
 	push de				; preserve DE
 	ld a,(ltoa_digit)		; count one more subtraction
 	inc a				; A++
 	ld (ltoa_digit),a		; save as digit character being built
-	ld de,ltoa_value		; point DE at working copy of the value being converted
-	ld hl,ltoa_temp			; point HL at temporary subtraction result
+	ld de,ltoa_value		; point DE at working copy of the 32-bit value being converted
+	ld hl,ltoa_temp			; point HL at temporary 32-bit subtraction result
 	call copy32			; value = remainder
 	pop de				; restore DE
-	djnz L073C			; try subtracting again
-L075D:
+	djnz ltoa32_2			; try subtracting again
+ltoa32_3:
 	ld a,30H			; digit finished: is it "0"?
-ltoa_digit		.equ L075D+1	; ltoa32: digit character being built (patched operand)
+ltoa_digit		.equ ltoa32_3+1	; ltoa32: digit character being built (patched operand)
 	cp 30H				; Is it a leading zero ('0')?
-	jr nz,L0768			; non-zero digit: always emit it
-L0763:
+	jr nz,ltoa32_5			; non-zero digit: always emit it
+ltoa32_4:
 	ld a,00H			; a zero: emit only if a digit was already emitted
-ltoa_started		.equ L0763+1	; ltoa32: nonzero once a nonzero digit has been emitted
+ltoa_started		.equ ltoa32_4+1	; ltoa32: nonzero once a nonzero digit has been emitted
 	or a				; test A (sets Z if A = 0)
-	jr z,L0775			; leading zero: skip it
-L0768:
+	jr z,ltoa32_6			; leading zero: skip it
+ltoa32_5:
 	ld hl,0000H			; HL = output pointer
-ltoa_outptr		.equ L0768+1	; ltoa32: output pointer (patched operand, 16 bits)
+ltoa_outptr		.equ ltoa32_5+1	; ltoa32: output pointer (patched operand, 16 bits)
 	ld (hl),a			; store the digit
 	inc hl				; Advance output pointer
 	ld (ltoa_outptr),hl		; advance the output pointer
 	ld a,30H			; mark that digits have started
 	ld (ltoa_started),a		; nonzero once a nonzero digit has been emitted = 30H
-L0775:
+ltoa32_6:
 	dec c				; next power of ten
-	jr nz,L0731			; Process next decimal position
+	jr nz,ltoa32_1			; Process next decimal position
 	ld a,(ltoa_value)		; last digit is the remaining value
 	and 0FH				; keep the low nibble
 	add a,30H			; convert to ASCII
@@ -1274,30 +1326,34 @@ L0775:
 
 ; ----------------------------------------------------------------------
 ; checksum_add: Add A to the running 8-bit XMODEM checksum.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 checksum_add:
 	push af				; preserve AF
-L0788:
-	add a,00H			; SMC: Add byte to running 8-bit checksum accumulator
-xm_checksum		.equ L0788+1	; running 8-bit XMODEM checksum (patched operand)
+checksum_add_1:
+	add a,00H			; Add byte to running 8-bit checksum accumulator
+xm_checksum		.equ checksum_add_1+1	; running 8-bit XMODEM checksum (patched operand)
 	ld (xm_checksum),a		; save as running 8-bit XMODEM checksum
 	pop af				; restore AF
 	ret				; return
 ; CRC-32 polynomial 0EDB88320H (little endian)
+; Common data: identical in RZ and SZ.
 crc32_poly:
 	.db 20H,83H,0B8H,0EDH
 ; CRC-32 residue 0DEBB20E3H expected after a good frame
+; Common data: identical in RZ and SZ.
 crc32_residue:
 	.db 0E3H,20H,0BBH,0DEH
 
 ; ----------------------------------------------------------------------
 ; crc32_update: Update the running CRC-32 with byte A.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 crc32_update:
 	push af				; preserve AF
-L0798:
+crc32_update_1:
 	ld iy,crc32_table		; point IY at CRC-32 lookup table, 256 x 4 bytes
-crc32_tab_ptr		.equ L0798+2	; address of the CRC-32 table (patched operand, 16 bits)
+crc32_tab_ptr		.equ crc32_update_1+2	; address of the CRC-32 table (patched operand, 16 bits)
 	ld ix,crc32_value		; point IX at running CRC-32 accumulator
 	xor (ix+0)			; Index = input byte XOR lowest CRC byte
 	ld h,00H			; HL = table entry index * 4
@@ -1323,6 +1379,7 @@ crc32_tab_ptr		.equ L0798+2	; address of the CRC-32 table (patched operand, 16 b
 
 ; ----------------------------------------------------------------------
 ; crc32_table_init: Build the 256-entry CRC-32 lookup table.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 crc32_table_init:
 	push de				; preserve DE
@@ -1334,20 +1391,20 @@ crc32_table_init:
 	pop iy				; IY = write pointer
 	ld ix,crc32_poly		; IX -> the CRC-32 polynomial
 	xor a				; start with table index 0
-L07E0:
+crc32_table_1:
 	push af				; keep the index
 	ld hl,0FFFFH			; CRC register = FFFFFFFFH (HL:DE)
 	ld de,0FFFFH			; DE = 0FFFFH
 	xor e				; mix the index into the low byte
 	ld e,a				; E = A
 	ld b,08H			; eight bit steps
-L07EB:
+crc32_table_2:
 	scf				; shift in a 1 ...
 	rr h				; ... shifting the 32-bit register right
 	rr l				; rotate right through carry L
 	rr d				; rotate right through carry D
 	rr e				; rotate right through carry E
-	jr nc,L080A			; bit shifted out was 0: no polynomial
+	jr nc,crc32_table_3		; bit shifted out was 0: no polynomial
 	ld a,e				; bit was 1: XOR in the polynomial
 	xor (ix+0)			; A ^= (ix+0)
 	ld e,a				; E = A
@@ -1360,8 +1417,8 @@ L07EB:
 	ld a,h				; XOR high byte with polynomial byte 3
 	xor (ix+3)			; A ^= (ix+3)
 	ld h,a				; H = A
-L080A:
-	djnz L07EB			; next bit
+crc32_table_3:
+	djnz crc32_table_2		; next bit
 	ld a,h				; store the inverted result, high byte first (table is filled downwards)
 	cpl				; invert A (one's complement)
 	ld (iy+0),a			; Store high byte in table
@@ -1380,7 +1437,7 @@ L080A:
 	dec iy				; Move down 1 byte
 	pop af				; recover the index
 	inc a				; next table entry
-	jr nz,L07E0			; repeat for all 256 entries
+	jr nz,crc32_table_1		; repeat for all 256 entries
 	pop hl				; restore HL
 	pop de				; restore DE
 	ret				; return
@@ -1388,28 +1445,29 @@ L080A:
 ; ----------------------------------------------------------------------
 ; crc16_update: Update the running CRC-16 (CCITT, polynomial 1021H) with
 ; byte A. [updcrc]
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 crc16_update:
 	push af				; preserve AF
-L0830:
+crc16_update_1:
 	ld hl,0000H			; SMC: Running CRC-16 accumulator operand
-crc16_lo		.equ L0830+1	; CRC-16 low byte (patched operand)
-crc16_hi		.equ L0830+2	; CRC-16 high byte (patched operand)
+crc16_lo		.equ crc16_update_1+1	; CRC-16 low byte (patched operand)
+crc16_hi		.equ crc16_update_1+2	; CRC-16 high byte (patched operand)
 	ld de,1021H			; CCITT CRC-16 polynomial generator (x^16 + x^12 + x^5 + 1)
 	xor h				; XOR input byte with current high byte of CRC
 	ld h,a				; Store XOR result into high byte of CRC
 	ld b,08H			; Process 8 bits
-L083A:
+crc16_update_2:
 	add hl,hl			; Shift CRC left by 1 bit (HL << 1)
-	jr nc,L0843			; If no carry shifted out, skip polynomial XOR
+	jr nc,crc16_update_3		; If no carry shifted out, skip polynomial XOR
 	ld a,h				; XOR high byte with polynomial high byte (10h)
 	xor d				; A ^= D
 	ld h,a				; H = A
 	ld a,l				; XOR low byte with polynomial low byte (21h)
 	xor e				; A ^= E
 	ld l,a				; L = A
-L0843:
-	djnz L083A			; repeat until all B items are done
+crc16_update_3:
+	djnz crc16_update_2		; repeat until all B items are done
 	ld (crc16_lo),hl		; save as CRC-16 low byte
 	pop af				; restore AF
 	ret				; return
@@ -1423,6 +1481,7 @@ const_minus_1024:
 	.db 00H
 	.db 0FCH,0FFH,0FFH
 ; Selected protocol: 1 = XMODEM, 3 = YMODEM, 4 = ZMODEM (default)
+; Common data: identical in RZ and SZ.
 protocol:
 	.db 04H
 ; Default receiver window: value x 4 x 256 bytes
@@ -1436,10 +1495,10 @@ window_default:
 send_main:
 	ld a,(protocol)			; get selected protocol
 	cp 04H				; is it ZMODEM?
-	jr nz,L0860			; if A is not ZMODEM goto L0860
+	jr nz,send_main_1		; if A is not ZMODEM goto send_main_1
 	ld a,03H			; A = 03H
 	ld (protocol),a			; selected protocol = 03H (YMODEM)
-L0860:
+send_main_1:
 	xor a				; A = 0
 	ld hl,error_count		; point HL at consecutive error/retry counter
 	ld b,50H			; fill 80 bytes
@@ -1453,10 +1512,10 @@ L0860:
 	ld hl,0400H			; HL = 0400H
 	ld (subpacket_size),hl		; save as current data subpacket size
 	call send_files			; loop over all files in the list and send them
-	jr c,L0888			; if transfer failed / aborted goto L0888
+	jr c,send_main_2		; if transfer failed / aborted goto send_main_2
 	or a				; test A (sets Z if A = 0)
 	ret				; return
-L0888:
+send_main_2:
 	scf				; flag failure to caller (carry set)
 	ret				; return
 
@@ -1466,23 +1525,23 @@ L0888:
 ; ----------------------------------------------------------------------
 calc_buffer_mask:
 	xor a				; Clear accumulator
-	ld c,a				; Initialize bit mask register C = 0
+	ld c,a				; Initialize mask accumulator C = 00h
 	ld b,08H			; repeat count = 8
-	ld a,h				; Load memory page high byte into A
-L088F:
-	rlca				; Shift highest bit into carry
-	set 7,c				; Set bit 7 in mask register C
-	jr c,L0898			; If highest bit set, mask is complete
-	rr c				; Shift mask bit right
-	djnz L088F			; repeat until all B items are done
-L0898:
-	ld a,h				; A = high byte of available pages
-	and c				; Mask to largest power-of-two page boundary
-	ld h,a				; Set HL high byte to power-of-two page
+	ld a,h				; A = memory top page high byte
+calc_buffer_1:
+	rlca				; Rotate highest bit into carry
+	set 7,c				; Set highest bit of mask
+	jr c,calc_buffer_2		; When highest set bit encountered, mask is complete
+	rr c				; Shift mask right
+	djnz calc_buffer_1		; repeat until all B items are done
+calc_buffer_2:
+	ld a,h				; A = top page byte
+	and c				; Align memory boundary to power-of-two mask
+	ld h,a				; HL = page-aligned memory buffer ceiling
 	ld l,00H			; Set HL low byte to 0 (page-aligned)
 	ld (file_buffer_size),hl	; save as size of the file data ring buffer
-	dec hl				; Subtract 1 to create circular address wrap mask
-	ld (buffer_mask),hl		; save as file buffer size mask
+	dec hl				; Compute wrapping bitmask (size - 1)
+	ld (buffer_mask),hl		; save as receive buffer size mask
 	ret				; return
 
 ; ----------------------------------------------------------------------
@@ -1494,9 +1553,9 @@ fetch_file_entry:
 file_list_ptr		.equ fetch_file_entry+1	; pointer to the next entry of the file list (patched operand, 16 bits)
 	ld de,entry_user		; point DE at user number of the current file list entry
 	ldi				; Copy status/user byte
-L08AD:
+fetch_file_1:
 	ld a,00H			; Dynamically patched default drive number
-entry_drive		.equ L08AD+1	; drive for list entries (patched operand)
+entry_drive		.equ fetch_file_1+1	; drive for list entries (patched operand)
 	ld (de),a			; Store drive into FCB
 	inc de				; Advance FCB pointer
 	ld bc,000BH			; 11 bytes: 8 filename + 3 extension
@@ -1518,9 +1577,9 @@ send_files:
 	ld (xm_first_flag),a		; FFH until the first block has been acknowledged = FFH (set)
 	ld a,(file_count)		; get number of files in the list to send
 	or a				; Were any matching files found?
-	jr z,L08F4			; no files in the list
+	jr z,send_files_2		; no files in the list
 	ld b,a				; B counts the files left (also the list index)
-L08D1:
+send_files_1:
 	push bc				; preserve BC
 	ld a,b				; A = current file index
 	call fetch_file_entry		; get the next name into the FCB
@@ -1533,23 +1592,23 @@ L08D1:
 	call file_close_input		; close the file
 	pop af				; restore AF
 	pop bc				; restore BC
-	jr c,L08F7			; failed or aborted
-	djnz L08D1			; next file
+	jr c,send_files_3		; failed or aborted
+	djnz send_files_1		; next file
 	ld a,(files_sent_count)		; were any files sent?
 	or a				; Were any files transferred?
-	jr nz,L08FE			; yes: finish the session
-L08F4:
+	jr nz,send_files_4		; yes: finish the session
+send_files_2:
 	call print_cant_open		; no file could be opened
-L08F7:
+send_files_3:
 	call send_can_string		; abort the receiver
 	ld a,0FFH			; return with error
 	scf				; flag failure to caller (carry set)
 	ret				; return
-L08FE:
+send_files_4:
 	ld a,(protocol)			; all files sent: end the session
 	cp 03H				; is it YMODEM?
-	jr c,L0920			; XMODEM: nothing more to send
-	jr nz,L091D			; ZMODEM: send ZFIN
+	jr c,send_files_6		; XMODEM: nothing more to send
+	jr nz,send_files_5		; ZMODEM: send ZFIN
 	xor a				; YMODEM: send an empty block 0 to end the batch
 	ld (xmodem_block_no),a		; clear current XMODEM block number
 	ld hl,(file_buffer_base)	; get start of the file data ring buffer
@@ -1559,9 +1618,9 @@ L08FE:
 	ld (block_len),hl		; save as length of the current block / subpacket
 	call xmodem_snd_block		; send one block
 	xor a				; Clear A
-L091D:
+send_files_5:
 	call nz,send_zfin_oo		; ZMODEM: finish with ZFIN and "OO"
-L0920:
+send_files_6:
 	xor a				; success
 	ret				; return
 
@@ -1585,10 +1644,10 @@ send_one_file:
 	call zero32			; clear file_read_pos
 	ld de,send_fcb			; point DE at FCB of the file being sent
 	call file_open_input		; open the file
-	jr z,L094C			; opened
+	jr z,send_one_file_1		; opened
 	xor a				; could not open: skip this file
 	ret				; return
-L094C:
+send_one_file_1:
 	xor a				; reset the per-file state
 	ld (error_count),a		; clear consecutive error/retry counter
 	ld a,00H			; A = 00H
@@ -1619,15 +1678,15 @@ build_file_info:
 	ld de,send_fcb_name		; point DE at name field of send_fcb
 	call fcb_to_name		; NAME.EXT from the FCB
 	ld b,0CH			; 12 characters at most
-L0983:
+build_file_1:
 	ld a,(hl)			; Load filename character
 	call is_alpha			; a letter?
-	jr nz,L098C			; if not zero goto L098C
+	jr nz,build_file_2		; if not zero goto build_file_2
 	or 20H				; yes: make it lower case
 	ld (hl),a			; Store lowercase character back to buffer
-L098C:
+build_file_2:
 	inc hl				; Advance character pointer
-	djnz L0983			; repeat until all B items are done
+	djnz build_file_1		; repeat until all B items are done
 	ld hl,(file_buffer_base)	; get start of the file data ring buffer
 	call skip_to_blank		; find the end of the name
 	ld (hl),00H			; terminate the name
@@ -1675,27 +1734,27 @@ wait_rx_start:
 	xor a				; Clear error / response status bytes
 	ld (prev_rx_char),a		; clear previous received character
 	ld (last_rx_char),a		; clear last character received from the modem
-L09EA:
+wait_rx_start_1:
 	ld b,0FFH			; wait up to 25.5 s
 	call aux_getc_timeout		; get a character from the modem with timeout
 	ld (last_rx_char),a		; save as last character received from the modem
-	ld hl,D0A31			; point HL at D0A31
+	ld hl,start_char_tab		; point HL at first character from the receiver
 	ld bc,0005H			; 5 keys in the table
 	cpir				; look A up in the key table
 	jp z,dispatch			; if A is in the key list goto dispatch
-L09FD:
+wait_rx_start_2:
 	ld a,(last_rx_char)		; get last character received from the modem
 	ld (prev_rx_char),a		; save as previous received character
-	jr L09EA			; loop back to L09EA
+	jr wait_rx_start_1		; loop back to wait_rx_start_1
 wait_can_confirm:
 	ld b,14H			; wait up to 2.0 s
 	call aux_getc_timeout		; get a character from the modem with timeout
 	ld (last_rx_char),a		; save as last character received from the modem
 	cp 18H				; is it ZDLE/CAN?
-	jr nz,L09FD			; if A is not ZDLE/CAN goto L09FD
+	jr nz,wait_rx_start_2		; if A is not ZDLE/CAN goto wait_rx_start_2
 	ld hl,prev_rx_char		; point HL at previous received character
 	cp (hl)				; compare A with (HL)
-	jr nz,L09FD			; if not zero goto L09FD
+	jr nz,wait_rx_start_2		; if not zero goto wait_rx_start_2
 	ld a,0FFH			; return code: error
 	scf				; flag failure to caller (carry set)
 	ret				; return
@@ -1722,14 +1781,16 @@ got_zpad_zmodem:
 	ld (protocol),a			; selected protocol = 04H (ZMODEM)
 	xor a				; return 0 (success)
 	ret				; return
-D0A31:
+; wait_rx_start: first character from the receiver
+start_char_tab:
 	.db 2AH,0FEH,43H,15H,18H	; keys: *.C..
 	.dw wait_can_confirm		; key 18H CAN
 	.dw got_nak			; key 15H NAK
 	.dw got_c_crc_mode		; key 43H 'C' (CRC requested)
 	.dw got_timeout			; key 0FEH TIMEOUT
 	.dw got_zpad_zmodem		; key 2AH ZPAD: receiver speaks ZMODEM
-D0A40:
+; xmodem_wait_rx: start character from the receiver
+xm_start_tab:
 	.db 15H,43H,0FEH,18H		; keys: .C..
 	.dw xw_got_can			; key 18H CAN
 	.dw xw_timeout			; key 0FEH TIMEOUT
@@ -1750,14 +1811,14 @@ xmodem_wait_rx:
 	call zero32			; clear tx_position
 	ld hl,buffer_start_pos		; point HL at file position corresponding to the start of the ring
 	call zero32			; clear buffer_start_pos
-L0A61:
+xmodem_wait_rx_1:
 	ld b,0FFH			; wait up to 25.5 s
 	call aux_getc_timeout		; get a character from the modem with timeout
 	ld (last_rx_char),a		; save as last character received from the modem
-	ld hl,D0A40			; point HL at D0A40
+	ld hl,xm_start_tab		; point HL at start character from the receiver
 	ld bc,0004H			; 4 keys in the table
 	cpir				; look A up in the key table
-	jr nz,L0A61			; if A is not in the key list goto L0A61
+	jr nz,xmodem_wait_rx_1		; if A is not in the key list goto xmodem_wait_rx_1
 	jp dispatch			; loop back to dispatch
 ; CAN while waiting for the receiver: abort.
 xw_got_can:
@@ -1786,19 +1847,19 @@ xmodem_snd_blks:
 	ld de,const_1024		; point DE at 32-bit constant 1024
 	call cmp32_signed		; compare pos_scratch with const_1024
 	ld hl,0400H			; HL = 0400H
-	jr nc,L0AA0			; if first value >= second goto L0AA0
+	jr nc,xmodem_snd_1		; if first value >= second goto xmodem_snd_1
 	ld hl,0080H			; HL = 0080H
-L0AA0:
+xmodem_snd_1:
 	ld (block_len),hl		; save as length of the current block / subpacket
 	ld bc,(block_len)		; get length of the current block / subpacket
 	call fill_file_buffer		; read BC bytes from the file into the ring buffer
 	jr c,xw_timeout			; if disk read error goto xw_timeout
 	or a				; Check bytes read status
-	jr z,L0AB3			; if result is zero goto L0AB3
+	jr z,xmodem_snd_2		; if result is zero goto xmodem_snd_2
 	ld a,d				; Check if remaining length is zero (EOF)
 	or e				; A |= E
 	jr z,xmodem_send_eot		; if result is zero goto xmodem_send_eot
-L0AB3:
+xmodem_snd_2:
 	ld hl,xmodem_block_no		; point HL at current XMODEM block number
 	inc (hl)			; count up current XMODEM block number
 	call xmodem_snd_block		; send one block
@@ -1814,22 +1875,22 @@ L0AB3:
 ; ----------------------------------------------------------------------
 xmodem_send_eot:
 	ld b,05H			; Send EOT up to 5 times
-L0ACB:
+xmodem_send_1:
 	push bc				; preserve BC
 	ld a,04H			; character to send: EOT
 	call aux_putc_wait		; send A to the modem, waiting until the output is ready
 	ld b,64H			; wait up to 10.0 s
 	call aux_getc_timeout		; get a character from the modem with timeout
 	cp 06H				; is it ACK?
-	jr z,L0AE1			; if A is ACK goto L0AE1
+	jr z,xw_timeout_1		; if A is ACK goto xw_timeout_1
 	pop bc				; restore BC
-	djnz L0ACB			; repeat until all B items are done
+	djnz xmodem_send_1		; repeat until all B items are done
 ; No answer within 25.5 s: abort.
 xw_timeout:
 	ld a,0FFH			; return code: error
 	scf				; flag failure to caller (carry set)
 	ret				; return
-L0AE1:
+xw_timeout_1:
 	pop bc				; restore BC
 	xor a				; return 0 (success)
 	ret				; return
@@ -1842,7 +1903,7 @@ xmodem_snd_block:
 	xor a				; no reply seen yet; no errors
 	ld (last_rx_char),a		; clear last character received from the modem
 	ld (error_count),a		; clear consecutive error/retry counter
-L0AEB:
+xmodem_snd_3:
 	ld a,(last_rx_char)		; (re)start of a send attempt
 	ld (prev_rx_char),a		; save as previous received character
 	ld hl,tx_position		; show where we are
@@ -1854,9 +1915,9 @@ L0AEB:
 	ld a,l				; Check low byte of length
 	cp 80H				; 128 bytes?
 	ld a,01H			; yes: start with SOH
-	jr z,L0B0C			; if A = 80H goto L0B0C
+	jr z,xmodem_snd_4		; if A = 80H goto xmodem_snd_4
 	ld a,02H			; no: start with STX (1K block)
-L0B0C:
+xmodem_snd_4:
 	call aux_putc_wait		; send the block start character
 	ld a,(xmodem_block_no)		; get current XMODEM block number
 	call aux_putc_wait		; send the block number
@@ -1865,32 +1926,32 @@ L0B0C:
 	call aux_putc_wait		; send A to the modem, waiting until the output is ready
 	call crc_init			; start the checksum / CRC
 	ld ix,(file_buffer_base)	; IX -> block data
-L0B23:
+xmodem_snd_5:
 	ld a,(ix+0)			; next data byte
 	call checksum_add		; add A to the running 8-bit XMODEM checksum
 	call crc16_update		; update the running CRC-16
 	push ix				; preserve IX
 	call aux_putc_wait		; send it
 	pop ix				; restore IX
-L0B33:
+xmodem_snd_6:
 	ld hl,0000H			; HL = bytes left (patched)
-blk_bytes_left		.equ L0B33+1	; bytes still to send in the current block (patched operand, 16 bits)
+blk_bytes_left		.equ xmodem_snd_6+1	; bytes still to send in the current block (patched operand, 16 bits)
 	dec hl				; Decrement remaining byte count
 	ld (blk_bytes_left),hl		; save as bytes still to send in the current block
 	inc ix				; Advance buffer pointer
 	ld a,h				; block finished?
 	or l				; A = H or L: zero only if HL = 0
-	jr nz,L0B23			; if the 16-bit count is not zero goto L0B23
+	jr nz,xmodem_snd_5		; if the 16-bit count is not zero goto xmodem_snd_5
 	ld a,(tx_crc_mode)		; trailer: CRC or checksum?
 	cp 10H				; compare A with 10H
-	jr z,L0B4C			; CRC
+	jr z,xmodem_snd_7		; CRC
 	ld a,(xm_checksum)		; checksum
-	jr L0B55			; continue at L0B55
-L0B4C:
+	jr xmodem_snd_8			; continue at xmodem_snd_8
+xmodem_snd_7:
 	ld a,(crc16_hi)			; CRC high byte
 	call aux_putc_wait		; send A to the modem, waiting until the output is ready
 	ld a,(crc16_lo)			; CRC low byte
-L0B55:
+xmodem_snd_8:
 	call aux_putc_wait		; send the trailer
 	ld b,64H			; wait up to 10 s for ACK/NAK
 	call aux_getc_timeout		; get a character from the modem with timeout
@@ -1901,7 +1962,7 @@ L0B55:
 ; ----------------------------------------------------------------------
 xs_wait_ack:
 	ld a,(last_rx_char)		; get last character received from the modem
-	ld hl,D0B9C			; point HL at D0B9C
+	ld hl,xs_reply_tab		; point HL at XModem sender
 	ld bc,0006H			; 6 keys in the table
 	cpir				; look A up in the key table
 	jp z,dispatch			; if A is in the key list goto dispatch
@@ -1911,7 +1972,7 @@ xs_got_can:
 	ld a,(prev_rx_char)		; get previous received character
 	cp 18H				; is it ZDLE/CAN?
 	jp nz,xs_bad_response		; if A is not ZDLE/CAN goto xs_bad_response
-L0B79:
+xs_got_can_1:
 	ld a,0FFH			; return code: error
 	scf				; flag failure to caller (carry set)
 	ret				; return
@@ -1938,7 +1999,8 @@ xs_got_ack:
 ; Garbage instead of ACK/NAK: count it and resend.
 xs_got_garbage:
 	jp xs_bad_response		; continue at xs_bad_response
-D0B9C:
+; XModem sender: response to a block
+xs_reply_tab:
 	.db 18H,0FEH,43H,15H,06H,0FFH	; keys: ..C...
 	.dw xs_got_garbage		; key 0FFH ERROR
 	.dw xs_got_ack			; key 06H ACK
@@ -1946,7 +2008,8 @@ D0B9C:
 	.dw xs_got_c			; key 43H 'C' (CRC requested)
 	.dw xs_timeout			; key 0FEH TIMEOUT
 	.dw xs_got_can			; key 18H CAN
-D0BAE:
+; XModem sender: response after unrecognized characters
+xs_garbage_tab:
 	.db 0FEH,15H,43H,18H		; keys: ..C.
 	.dw xs_chk_can			; key 18H CAN
 	.dw xs_wait_ack			; key 43H 'C' (CRC requested)
@@ -1958,7 +2021,7 @@ xs_bad_response:
 	ld b,64H			; wait up to 10.0 s
 	call aux_getc_timeout		; get a character from the modem with timeout
 	ld (last_rx_char),a		; save as last character received from the modem
-	ld hl,D0BAE			; point HL at D0BAE
+	ld hl,xs_garbage_tab		; point HL at XModem sender
 	ld bc,0004H			; 4 keys in the table
 	cpir				; look A up in the key table
 	jp z,dispatch			; if A is in the key list goto dispatch
@@ -1966,7 +2029,7 @@ xs_bad_response:
 xs_chk_can:
 	ld a,(prev_rx_char)		; get previous received character
 	cp 18H				; is it ZDLE/CAN?
-	jp z,L0B79			; if A is ZDLE/CAN goto L0B79
+	jp z,xs_got_can_1		; if A is ZDLE/CAN goto xs_got_can_1
 	jr xs_bad_response		; loop back to xs_bad_response
 
 ; ----------------------------------------------------------------------
@@ -1978,7 +2041,7 @@ xs_retry:
 	call print_err_count		; print the current error count / retry message on the
 	ld a,(error_count)		; get consecutive error/retry counter
 	cp 05H				; Maximum 5 retries allowed
-	jp c,L0AEB			; if A < 05H goto L0AEB
+	jp c,xmodem_snd_3		; if A < 05H goto xmodem_snd_3
 	ld a,0FFH			; return code: error
 	scf				; flag failure to caller (carry set)
 	ret				; return
@@ -1990,34 +2053,34 @@ xs_retry:
 zmodem_send_init:
 	ld a,0BH			; allow up to 10 ZRINIT/ZRQINIT exchanges [getzrxinit: for n=10]
 	ld (zrqinit_retries),a		; remaining attempts to get ZRINIT = 0BH
-L0BF5:
+zmodem_send_1:
 	ld hl,zrqinit_retries		; point HL at remaining attempts to get ZRINIT
 	dec (hl)			; count down remaining attempts to get ZRINIT
 	ld a,0FFH			; return code: error
 	scf				; flag failure to caller (carry set)
 	ret z				; return: remaining attempts to get ZRINIT has run out
 	call get_header			; wait for the receiver's ZRINIT [zgethdr]
-	ld hl,D0C79			; point HL at D0C79
+	ld hl,send_init_tab		; point HL at ZModem start
 	ld bc,0006H			; 6 keys in the table
 	cpir				; look A up in the key table
 	jp z,dispatch			; if A is in the key list goto dispatch
-L0C0B:
+zmodem_send_2:
 	ld a,ZNAK			; frame type = ZNAK
 	call send_hex_header		; send a hex header
-	jr L0BF5			; loop back to L0BF5
+	jr zmodem_send_1		; loop back to zmodem_send_1
 zi_got_zchall:
 	ld hl,rx_header_data		; point HL at four argument bytes of the last received header
 	ld de,tx_header_data		; point DE at four argument bytes for the next header to send
 	call copy32			; copy rx_header_data to tx_header_data
 	ld a,ZACK			; frame type = ZACK
 	call send_hex_header		; send a hex header
-	jr L0BF5			; loop back to L0BF5
+	jr zmodem_send_1		; loop back to zmodem_send_1
 zi_got_zcommand:
 	ld hl,tx_header_data		; point HL at four argument bytes for the next header to send
 	call zero32			; clear tx_header_data
 	ld a,ZRQINIT			; frame type = ZRQINIT
 	call send_hex_header		; send a hex header
-	jr L0BF5			; loop back to L0BF5
+	jr zmodem_send_1		; loop back to zmodem_send_1
 
 ; ----------------------------------------------------------------------
 ; zmodem_got_zri: Process the ZRINIT flags from the receiver (CRC-32,
@@ -2038,14 +2101,14 @@ zmodem_got_zri:
 	ld (rx_window_size),hl		; save as receiver buffer length from ZRINIT ZP0/ZP1
 	ld a,h				; test whether HL is zero (first half)
 	or l				; A = H or L: zero only if HL = 0
-	jr nz,L0C5E			; if the 16-bit count is not zero goto L0C5E
+	jr nz,zmodem_got_zri_1		; if the 16-bit count is not zero goto zmodem_got_zri_1
 	ld a,(window_default)		; no limit announced: use a default window (32K) between acknowledgements
 	rla				; Scale to buffer byte count (* 1024)
 	rla				; rotate A left through carry
 	ld h,a				; H = A
 	ld l,00H			; Low byte = 0
 	ld (rx_window_size),hl		; save as receiver buffer length from ZRINIT ZP0/ZP1
-L0C5E:
+zmodem_got_zri_1:
 	ld hl,0400H			; start with 1024-byte data subpackets [blklen = KSIZE]; no ZSINIT is sent
 	ld (subpacket_size),hl		; save as current data subpacket size
 	xor a				; return 0 (success)
@@ -2060,9 +2123,10 @@ zi_got_zrqinit:
 	ld ix,rx_header_data		; point IX at four argument bytes of the last received header
 	ld a,(ix+ZF0)			; get byte 3 of four argument bytes of the last received header
 	cp ZCOMMAND			; Compare with 12h
-	jp z,L0BF5			; if A = 12H goto L0BF5
-	jp L0C0B			; loop back to L0C0B
-D0C79:
+	jp z,zmodem_send_1		; if A = 12H goto zmodem_send_1
+	jp zmodem_send_2		; loop back to zmodem_send_2
+; ZModem start: frame type of the receiver's answer
+send_init_tab:
 	.db ZCHALLENGE,ZCOMMAND,ZRINIT,ZCAN,0FEH,ZRQINIT	; keys: ......
 	.dw zi_got_zrqinit		; key 00H ZRQINIT
 	.dw zi_abort			; key 0FEH timeout
@@ -2079,54 +2143,54 @@ zmodem_snd_zfile:
 	ld (zfile_info_len),de		; save as length of the ZFILE info subpacket
 	ld hl,tx_position		; point HL at position in the file of the next byte to send
 	call zero32			; clear tx_position
-L0C95:
+zmodem_snd_1:
 	ld ix,tx_header_data		; point IX at four argument bytes for the next header to send
 	ld a,(opt_binary_flag)		; get FFH if -b
 	cp 0FFH				; Is binary transfer active?
 	ld a,ZF0_ZCBIN			; ZF0 = 1 (ZCBIN: binary transfer)
-	jr z,L0CAC			; if A = FFH goto L0CAC
+	jr z,zmodem_snd_2		; if A = FFH goto zmodem_snd_2
 	ld a,(opt_convert_flag)		; get FFH if -c
 	cp 0FFH				; Is text conversion active?
 	ld a,ZF0_ZCNL			; ZF0 = 2 (ZCNL: convert end-of-line)
-	jr z,L0CAC			; if A = FFH goto L0CAC
+	jr z,zmodem_snd_2		; if A = FFH goto zmodem_snd_2
 	xor a				; Default ZF0 = 0 (standard transfer)
-L0CAC:
+zmodem_snd_2:
 	ld (ix+ZF0),a			; ZF0 conversion option: 1 = ZCBIN (-b), 2 = ZCNL (-c) [Lzconv]
 	ld a,(opt_protect_flag)		; get FFH if -p
 	cp 0FFH				; compare A with 0FFH
 	ld a,ZF1_ZMPROT			; ZF1 = 7 (ZCRECOV: recover interrupted transfer)
-	jr z,L0CC2			; if A = FFH goto L0CC2
+	jr z,zmodem_snd_3		; if A = FFH goto zmodem_snd_3
 	ld a,(opt_append_flag)		; get FFH if -a
 	cp 0FFH				; compare A with 0FFH
 	ld a,ZF1_ZMAPND			; A = 03H
-	jr z,L0CC2			; if A = FFH goto L0CC2
+	jr z,zmodem_snd_3		; if A = FFH goto zmodem_snd_3
 	xor a				; Default ZF1 = 0
-L0CC2:
+zmodem_snd_3:
 	ld (ix+ZF1),a			; ZF1 management option: 7 = ZMPROT (-p), 3 = ZMAPND (-a) [Lzmanag]
 	xor a				; Clear A
 	ld (ix+ZF2),a			; ZF2 transport option = 0 [Lztrans]
 	ld (ix+ZF3),a			; ZF3 = 0
 	ld a,ZFILE			; frame type = ZFILE
 	call send_bin_header		; send the ZFILE header [zsbhdr]
-L0CD1:
+zmodem_snd_4:
 	ld bc,0000H			; 0 keys in the table
-zfile_info_len		.equ L0CD1+1	; length of the ZFILE info subpacket (patched operand, 16 bits)
+zfile_info_len		.equ zmodem_snd_4+1	; length of the ZFILE info subpacket (patched operand, 16 bits)
 	ld a,ZCRCW			; A = 6BH
 	call send_subpacket		; file name and size as a ZCRCW data packet [zsbdata]
-L0CD9:
+zmodem_snd_5:
 	call get_header			; wait for ZRPOS, ZSKIP, ... [zgethdr]
-	ld hl,D0D2F			; point HL at D0D2F
+	ld hl,zfile_reply_tab		; point HL at frame type of the receiver's answer
 	ld bc,0008H			; 8 keys in the table
 	cpir				; look A up in the key table
 	jp z,dispatch			; if A is in the key list goto dispatch
-	jr L0C95			; loop back to L0C95
+	jr zmodem_snd_1			; loop back to zmodem_snd_1
 ; ZRINIT again: wait up to 5 s for ZPAD; if none arrives send the ZFILE again.
 zf_wait_zpad:
 	ld b,32H			; wait up to 5.0 s
 	call aux_getc_timeout		; get a character from the modem with timeout
-	jr c,L0C95			; if timed out waiting for the modem goto L0C95
+	jr c,zmodem_snd_1		; if timed out waiting for the modem goto zmodem_snd_1
 	cp ZPAD				; is it ZPAD?
-	jr z,L0CD9			; if A is ZPAD goto L0CD9
+	jr z,zmodem_snd_5		; if A is ZPAD goto zmodem_snd_5
 	jr zf_wait_zpad			; loop back to zf_wait_zpad
 ; Abort the ZModem transfer.
 zf_abort:
@@ -2135,7 +2199,7 @@ zf_abort:
 	ret				; return
 ; Ignore this frame and read the next header.
 zf_ignore:
-	jp L0CD9			; loop back to L0CD9
+	jp zmodem_snd_5			; loop back to zmodem_snd_5
 ; ZSKIP: the receiver does not want the file.
 zf_skip:
 	ld a,ZSKIP			; return ZSKIP
@@ -2159,7 +2223,8 @@ zf_got_zrpos:
 	ex de,hl			; swap pointers
 	call dec32			; (step the saved position back by one)
 	jp zmodem_send_data		; continue at zmodem_send_data
-D0D2F:
+; ZFILE: frame type of the receiver's answer
+zfile_reply_tab:
 	.db ZRINIT,ZCAN,0FEH,ZABORT,ZFIN,ZCRC,ZSKIP,ZRPOS	; keys: ........
 	.dw zf_got_zrpos		; key 09H ZRPOS
 	.dw zf_skip			; key 05H ZSKIP
@@ -2178,15 +2243,15 @@ zmodem_send_data:
 	xor a				; Clear consecutive error counter
 	ld (same_zrpos_count),a		; clear number of times in a row ZRPOS asked for the same
 	ld (error_count),a		; clear consecutive error/retry counter
-L0D4E:
+zmodem_send_3:
 	jp zmodem_stream		; continue at zmodem_stream
-L0D51:
+zmodem_send_4:
 	xor a				; A = 0
 	ld (resp_junk_count),a		; clear garbage characters seen while streaming
 	ld a,0FFH			; A = 0FFH
 	call zmodem_get_resp		; wait for a header from the receiver and dispatch on its
-L0D5A:
-	ld hl,D0D6E			; point HL at D0D6E
+zmodem_send_5:
+	ld hl,zcrcw_reply_tab		; point HL at after a ZCRCW subpacket
 	ld bc,0005H			; 5 keys in the table
 	cpir				; look A up in the key table
 	jp z,dispatch			; if A is in the key list goto dispatch
@@ -2203,7 +2268,8 @@ zd_got_zskip:
 zd_ok:
 	xor a				; return 0 (success)
 	ret				; return
-D0D6E:
+; After a ZCRCW subpacket: frame type of the receiver's answer
+zcrcw_reply_tab:
 	.db ZCAN,ZSKIP,ZACK,ZRPOS,ZRINIT	; keys: .....
 	.dw zd_ok			; key 01H ZRINIT
 	.dw zd_got_zrpos		; key 09H ZRPOS
@@ -2223,8 +2289,8 @@ zd_got_zrpos:
 	jr z,zmodem_stream		; if nothing waiting at the modem goto zmodem_stream
 	ld b,0AH			; wait up to 1.0 s
 	call aux_getc_timeout		; get a character from the modem with timeout
-L0D8B:
-	ld hl,D0DA7			; point HL at D0DA7
+zd_got_zrpos_1:
+	ld hl,after_ack_tab		; point HL at after a ZACK
 	ld bc,0005H			; 5 keys in the table
 	cpir				; look A up in the key table
 	jr nz,zd_got_zrpos		; if A is not in the key list goto zd_got_zrpos
@@ -2233,13 +2299,14 @@ L0D8B:
 zd_got_pad:
 	ld a,00H			; A = 00H
 	call zmodem_get_resp		; wait for a header from the receiver and dispatch on its
-	jp L0D5A			; loop back to L0D5A
+	jp zmodem_send_5		; loop back to zmodem_send_5
 ; XOFF seen: the line is paused; wait for it to be released.
 zd_got_xoff:
 	ld b,64H			; wait up to 10.0 s
 	call aux_getc_timeout		; get a character from the modem with timeout
-	jr L0D8B			; loop back to L0D8B
-D0DA7:
+	jr zd_got_zrpos_1		; loop back to zd_got_zrpos_1
+; After a ZACK: character that arrived from the receiver
+after_ack_tab:
 	.db 0FEH,ZDLE,ZPAD,13H,93H	; keys: ..*..
 	.dw zd_got_xoff			; key 93H XOFF (bit 7 set)
 	.dw zd_got_xoff			; key 13H XOFF
@@ -2259,44 +2326,44 @@ zmodem_stream:
 	call copy32			; copy tx_position to tx_header_data
 	ld a,ZDATA			; frame type ZDATA
 	call send_bin_header		; announce the data
-L0DCA:
+zmodem_stream_1:
 	call get_next_chunk		; HL = length of the next chunk (up to subpacket_size)
 	ret c				; disk read error
 	ld (chunk_len),hl		; save as number of bytes in the current chunk
 	ld a,(eof_pending)		; last chunk of the file?
 	cp 0FFH				; compare A with 0FFH
-	jr nz,L0DE0			; if A != FFH goto L0DE0
+	jr nz,zmodem_stream_2		; if A != FFH goto zmodem_stream_2
 	ld a,ZCRCE			; last (short) chunk: end the frame with ZCRCE, no reply expected [zsendfdata: c <
 					; blklen]
 	ld (subpkt_term),a		; terminator for the next data subpacket = 68H (ZCRCE)
-	jp L0E16			; continue at L0E16
-L0DE0:
+	jp zmodem_stream_6		; continue at zmodem_stream_6
+zmodem_stream_2:
 	ld a,(resp_junk_count)		; trouble seen from the receiver?
 	cp 04H				; compare A with 04H
-	jr c,L0DEF			; if A < 04H goto L0DEF
-L0DE7:
+	jr c,zmodem_stream_4		; if A < 04H goto zmodem_stream_4
+zmodem_stream_3:
 	ld a,ZCRCW			; end with ZCRCW: the receiver must acknowledge before more data is sent
 	ld (subpkt_term),a		; terminator for the next data subpacket = 6BH (ZCRCW)
-	jp L0E16			; continue at L0E16
-L0DEF:
+	jp zmodem_stream_6		; continue at zmodem_stream_6
+zmodem_stream_4:
 	ld hl,last_sync_pos		; just resent after a ZRPOS to the same position?
 	ld de,last_zrpos_pos		; point DE at position of the last ZRPOS request
 	call eq32			; compare last_sync_pos with last_zrpos_pos
-	jr z,L0DE7			; yes: be careful, use ZCRCW
+	jr z,zmodem_stream_3		; yes: be careful, use ZCRCW
 	ld hl,(rx_window_size)		; receiver has a window?
 	ld a,h				; test whether HL is zero (first half)
 	or l				; A = H or L: zero only if HL = 0
-	jr z,L0E11			; no window: stream freely
+	jr z,zmodem_stream_5		; no window: stream freely
 	ld hl,(window_remaining)	; get bytes left before the receiver must acknowledge
 	ld de,(chunk_len)		; get number of bytes in the current chunk
 	sbc hl,de			; window left after this chunk [zsendfdata: newcnt -= c]
 	ld (window_remaining),hl	; save as bytes left before the receiver must acknowledge
-	jr z,L0DE7			; window used up: ZCRCW
-	jr c,L0DE7			; if carry goto L0DE7
-L0E11:
+	jr z,zmodem_stream_3		; window used up: ZCRCW
+	jr c,zmodem_stream_3		; if carry goto zmodem_stream_3
+zmodem_stream_5:
 	ld a,ZCRCG			; otherwise ZCRCG: more data follows, no reply needed [zsendfdata: e = ZCRCG]
 	ld (subpkt_term),a		; terminator for the next data subpacket = 69H (ZCRCG)
-L0E16:
+zmodem_stream_6:
 	ld a,(subpkt_term)		; send the chunk with the chosen terminator
 	ld bc,(chunk_len)		; get number of bytes in the current chunk
 	call send_subpacket		; send BC data bytes followed by ZDLE and the terminator
@@ -2309,54 +2376,55 @@ L0E16:
 	call copy32			; copy tx_position to last_sync_pos
 	ld a,(subpkt_term)		; get terminator for the next data subpacket
 	cp ZCRCW			; ZCRCW: the receiver must acknowledge
-	jp z,L0D51			; go and wait for the ZACK
-L0E3D:
+	jp z,zmodem_send_4		; go and wait for the ZACK
+zmodem_stream_7:
 	call aux_poll_input		; anything from the receiver?
-	jr z,L0E93			; no: carry on
+	jr z,zs_got_xoff_1		; no: carry on
 	ld b,0AH			; wait up to 1.0 s
 	call aux_getc_timeout		; get a character from the modem with timeout
-L0E47:
-	ld hl,D0E84			; point HL at D0E84
+zmodem_stream_8:
+	ld hl,rev_sample_tab		; point HL at reverse-channel sampling while streaming
 	ld bc,0005H			; 5 keys in the table
 	cpir				; XON/XOFF, ZPAD, ZDLE or timeout?
 	jp z,dispatch			; if A is in the key list goto dispatch
 	ld hl,resp_junk_count		; other junk: note it
 	inc (hl)			; count up garbage characters seen while streaming
-	jr L0E3D			; look again
+	jr zmodem_stream_7		; look again
 zs_got_pad:
 	ld a,00H			; A = 00H
 	call zmodem_get_resp		; wait for a header from the receiver and dispatch on its
 	cp ZACK				; is it ZACK?
-	jr z,L0E93			; if A is ZACK goto L0E93
+	jr z,zs_got_xoff_1		; if A is ZACK goto zs_got_xoff_1
 	push af				; preserve AF
-L0E62:
+zs_got_pad_1:
 	ld hl,aux_ring			; point HL at AUX receive ring buffer control block
 	call ring_reset			; clear the 6-byte ring buffer control block at HL
 	call aux_poll_input		; poll the AUX device
-	jr nz,L0E62			; if input was waiting goto L0E62
+	jr nz,zs_got_pad_1		; if input was waiting goto zs_got_pad_1
 	ld a,ZCRCE			; a ZPAD arrived from the receiver: send an empty ZCRCE data packet first [spec 9.1,
 					; sampling the reverse channel]
 	ld bc,0000H			; BC = 0000H
 	call send_subpacket		; send BC data bytes followed by ZDLE and the terminator
 	pop af				; restore AF
-	jp L0D5A			; loop back to L0D5A
+	jp zmodem_send_5		; loop back to zmodem_send_5
 zs_got_xoff:
 	ld b,64H			; wait up to 10.0 s
 	call aux_getc_timeout		; get a character from the modem with timeout
 	ld hl,resp_junk_count		; point HL at garbage characters seen while streaming
 	inc (hl)			; count up garbage characters seen while streaming
-	jr L0E47			; loop back to L0E47
-D0E84:
+	jr zmodem_stream_8		; loop back to zmodem_stream_8
+; Reverse-channel sampling while streaming: character from the receiver
+rev_sample_tab:
 	.db 0FEH,ZDLE,ZPAD,13H,93H	; keys: ..*..
 	.dw zs_got_xoff			; key 93H XOFF (bit 7 set)
 	.dw zs_got_xoff			; key 13H XOFF
 	.dw zs_got_pad			; key 2AH ZPAD
 	.dw zs_got_pad			; key 18H ZDLE/CAN
 	.dw zd_abort			; key 0FEH timeout
-L0E93:
+zs_got_xoff_1:
 	ld a,(eof_pending)		; get FFH when the end of the file has been read into the
 	cp 0FFH				; compare A with 0FFH
-	jp nz,L0DCA			; if A != FFH goto L0DCA
+	jp nz,zmodem_stream_1		; if A != FFH goto zmodem_stream_1
 
 ; ----------------------------------------------------------------------
 ; zmodem_send_zeof: Send ZEOF and wait for the receiver's ZRINIT. [sz.c
@@ -2370,7 +2438,7 @@ zmodem_send_zeof:
 	call send_bin_header		; ZEOF: the position tells the receiver how many bytes were sent [zsbhdr]
 	ld a,0FFH			; Wait for receiver response
 	call zmodem_get_resp		; wait for a header from the receiver and dispatch on its
-	ld hl,D0EC5			; point HL at D0EC5
+	ld hl,zeof_reply_tab		; point HL at after ZEOF
 	ld bc,0004H			; 4 keys in the table
 	cpir				; look A up in the key table
 	jp z,dispatch			; if A is in the key list goto dispatch
@@ -2382,7 +2450,7 @@ zeof_retry:
 	jr zmodem_send_zeof		; loop back to zmodem_send_zeof
 ; ZRPOS after ZEOF: the receiver is missing data; send from its offset again.
 zeof_resend:
-	jp L0D4E			; loop back to L0D4E
+	jp zmodem_send_3		; loop back to zmodem_send_3
 
 ; ----------------------------------------------------------------------
 ; zeof_ok: Receiver acknowledged ZEOF.
@@ -2393,7 +2461,8 @@ zeof_ok:
 ; ZSKIP after ZEOF.
 zeof_skip:
 	ret				; return
-D0EC5:
+; After ZEOF: frame type of the receiver's answer
+zeof_reply_tab:
 	.db ZACK,ZRPOS,ZRINIT,ZSKIP	; keys: ....
 	.dw zeof_skip			; key 05H ZSKIP
 	.dw zeof_ok			; key 01H ZRINIT
@@ -2406,9 +2475,9 @@ D0EC5:
 ; ----------------------------------------------------------------------
 zmodem_get_resp:
 	ld (resp_mode_flag),a		; A = FFH: accept only a ZACK for the current position; 0: any ZACK
-L0ED4:
+zmodem_get_1:
 	call get_header			; receive a ZMODEM header
-	ld hl,D0F74			; point HL at D0F74
+	ld hl,resp_frame_tab		; point HL at frame type received
 	ld bc,0009H			; 9 keys in the table
 	cpir				; look A up in the key table
 	jp z,dispatch			; if A is in the key list goto dispatch
@@ -2416,7 +2485,7 @@ L0ED4:
 resp_send_znak:
 	ld a,ZNAK			; frame type = ZNAK
 	call send_bin_header		; send a binary header
-	jr L0ED4			; loop back to L0ED4
+	jr zmodem_get_1			; loop back to zmodem_get_1
 ; ZSKIP: return it to the caller.
 resp_return:
 	ret				; return
@@ -2431,9 +2500,9 @@ resp_zack_check:
 	ld de,zack_pos			; point DE at position from the last ZACK
 	ld hl,rx_pos_arg		; point HL at position argument of the last ZRPOS/ZACK from the
 	call copy32			; copy rx_pos_arg to zack_pos
-L0EF9:
+resp_zack_1:
 	ld a,00H			; A = 00H
-resp_mode_flag		.equ L0EF9+1	; FFH: wait for a ZACK at the current position (patched operand)
+resp_mode_flag		.equ resp_zack_1+1	; FFH: wait for a ZACK at the current position (patched operand)
 	cp 00H				; Compare with 0
 	ld a,ZACK			; return ZACK
 	ret z				; return: A = 00H
@@ -2442,7 +2511,7 @@ resp_mode_flag		.equ L0EF9+1	; FFH: wait for a ZACK at the current position (pat
 	call eq32			; compare rx_pos_arg with tx_position
 	ld a,ZACK			; return ZACK
 	ret z				; return: values are equal
-	jp L0ED4			; loop back to L0ED4
+	jp zmodem_get_1			; loop back to zmodem_get_1
 
 ; ----------------------------------------------------------------------
 ; zmodem_do_zrpos: Handle ZRPOS: reposition the file and restart
@@ -2468,21 +2537,21 @@ zmodem_do_zrpos:
 	call copy32			; copy 32-bit value
 	ld de,last_zrpos_pos		; point DE at position of the last ZRPOS request
 	call eq32			; compare 32-bit values
-	jr nz,L0F64			; if values differ goto L0F64
+	jr nz,zmodem_do_1		; if values differ goto zmodem_do_1
 	ld a,(same_zrpos_count)		; get number of times in a row ZRPOS asked for the same
 	inc a				; Increment consecutive error count
 	ld (same_zrpos_count),a		; save as number of times in a row ZRPOS asked for the same
 	cp 05H				; 5 consecutive errors at same position?
-	jr c,L0F64			; if A < 05H goto L0F64
+	jr c,zmodem_do_1		; if A < 05H goto zmodem_do_1
 	ld hl,0020H			; HL = 0020H
 	ld de,(subpacket_size)		; get current data subpacket size
 	or a				; test A (sets Z if A = 0)
 	sbc hl,de			; Is current size already at minimum (32 bytes)?
-	jr nc,L0F64			; If at minimum, cannot reduce
+	jr nc,zmodem_do_1		; If at minimum, cannot reduce
 	srl d				; repeated ZRPOS for the same offset: halve the data subpacket size
 	rr e				; rotate right through carry E
 	ld (subpacket_size),de		; save as current data subpacket size
-L0F64:
+zmodem_do_1:
 	ld hl,rx_pos_arg		; point HL at position argument of the last ZRPOS/ZACK from the
 	ld de,last_zrpos_pos		; point DE at position of the last ZRPOS request
 	call copy32			; copy rx_pos_arg to last_zrpos_pos
@@ -2493,7 +2562,8 @@ resp_abort:
 	ld a,0FFH			; return code: error
 	scf				; flag failure to caller (carry set)
 	ret				; return
-D0F74:
+; zmodem_get_resp: frame type received
+resp_frame_tab:
 	.db ZCAN,ZABORT,ZFIN,0FEH,ZRPOS,ZACK,ZRINIT,ZSKIP,0FFH	; keys: .........
 	.dw resp_send_znak		; key 0FFH error
 	.dw resp_return			; key 05H ZSKIP
@@ -2517,7 +2587,7 @@ reposition_file:
 	ld hl,zrpos_target		; point HL at position requested by ZRPOS
 	ld de,pos_scratch		; point DE at scratch 32-bit result for position arithmetic
 	call cmp32_signed		; compare zrpos_target with pos_scratch
-	jp nc,L0FD2			; if first value >= second goto L0FD2
+	jp nc,reposition_1		; if first value >= second goto reposition_1
 	ld a,00H			; A = 00H
 	ld (eof_flag),a			; FFH when the disk file is at end of file = 00H (clear)
 	ld hl,zrpos_target		; point HL at position requested by ZRPOS
@@ -2535,7 +2605,7 @@ reposition_file:
 	ret c				; return: disk read error
 	xor a				; return 0 (success)
 	ret				; return
-L0FD2:
+reposition_1:
 	ld hl,file_read_pos		; point HL at position of the next byte to be read from the disk file
 	ld de,const_1024		; point DE at 32-bit constant 1024
 	ld bc,pos_scratch		; point BC at scratch 32-bit result for position arithmetic
@@ -2543,7 +2613,7 @@ L0FD2:
 	ld hl,pos_scratch		; point HL at scratch 32-bit result for position arithmetic
 	ld de,zrpos_target		; point DE at position requested by ZRPOS
 	call cmp32_signed		; compare pos_scratch with zrpos_target
-	jp nc,L1015			; if first value >= second goto L1015
+	jp nc,reposition_2		; if first value >= second goto reposition_2
 	ld a,00H			; Target lies beyond loaded buffer: seek forward
 	ld (eof_flag),a			; FFH when the disk file is at end of file = 00H (clear)
 	ld hl,zrpos_target		; point HL at position requested by ZRPOS
@@ -2561,7 +2631,7 @@ L0FD2:
 	ret c				; return: disk read error
 	xor a				; return 0 (success)
 	ret				; return
-L1015:
+reposition_2:
 	xor a				; return 0 (success)
 	ret				; return
 
@@ -2572,7 +2642,7 @@ L1015:
 file_skip_fwd:
 	ex de,hl			; swap pointers
 	ld hl,file_read_pos		; point HL at position of the next byte to be read from the disk file
-	jr L102D			; continue at L102D
+	jr file_rewind_1		; continue at file_rewind_1
 
 ; ----------------------------------------------------------------------
 ; file_rewind_skip: Rewind the file and skip forward to the target
@@ -2585,14 +2655,14 @@ file_rewind_skip:
 	ex de,hl			; swap pointers
 	ld hl,file_read_pos		; point HL at position of the next byte to be read from the disk file
 	call zero32			; clear file_read_pos
-L102D:
+file_rewind_1:
 	call eq32			; compare 32-bit values
 	ret z				; return: values are equal
 	call file_getc			; read the next byte from the input file
-	jr nz,L103B			; if end of file or error goto L103B
+	jr nz,file_rewind_2		; if end of file or error goto file_rewind_2
 	call inc32			; increment the 32-bit value at
-	jr L102D			; loop back to L102D
-L103B:
+	jr file_rewind_1		; loop back to file_rewind_1
+file_rewind_2:
 	xor 04H				; Check for CP/M EOF (Ctrl-Z / status 4)
 	ret z				; If EOF, return
 	ld a,0FFH			; return code: error
@@ -2613,7 +2683,7 @@ get_next_chunk:
 	ld hl,last_sync_pos		; point HL at position at the last synchronisation point
 	ld de,file_read_pos		; point DE at position of the next byte to be read from the disk file
 	call cmp32_signed		; compare last_sync_pos with file_read_pos
-	jp c,L1070			; if first value is smaller goto L1070
+	jp c,get_next_chunk_1		; if first value is smaller goto get_next_chunk_1
 	ld bc,(subpacket_size)		; get current data subpacket size
 	call fill_file_buffer		; read BC bytes from the file into the ring buffer
 	ret c				; return: disk read error
@@ -2621,7 +2691,7 @@ get_next_chunk:
 	ld (eof_pending),a		; save as FFH when the end of the file has been read into the
 	ex de,hl			; swap pointers
 	ret				; return
-L1070:
+get_next_chunk_1:
 	ld hl,last_sync_pos		; point HL at position at the last synchronisation point
 	ld de,subpacket_size		; point DE at current data subpacket size
 	ld bc,pos_scratch		; point BC at scratch 32-bit result for position arithmetic
@@ -2629,10 +2699,10 @@ L1070:
 	ld hl,file_read_pos		; point HL at position of the next byte to be read from the disk file
 	ld de,pos_scratch		; point DE at scratch 32-bit result for position arithmetic
 	call cmp32_signed		; compare file_read_pos with pos_scratch
-	jp c,L108C			; if first value is smaller goto L108C
+	jp c,get_next_chunk_2		; if first value is smaller goto get_next_chunk_2
 	ld hl,(subpacket_size)		; get current data subpacket size
 	ret				; return
-L108C:
+get_next_chunk_2:
 	ld a,(eof_flag)			; get FFH when the disk file is at end of file
 	ld (eof_pending),a		; save as FFH when the end of the file has been read into the
 	ld hl,file_read_pos		; point HL at position of the next byte to be read from the disk file
@@ -2648,10 +2718,10 @@ L108C:
 ; ----------------------------------------------------------------------
 fill_file_buffer:
 	ld de,0000H			; Initialize buffer write offset = 0
-L10A5:
+fill_file_1:
 	call ring_buffer_addr		; compute the address of the ring-buffer byte at offset
 	call file_getc			; read the next byte from the input file
-	jr nz,L10BB			; if end of file or error goto L10BB
+	jr nz,fill_file_2		; if end of file or error goto fill_file_2
 	ld (hl),a			; Store byte into circular transmit buffer
 	ld hl,file_read_pos		; point HL at position of the next byte to be read from the disk file
 	call inc32			; add 1 to file_read_pos
@@ -2659,9 +2729,9 @@ L10A5:
 	dec bc				; Decrement requested read byte count
 	ld a,b				; Check if all bytes read
 	or c				; A |= C
-	jr nz,L10A5			; Loop until entire block is loaded
+	jr nz,fill_file_1		; Loop until entire block is loaded
 	ret				; return
-L10BB:
+fill_file_2:
 	cp 04H				; CP/M EOF status (Ctrl-Z / status 4)?
 	ld a,0FFH			; A = 0FFH
 	ld (eof_flag),a			; FFH when the disk file is at end of file = FFH (set)
@@ -2727,11 +2797,11 @@ send_subpacket:
 	ld de,0000H			; DE = offset into the ring buffer
 	ld a,(tx_crc_mode)		; CRC-32 in use?
 	and CANFC32			; test the CRC-32 flag bit
-	jr nz,L1156			; yes
-L111B:
+	jr nz,send_subpacket_3		; yes
+send_subpacket_1:
 	ld a,b				; CRC-16: send BC data bytes
 	or c				; A |= C
-	jr z,L1131			; if zero goto L1131
+	jr z,send_subpacket_2		; if zero goto send_subpacket_2
 	push bc				; preserve BC
 	push de				; preserve DE
 	call ring_buffer_addr		; HL -> byte in the ring buffer
@@ -2742,8 +2812,8 @@ L111B:
 	pop bc				; restore BC
 	inc de				; Advance offset
 	dec bc				; Decrement remaining byte count
-	jr L111B			; next byte
-L1131:
+	jr send_subpacket_1		; next byte
+send_subpacket_2:
 	ld a,ZDLE			; end of data: ZDLE ...
 	call aux_putc_wait		; send A to the modem, waiting until the output is ready
 	ld a,(data_terminator)		; ... then the terminator
@@ -2758,10 +2828,10 @@ L1131:
 	ret z				; yes: no XON
 	ld a,11H			; otherwise follow with XON
 	jp aux_putc_wait		; continue at aux_putc_wait
-L1156:
+send_subpacket_3:
 	ld a,b				; CRC-32: send BC data bytes
 	or c				; A |= C
-	jr z,L116C			; If done, send delimiter and CRC-32
+	jr z,send_subpacket_4		; If done, send delimiter and CRC-32
 	push bc				; preserve BC
 	push de				; preserve DE
 	call ring_buffer_addr		; compute the address of the ring-buffer byte at offset
@@ -2772,8 +2842,8 @@ L1156:
 	pop bc				; restore BC
 	inc de				; Advance offset
 	dec bc				; Decrement remaining byte count
-	jr L1156			; loop back to L1156
-L116C:
+	jr send_subpacket_3		; loop back to send_subpacket_3
+send_subpacket_4:
 	ld a,ZDLE			; end of data: ZDLE ...
 	call aux_putc_wait		; send A to the modem, waiting until the output is ready
 	ld a,(data_terminator)		; get terminator byte of the data subpacket being sent
@@ -2781,7 +2851,7 @@ L116C:
 	call aux_putc_wait		; send A to the modem, waiting until the output is ready
 	ld b,04H			; send the four CRC bytes, complemented
 	ld hl,crc32_value		; point HL at running CRC-32 accumulator
-L117F:
+send_subpacket_5:
 	ld a,(hl)			; Load CRC byte
 	inc hl				; Advance pointer
 	push bc				; preserve BC
@@ -2790,7 +2860,7 @@ L117F:
 	call put_zdle_char		; send A, escaping it with ZDLE if it is a control
 	pop hl				; restore HL
 	pop bc				; restore BC
-	djnz L117F			; repeat until all B items are done
+	djnz send_subpacket_5		; repeat until all B items are done
 	ret				; return
 
 ; ----------------------------------------------------------------------
@@ -2798,7 +2868,7 @@ L117F:
 ; and the header buffer contents. [zm.c zsbhdr]
 ; ----------------------------------------------------------------------
 send_bin_header:
-	ld (out_frame_type),a		; save as frame type of the header being sent
+	ld (tx_frame_type),a		; save as frame type of the header being sent
 	ld a,ZPAD			; character to send: ZPAD
 	call aux_putc_wait		; send A to the modem, waiting until the output is ready
 	ld a,ZDLE			; character to send: ZDLE/CAN
@@ -2806,15 +2876,15 @@ send_bin_header:
 	call crc_init			; reset CRC-16 to 0 and CRC-32 to 0FFFFFFFFH
 	ld a,(tx_crc_mode)		; get CRC type used for sending
 	and CANFC32			; test the CRC-32 flag bit
-	jp nz,L11D1			; if result is nonzero goto L11D1
+	jp nz,send_bin_2		; if result is nonzero goto send_bin_2
 	ld a,ZBIN			; character to send: ZBIN header marker
 	call aux_putc_wait		; send A to the modem, waiting until the output is ready
-	ld a,(out_frame_type)		; get frame type of the header being sent
+	ld a,(tx_frame_type)		; get frame type of the header being sent
 	call crc16_update		; update the running CRC-16
 	call put_zdle_char		; send A, escaping it with ZDLE if it is a control
 	ld hl,tx_header_data		; point HL at four argument bytes for the next header to send
 	ld b,04H			; 4 bytes to transmit
-L11B7:
+send_bin_1:
 	push bc				; preserve BC
 	ld a,(hl)			; A = (HL)
 	inc hl				; Advance pointer
@@ -2823,20 +2893,20 @@ L11B7:
 	call put_zdle_char		; send A, escaping it with ZDLE if it is a control
 	pop hl				; restore HL
 	pop bc				; restore BC
-	djnz L11B7			; repeat until all B items are done
+	djnz send_bin_1			; repeat until all B items are done
 	ld a,(crc16_hi)			; get CRC-16 high byte
 	call put_zdle_char		; send A, escaping it with ZDLE if it is a control
 	ld a,(crc16_lo)			; get CRC-16 low byte
 	jp put_zdle_char		; continue at put_zdle_char
-L11D1:
+send_bin_2:
 	ld a,ZBIN32			; character to send: 'C'
 	call aux_putc_wait		; send A to the modem, waiting until the output is ready
-	ld a,(out_frame_type)		; get frame type of the header being sent
+	ld a,(tx_frame_type)		; get frame type of the header being sent
 	call crc32_update		; update the running CRC-32 with byte A
 	call aux_putc_wait		; send A to the modem, waiting until the output is ready
 	ld hl,tx_header_data		; point HL at four argument bytes for the next header to send
 	ld b,04H			; 4 bytes to transmit
-L11E4:
+send_bin_3:
 	push bc				; preserve BC
 	ld a,(hl)			; A = (HL)
 	inc hl				; Advance pointer
@@ -2845,10 +2915,10 @@ L11E4:
 	call put_zdle_char		; send A, escaping it with ZDLE if it is a control
 	pop hl				; restore HL
 	pop bc				; restore BC
-	djnz L11E4			; repeat until all B items are done
+	djnz send_bin_3			; repeat until all B items are done
 	ld hl,crc32_value		; point HL at running CRC-32 accumulator
 	ld b,04H			; 4 CRC bytes to send
-L11F7:
+send_bin_4:
 	push bc				; preserve BC
 	ld a,(hl)			; Load CRC byte
 	inc hl				; Advance pointer
@@ -2857,24 +2927,25 @@ L11F7:
 	call put_zdle_char		; send A, escaping it with ZDLE if it is a control
 	pop hl				; restore HL
 	pop bc				; restore BC
-	djnz L11F7			; repeat until all B items are done
+	djnz send_bin_4			; repeat until all B items are done
 	ret				; return
 
 ; ----------------------------------------------------------------------
 ; send_hex_header: Send a hex header: frame type in A, four argument bytes
 ; from the header buffer, CRC-16, CR LF. [zm.c zshhdr]
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 send_hex_header:
-	ld (out_frame_type),a		; save as frame type of the header being sent
-	ld hl,D124D			; point HL at D124D
+	ld (tx_frame_type),a		; save as frame type of the header being sent
+	ld hl,hex_hdr_prefix		; point HL at ZPAD ZPAD ZDLE ZHEX, introduces a hex header
 	call send_string		; send the zero-terminated string at HL to the modem
 	call crc_init			; reset CRC-16 to 0 and CRC-32 to 0FFFFFFFFH
-	ld a,(out_frame_type)		; get frame type of the header being sent
+	ld a,(tx_frame_type)		; get frame type of the header being sent
 	call crc16_update		; update the running CRC-16
 	call put_hex_byte		; send A as two lowercase hex digits
 	ld hl,tx_header_data		; point HL at four argument bytes for the next header to send
-	ld b,04H			; 4 bytes to transmit
-L121E:
+	ld b,04H			; Loop counter = 4 bytes
+send_hex_1:
 	push bc				; preserve BC
 	ld a,(hl)			; A = (HL)
 	inc hl				; Advance pointer
@@ -2883,7 +2954,7 @@ L121E:
 	call put_hex_byte		; send A as two lowercase hex digits
 	pop hl				; restore HL
 	pop bc				; restore BC
-	djnz L121E			; repeat until all B items are done
+	djnz send_hex_1			; repeat until all B items are done
 	ld a,(crc16_hi)			; get CRC-16 high byte
 	call put_hex_byte		; send A as two lowercase hex digits
 	ld a,(crc16_lo)			; get CRC-16 low byte
@@ -2892,88 +2963,99 @@ L121E:
 	call aux_putc_wait		; send A to the modem, waiting until the output is ready
 	ld a,0AH			; character to send: LF
 	call aux_putc_wait		; send A to the modem, waiting until the output is ready
-	ld a,(out_frame_type)		; get frame type of the header being sent
+	ld a,(tx_frame_type)		; get frame type of the header being sent
 	cp ZFIN				; is it ZFIN?
 	ret z				; return: A is ZFIN
 	ld a,11H			; A = 11H (XON)
 	jp aux_putc_wait		; continue at aux_putc_wait
-D124D:
+; ZPAD ZPAD ZDLE ZHEX, introduces a hex header
+; Common data: identical in RZ and SZ.
+hex_hdr_prefix:
 	.db ZPAD,ZPAD,ZDLE,ZHEX,00H
-D1252:
+; "0123456789abcdef"
+; Common data: identical in RZ and SZ.
+hex_digits:
 	.db "0123456789abcdef"
 
 ; ----------------------------------------------------------------------
 ; put_hex_byte: Send A as two lowercase hex digits. [zm.c zputhex]
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 put_hex_byte:
 	push af				; preserve AF
-	ld hl,D1252			; point HL at D1252
-	ld b,00H			; BC = high nibble index
-	rra				; Shift high nibble into low nibble (A >> 4)
+	ld hl,hex_digits		; point HL at "0123456789abcdef"
+	ld b,00H			; BC = high nibble offset
+	rra				; Shift high nibble into low 4 bits
 	rra				; rotate A right through carry
 	rra				; rotate A right through carry
 	rra				; rotate A right through carry
 	and 0FH				; keep the low nibble
 	ld c,a				; Set offset
-	add hl,bc			; HL points to hex ASCII character
-	ld a,(hl)			; get a byte of D1252
+	add hl,bc			; Index into hex digits string
+	ld a,(hl)			; get a byte of "0123456789abcdef"
 	call aux_putc_wait		; send A to the modem, waiting until the output is ready
 	pop af				; restore AF
-	ld hl,D1252			; point HL at D1252
-	ld b,00H			; BC = low nibble index
+	ld hl,hex_digits		; point HL at "0123456789abcdef"
+	ld b,00H			; BC = low nibble offset
 	and 0FH				; keep the low nibble
 	ld c,a				; Set offset
-	add hl,bc			; HL points to hex ASCII character
-	ld a,(hl)			; get a byte of D1252
+	add hl,bc			; Index into hex digits string
+	ld a,(hl)			; get a byte of "0123456789abcdef"
 	jp aux_putc_wait		; continue at aux_putc_wait
 
 ; ----------------------------------------------------------------------
 ; put_zdle_char: Send A, escaping it with ZDLE if it is a control
 ; character. [zm.c zsendline]
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 put_zdle_char:
 	ld (zdl_char),a			; save as character to send after a ZDLE
 	ld bc,0009H			; nine characters get special treatment: ZDLE, DLE, XON, XOFF and CR (each also with
 					; bit 7 set)
-	ld hl,D12C1			; point HL at D12C1
+	ld hl,esc_set_tab		; point HL at characters that must be sent escaped with ZDLE
 	cpir				; look A up in the key table
 	jp z,dispatch			; if A is in the key list goto dispatch
 	and 60H				; other bytes: only control characters (bits 5-6 clear) can need escaping
-	jr nz,L12A4			; if result is nonzero goto L12A4
+	jr nz,zdl_escape_1		; if result is nonzero goto zdl_escape_1
 	ld a,(escape_ctl_flag)		; receiver/sender asked for ALL control characters to be escaped (ESCCTL)?
 	or a				; test A (sets Z if A = 0)
-	jr z,L12A4			; if nonzero is zero/clear goto L12A4
+	jr z,zdl_escape_1		; if nonzero is zero/clear goto zdl_escape_1
 ; Send ZDLE followed by the character XOR 40H, then fall through to send it.
+; Common routine: identical in RZ and SZ.
 zdl_escape:
 	ld hl,zdl_char			; point HL at character to send after a ZDLE
 	set 6,(hl)			; escape: send ZDLE followed by the byte with bit 6 flipped
 	ld a,ZDLE			; character to send: ZDLE/CAN
 	call aux_putc_wait		; send A to the modem, waiting until the output is ready
-L12A4:
+zdl_escape_1:
 	ld a,00H			; Byte to transmit
-zdl_char		.equ L12A4+1	; character to send after a ZDLE (patched operand)
+zdl_char		.equ zdl_escape_1+1	; character to send after a ZDLE (patched operand)
 
 ; ----------------------------------------------------------------------
 ; aux_putc_wait: Send A to the modem, waiting until the output is ready.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 aux_putc_wait:
 	ld (aux_out_char),a		; save as character waiting to be sent to the modem
-L12A9:
+aux_putc_wait_1:
 	call aux_poll_input		; poll the AUX device
 	call aux_out_ready		; test whether the AUX output is ready
-	jr z,L12A9			; if modem not ready for output goto L12A9
-L12B1:
+	jr z,aux_putc_wait_1		; if modem not ready for output goto aux_putc_wait_1
+aux_putc_wait_2:
 	ld a,00H			; Load character
-aux_out_char		.equ L12B1+1	; character waiting to be sent to the modem (patched operand)
+aux_out_char		.equ aux_putc_wait_2+1	; character waiting to be sent to the modem (patched operand)
 	jp aux_putc			; loop back to aux_putc
 ; CR is escaped only if the previous character sent was "@".
+; Common routine: identical in RZ and SZ.
 zdl_cr_rule:
 	ld a,(aux_out_char)		; CR rule: the previous character sent ...
 	and 7FH				; strip the parity bit (7-bit ASCII)
 	cp 40H				; ... was "@"? (a CR after "@" is escaped so Telenet is not triggered)
-	jr nz,L12A4			; if A != 40H goto L12A4
+	jr nz,zdl_escape_1		; if A != 40H goto zdl_escape_1
 	jr zdl_escape			; loop back to zdl_escape
-D12C1:
+; Characters that must be sent escaped with ZDLE, and the routine that decides
+; Common data: identical in RZ and SZ.
+esc_set_tab:
 	.db ZDLE,0DH,8DH,10H,90H,11H,91H,13H,93H	; keys: .........
 	.dw zdl_escape			; key 93H XOFF with bit 7
 	.dw zdl_escape			; key 13H XOFF
@@ -2987,10 +3069,11 @@ D12C1:
 
 ; ----------------------------------------------------------------------
 ; crc_init: Reset CRC-16 to 0 and CRC-32 to 0FFFFFFFFH.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 crc_init:
-	xor a				; A = 0
-	ld h,a				; H = A
+	xor a				; Clear A
+	ld h,a				; HL = 0000h
 	ld l,a				; L = A
 	ld (xm_checksum),a		; clear running 8-bit XMODEM checksum
 	ld (crc16_lo),hl		; save as CRC-16 low byte
@@ -3006,134 +3089,154 @@ get_header:
 	ld (rx_frame_type),a		; clear frame type of the last header received
 	ld hl,0400H			; give up after 1024 junk characters without a header
 	ld (hdr_junk_limit),hl		; save as remaining number of junk characters tolerated
-L12F5:
+get_header_1:
 	ld a,05H			; five CANs in a row mean "session cancelled" [zgethdr: cancount = 5]
 	ld (hdr_can_count),a		; remaining CAN characters before abort = 05H
-L12FA:
+get_header_2:
 	ld b,0FFH			; wait up to 25.5 s
 	call aux_getc_timeout		; get a character from the modem with timeout
-	jp c,L13A4			; if timed out waiting for the modem goto L13A4
-	ld hl,D13B8			; point HL at D13B8
+	jp c,hdr_return			; if timed out waiting for the modem goto hdr_return
+	ld hl,hdr_idle_tab		; point HL at header scan, idle state
 	ld bc,0003H			; 3 keys in the table
 	cpir				; look A up in the key table
 	jp z,dispatch			; if A is in the key list goto dispatch
-	jr L133E			; continue at L133E
+	jr hdr_zdle_zcrcw_1		; continue at hdr_zdle_zcrcw_1
+; Common routine: identical in RZ and SZ.
 hdr_got_zdle:
 	ld hl,hdr_can_count		; point HL at remaining CAN characters before abort
 	dec (hl)			; count down remaining CAN characters before abort
 	ld a,ZCAN			; CAN limit reached: report ZCAN
-	jp z,L13A4			; if remaining CAN characters before abort has run out goto L13A4
+	jp z,hdr_return			; if remaining CAN characters before abort has run out goto hdr_return
 	ld b,0AH			; wait up to 1.0 s
 	call aux_getc_timeout		; get a character from the modem with timeout
-	jr c,L12FA			; if timed out waiting for the modem goto L12FA
-	ld hl,D13C1			; point HL at D13C1
+	jr c,get_header_2		; if timed out waiting for the modem goto get_header_2
+	ld hl,hdr_zdle_tab		; point HL at header scan, after ZDLE
 	ld bc,0002H			; 2 keys in the table
 	cpir				; look A up in the key table
 	jp z,dispatch			; if A is in the key list goto dispatch
-	jr L133E			; continue at L133E
+	jr hdr_zdle_zcrcw_1		; continue at hdr_zdle_zcrcw_1
 ; A second ZDLE: count a CAN; five in a row return ZCAN.
+; Common routine: identical in RZ and SZ.
 hdr_zdle_zdle:
 	ld hl,hdr_can_count		; point HL at remaining CAN characters before abort
 	dec (hl)			; count down remaining CAN characters before abort
 	ld a,ZCAN			; CRC-16 header: remember the CRC type
-	jp z,L13A4			; if remaining CAN characters before abort has run out goto L13A4
-	jr L12FA			; loop back to L12FA
+	jp z,hdr_return			; if remaining CAN characters before abort has run out goto hdr_return
+	jr get_header_2			; loop back to get_header_2
 ; ZDLE then ZCRCW: wait briefly for one more character, otherwise return an error.
+; Common routine: identical in RZ and SZ.
 hdr_zdle_zcrcw:
 	ld b,0AH			; wait up to 1.0 s
 	call aux_getc_timeout		; get a character from the modem with timeout
-	jr c,L134F			; if timed out waiting for the modem goto L134F
-L133E:
+	jr c,hdr_zdle_zcrcw_2		; if timed out waiting for the modem goto hdr_zdle_zcrcw_2
+hdr_zdle_zcrcw_1:
 	ld hl,(hdr_junk_limit)		; get remaining number of junk characters tolerated
 	dec hl				; HL--
 	ld (hdr_junk_limit),hl		; save as remaining number of junk characters tolerated
 	ld a,h				; test whether HL is zero (first half)
 	or l				; A = H or L: zero only if HL = 0
 	ld a,0FCH			; junk limit reached: no header found
-	jp z,L13A4			; if the 16-bit count is zero goto L13A4
-	jp L12F5			; loop back to L12F5
-L134F:
+	jp z,hdr_return			; if the 16-bit count is zero goto hdr_return
+	jp get_header_1			; loop back to get_header_1
+hdr_zdle_zcrcw_2:
 	ld a,0FFH			; Timeout error status
-	jp L13A4			; continue at L13A4
+	jp hdr_return			; continue at hdr_return
+; Common routine: identical in RZ and SZ.
 hdr_got_zpad:
 	ld a,05H			; A = 05H
 	ld (hdr_can_count),a		; remaining CAN characters before abort = 05H
 ; Another ZPAD: keep waiting for ZDLE.
+; Common routine: identical in RZ and SZ.
 hdr_pad_loop:
 	call getc_7bit_filt		; get a modem char, strip bit 7 and ignore
-	jr c,L13A4			; if timeout or error goto L13A4
-	ld hl,D13C7			; point HL at D13C7
+	jr c,hdr_return			; if timeout or error goto hdr_return
+	ld hl,hdr_pad_tab		; point HL at header scan, after ZPAD
 	ld bc,0002H			; 2 keys in the table
 	cpir				; look A up in the key table
 	jp z,dispatch			; if A is in the key list goto dispatch
-	jr L133E			; loop back to L133E
+	jr hdr_zdle_zcrcw_1		; loop back to hdr_zdle_zcrcw_1
+; Common routine: identical in RZ and SZ.
 hdr_zpad_zdle:
 	call getc_7bit_filt		; get a modem char, strip bit 7 and ignore
-	jr c,L13A4			; if timeout or error goto L13A4
-	ld hl,D13CD			; point HL at D13CD
+	jr c,hdr_return			; if timeout or error goto hdr_return
+	ld hl,hdr_fmt_tab		; point HL at header scan, after ZPAD ZDLE
 	ld bc,0004H			; 4 keys in the table
 	cpir				; look A up in the key table
 	jp z,dispatch			; if A is in the key list goto dispatch
-	jr L133E			; loop back to L133E
+	jr hdr_zdle_zcrcw_1		; loop back to hdr_zdle_zcrcw_1
+; Common routine: identical in RZ and SZ.
 hdr_hex:
 	ld a,10H			; CRC-16 header: remember the CRC type
-	ld (rx_crc_mode),a		; CRC type of the last received header = 10H (CRC-16)
+	ld (rx_crc_mode),a		; link CRC type = 10H (CRC-16)
 	call get_hex_header		; receive a hex-encoded header
-	jr L1399			; continue at L1399
+	jr hdr_bin32_1			; continue at hdr_bin32_1
+; Common routine: identical in RZ and SZ.
 hdr_bin16:
-	ld a,10H			; CRC format = 16-bit
-	ld (rx_crc_mode),a		; CRC type of the last received header = 10H (CRC-16)
+	ld a,10H			; CRC format = 16-bit CRC (10h)
+	ld (rx_crc_mode),a		; link CRC type = 10H (CRC-16)
 	call get_bin16_header		; receive a binary header with 16-bit CRC
-	jr L1399			; continue at L1399
+	jr hdr_bin32_1			; continue at hdr_bin32_1
 hdr_bin32:
 	ld a,20H			; CRC-32 header (ZBIN32): remember the CRC type
-	ld (rx_crc_mode),a		; CRC type of the last received header = 20H (CRC-32)
+	ld (rx_crc_mode),a		; link CRC type = 20H (CRC-32)
 	call get_bin32_header		; receive a binary header with 32-bit CRC
-L1399:
+hdr_bin32_1:
 	push af				; preserve AF
-	ld hl,rx_header_data		; point HL at four argument bytes of the last received header
+	ld hl,rx_header_data		; point HL at four argument bytes of the most recently received header
 	ld de,rx_pos_arg		; point DE at position argument of the last ZRPOS/ZACK from the
-	call copy32			; copy rx_header_data to rx_pos_arg
+	call copy32			; copy rx_header_data to rx_header_copy
 	pop af				; restore AF
-L13A4:
-	ld hl,D13D9			; point HL at D13D9
+; Common routine: identical in RZ and SZ.
+hdr_return:
+	ld hl,hdr_ret_keys		; point HL at header results that are returned with carry set
 	ld bc,0006H			; 6 keys in the table
 	cpir				; look A up in the key table
-	jr nz,L13B6			; if A is not in the key list goto L13B6
+	jr nz,hdr_return_2		; if A is not in the key list goto hdr_return_2
 	cp GOTCAN			; Special error status?
-	jr nz,L13B4			; if A != 98H goto L13B4
+	jr nz,hdr_return_1		; if A != 98H goto hdr_return_1
 	ld a,ZCAN			; return ZCAN
-L13B4:
+hdr_return_1:
 	scf				; error/timeout/cancel: carry set
 	ret				; return
-L13B6:
-	or a				; test A (sets Z if A = 0)
+hdr_return_2:
+	or a				; Clear carry (success)
 	ret				; return
-D13B8:
+; Header scan, idle state: ZPAD or ZDLE starts a header
+; Common data: identical in RZ and SZ.
+hdr_idle_tab:
 	.db ZDLE,ZPAD+80H,ZPAD		; keys: ..*
 	.dw hdr_got_zpad		; key 2AH ZPAD
 	.dw hdr_got_zpad		; key 0AAH ZPAD (bit 7 set)
 	.dw hdr_got_zdle		; key 18H ZDLE
-D13C1:
+; Header scan, after ZDLE: another ZDLE or ZCRCW
+; Common data: identical in RZ and SZ.
+hdr_zdle_tab:
 	.db ZCRCW,ZDLE			; keys: k.
 	.dw hdr_zdle_zdle		; key 18H ZDLE
 	.dw hdr_zdle_zcrcw		; key 6BH ZCRCW after CAN: no header follows
-D13C7:
+; Header scan, after ZPAD: another ZPAD or ZDLE
+; Common data: identical in RZ and SZ.
+hdr_pad_tab:
 	.db ZPAD,ZDLE			; keys: *.
 	.dw hdr_zpad_zdle		; key 18H ZDLE
 	.dw hdr_pad_loop		; key 2AH ZPAD
-D13CD:
+; Header scan, after ZPAD ZDLE: format character (ZBIN, ZHEX, ZBIN32) or ZDLE
+; Common data: identical in RZ and SZ.
+hdr_fmt_tab:
 	.db ZBIN32,ZBIN,ZHEX,ZDLE	; keys: CAB.
 	.dw hdr_got_zdle		; key 18H ZDLE
 	.dw hdr_hex			; key 42H ZHEX (hex header)
 	.dw hdr_bin16			; key 41H ZBIN (binary header, CRC-16)
 	.dw hdr_bin32			; key 43H ZBIN32 (binary header, CRC-32)
-D13D9:
+; Header results that are returned with carry set
+; Common data: identical in RZ and SZ.
+hdr_ret_keys:
 	.db GOTCAN,ZNAK,ZCAN,0FFH,0FEH,0FCH	; keys: ......
 
 ; ----------------------------------------------------------------------
 ; get_bin32_header: Receive a binary header with 32-bit CRC. [zm.c
 ; zrbhdr32]
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 get_bin32_header:
 	call crc_init			; reset CRC-16 to 0 and CRC-32 to 0FFFFFFFFH
@@ -3141,9 +3244,9 @@ get_bin32_header:
 	ret c				; return: timeout, CAN or error
 	ld (rx_frame_type),a		; save as frame type of the last header received
 	call crc32_update		; update the running CRC-32 with byte A
-	ld hl,rx_header_data		; point HL at four argument bytes of the last received header
+	ld hl,rx_header_data		; point HL at four argument bytes of the most recently received header
 	ld b,04H			; 4 bytes to read
-L13F1:
+get_bin32_1:
 	push bc				; preserve BC
 	push hl				; preserve HL
 	call getc_zdl_filt		; get a modem char, ignore XON/XOFF and decode ZDLE
@@ -3152,21 +3255,21 @@ L13F1:
 	pop bc				; restore BC
 	ld (hl),a			; (HL) = A
 	inc hl				; Advance pointer
-	ret c				; Return on error
-	djnz L13F1			; repeat until all B items are done
+	ret c				; Return on read error
+	djnz get_bin32_1		; repeat until all B items are done
 	ld b,04H			; repeat count = 4
-L1402:
+get_bin32_2:
 	push bc				; preserve BC
 	call getc_zdl_filt		; get a modem char, ignore XON/XOFF and decode ZDLE
 	call crc32_update		; update the running CRC-32 with byte A
 	pop bc				; restore BC
-	ret c				; Return on error
-	djnz L1402			; repeat until all B items are done
+	ret c				; Return on read error
+	djnz get_bin32_2		; repeat until all B items are done
 	ld hl,crc32_value		; point HL at running CRC-32 accumulator
 	ld de,crc32_residue		; point DE at CRC-32 residue 0DEBB20E3H expected after a good frame
 	call eq32			; compare crc32_value with crc32_residue
-	jr z,L144C			; if values are equal goto L144C
-	jr L1450			; continue at L1450
+	jr z,get_bin16_3		; if values are equal goto get_bin16_3
+	jr get_bin16_4			; continue at get_bin16_4
 
 ; ----------------------------------------------------------------------
 ; get_bin16_header: Receive a binary header with 16-bit CRC. [zm.c zrbhdr]
@@ -3177,9 +3280,9 @@ get_bin16_header:
 	ret c				; return: timeout, CAN or error
 	ld (rx_frame_type),a		; save as frame type of the last header received
 	call crc16_update		; update the running CRC-16
-	ld hl,rx_header_data		; point HL at four argument bytes of the last received header
+	ld hl,rx_header_data		; point HL at four argument bytes of the most recently received header
 	ld b,04H			; 4 bytes to read
-L142C:
+get_bin16_1:
 	push bc				; preserve BC
 	push hl				; preserve HL
 	call getc_zdl_filt		; get a modem char, ignore XON/XOFF and decode ZDLE
@@ -3188,23 +3291,23 @@ L142C:
 	pop bc				; restore BC
 	ld (hl),a			; (HL) = A
 	inc hl				; Advance pointer
-	ret c				; Return on error
-	djnz L142C			; repeat until all B items are done
+	ret c				; Return on read error
+	djnz get_bin16_1		; repeat until all B items are done
 	ld b,02H			; repeat count = 2
-L143D:
+get_bin16_2:
 	push bc				; preserve BC
 	call getc_zdl_filt		; get a modem char, ignore XON/XOFF and decode ZDLE
 	call crc16_update		; update the running CRC-16
 	pop bc				; restore BC
-	ret c				; Return on error
-	djnz L143D			; repeat until all B items are done
+	ret c				; Return on read error
+	djnz get_bin16_2		; repeat until all B items are done
 	ld a,h				; test whether HL is zero (first half)
 	or l				; A = H or L: zero only if HL = 0
-	jr nz,L1450			; if the 16-bit count is not zero goto L1450
-L144C:
+	jr nz,get_bin16_4		; if the 16-bit count is not zero goto get_bin16_4
+get_bin16_3:
 	ld a,(rx_frame_type)		; get frame type of the last header received
 	ret				; return
-L1450:
+get_bin16_4:
 	ld a,0FFH			; return code: error
 	scf				; flag failure to caller (carry set)
 	ret				; return
@@ -3218,48 +3321,48 @@ get_hex_header:
 	ret c				; Return on error
 	ld (rx_frame_type),a		; save as frame type of the last header received
 	call crc16_update		; update the running CRC-16
-	ld hl,rx_header_data		; point HL at four argument bytes of the last received header
+	ld hl,rx_header_data		; point HL at four argument bytes of the most recently received header
 	ld b,04H			; 4 bytes to read
-L1466:
+get_hex_header_1:
 	push bc				; preserve BC
 	push hl				; preserve HL
 	call get_hex_byte		; receive two hex digits and combine them into a byte
-	jr nc,L1470			; If valid hex, store byte
+	jr nc,get_hex_header_2		; If byte received successfully, proceed
 	pop hl				; restore HL
 	pop bc				; restore BC
 	ret				; return
-L1470:
+get_hex_header_2:
 	call crc16_update		; update the running CRC-16
 	pop hl				; restore HL
 	pop bc				; restore BC
 	ld (hl),a			; (HL) = A
 	inc hl				; Advance pointer
-	djnz L1466			; repeat until all B items are done
-	ld b,02H			; 2 CRC-16 bytes (4 hex chars) to read
-L147B:
+	djnz get_hex_header_1		; repeat until all B items are done
+	ld b,02H			; Read 2 CRC-16 hex bytes
+get_hex_header_3:
 	push bc				; preserve BC
 	call get_hex_byte		; receive two hex digits and combine them into a byte
-	jr nc,L1483			; If valid hex, process
+	jr nc,get_hex_header_4		; If valid hex, process
 	pop bc				; restore BC
 	ret				; return
-L1483:
+get_hex_header_4:
 	call crc16_update		; update the running CRC-16
 	pop bc				; restore BC
-	djnz L147B			; repeat until all B items are done
+	djnz get_hex_header_3		; repeat until all B items are done
 	ld a,h				; test whether HL is zero (first half)
 	or l				; A = H or L: zero only if HL = 0
-	jr nz,L14A0			; if the 16-bit count is not zero goto L14A0
+	jr nz,get_hex_header_6		; if the 16-bit count is not zero goto get_hex_header_6
 	ld b,0AH			; wait up to 1.0 s
 	call aux_getc_timeout		; get a character from the modem with timeout
 	cp 0DH				; is it CR?
-	jr nz,L149B			; if A is not CR goto L149B
+	jr nz,get_hex_header_5		; if A is not CR goto get_hex_header_5
 	ld b,0AH			; wait up to 1.0 s
 	call aux_getc_timeout		; get a character from the modem with timeout
-L149B:
-	or a				; test A (sets Z if A = 0)
+get_hex_header_5:
+	or a				; Clear carry (success)
 	ld a,(rx_frame_type)		; get frame type of the last header received
 	ret				; return
-L14A0:
+get_hex_header_6:
 	ld a,0FFH			; return code: error
 	scf				; flag failure to caller (carry set)
 	ret				; return
@@ -3267,55 +3370,58 @@ L14A0:
 ; ----------------------------------------------------------------------
 ; get_hex_byte: Receive two hex digits and combine them into a byte. [zm.c
 ; zgethex]
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 get_hex_byte:
 	call getc_7bit_filt		; get a modem char, strip bit 7 and ignore
 	ret c				; return: timeout or error
 	call hex_digit_value		; convert an ASCII hex digit in A to 0-15
-	jr nz,L14BF			; if not zero goto L14BF
-	rlca				; Shift low nibble to high nibble (A << 4)
+	jr nz,get_hex_byte_1		; Error if invalid hex character
+	rlca				; Shift high nibble into bits 4-7
 	rlca				; rotate A left
 	rlca				; rotate A left
 	rlca				; rotate A left
-	ld b,a				; B = high nibble shifted
+	ld b,a				; Save high nibble in B
 	push bc				; preserve BC
 	call getc_7bit_filt		; get a modem char, strip bit 7 and ignore
 	pop bc				; restore BC
 	ret c				; return: timeout or error
 	call hex_digit_value		; convert an ASCII hex digit in A to 0-15
-	jr nz,L14BF			; if not zero goto L14BF
-	or b				; Combine high and low nibbles (A = high | low)
+	jr nz,get_hex_byte_1		; Error if invalid hex character
+	or b				; Merge high nibble from B with low nibble in A
 	ret				; return
-L14BF:
+get_hex_byte_1:
 	ld a,0FFH			; return code: error
 	scf				; flag failure to caller (carry set)
 	ret				; return
 
 ; ----------------------------------------------------------------------
 ; hex_digit_value: Convert an ASCII hex digit in A to 0-15.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 hex_digit_value:
-	ld l,a				; Preserve char in L
-	sub 30H				; Subtract '0' (30h)
-	cp 0AH				; Is it a decimal digit ('0'..'9')?
-	jr c,L14CC			; if A < 0AH goto L14CC
-	sub 27H				; A -= 27H
-L14CC:
-	ld l,a				; Save result in L
+	ld l,a				; Save original character in L
+	sub 30H				; Subtract ASCII '0' offset
+	cp 0AH				; In digit range '0'-'9'?
+	jr c,hex_digit_1		; if A < 0AH goto hex_digit_1
+	sub 27H				; Subtract offset for lowercase 'a'-'f'
+hex_digit_1:
+	ld l,a				; Save nibble value in L
 	and 0F0H			; keep the high nibble
-	ld a,l				; A = nibble value (0..15)
+	ld a,l				; Return nibble in A
 	ret				; return
 
 ; ----------------------------------------------------------------------
 ; getc_7bit_filt: Get a modem char, strip bit 7 and ignore
 ; XON/XOFF/CR/LF/ZDLE. [zm.c noxrd7]
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 getc_7bit_filt:
 	ld b,64H			; wait up to 10.0 s
 	call aux_getc_timeout		; get a character from the modem with timeout
 	ret c				; return: timed out waiting for the modem
 	and 7FH				; strip the parity bit (7-bit ASCII)
-	ld hl,D14F6			; point HL at D14F6
+	ld hl,filter7_keys		; point HL at characters getc_7bit_filt ignores
 	ld bc,0002H			; 2 keys in the table
 	cpir				; look A up in the key table
 	jr z,getc_7bit_filt		; if A is in the key list goto getc_7bit_filt
@@ -3324,14 +3430,16 @@ getc_7bit_filt:
 	ret z				; return: A is in the key list
 	ld b,a				; Preserve character in B
 	and 60H				; isolate bits 5-6: zero means a control character
-	jr nz,L14F4			; if result is nonzero goto L14F4
+	jr nz,getc_7bit_filt_1		; if result is nonzero goto getc_7bit_filt_1
 	ld a,(escape_ctl_flag)		; get nonzero
 	or a				; test A (sets Z if A = 0)
 	jr nz,getc_7bit_filt		; if nonzero is set/nonzero goto getc_7bit_filt
-L14F4:
-	ld a,b				; Restore character in A
+getc_7bit_filt_1:
+	ld a,b				; Restore received character in A
 	ret				; return
-D14F6:
+; Characters getc_7bit_filt ignores (XON, XOFF) and those it accepts (CR, LF, ZDLE)
+; Common data: identical in RZ and SZ.
+filter7_keys:
 	.db 11H,13H			; keys: ..
 	.db 0DH,0AH
 	.db 18H
@@ -3339,6 +3447,7 @@ D14F6:
 ; ----------------------------------------------------------------------
 ; getc_zdl_filt: Get a modem char, ignore XON/XOFF and decode ZDLE
 ; escapes. [zm.c zdlread]
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 getc_zdl_filt:
 	ld b,64H			; wait up to 10.0 s
@@ -3346,78 +3455,86 @@ getc_zdl_filt:
 	ret c				; return: timed out waiting for the modem
 	ld e,a				; Preserve character in E
 	and 60H				; isolate bits 5-6: zero means a control character
-	ld a,e				; Restore character
+	ld a,e				; Restore character into A
 	ret nz				; return: result is nonzero
 	cp ZDLE				; compare A with 18H (ZDLE/CAN)
 	jr z,zdlread_escape		; if A = 18H goto zdlread_escape
-	ld hl,D156E			; point HL at D156E
+	ld hl,zdl_ign_keys		; point HL at characters getc_zdl_filt ignores
 	ld bc,0004H			; 4 keys in the table
 	cpir				; look A up in the key table
 	jr z,getc_zdl_filt		; if A is in the key list goto getc_zdl_filt
 	ld a,(escape_ctl_flag)		; get nonzero
 	or a				; test A (sets Z if A = 0)
 	jr nz,getc_zdl_filt		; if nonzero is set/nonzero goto getc_zdl_filt
-	ld a,e				; Otherwise return raw control byte
+	ld a,e				; Return unescaped control character
 	ret				; return
 
 ; ----------------------------------------------------------------------
 ; zdlread_escape: Decode the byte following a ZDLE (CAN) escape: frame-end
 ; codes, ZRUB0/ZRUB1, or XOR 40H. [zm.c zdlread]
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 zdlread_escape:
 	ld b,64H			; wait up to 10.0 s
 	call aux_getc_timeout		; get a character from the modem with timeout
 	ret c				; return: timed out waiting for the modem
 	cp ZDLE				; is it ZDLE/CAN?
-	jr nz,L1540			; if A is not ZDLE/CAN goto L1540
+	jr nz,zdlread_escape_1		; if A is not ZDLE/CAN goto zdlread_escape_1
 	ld b,64H			; wait up to 10.0 s
 	call aux_getc_timeout		; get a character from the modem with timeout
 	ret c				; return: timed out waiting for the modem
 	cp ZDLE				; is it ZDLE/CAN?
-	jr nz,L1540			; if A is not ZDLE/CAN goto L1540
+	jr nz,zdlread_escape_1		; if A is not ZDLE/CAN goto zdlread_escape_1
 	ld b,64H			; wait up to 10.0 s
 	call aux_getc_timeout		; get a character from the modem with timeout
 	ret c				; return: timed out waiting for the modem
 	cp ZDLE				; is it ZDLE/CAN?
-	jr nz,L1540			; if A is not ZDLE/CAN goto L1540
+	jr nz,zdlread_escape_1		; if A is not ZDLE/CAN goto zdlread_escape_1
 	ld b,64H			; wait up to 10.0 s
 	call aux_getc_timeout		; get a character from the modem with timeout
 	ret c				; return: timed out waiting for the modem
-L1540:
-	ld hl,D1572			; point HL at D1572
+zdlread_escape_1:
+	ld hl,zdl_esc_tab		; point HL at character that follows ZDLE
 	ld bc,000BH			; 11 keys in the table
 	cpir				; look A up in the key table
 	jp z,dispatch			; if A is in the key list goto dispatch
-	ld l,a				; Save byte in L
+	ld l,a				; Save character in L
 	ld a,(escape_ctl_flag)		; get nonzero
 	or a				; test A (sets Z if A = 0)
-	jr z,L1557			; if nonzero is zero/clear goto L1557
-	ld a,l				; Check if control character
+	jr z,zdlread_escape_2		; if nonzero is zero/clear goto zdlread_escape_2
+	ld a,l				; Check bits 5-6
 	and 60H				; isolate bits 5-6: zero means a control character
 	jr z,zdlread_escape		; if result is zero goto zdlread_escape
-L1557:
-	ld a,l				; Load escaped byte
+zdlread_escape_2:
+	ld a,l				; Load character
 	and 60H				; isolate bits 5-6: zero means a control character
 	cp 40H				; Escaped standard control character?
-	jr nz,L1568			; if A != 40H goto L1568
-	ld a,l				; Load byte
+	jr nz,zdl_rub1_1		; if A != 40H goto zdl_rub1_1
+	ld a,l				; Unescape: invert bit 6 (XOR 40h) to restore control code
 	xor 40H				; undo ZDLE escaping (flip bit 6)
 	ret				; return
+; Common routine: identical in RZ and SZ.
 zdl_rub0:
-	ld a,7FH			; Unescape to Rubout / DEL (7Fh)
+	ld a,7FH			; Escaped rubout / DEL (7Fh)
 	ret				; return
+; Common routine: identical in RZ and SZ.
 zdl_rub1:
-	ld a,0FFH			; Unescape to 0FFh (Rubout | 80h)
+	ld a,0FFH			; Escaped 0FFh byte
 	ret				; return
-L1568:
-	ld a,0FFH			; Framing error status
+zdl_rub1_1:
+	ld a,0FFH			; Framing error code
+; Common routine: identical in RZ and SZ.
 zdl_crc_end:
 	or 80H				; set bit 7 (marks a received subpacket terminator)
 	scf				; flag failure to caller (carry set)
 	ret				; return
-D156E:
+; Characters getc_zdl_filt ignores: XON and XOFF with and without bit 7
+; Common data: identical in RZ and SZ.
+zdl_ign_keys:
 	.db 11H,91H,13H,93H		; keys: ....
-D1572:
+; Character that follows ZDLE: ignored flow control, subpacket terminators, rubout codes, ZDLE
+; Common data: identical in RZ and SZ.
+zdl_esc_tab:
 	.db 11H,91H,13H,93H,ZDLE,ZCRCE,ZCRCG,ZCRCQ,ZCRCW,ZRUB0,ZRUB1	; keys: .....hijklm
 	.dw zdl_rub1			; key 6DH 'm'
 	.dw zdl_rub0			; key 6CH 'l'
@@ -3430,20 +3547,24 @@ D1572:
 	.dw zdlread_escape		; key 13H
 	.dw zdlread_escape		; key 91H
 	.dw zdlread_escape		; key 11H
-D1593:
+; Ten CAN (18H) followed by ten backspaces, zero terminated
+; Common data: identical in RZ and SZ.
+cancel_string:
 	.db 18H,18H,18H,18H,18H,18H,18H,18H,18H,18H,08H,08H,08H,08H,08H
 	.db 08H,08H,08H,08H,08H,00H
 
 ; ----------------------------------------------------------------------
 ; send_can_string: Send eight+ CAN characters followed by backspaces to
 ; abort the peer. [canit]
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 send_can_string:
-	ld hl,D1593			; point HL at D1593
+	ld hl,cancel_string		; point HL at ten CAN
 
 ; ----------------------------------------------------------------------
 ; send_string: Send the zero-terminated string at HL to the modem. [rz.c
 ; zmputs]
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 send_string:
 	ld a,(hl)			; Load next string character
@@ -3459,6 +3580,7 @@ send_string:
 ; aux_getc_timeout: Get a character from the modem with timeout (B =
 ; tenths of a second). Carry set on timeout; checks ESC at console.
 ; [readline]
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 aux_getc_timeout:
 	push bc				; preserve BC
@@ -3469,20 +3591,21 @@ aux_getc_timeout:
 	ld c,0AH			; C = 0AH
 	call z,set_pending_char		; if A = 1BH: call set_pending_char
 	pop bc				; restore BC
-L15C7:
+aux_getc_1:
 	call aux_wait_input		; wait roughly 100 ms-steps for an input character
-	jr nz,L15D2			; if a character arrived goto L15D2
-	djnz L15C7			; repeat until all B items are done
+	jr nz,aux_getc_2		; if a character arrived goto aux_getc_2
+	djnz aux_getc_1			; repeat until all B items are done
 	ld a,0FEH			; Timeout status code (0FEh)
 	scf				; flag failure to caller (carry set)
 	ret				; return
-L15D2:
+aux_getc_2:
 	or a				; test A (sets Z if A = 0)
 	ret				; return
 
 ; ----------------------------------------------------------------------
 ; parse_filespec: Parse a [DU:|DIR:]filename into an FCB (Z3PLUS named
 ; directories supported).
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 parse_filespec:
 	push bc				; preserve BC
@@ -3496,10 +3619,11 @@ parse_filespec:
 	call parse_fcb			; core of the filespec parser
 	pop de				; restore DE
 	pop bc				; restore BC
-	jr L165F			; continue at L165F
+	jr parse_fcb_6			; continue at parse_fcb_6
 
 ; ----------------------------------------------------------------------
 ; parse_fcb: Core of the filespec parser.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 parse_fcb:
 	xor a				; Clear A
@@ -3512,30 +3636,30 @@ parse_fcb:
 	push de				; preserve DE
 	ld a,(hl)			; Check first character of filespec
 	cp 3AH				; Is it a colon (':')?
-	jr nz,L15FF			; if A != 3AH goto L15FF
+	jr nz,parse_fcb_1		; if A != 3AH goto parse_fcb_1
 	inc hl				; Skip leading colon
-L15FF:
+parse_fcb_1:
 	ld b,08H			; Up to 8 characters for filename primary field
 	call parse_fcb_field		; copy up to B name characters, expanding "*" to "?"s
 	pop de				; restore DE
 	ld a,(hl)			; Check trailing delimiter character
 	ld (parse_next_char),a		; save as character following the parsed name
 	cp 3AH				; Was character a colon ':' (drive/user prefix)?
-	jr nz,L1640			; if A != 3AH goto L1640
+	jr nz,parse_fcb_4		; if A != 3AH goto parse_fcb_4
 	inc hl				; Advance past colon
 	ld a,(parse_mode)		; get parse_filespec argument
 	or a				; test A (sets Z if A = 0)
-	jr z,L1619			; if parse_filespec argument is zero/clear goto L1619
+	jr z,parse_fcb_2		; if parse_filespec argument is zero/clear goto parse_fcb_2
 	call parse_du			; try to interpret a prefix as drive/user
-	jr z,L1627			; if a valid DU: prefix was found goto L1627
-L1619:
+	jr z,parse_fcb_3		; if a valid DU: prefix was found goto parse_fcb_3
+parse_fcb_2:
 	call parse_named_dir		; try to interpret a prefix as a named directory
-	jr z,L1627			; if a valid DIR: prefix was found goto L1627
+	jr z,parse_fcb_3		; if a valid DIR: prefix was found goto parse_fcb_3
 	ld a,(parse_mode)		; get parse_filespec argument
 	or a				; test A (sets Z if A = 0)
-	jr nz,L1627			; if parse_filespec argument is set/nonzero goto L1627
+	jr nz,parse_fcb_3		; if parse_filespec argument is set/nonzero goto parse_fcb_3
 	call parse_du			; try to interpret a prefix as drive/user
-L1627:
+parse_fcb_3:
 	ld a,(parsed_drive)		; get drive from the file spec
 	ld (de),a			; Store drive into FCB drive byte
 	push de				; preserve DE
@@ -3550,7 +3674,7 @@ L1627:
 	pop de				; restore DE
 	ld a,(hl)			; Load delimiter character following filename
 	ld (parse_next_char),a		; save as character following the parsed name
-L1640:
+parse_fcb_4:
 	ld a,(parse_next_char)		; get character following the parsed name
 	ex de,hl			; swap pointers
 	ld bc,0008H			; Advance HL past 8 filename bytes to extension
@@ -3558,51 +3682,53 @@ L1640:
 	ex de,hl			; swap pointers
 	ld b,03H			; Extension length = 3 characters
 	cp 2EH				; Is delimiter a dot '.'?
-	jr nz,L1655			; if A != 2EH goto L1655
+	jr nz,parse_fcb_5		; if A != 2EH goto parse_fcb_5
 	inc hl				; Advance past dot
 	push de				; preserve DE
 	call parse_fcb_field		; copy up to B name characters, expanding "*" to "?"s
 	pop de				; restore DE
-L1655:
+parse_fcb_5:
 	ex de,hl			; swap pointers
 	ld bc,0005H			; BC = 0005H
 	add hl,bc			; HL += BC
 	ex de,hl			; swap pointers
 	ld a,(parsed_user)		; get user number from the file spec
 	ld (de),a			; Store user area into FCB extension
-L165F:
+parse_fcb_6:
 	ld a,(wildcard_count)		; get number of wildcard characters in the file name
 	or a				; test A (sets Z if A = 0)
 	ret				; return
 
 ; ----------------------------------------------------------------------
 ; parse_fcb_field: Copy up to B name characters, expanding "*" to "?"s.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 parse_fcb_field:
 	call is_delimiter		; end of the name?
 	ret z				; yes: field is complete
 	inc de				; step to the next FCB byte
 	cp 2AH				; is it "*" ?
-	jr nz,L1675			; no: ordinary character
+	jr nz,parse_fcb_7		; no: ordinary character
 	ld a,3FH			; "*" fills the rest of the field with "?"
 	ld (de),a			; (DE) = A
 	call inc_wild_count		; note one wildcard
-	jr L167C			; go and fill the remaining positions
-L1675:
+	jr parse_fcb_8			; go and fill the remaining positions
+parse_fcb_7:
 	ld (de),a			; store the character in the FCB
 	inc hl				; advance in the source text
 	cp 3FH				; is it "?" ?
 	call z,inc_wild_count		; count it as a wildcard
-L167C:
+parse_fcb_8:
 	djnz parse_fcb_field		; next character of the field
-L167E:
+parse_fcb_9:
 	call is_delimiter		; field full: skip any extra characters of the name
 	ret z				; return: character ends the name
 	inc hl				; HL++
-	jr L167E			; loop back to L167E
+	jr parse_fcb_9			; loop back to parse_fcb_9
 
 ; ----------------------------------------------------------------------
 ; inc_wild_count: Count one wildcard character.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 inc_wild_count:
 	push hl				; preserve HL
@@ -3613,6 +3739,7 @@ inc_wild_count:
 
 ; ----------------------------------------------------------------------
 ; parse_du: Try to interpret a prefix as drive/user (DU:).
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 parse_du:
 	push hl				; preserve HL
@@ -3625,10 +3752,11 @@ parse_du:
 ; ----------------------------------------------------------------------
 ; parse_du_inner: Decode "dU" / "d" / "U" form checking against the
 ; environment limits.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 parse_du_inner:
 	call z3env_duok			; is a ZCPR3 environment present?
-	jr z,L170C			; no: not a DU specification
+	jr z,named_dir_4		; no: not a DU specification
 	ex de,hl			; swap pointers
 	inc hl				; Advance to filename
 	call z3env_max_drive		; highest valid drive
@@ -3636,10 +3764,10 @@ parse_du_inner:
 	inc b				; B = number of valid drives
 	ld a,(hl)			; first character of the spec
 	cp 41H				; a drive letter ("A"-"P")?
-	jr c,L16B6			; no: only a user number may follow
+	jr c,parse_du_inner_1		; no: only a user number may follow
 	sub 40H				; convert the letter to a drive number (A = 1)
 	cp b				; is that drive valid?
-	jr nc,L170C			; no: not a DU specification
+	jr nc,named_dir_4		; no: not a DU specification
 	ld (parsed_drive),a		; remember the drive
 	inc hl				; HL++
 	ld a,(hl)			; next character
@@ -3647,37 +3775,38 @@ parse_du_inner:
 	ret z				; return: A = 20H
 	call digit_value		; a digit starts the user number
 	ret c				; neither: stop here
-L16B6:
+parse_du_inner_1:
 	push hl				; try to read a user number (one or two digits)
 	ld b,02H			; Check up to 2 user number digits
-L16B9:
+parse_du_inner_2:
 	ld a,(hl)			; A = (HL)
 	cp 20H				; compare A with 20H (' ')
-	jr z,L16CB			; if A = 20H goto L16CB
+	jr z,parse_du_inner_3		; if A = 20H goto parse_du_inner_3
 	call digit_value		; A = A-'0'
-	jr c,L16DC			; not a number: give up
+	jr c,parse_du_inner_4		; not a number: give up
 	inc hl				; HL++
-	djnz L16B9			; repeat until all B items are done
+	djnz parse_du_inner_2		; repeat until all B items are done
 	ld a,(hl)			; the digits must be followed by a blank
 	cp 20H				; compare A with 20H (' ')
-	jr nz,L16DC			; if A != 20H goto L16DC
-L16CB:
+	jr nz,parse_du_inner_4		; if A != 20H goto parse_du_inner_4
+parse_du_inner_3:
 	pop hl				; restore HL
 	call z3env_max_user		; highest valid user number
 	ld c,a				; C = A
 	inc c				; C++
 	call parse_decimal		; convert the digits
 	cp c				; is the user number in range?
-	jr nc,L170C			; no: reject
+	jr nc,named_dir_4		; no: reject
 	ld (parsed_user),a		; remember the user number
 	xor a				; Z = valid DU specification
 	ret				; return
-L16DC:
+parse_du_inner_4:
 	pop hl				; restore HL
-	jr L170C			; reject
+	jr named_dir_4			; reject
 
 ; ----------------------------------------------------------------------
 ; parse_named_dir: Try to interpret a prefix as a named directory (DIR:).
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 parse_named_dir:
 	push hl				; preserve HL
@@ -3690,41 +3819,42 @@ parse_named_dir:
 ; ----------------------------------------------------------------------
 ; named_dir_lookup: Look up an 8-character name in the Z3 named directory
 ; register.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 named_dir_lookup:
 	call z3env_ndr_ptr		; HL -> named directory register of the ZCPR3 environment
-	jr z,L170C			; none: not found
+	jr z,named_dir_4		; none: not found
 	ex de,hl			; swap pointers
 	inc hl				; HL++
-L16EE:
+named_dir_1:
 	ld a,(de)			; first byte of an entry: 0 ends the register
 	or a				; test A (sets Z if A = 0)
-	jr z,L170C			; end of the register: not found
+	jr z,named_dir_4		; end of the register: not found
 	inc de				; skip the drive/user bytes
 	inc de				; DE++
 	push hl				; preserve HL
 	push de				; preserve DE
 	ld b,08H			; compare the 8-character name
-L16F8:
+named_dir_2:
 	ld a,(de)			; A = (DE)
 	cp (hl)				; Character match?
-	jr nz,L1700			; if not zero goto L1700
+	jr nz,named_dir_3		; if not zero goto named_dir_3
 	inc hl				; HL++
 	inc de				; DE++
-	djnz L16F8			; repeat until all B items are done
-L1700:
+	djnz named_dir_2		; repeat until all B items are done
+named_dir_3:
 	pop de				; restore DE
 	pop hl				; restore HL
-	jr z,L170F			; all eight characters matched: found
+	jr z,named_dir_5		; all eight characters matched: found
 	ex de,hl			; not this entry: step to the next one (16 bytes)
 	ld bc,0010H			; Advance to next 16-byte template entry
 	add hl,bc			; HL += BC
 	ex de,hl			; swap pointers
-	jr L16EE			; loop back to L16EE
-L170C:
+	jr named_dir_1			; loop back to named_dir_1
+named_dir_4:
 	or 0FFH				; NZ = name not found
 	ret				; return
-L170F:
+named_dir_5:
 	dec de				; found: fetch the user number and drive stored before the name
 	ld a,(de)			; Load user number
 	ld (parsed_user),a		; save as user number from the file spec
@@ -3736,11 +3866,12 @@ L170F:
 
 ; ----------------------------------------------------------------------
 ; is_delimiter: Z if A ends a file name token.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 is_delimiter:
 	ld a,(hl)			; Load character
 	cp 21H				; Below '!' is control char or space
-	jr c,L173A			; if A < 21H goto L173A
+	jr c,is_delimiter_1		; if A < 21H goto is_delimiter_1
 	cp 3DH				; Invalid delimiter characters
 	ret z				; return: A = 3DH
 	cp 5FH				; compare A with 5FH
@@ -3759,49 +3890,51 @@ is_delimiter:
 	ret z				; return: result is zero
 	cp 3BH				; Semicolon ';'
 	ret				; return
-L173A:
+is_delimiter_1:
 	xor a				; return 0 (success)
 	ret				; return
 
 ; ----------------------------------------------------------------------
 ; parse_decimal: Parse a decimal user number.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 parse_decimal:
 	push bc				; preserve BC
-	ld bc,1100H			; B = loop limit, C = accumulator (0)
-L1740:
+	ld bc,1100H			; point BC at get_bin16_header
+parse_decimal_1:
 	ld a,(hl)			; Load next character
 	call is_delimiter		; Z if A ends a file name token
-	jr z,L1760			; if character ends the name goto L1760
+	jr z,parse_decimal_2		; if character ends the name goto parse_decimal_2
 	inc hl				; Advance pointer
 	call digit_value		; A = A-'0'
-	jr c,L1764			; if not a decimal digit goto L1764
+	jr c,parse_decimal_3		; if not a decimal digit goto parse_decimal_3
 	ld d,a				; D = digit value
 	ld a,c				; Multiply accumulator C by 10 (C * 8 + C * 2)
 	rlca				; rotate A left
-	jr c,L1764			; if not a decimal digit goto L1764
+	jr c,parse_decimal_3		; if not a decimal digit goto parse_decimal_3
 	rlca				; rotate A left
-	jr c,L1764			; if not a decimal digit goto L1764
+	jr c,parse_decimal_3		; if not a decimal digit goto parse_decimal_3
 	add a,c				; A += C
-	jr c,L1764			; if not a decimal digit goto L1764
+	jr c,parse_decimal_3		; if not a decimal digit goto parse_decimal_3
 	rlca				; rotate A left
-	jr c,L1764			; if not a decimal digit goto L1764
+	jr c,parse_decimal_3		; if not a decimal digit goto parse_decimal_3
 	add a,d				; Add new digit value
-	jr c,L1764			; if not a decimal digit goto L1764
+	jr c,parse_decimal_3		; if not a decimal digit goto parse_decimal_3
 	ld c,a				; Update accumulator
-	djnz L1740			; repeat until all B items are done
-L1760:
+	djnz parse_decimal_1		; repeat until all B items are done
+parse_decimal_2:
 	ld a,c				; A = parsed binary user number
 	pop bc				; restore BC
 	or a				; Clear carry (success)
 	ret				; return
-L1764:
+parse_decimal_3:
 	pop bc				; restore BC
 	scf				; flag failure to caller (carry set)
 	ret				; return
 
 ; ----------------------------------------------------------------------
 ; digit_value: A = A-'0'; carry if not a digit.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 digit_value:
 	sub 30H				; Subtract ASCII '0' (30h)
@@ -3812,6 +3945,7 @@ digit_value:
 
 ; ----------------------------------------------------------------------
 ; clear_dirspec: Clear the drive/user part of the FCB.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 clear_dirspec:
 	xor a				; Clear A (default drive 0)
@@ -3821,6 +3955,7 @@ clear_dirspec:
 
 ; ----------------------------------------------------------------------
 ; clear_fcb_tail: Clear the rest of the FCB.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 clear_fcb_tail:
 	ld b,0BH			; 11 bytes (8 filename + 3 extension)
@@ -3838,6 +3973,7 @@ clear_fcb_tail:
 
 ; ----------------------------------------------------------------------
 ; fill_clear: Fill B bytes at DE with A.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 fill_clear:
 	ld (de),a			; Store fill byte into memory
@@ -3848,54 +3984,58 @@ fill_clear:
 ; ----------------------------------------------------------------------
 ; z3env_duok: Read the DU:-form-allowed flag (DUOK, offset 2EH) of the
 ; ZCPR3 environment descriptor; Z if there is none or DU: is not allowed.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 z3env_duok:
 	push hl				; preserve HL
 	push de				; preserve DE
 	ld de,Z3_DUOK_OFF		; DE = 002EH
-	jp L17AB			; continue at L17AB
+	jp z3env_ndr_ptr_1		; continue at z3env_ndr_ptr_1
 
 ; ----------------------------------------------------------------------
 ; z3env_max_drive: Read the highest valid drive (offset 2CH) from the
 ; ZCPR3 environment descriptor.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 z3env_max_drive:
 	push hl				; preserve HL
 	push de				; preserve DE
 	ld de,Z3_MDRV_OFF		; DE = 002CH
-	jp L17AB			; continue at L17AB
+	jp z3env_ndr_ptr_1		; continue at z3env_ndr_ptr_1
 
 ; ----------------------------------------------------------------------
 ; z3env_max_user: Read the highest valid user number (offset 2DH) from the
 ; ZCPR3 environment descriptor.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 z3env_max_user:
 	push hl				; preserve HL
 	push de				; preserve DE
 	ld de,Z3_MUSR_OFF		; DE = 002DH
-	jp L17AB			; continue at L17AB
+	jp z3env_ndr_ptr_1		; continue at z3env_ndr_ptr_1
 
 ; ----------------------------------------------------------------------
 ; z3env_ndr_ptr: Get the named directory register address (offset 15H)
 ; from the ZCPR3 environment descriptor; its entry count is at 17H.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 z3env_ndr_ptr:
 	push de				; preserve DE
 	ld de,Z3_NDR_OFF		; DE = 0015H
-	jp L17B8			; continue at L17B8
-L17AB:
+	jp z3env_ndr_ptr_3		; continue at z3env_ndr_ptr_3
+z3env_ndr_ptr_1:
 	ld hl,(z3env_ptr)		; get address of the ZCPR3 environment descriptor
 	ld a,h				; test whether HL is zero (first half)
 	or l				; A = H or L: zero only if HL = 0
-	jr z,L17B3			; if the 16-bit count is zero goto L17B3
+	jr z,z3env_ndr_ptr_2		; if the 16-bit count is zero goto z3env_ndr_ptr_2
 	add hl,de			; Add field offset to base
-L17B3:
+z3env_ndr_ptr_2:
 	ld a,(hl)			; Fetch byte from descriptor
 	pop de				; restore DE
 	pop hl				; restore HL
 	or a				; Set condition flags
 	ret				; return
-L17B8:
+z3env_ndr_ptr_3:
 	ld hl,(z3env_ptr)		; get address of the ZCPR3 environment descriptor
 	add hl,de			; Add offset (15h)
 	ld e,(hl)			; Load low byte of pointer
@@ -3910,6 +4050,7 @@ L17B8:
 
 ; ----------------------------------------------------------------------
 ; set_z3env: Store HL as the ZCPR3 environment pointer.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 set_z3env:
 	ld (z3env_ptr),hl		; save as address of the ZCPR3 environment descriptor
@@ -3927,7 +4068,7 @@ build_file_list:
 	ld (dir_attr_mask),a		; save as selection mask
 	call dir_table_init		; prepare the directory table at HL
 	call dir_collect_ff		; scan the directory with BDOS Search First/Next and
-	jp L17E0			; continue at L17E0
+	jp build_flist_1		; continue at build_flist_1
 
 ; ----------------------------------------------------------------------
 ; build_flist_alt: Same as build_file_list, but a file listed in
@@ -3938,7 +4079,7 @@ build_flist_alt:
 	ld (dir_attr_mask),a		; save as selection mask
 	call dir_table_init		; prepare the directory table at HL
 	call dir_collect_00		; collect matching directory entries
-L17E0:
+build_flist_1:
 	pop de				; restore DE
 	ret z				; return if zero
 	push af				; preserve AF
@@ -3988,7 +4129,7 @@ dir_compare:
 	push de				; preserve DE
 	ld a,(sort_key_flag)		; get sort key
 	or a				; 0 = filename then ext; 1 = ext then filename
-	jr z,L1853			; if sort key is zero/clear goto L1853
+	jr z,dir_compare_3		; if sort key is zero/clear goto dir_compare_3
 	ld bc,FCB_EXT			; Offset to extension (+9)
 	add hl,bc			; HL points to extension of first FCB
 	ex de,hl			; swap pointers
@@ -3998,7 +4139,7 @@ dir_compare:
 	call compare_mem		; compare B bytes at HL and DE
 	pop de				; restore DE
 	pop hl				; restore HL
-	jr nz,L1851			; if names differ goto L1851
+	jr nz,dir_compare_2		; if names differ goto dir_compare_2
 	push hl				; preserve HL
 	push de				; preserve DE
 	inc hl				; Point to filename (+1)
@@ -4007,7 +4148,7 @@ dir_compare:
 	call compare_mem		; compare B bytes at HL and DE
 	pop de				; restore DE
 	pop hl				; restore HL
-	jr nz,L1851			; if names differ goto L1851
+	jr nz,dir_compare_2		; if names differ goto dir_compare_2
 	push hl				; preserve HL
 	push de				; preserve DE
 	ld bc,FCB_EX			; BC = 000CH
@@ -4017,21 +4158,21 @@ dir_compare:
 	ex de,hl			; swap pointers
 	ld a,(de)			; A = (DE)
 	cp (hl)				; compare A with (HL)
-L184B:
+dir_compare_1:
 	pop de				; restore DE
 	pop hl				; restore HL
-	jr nz,L1851			; if not zero goto L1851
+	jr nz,dir_compare_2		; if not zero goto dir_compare_2
 	ld a,(de)			; Compare drive/user byte
 	cp (hl)				; compare A with (HL)
-L1851:
+dir_compare_2:
 	pop bc				; restore BC
 	ret				; return
-L1853:
+dir_compare_3:
 	inc hl				; Advance past drive byte to filename (+1)
 	inc de				; DE++
 	ld b,0CH			; B = 0CH
 	call compare_mem		; compare B bytes at HL and DE
-	jr L184B			; loop back to L184B
+	jr dir_compare_1		; loop back to dir_compare_1
 
 ; ----------------------------------------------------------------------
 ; dir_collect_ff: Scan the directory with BDOS Search First/Next and
@@ -4061,25 +4202,25 @@ dir_collect_00		.equ dir_collect_ff+1	; alternate entry point inside the instruc
 	ld c,F_DMAOFF			; BDOS function: F_DMAOFF
 	call BDOS			; F_DMAOFF: set the DMA (transfer) address
 	ld c,F_SFIRST			; BDOS Function 17: Search First
-	jr L1892			; continue at L1892
-L188B:
+	jr dir_collect_ff_2		; continue at dir_collect_ff_2
+dir_collect_ff_1:
 	call dir_add_entry		; take directory entry number A
-	jr z,L18A5			; if entry added goto L18A5
+	jr z,dir_collect_ff_4		; if entry added goto dir_collect_ff_4
 	ld c,F_SNEXT			; BDOS function: F_SNEXT
-L1892:
+dir_collect_ff_2:
 	ld de,dir_search_fcb		; point DE at wildcard FCB used for BDOS search first/next
 	call BDOS			; F_SNEXT: search for the next match
 	cp 0FFH				; 0FFh = no more directory entries
-	jr nz,L188B			; if A != FFH goto L188B
+	jr nz,dir_collect_ff_1		; if A != FFH goto dir_collect_ff_1
 	or 0FFH				; A |= 0FFH
-L189E:
+dir_collect_ff_3:
 	ld bc,(dir_entry_count)		; get number of directory entries collected
 	pop de				; restore DE
 	pop hl				; restore HL
 	ret				; return
-L18A5:
+dir_collect_ff_4:
 	xor a				; A = 0
-	jr L189E			; loop back to L189E
+	jr dir_collect_ff_3		; loop back to dir_collect_ff_3
 
 ; ----------------------------------------------------------------------
 ; dir_add_entry: Take directory entry number A (0-3) of the sector BDOS
@@ -4102,11 +4243,11 @@ dir_add_entry:
 	add hl,de			; HL points to 32-byte directory entry in DMA buffer
 	ld a,(hl)			; Check user number / status byte
 	cp 0E5H				; 0E5h = deleted / empty entry
-	jr z,L18E5			; if A = E5H goto L18E5
+	jr z,dir_add_entry_2		; if A = E5H goto dir_add_entry_2
 	cp 21H				; Greater than 32 (user 0..31)?
-	jr nc,L18E5			; if A >= 21H goto L18E5
+	jr nc,dir_add_entry_2		; if A >= 21H goto dir_add_entry_2
 	call dir_find_dup		; look for the same user + file name
-	jr z,L18E5			; if duplicate entry found goto L18E5
+	jr z,dir_add_entry_2		; if duplicate entry found goto dir_add_entry_2
 	push hl				; preserve HL
 	ld hl,(dir_entry_count)		; get number of directory entries collected
 	inc hl				; HL++
@@ -4120,11 +4261,12 @@ dir_add_entry:
 	ld a,h				; High byte of TPA limit
 	dec a				; Safety margin of 256 bytes
 	cp d				; Compare against current buffer high byte
-	jr nz,L18E5			; If memory remains, continue
+	jr nz,dir_add_entry_2		; If memory remains, continue
 	xor a				; A = 0
-L18E4:
+dir_add_entry_1:
 	ld hl,0FFF6H			; Dummy instruction (never executed directly)
-L18E5			.equ L18E4+1	; alternate entry point inside the instruction above (overlapping decode: or 0FFH)
+dir_add_entry_2		.equ dir_add_entry_1+1	; alternate entry point inside the instruction above (overlapping decode: or
+					; 0FFH)
 	pop hl				; restore HL
 	pop de				; restore DE
 	pop bc				; restore BC
@@ -4142,9 +4284,9 @@ dir_find_dup:
 	ld bc,(dir_entry_count)		; get number of directory entries collected
 	ld a,b				; Any entries in table yet?
 	or c				; A |= C
-	jr z,L1934			; If table empty, file is unique (NZ)
+	jr z,dir_find_dup_6		; If table empty, file is unique (NZ)
 	ld hl,(dir_table_start)		; get start of the directory entry table
-L18F8:
+dir_find_dup_1:
 	push bc				; preserve BC
 	push hl				; preserve HL
 	push de				; preserve DE
@@ -4152,7 +4294,7 @@ L18F8:
 	call compare_mem		; compare B bytes at HL and DE
 	pop de				; restore DE
 	pop hl				; restore HL
-	jr nz,L192A			; if names differ goto L192A
+	jr nz,dir_find_dup_5		; if names differ goto dir_find_dup_5
 	push hl				; preserve HL
 	push de				; preserve DE
 	ld bc,FCB_EX			; BC = 000CH
@@ -4163,33 +4305,33 @@ L18F8:
 	cp (hl)				; compare A with (HL)
 	pop de				; restore DE
 	pop hl				; restore HL
-	jr nc,L1920			; if no carry goto L1920
+	jr nc,dir_find_dup_3		; if no carry goto dir_find_dup_3
 	ld a,(dir_dup_mode)		; get file seen in several extents
 	or a				; test A (sets Z if A = 0)
-	jr nz,L1926			; if file seen in several extents is set/nonzero goto L1926
-L1918:
+	jr nz,dir_find_dup_4		; if file seen in several extents is set/nonzero goto dir_find_dup_4
+dir_find_dup_2:
 	ex de,hl			; swap pointers
 	ld bc,0010H			; 16 bytes
 	ldir				; copy the block
-	jr L1926			; continue at L1926
-L1920:
+	jr dir_find_dup_4		; continue at dir_find_dup_4
+dir_find_dup_3:
 	ld a,(dir_dup_mode)		; get file seen in several extents
 	or a				; test A (sets Z if A = 0)
-	jr nz,L1918			; if file seen in several extents is set/nonzero goto L1918
-L1926:
+	jr nz,dir_find_dup_2		; if file seen in several extents is set/nonzero goto dir_find_dup_2
+dir_find_dup_4:
 	pop bc				; restore BC
 	xor a				; A = 0
 	pop hl				; restore HL
 	ret				; return
-L192A:
+dir_find_dup_5:
 	ld bc,0010H			; Advance to next 16-byte table entry
 	add hl,bc			; HL += BC
 	pop bc				; restore BC
 	dec bc				; Decrement entries remaining
 	ld a,b				; A = B
 	or c				; A |= C
-	jr nz,L18F8			; Continue checking remaining entries
-L1934:
+	jr nz,dir_find_dup_1		; Continue checking remaining entries
+dir_find_dup_6:
 	or 0FFH				; A |= 0FFH
 	pop hl				; restore HL
 	ret				; return
@@ -4209,15 +4351,15 @@ dir_compact:
 	pop hl				; restore HL
 	ld (dir_table_ptr),hl		; save as pointer into the directory table
 	push bc				; preserve BC
-L1947:
+dir_compact_1:
 	pop bc				; restore BC
 	ld a,b				; Any entries remaining?
 	or c				; A |= C
-	jr z,L1971			; If all processed, finish
+	jr z,dir_compact_3		; If all processed, finish
 	dec bc				; Decrement loop counter
 	push bc				; preserve BC
 	bit 7,(hl)			; Check if entry was marked (bit 7 set)
-	jr z,L196B			; If not marked, skip entry
+	jr z,dir_compact_2		; If not marked, skip entry
 	res 7,(hl)			; Clear mark bit
 	ex de,hl			; swap pointers
 	ld hl,(dir_marked_count)	; get number of entries marked / kept
@@ -4228,12 +4370,12 @@ L1947:
 	ld bc,0010H			; 16 bytes per entry
 	ldir				; copy the block
 	ld (dir_table_ptr),de		; save as pointer into the directory table
-	jr L1947			; loop back to L1947
-L196B:
+	jr dir_compact_1		; loop back to dir_compact_1
+dir_compact_2:
 	ld bc,0010H			; Advance past unmarked 16-byte entry
 	add hl,bc			; HL += BC
-	jr L1947			; loop back to L1947
-L1971:
+	jr dir_compact_1		; loop back to dir_compact_1
+dir_compact_3:
 	ld bc,(dir_marked_count)	; get number of entries marked / kept
 	pop af				; restore AF
 	pop de				; restore DE
@@ -4313,11 +4455,11 @@ dir_mark_matches:
 	push af				; preserve AF
 	ld (dir_attr_mask),a		; save as selection mask
 	push bc				; preserve BC
-L19D3:
+dir_mark_1:
 	pop bc				; restore BC
 	ld a,b				; Any entries remaining?
 	or c				; A |= C
-	jr z,L1A06			; If done, exit
+	jr z,dir_mark_3			; If done, exit
 	dec bc				; Decrement loop counter
 	push bc				; preserve BC
 	push hl				; preserve HL
@@ -4329,7 +4471,7 @@ L19D3:
 	call compare_wild		; compare B bytes at HL and DE, "?" matches anything
 	pop de				; restore DE
 	pop hl				; restore HL
-	jr nz,L1A00			; if names differ goto L1A00
+	jr nz,dir_mark_2		; if names differ goto dir_mark_2
 	push hl				; preserve HL
 	push de				; preserve DE
 	ld bc,FCB_EXT			; Offset to extension (+9)
@@ -4340,15 +4482,15 @@ L19D3:
 	call compare_wild		; compare B bytes at HL and DE, "?" matches anything
 	pop de				; restore DE
 	pop hl				; restore HL
-	jr nz,L1A00			; if names differ goto L1A00
+	jr nz,dir_mark_2		; if names differ goto dir_mark_2
 	call dir_check_attr		; does the entry pass the selection mask? A DIR file
-	jr nz,L1A00			; if not zero goto L1A00
+	jr nz,dir_mark_2		; if not zero goto dir_mark_2
 	set 7,(hl)			; Mark entry as matched (set bit 7 of user byte)
-L1A00:
+dir_mark_2:
 	ld bc,0010H			; Advance to next 16-byte table entry
 	add hl,bc			; HL += BC
-	jr L19D3			; loop back to L19D3
-L1A06:
+	jr dir_mark_1			; loop back to dir_mark_1
+dir_mark_3:
 	pop af				; restore AF
 	pop bc				; restore BC
 	pop de				; restore DE
@@ -4370,22 +4512,22 @@ dir_check_attr:
 	pop hl				; restore HL
 	pop de				; restore DE
 	ld a,(dir_attr_mask)		; get selection mask
-	jr z,L1A21			; If DIR file (not SYS), branch
+	jr z,dir_check_attr_2		; If DIR file (not SYS), branch
 	bit 6,a				; test bit 6 of A
-	jr nz,L1A25			; If SYS allowed, check user area
-L1A1E:
+	jr nz,dir_check_attr_3		; If SYS allowed, check user area
+dir_check_attr_1:
 	or 0FFH				; A |= 0FFH
 	ret				; return
-L1A21:
+dir_check_attr_2:
 	bit 7,a				; test bit 7 of A
-	jr z,L1A1E			; If DIR files excluded, reject
-L1A25:
+	jr z,dir_check_attr_1		; If DIR files excluded, reject
+dir_check_attr_3:
 	bit 5,a				; test bit 5 of A
-	jr nz,L1A2E			; If all users allowed, accept
+	jr nz,dir_check_attr_4		; If all users allowed, accept
 	xor (hl)			; Compare user area byte
 	and 3FH				; Mask user area (0..31)
-	jr nz,L1A1E			; if result is nonzero goto L1A1E
-L1A2E:
+	jr nz,dir_check_attr_1		; if result is nonzero goto dir_check_attr_1
+dir_check_attr_4:
 	xor a				; return 0 (success)
 	ret				; return
 
@@ -4404,26 +4546,26 @@ sort_alloc_index:
 	ld hl,(sort_blk_count)		; get ... element count
 	ld a,h				; test whether HL is zero (first half)
 	or l				; A = H or L: zero only if HL = 0
-	jr z,L1A7B			; if the 16-bit count is zero goto L1A7B
+	jr z,sort_alloc_4		; if the 16-bit count is zero goto sort_alloc_4
 	ld b,h				; BC = item count N
 	ld c,l				; C = L
 	add hl,hl			; HL = N * 2 (size of 16-bit pointer array)
-	jr c,L1A7B			; Overflow check
+	jr c,sort_alloc_4		; Overflow check
 	add hl,de			; End of pointer array
-	jr c,L1A7B			; Overflow check
+	jr c,sort_alloc_4		; Overflow check
 	ex de,hl			; swap pointers
 	ld hl,(BDOSVEC)			; get BDOSVEC
 	sbc hl,de			; Ensure pointer array fits below BDOS top of RAM
-	jr c,L1A7B			; if carry goto L1A7B
+	jr c,sort_alloc_4		; if carry goto sort_alloc_4
 	ld hl,(sort_blk_base)		; get working copy of sort block
 	ld a,h				; test whether HL is zero (first half)
 	or l				; A = H or L: zero only if HL = 0
-	jr z,L1A5A			; if the 16-bit count is zero goto L1A5A
+	jr z,sort_alloc_1		; if the 16-bit count is zero goto sort_alloc_1
 	ex de,hl			; swap pointers
-L1A5A:
+sort_alloc_1:
 	push de				; preserve DE
 	ld hl,(sort_index_ptr)		; get pointer to the sort index array
-L1A5E:
+sort_alloc_2:
 	ld (hl),e			; Store item pointer low byte into array
 	inc hl				; HL++
 	ld (hl),d			; Store item pointer high byte into array
@@ -4436,21 +4578,21 @@ L1A5E:
 	dec bc				; Decrement item counter
 	ld a,b				; Any items remaining?
 	or c				; A |= C
-	jr nz,L1A5E			; Loop until all pointers stored
+	jr nz,sort_alloc_2		; Loop until all pointers stored
 	pop hl				; restore HL
 	ld (sort_blk_base),hl		; save as working copy of sort block
 	push hl				; preserve HL
 	call sort_prm_restore		; copy the working sort control block back to the caller
 	pop hl				; restore HL
 	dec a				; Decrement status
-L1A78:
+sort_alloc_3:
 	pop de				; restore DE
 	pop bc				; restore BC
 	ret				; return
-L1A7B:
+sort_alloc_4:
 	xor a				; Clear A (failure status)
 	ld hl,(sort_index_ptr)		; get pointer to the sort index array
-	jr L1A78			; loop back to L1A78
+	jr sort_alloc_3			; loop back to sort_alloc_3
 
 ; ----------------------------------------------------------------------
 ; sort_entries: Sort: Shell-sort the pointer index (sort_shell), then
@@ -4468,23 +4610,23 @@ sort_entries:
 	call sort_shell			; shell sort of the index. The gap starts at N/2 made odd
 	ld a,(sort_blk_flag)		; get sort block flag
 	or a				; test A (sets Z if A = 0)
-	jr z,L1AF1			; if sort block flag is zero/clear goto L1AF1
+	jr z,sort_entries_3		; if sort block flag is zero/clear goto sort_entries_3
 	ld a,(sort_blk_flag2)		; get sort block second flag
 	or a				; test A (sets Z if A = 0)
-	jr nz,L1AF1			; if sort block second flag is set/nonzero goto L1AF1
+	jr nz,sort_entries_3		; if sort block second flag is set/nonzero goto sort_entries_3
 	ld hl,(sort_blk_count)		; get ... element count
 	ld a,h				; test whether HL is zero (first half)
 	or l				; A = H or L: zero only if HL = 0
-	jr z,L1AF1			; if the 16-bit count is zero goto L1AF1
+	jr z,sort_entries_3		; if the 16-bit count is zero goto sort_entries_3
 	ld (sort_i),hl			; save as sort loop index i
 	ld hl,0000H			; Initialize item index
 	ld (sort_j),hl			; save as sort loop index j
-L1AAA:
+sort_entries_1:
 	ld hl,(sort_i)			; get sort loop index i
 	dec hl				; HL--
 	ld a,h				; test whether HL is zero (first half)
 	or l				; A = H or L: zero only if HL = 0
-	jr z,L1AF1			; if the 16-bit count is zero goto L1AF1
+	jr z,sort_entries_3		; if the 16-bit count is zero goto sort_entries_3
 	ld (sort_i),hl			; save as sort loop index i
 	ld hl,(sort_j)			; get sort loop index j
 	inc hl				; HL++
@@ -4500,7 +4642,7 @@ L1AAA:
 	call sort_elem_addr		; HL = address of item number HL
 	sbc hl,de			; Is item already in place?
 	add hl,de			; HL += DE
-	jr nc,L1AAA			; If already in place, continue
+	jr nc,sort_entries_1		; If already in place, continue
 	push de				; preserve DE
 	push hl				; preserve HL
 	call sort_copy_ents		; swap the contents of two complete items
@@ -4511,24 +4653,24 @@ L1AAA:
 	inc hl				; HL++
 	ld (hl),d			; (HL) = D
 	inc hl				; HL++
-L1ADE:
+sort_entries_2:
 	ld a,(hl)			; Search for next item in permutation cycle
 	inc hl				; HL++
 	cp e				; compare A with E
 	inc hl				; HL++
-	jr nz,L1ADE			; if not zero goto L1ADE
+	jr nz,sort_entries_2		; if not zero goto sort_entries_2
 	dec hl				; HL--
 	ld a,(hl)			; A = (HL)
 	inc hl				; HL++
 	cp d				; compare A with D
-	jr nz,L1ADE			; if not zero goto L1ADE
+	jr nz,sort_entries_2		; if not zero goto sort_entries_2
 	pop de				; restore DE
 	dec hl				; HL--
 	ld (hl),d			; Update permutation link
 	dec hl				; HL--
 	ld (hl),e			; (HL) = E
-	jr L1AAA			; loop back to L1AAA
-L1AF1:
+	jr sort_entries_1		; loop back to sort_entries_1
+sort_entries_3:
 	pop af				; restore AF
 	pop bc				; restore BC
 	pop de				; restore DE
@@ -4549,7 +4691,7 @@ sort_swap:
 	push bc				; preserve BC
 	ld a,(sort_blk_flag)		; get sort block flag
 	or a				; test A (sets Z if A = 0)
-	jr nz,L1B11			; if sort block flag is set/nonzero goto L1B11
+	jr nz,sort_copy_ents_1		; if sort block flag is set/nonzero goto sort_copy_ents_1
 	call sort_elem_adr_de		; HL and DE become the addresses of items HL and DE
 
 ; ----------------------------------------------------------------------
@@ -4558,24 +4700,24 @@ sort_swap:
 ; ----------------------------------------------------------------------
 sort_copy_ents:
 	ld bc,(sort_blk_size)		; get ... element size
-	jr L1B1B			; continue at L1B1B
+	jr sort_copy_ents_2		; continue at sort_copy_ents_2
 	pop de				; restore DE
 	pop hl				; restore HL
 	ret				; return
-L1B11:
+sort_copy_ents_1:
 	call sort_index_addr		; HL = address of index entry HL
 	ex de,hl			; swap pointers
 	dec hl				; Offset adjustment
 	add hl,hl			; HL = (index 2 - 1) * 2
 	add hl,bc			; HL = pointer 2 address in pointer table
 	ld bc,0002H			; Size of 16-bit word = 2 bytes
-L1B1B:
+sort_copy_ents_2:
 	ld a,(de)			; Swap bytes between (DE) and (HL)
 	ldi				; Copy (HL) to (DE), increment both, decrement BC
 	dec hl				; Back up HL
 	ld (hl),a			; Store original (DE) byte into (HL)
 	inc hl				; Advance HL
-	jp pe,L1B1B			; Loop until BC reaches 0 (parity even = PE)
+	jp pe,sort_copy_ents_2		; Loop until BC reaches 0 (parity even = PE)
 	ret				; return
 
 ; ----------------------------------------------------------------------
@@ -4598,27 +4740,27 @@ sort_elem_addr:
 	ld hl,0FFE5H			; Threshold check (-27)
 	add hl,bc			; HL += BC
 	ld hl,0000H			; Initialize product = 0
-	jr nc,L1B4A			; If small size, use shift/add multiply
+	jr nc,sort_elem_addr_4		; If small size, use shift/add multiply
 	ld a,10H			; 16-bit shift/add loop counter
-L1B3C:
+sort_elem_addr_1:
 	add hl,hl			; Shift product left
 	ex de,hl			; swap pointers
 	add hl,hl			; Shift multiplier left
 	ex de,hl			; swap pointers
-	jr nc,L1B43			; If bit not set, skip add
+	jr nc,sort_elem_addr_2		; If bit not set, skip add
 	add hl,bc			; Add multiplicand to product
-L1B43:
+sort_elem_addr_2:
 	dec a				; Decrement bit counter
-	jr nz,L1B3C			; Loop for all 16 bits
-	jr L1B4E			; continue at L1B4E
-L1B48:
+	jr nz,sort_elem_addr_1		; Loop for all 16 bits
+	jr sort_elem_addr_5		; continue at sort_elem_addr_5
+sort_elem_addr_3:
 	dec bc				; Decrement multiplicand
 	add hl,de			; Repeated addition multiply
-L1B4A:
+sort_elem_addr_4:
 	ld a,b				; Multiplicand reaches 0?
 	or c				; A |= C
-	jr nz,L1B48			; Loop until multiplied
-L1B4E:
+	jr nz,sort_elem_addr_3		; Loop until multiplied
+sort_elem_addr_5:
 	ld de,(sort_blk_base)		; get working copy of sort block
 	add hl,de			; HL = base + (index - 1) * size
 	pop de				; restore DE
@@ -4636,10 +4778,10 @@ sort_compare:
 	push bc				; preserve BC
 	ld a,(sort_blk_flag)		; get sort block flag
 	or a				; test A (sets Z if A = 0)
-	jr nz,L1B66			; if sort block flag is set/nonzero goto L1B66
+	jr nz,sort_compare_1		; if sort block flag is set/nonzero goto sort_compare_1
 	call sort_elem_adr_de		; HL and DE become the addresses of items HL and DE
-	jr L1B76			; continue at L1B76
-L1B66:
+	jr sort_compare_2		; continue at sort_compare_2
+sort_compare_1:
 	call sort_index_addr		; HL = address of index entry HL
 	ex de,hl			; swap pointers
 	dec hl				; Offset adjustment
@@ -4654,7 +4796,7 @@ L1B66:
 	ld d,(hl)			; D = (HL)
 	ld h,b				; HL = target pointer 2
 	ld l,c				; L = C
-L1B76:
+sort_compare_2:
 	push hl				; preserve HL
 	ld hl,(sort_blk_cmp)		; get ... compare function
 	ex (sp),hl			; Push callback and restore HL = item 2 address
@@ -4679,7 +4821,7 @@ sort_params_save:
 	ex de,hl			; swap pointers
 	ld (sort_blk_ptr),hl		; save as pointer to the caller's sort control block
 	ld de,sort_blk_base		; point DE at working copy of sort block
-L1B8B:
+sort_params_1:
 	ld bc,000CH			; 12 bytes
 	ldir				; copy the block
 	ret				; return
@@ -4691,7 +4833,7 @@ L1B8B:
 sort_prm_restore:
 	ld hl,sort_blk_base		; point HL at working copy of sort block
 	ld de,(sort_blk_ptr)		; get pointer to the caller's sort control block
-	jr L1B8B			; loop back to L1B8B
+	jr sort_params_1		; loop back to sort_params_1
 
 ; ----------------------------------------------------------------------
 ; sort_shell: Shell sort of the index. The gap starts at N/2 made odd and
@@ -4701,7 +4843,7 @@ sort_prm_restore:
 sort_shell:
 	ld hl,(sort_blk_count)		; get ... element count
 	ld (sort_j),hl			; save as sort loop index j
-L1BA0:
+sort_shell_1:
 	ld hl,(sort_j)			; get sort loop index j
 	srl h				; Shift right 1 bit
 	rr l				; rotate right through carry L
@@ -4709,12 +4851,12 @@ L1BA0:
 	or h				; A |= H
 	ret z				; If gap == 0, sort is complete!
 	bit 0,l				; Is gap odd?
-	jr nz,L1BAF			; If odd, keep it
+	jr nz,sort_shell_2		; If odd, keep it
 	dec hl				; If even, decrement to make odd (classic Shell sort optimization)
-L1BAF:
+sort_shell_2:
 	ld (sort_j),hl			; save as sort loop index j
 	ld (sort_i),hl			; save as sort loop index i
-L1BB5:
+sort_shell_3:
 	ld hl,(sort_i)			; get sort loop index i
 	inc hl				; HL++
 	ld (sort_i),hl			; save as sort loop index i
@@ -4722,19 +4864,19 @@ L1BB5:
 	ld hl,(sort_blk_count)		; get ... element count
 	or a				; Clear Carry
 	sbc hl,de			; Count - index
-	jr c,L1BA0			; If index > count, reduce gap
-L1BC5:
+	jr c,sort_shell_1		; If index > count, reduce gap
+sort_shell_4:
 	ld hl,(sort_j)			; get sort loop index j
 	ex de,hl			; swap pointers
 	sbc hl,de			; Inner index -= gap
-	jr c,L1BB5			; If below start, advance outer index
-	jr z,L1BB5			; if zero goto L1BB5
+	jr c,sort_shell_3		; If below start, advance outer index
+	jr z,sort_shell_3		; if zero goto sort_shell_3
 	ex de,hl			; swap pointers
 	add hl,de			; HL = inner index + gap
 	call sort_compare		; call the caller's compare routine with HL and DE = the
-	jr nc,L1BB5			; If in order, advance outer index
+	jr nc,sort_shell_3		; If in order, advance outer index
 	call sort_swap			; swap items HL and DE
-	jr L1BC5			; loop back to L1BC5
+	jr sort_shell_4			; loop back to sort_shell_4
 
 ; ----------------------------------------------------------------------
 ; file_open_input: Open the file named at DE for reading.
@@ -4829,7 +4971,7 @@ file_oprd_impl:
 	ld a,(hl)			; A = (HL)
 	or a				; test A (sets Z if A = 0)
 	ld a,07H			; Error code 7 (already open)
-	jr nz,L1C72			; if result is nonzero goto L1C72
+	jr nz,file_oprd_impl_2		; if result is nonzero goto file_oprd_impl_2
 	ld (cur_file_ptr),hl		; save as pointer to the file object being operated on
 	inc hl				; HL++
 	inc hl				; HL++
@@ -4843,11 +4985,11 @@ file_oprd_impl:
 	call fcb_clear_tail		; clear the extent/record part of the FCB
 	call fcb_open			; open the file
 	ld a,03H			; Error code 3 (open failed)
-	jr nz,L1C72			; if open failed goto L1C72
+	jr nz,file_oprd_impl_2		; if open failed goto file_oprd_impl_2
 	call file_read_sector		; read the next 128-byte record of the current file
 	ld a,04H			; Error code 4 (read failed)
-	jr nz,L1C72			; If read failed, exit
-L1C5F:
+	jr nz,file_oprd_impl_2		; If read failed, exit
+file_oprd_impl_1:
 	ld hl,(cur_file_ptr)		; get pointer to the file object being operated on
 	ld (hl),0FFH			; Mark buffer as active/open
 	inc hl				; HL++
@@ -4861,8 +5003,8 @@ L1C5F:
 	inc hl				; HL++
 	ld (hl),d			; Store data pointer high byte
 	xor a				; Return success (A = 0)
-L1C72:
-	jp L1D52			; continue at L1D52
+file_oprd_impl_2:
+	jp file_clswr_3			; continue at file_clswr_3
 
 ; ----------------------------------------------------------------------
 ; file_opwr_impl: Create (BDOS F_MAKE) the file of the file object
@@ -4874,7 +5016,7 @@ file_opwr_impl:
 	ld a,(hl)			; A = (HL)
 	or a				; test A (sets Z if A = 0)
 	ld a,07H			; Error code 7 (already open)
-	jr nz,L1C72			; if result is nonzero goto L1C72
+	jr nz,file_oprd_impl_2		; if result is nonzero goto file_oprd_impl_2
 	ld (cur_file_ptr),hl		; save as pointer to the file object being operated on
 	inc hl				; HL++
 	inc hl				; HL++
@@ -4887,9 +5029,9 @@ file_opwr_impl:
 	pop de				; restore DE
 	call fcb_clear_tail		; clear the extent/record part of the FCB
 	call fcb_open_or_make		; open the file, or create it if it does not exist
-	jr z,L1C5F			; if file ready goto L1C5F
+	jr z,file_oprd_impl_1		; if file ready goto file_oprd_impl_1
 	ld a,05H			; Error code 5 (create failed)
-	jr L1C72			; loop back to L1C72
+	jr file_oprd_impl_2		; loop back to file_oprd_impl_2
 
 ; ----------------------------------------------------------------------
 ; file_getc_impl: Return the next byte of an input file object (byte in A
@@ -4902,7 +5044,7 @@ file_getc_impl:
 	ld a,(hl)			; Check if file is open
 	or a				; test A (sets Z if A = 0)
 	ld a,01H			; Error 1 (file not open)
-	jr z,L1D11			; if result is zero goto L1D11
+	jr z,file_putc_impl_1		; if result is zero goto file_putc_impl_1
 	ld (cur_file_ptr),hl		; save as pointer to the file object being operated on
 	inc hl				; Advance to buffer data pointer (+2)
 	inc hl				; HL++
@@ -4912,7 +5054,7 @@ file_getc_impl:
 	ld a,d				; Pointer null?
 	or e				; A |= E
 	ld a,04H			; Error 4 (buffer empty / EOF)
-	jr z,L1D11			; Exit if null
+	jr z,file_putc_impl_1		; Exit if null
 	ld a,(de)			; Fetch byte from buffer
 	ld (file_io_char),a		; save as character passed through file get/put
 	inc de				; Advance buffer pointer
@@ -4921,7 +5063,7 @@ file_getc_impl:
 	ld (hl),e			; (HL) = E
 	dec hl				; Point to remaining byte counter
 	dec (hl)			; Decrement byte counter
-	jr nz,L1CD5			; If bytes remain, return saved byte
+	jr nz,file_getc_impl_1		; If bytes remain, return saved byte
 	ld (hl),80H			; Reset sector byte counter = 128
 	inc hl				; HL++
 	ex de,hl			; swap pointers
@@ -4932,17 +5074,17 @@ file_getc_impl:
 	inc hl				; HL++
 	ld (hl),d			; (HL) = D
 	call file_read_sector		; read the next 128-byte record of the current file
-	jr z,L1CD5			; If refilled successfully, continue
+	jr z,file_getc_impl_1		; If refilled successfully, continue
 	ld hl,(cur_file_ptr)		; get pointer to the file object being operated on
 	inc hl				; HL++
 	inc hl				; HL++
 	ld (hl),00H			; (HL) = 00H
 	inc hl				; HL++
 	ld (hl),00H			; (HL) = 00H
-L1CD5:
+file_getc_impl_1:
 	ld a,(file_io_char)		; get character passed through file get/put
 	cp a				; compare A with A
-	jr L1D12			; continue at L1D12
+	jr file_putc_impl_2		; continue at file_putc_impl_2
 
 ; ----------------------------------------------------------------------
 ; file_putc_a: Put byte A to the output file.
@@ -4962,7 +5104,7 @@ file_putc_impl:
 	ld a,(hl)			; Check if file is open
 	or a				; test A (sets Z if A = 0)
 	ld a,01H			; Error 1 (file not open)
-	jr z,L1D11			; if result is zero goto L1D11
+	jr z,file_putc_impl_1		; if result is zero goto file_putc_impl_1
 	ld (cur_file_ptr),hl		; save as pointer to the file object being operated on
 	inc hl				; Advance to buffer data pointer (+2)
 	inc hl				; HL++
@@ -4977,7 +5119,7 @@ file_putc_impl:
 	ld (hl),e			; (HL) = E
 	dec hl				; Point to sector byte counter
 	dec (hl)			; Decrement remaining bytes in sector
-	jr nz,L1CD5			; If sector not full, return success
+	jr nz,file_getc_impl_1		; If sector not full, return success
 	ld (hl),80H			; Reset sector byte counter = 128
 	inc hl				; HL++
 	ex de,hl			; swap pointers
@@ -4988,11 +5130,11 @@ file_putc_impl:
 	inc hl				; HL++
 	ld (hl),d			; (HL) = D
 	call file_wr_sector		; write the buffer out as a sector
-	jr z,L1CD5			; If written successfully, continue
+	jr z,file_getc_impl_1		; If written successfully, continue
 	ld a,02H			; Error 2 (write error / disk full)
-L1D11:
+file_putc_impl_1:
 	or a				; test A (sets Z if A = 0)
-L1D12:
+file_putc_impl_2:
 	pop de				; restore DE
 	pop bc				; restore BC
 	pop hl				; restore HL
@@ -5007,9 +5149,9 @@ file_clsrd_impl:
 	push de				; preserve DE
 	ld a,(hl)			; Check if file is open
 	or a				; test A (sets Z if A = 0)
-	jr z,L1D52			; if result is zero goto L1D52
+	jr z,file_clswr_3		; if result is zero goto file_clswr_3
 	ld (cur_file_ptr),hl		; save as pointer to the file object being operated on
-	jr L1D40			; continue at L1D40
+	jr file_clswr_2			; continue at file_clswr_2
 
 ; ----------------------------------------------------------------------
 ; file_clswr_impl: Finish an output file object: pad the last sector
@@ -5021,22 +5163,22 @@ file_clswr_impl:
 	push de				; preserve DE
 	ld a,(hl)			; Check if file is open
 	or a				; test A (sets Z if A = 0)
-	jr z,L1D52			; if result is zero goto L1D52
+	jr z,file_clswr_3		; if result is zero goto file_clswr_3
 	ld (cur_file_ptr),hl		; save as pointer to the file object being operated on
 	inc hl				; Check sector byte count
 	ld a,(hl)			; A = (HL)
 	cp 80H				; Is sector buffer empty (count == 128)?
-	jr z,L1D40			; if A = 80H goto L1D40
+	jr z,file_clswr_2		; if A = 80H goto file_clswr_2
 	ld a,1AH			; Pad with CP/M EOF character (Ctrl-Z = 1Ah)
 	call file_putc_a		; put byte A to the output file
-L1D35:
+file_clswr_1:
 	ld a,(hl)			; Check sector byte count
 	cp 80H				; Reached sector boundary?
-	jr z,L1D40			; if A = 80H goto L1D40
+	jr z,file_clswr_2		; if A = 80H goto file_clswr_2
 	xor a				; Pad remainder of sector with 00h
 	call file_putc_a		; put byte A to the output file
-	jr L1D35			; loop back to L1D35
-L1D40:
+	jr file_clswr_1			; loop back to file_clswr_1
+file_clswr_2:
 	ld hl,(cur_file_ptr)		; get pointer to the file object being operated on
 	ld (hl),00H			; Mark buffer as closed
 	inc hl				; HL++
@@ -5046,9 +5188,9 @@ L1D40:
 	ex de,hl			; swap pointers
 	call fcb_close			; close the file
 	ld a,06H			; Error code 6 (close failed)
-	jr nz,L1D52			; if close failed goto L1D52
+	jr nz,file_clswr_3		; if close failed goto file_clswr_3
 	xor a				; Return success (A = 0)
-L1D52:
+file_clswr_3:
 	pop de				; restore DE
 	pop bc				; restore BC
 	or a				; Set flags based on status code
@@ -5069,7 +5211,7 @@ file_read_sector:
 	inc de				; DE++
 	inc de				; DE++
 	call fcb_read_sector		; read a sector
-	jr L1D82			; continue at L1D82
+	jr file_wr_sector_1		; continue at file_wr_sector_1
 
 ; ----------------------------------------------------------------------
 ; file_wr_sector: Write the buffer out as a sector.
@@ -5085,7 +5227,7 @@ file_wr_sector:
 	inc de				; DE++
 	inc de				; DE++
 	call fcb_write_sector		; write a sector
-L1D82:
+file_wr_sector_1:
 	push af				; preserve AF
 	ld hl,0080H			; Restore default DMA buffer address (0080h)
 	call set_dma			; set the DMA address to DE
@@ -5095,6 +5237,7 @@ L1D82:
 
 ; ----------------------------------------------------------------------
 ; get_drive_user: Return current drive in B and user in C.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 get_drive_user:
 	push af				; preserve AF
@@ -5106,9 +5249,9 @@ get_drive_user:
 	ld e,0FFH			; 0FFh = query current user area
 	ld c,F_USERNUM			; BDOS Function 32: Get/Set User Code
 	call bdos_save_regs		; BDOS call preserving BC and DE
-	ld c,a				; C = user area (0..31)
+	ld c,a				; C = current user number (0..15)
 	pop af				; restore AF
-	ld b,a				; B = drive number (0..15)
+	ld b,a				; B = current drive number (0=A..)
 	pop hl				; restore HL
 	pop de				; restore DE
 	pop af				; restore AF
@@ -5119,7 +5262,7 @@ get_drive_user:
 ; ----------------------------------------------------------------------
 get_file_size:
 	ld a,F_SIZE			; BDOS function 35 (F_SIZE): compute the file size in records
-	jr L1DA9			; continue at L1DA9
+	jr get_rand_1			; continue at get_rand_1
 
 ; ----------------------------------------------------------------------
 ; get_rand_record: Get the random record number (BDOS F_RANDREC).
@@ -5127,7 +5270,7 @@ get_file_size:
 get_rand_record:
 	ld a,F_RANDREC			; BDOS function 36 (F_RANDREC): set the random record number from the sequential
 					; position
-L1DA9:
+get_rand_1:
 	push de				; preserve DE
 	push bc				; preserve BC
 	push af				; preserve AF
@@ -5221,11 +5364,11 @@ fcb_clear_tail:
 	ld (hl),d			; Clear byte 0 (drive)
 	add hl,de			; HL points to byte 12 (EX)
 	ld e,15H			; Clear 21 bytes (12..32)
-L1DFE:
+fcb_clear_tail_1:
 	ld (hl),d			; Zero byte (D = 0)
 	inc hl				; Advance pointer
 	dec e				; Decrement loop counter
-	jr nz,L1DFE			; Loop until all 21 bytes cleared
+	jr nz,fcb_clear_tail_1		; Loop until all 21 bytes cleared
 	pop af				; restore AF
 	pop de				; restore DE
 	pop hl				; restore HL
@@ -5233,6 +5376,7 @@ L1DFE:
 
 ; ----------------------------------------------------------------------
 ; console_read: Read a console character (BDOS C_READ).
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 console_read:
 	ld a,C_READ			; A = 01H
@@ -5240,6 +5384,7 @@ console_read:
 
 ; ----------------------------------------------------------------------
 ; console_status: Console input status (BDOS C_STAT).
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 console_status:
 	ld a,C_STAT			; A = 0BH
@@ -5247,6 +5392,7 @@ console_status:
 
 ; ----------------------------------------------------------------------
 ; bdos_save_regs: BDOS call preserving BC and DE.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 bdos_save_regs:
 	push de				; preserve DE
@@ -5259,6 +5405,7 @@ bdos_save_regs:
 
 ; ----------------------------------------------------------------------
 ; bdos_call_a: BDOS call with function number in A, preserving BC, DE, HL.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 bdos_call_a:
 	push hl				; preserve HL
@@ -5274,6 +5421,7 @@ bdos_call_a:
 
 ; ----------------------------------------------------------------------
 ; fcb_to_name: Format the FCB name at DE as NAME.EXT at HL.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 fcb_to_name:
 	push bc				; preserve BC
@@ -5294,29 +5442,31 @@ fcb_to_name:
 
 ; ----------------------------------------------------------------------
 ; copy_name_part: Copy B characters of a name, dropping blanks.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 copy_name_part:
 	ld a,(de)			; Fetch character from FCB
 	and 7FH				; strip the parity bit (7-bit ASCII)
 	cp 20H				; Is character a space?
-	jr z,L1E45			; if A = 20H goto L1E45
+	jr z,copy_name_part_1		; if A = 20H goto copy_name_part_1
 	ld (hl),a			; Store printable character into output buffer
 	inc hl				; Advance output pointer
-L1E45:
+copy_name_part_1:
 	inc de				; Advance source pointer
 	djnz copy_name_part		; repeat until all B items are done
 	ret				; return
 
 ; ----------------------------------------------------------------------
 ; a_to_decimal: Convert A to up to three decimal digits at DE.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 a_to_decimal:
 	push bc				; preserve BC
 	ld b,00H			; B = 00H
-	jp L1E52			; continue at L1E52
+	jp a_to_decimal_1		; continue at a_to_decimal_1
 	push bc				; preserve BC
 	ld b,0FFH			; B = 0FFH
-L1E52:
+a_to_decimal_1:
 	push hl				; preserve HL
 	push af				; preserve AF
 	ld h,64H			; Divisor = 100 (hundreds digit)
@@ -5331,13 +5481,14 @@ L1E52:
 
 ; ----------------------------------------------------------------------
 ; decimal_digit: Extract one decimal digit.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 decimal_digit:
 	ld l,0FFH			; Initialize quotient = -1
-L1E67:
+decimal_digit_1:
 	sub h				; Subtract divisor
 	inc l				; Increment quotient
-	jr nc,L1E67			; Continue until underflow
+	jr nc,decimal_digit_1		; Continue until underflow
 	add a,h				; Restore remainder
 	ld h,a				; Save remainder in H
 	ld a,l				; A = quotient
@@ -5347,16 +5498,17 @@ L1E67:
 	ld a,h				; A = remainder
 	ret m				; If B negative, return
 	ld a,20H			; Output space for suppressed zero (' ')
-	jr z,L1E7C			; if result is zero goto L1E7C
+	jr z,decimal_emit_1		; if result is zero goto decimal_emit_1
 	xor a				; A = 0
 
 ; ----------------------------------------------------------------------
 ; decimal_emit: Store one decimal digit.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 decimal_emit:
 	add a,30H			; Convert digit 0..9 to ASCII '0'..'9'
 	ld b,a				; B non-zero (ends suppression)
-L1E7C:
+decimal_emit_1:
 	ld (de),a			; Store ASCII character into buffer
 	inc de				; Advance destination pointer
 	ld a,h				; Restore remainder in A
@@ -5368,15 +5520,15 @@ L1E7C:
 upcase_string:
 	push af				; preserve AF
 	push hl				; preserve HL
-L1E82:
+upcase_string_1:
 	ld a,(hl)			; Fetch character
 	or a				; Check for null terminator
-	jr z,L1E8D			; if result is zero goto L1E8D
+	jr z,upcase_string_2		; if result is zero goto upcase_string_2
 	call to_upper			; convert A to upper case
 	ld (hl),a			; Store converted character back
 	inc hl				; Advance string pointer
-	jr L1E82			; loop back to L1E82
-L1E8D:
+	jr upcase_string_1		; loop back to upcase_string_1
+upcase_string_2:
 	pop hl				; restore HL
 	pop af				; restore AF
 	ret				; return
@@ -5389,10 +5541,10 @@ skip_blanks_str:
 	ld a,(hl)			; Fetch character
 	inc hl				; Advance pointer
 	or a				; Null terminator?
-	jr z,L1E9B			; if result is zero goto L1E9B
+	jr z,skip_blanks_1		; if result is zero goto skip_blanks_1
 	call is_space			; Z if A is a blank/control separator
 	jr z,skip_blanks_str		; if character is blank/whitespace goto skip_blanks_str
-L1E9B:
+skip_blanks_1:
 	dec hl				; Point back to terminator
 	pop af				; restore AF
 	ret				; return
@@ -5402,18 +5554,19 @@ L1E9B:
 ; ----------------------------------------------------------------------
 skip_to_blank:
 	push af				; preserve AF
-L1E9F:
+skip_to_blank_1:
 	ld a,(hl)			; Fetch character
 	inc hl				; Advance pointer
 	or a				; Null terminator?
-	jr z,L1E9B			; if result is zero goto L1E9B
+	jr z,skip_blanks_1		; if result is zero goto skip_blanks_1
 	call is_space			; Z if A is a blank/control separator
-	jr nz,L1E9F			; If printable, continue
-	jr L1E9B			; loop back to L1E9B
+	jr nz,skip_to_blank_1		; If printable, continue
+	jr skip_blanks_1		; loop back to skip_blanks_1
 
 ; ----------------------------------------------------------------------
 ; tokenize_args: Split the command tail into blank-separated tokens,
 ; building a pointer table.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 tokenize_args:
 	push bc				; preserve BC
@@ -5425,36 +5578,36 @@ tokenize_args:
 	push hl				; remember the table address
 	inc hl				; skip the max/count bytes
 	inc hl				; HL++
-L1EB4:
+tokenize_args_1:
 	call skip_blanks		; find the start of the next token
 	or a				; end of text?
-	jr z,L1EDD			; yes: done
+	jr z,tokenize_args_4		; yes: done
 	ld (hl),e			; store the token address in the table
 	inc hl				; HL++
 	ld (hl),d			; Store token pointer high byte
 	inc hl				; HL++
 	dec b				; one more slot used
-	jr z,L1ED2			; table full
+	jr z,tokenize_args_3		; table full
 	call skip_token			; skip over the token
 	or a				; End of command line?
-	jr z,L1EDD			; end of text
+	jr z,tokenize_args_4		; end of text
 	ld a,c				; Delimiter replacement enabled?
 	or a				; terminate the token?
-	jr z,L1ECE			; if result is zero goto L1ECE
+	jr z,tokenize_args_2		; if result is zero goto tokenize_args_2
 	xor a				; Replace whitespace with null terminator
 	ld (de),a			; replace the delimiter by a zero
 	inc de				; Advance past null
-L1ECE:
+tokenize_args_2:
 	ld a,b				; more slots free?
 	or a				; test A (sets Z if A = 0)
-	jr nz,L1EB4			; yes: next token
-L1ED2:
+	jr nz,tokenize_args_1		; yes: next token
+tokenize_args_3:
 	call skip_token			; table full: see whether more text remains
 	call skip_blanks		; skip spaces and tabs at DE
 	or a				; End of line?
-	jr z,L1EDD			; if result is zero goto L1EDD
+	jr z,tokenize_args_4		; if result is zero goto tokenize_args_4
 	or 0FFH				; NZ = too many arguments
-L1EDD:
+tokenize_args_4:
 	pop hl				; HL -> table
 	push af				; preserve AF
 	ld a,(hl)			; count = max - remaining
@@ -5469,6 +5622,7 @@ L1EDD:
 
 ; ----------------------------------------------------------------------
 ; skip_blanks: Skip spaces and tabs at DE.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 skip_blanks:
 	ld a,(de)			; Fetch character
@@ -5483,6 +5637,7 @@ skip_blanks:
 
 ; ----------------------------------------------------------------------
 ; skip_token: Skip a token at DE.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 skip_token:
 	ld a,(de)			; Fetch character
@@ -5497,6 +5652,7 @@ skip_token:
 
 ; ----------------------------------------------------------------------
 ; memset: Fill B bytes at HL with A (preserves HL).
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 memset:
 	push hl				; preserve HL
@@ -5506,13 +5662,14 @@ memset:
 
 ; ----------------------------------------------------------------------
 ; memset_inner: Fill B bytes at HL with A.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 memset_inner:
 	push bc				; preserve BC
-L1F0A:
+memset_inner_1:
 	ld (hl),a			; Store byte into buffer
 	inc hl				; Advance pointer
-	djnz L1F0A			; repeat until all B items are done
+	djnz memset_inner_1		; repeat until all B items are done
 	pop bc				; restore BC
 	ret				; return
 
@@ -5525,12 +5682,13 @@ is_alpha:
 	and 7FH				; strip the parity bit (7-bit ASCII)
 	call to_upper			; convert A to upper case
 	cp 41H				; compare A with 41H ('A')
-	jr c,L1F1F			; if A < 41H goto L1F1F
+	jr c,is_alpha_1			; if A < 41H goto is_alpha_1
 	cp 5BH				; compare A with 5BH
-	jr c,L1F20			; if A < 5BH goto L1F20
-L1F1F:
+	jr c,is_alpha_2			; if A < 5BH goto is_alpha_2
+is_alpha_1:
 	or 0AFH				; A |= 0AFH
-L1F20			.equ L1F1F+1	; alternate entry point inside the instruction above (overlapping decode: xor a)
+is_alpha_2		.equ is_alpha_1+1	; alternate entry point inside the instruction above (overlapping decode: xor
+					; a)
 	ld a,c				; Restore original character in A
 	pop bc				; restore BC
 	ret				; return
@@ -5541,26 +5699,27 @@ L1F20			.equ L1F1F+1	; alternate entry point inside the instruction above (overl
 is_space:
 	push af				; preserve AF
 	and 7FH				; strip the parity bit (7-bit ASCII)
-	jr z,L1F39			; if result is zero goto L1F39
+	jr z,is_space_1			; if result is zero goto is_space_1
 	cp 7FH				; DEL (rubout)?
-	jr z,L1F39			; if A = 7FH goto L1F39
+	jr z,is_space_1			; if A = 7FH goto is_space_1
 	cp 20H				; Space?
-	jr z,L1F39			; if A = 20H goto L1F39
+	jr z,is_space_1			; if A = 20H goto is_space_1
 	cp 08H				; Backspace or lower?
-	jr c,L1F3C			; if A < 08H goto L1F3C
+	jr c,is_space_2			; if A < 08H goto is_space_2
 	cp 0EH				; Tab, LF, VT, FF, CR (8..13)?
-	jr nc,L1F3C			; if A >= 0EH goto L1F3C
-L1F39:
+	jr nc,is_space_2		; if A >= 0EH goto is_space_2
+is_space_1:
 	pop af				; restore AF
 	cp a				; compare A with A
 	ret				; return
-L1F3C:
+is_space_2:
 	pop af				; restore AF
 	or a				; test A (sets Z if A = 0)
 	ret				; return
 
 ; ----------------------------------------------------------------------
 ; to_upper: Convert A to upper case.
+; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 to_upper:
 	and 7FH				; strip the parity bit (7-bit ASCII)
@@ -5591,13 +5750,13 @@ compare_wild:
 	ld a,(hl)			; Fetch pattern character
 	and 7FH				; strip the parity bit (7-bit ASCII)
 	cp 3FH				; compare A with 3FH
-	jr z,L1F65			; if A = 3FH goto L1F65
+	jr z,compare_wild_1		; if A = 3FH goto compare_wild_1
 	ld c,a				; C = pattern character
 	ld a,(de)			; Fetch target character
 	and 7FH				; strip the parity bit (7-bit ASCII)
 	cp c				; Compare characters
 	ret nz				; return if not zero
-L1F65:
+compare_wild_1:
 	inc hl				; Advance pattern pointer
 	inc de				; Advance target pointer
 	djnz compare_wild		; repeat until all B items are done
@@ -5618,122 +5777,127 @@ compare_mem:
 	inc de				; Advance second pointer
 	djnz compare_mem		; repeat until all B items are done
 	ret				; return
-; Pointer to the argument table built by tokenize_args
-argv_ptr:
-	.dw 28DCH
-	.fill 6,0
+
+; Address of arg_table, the start of the free memory (initialised in the image)
+arg_table_ptr:
+	.dw arg_table
 
 ; ---- Uninitialised RAM work area above the program image ----
 ; .ds only reserves space: nothing here is stored in the .COM file.
-	.ds 128				; 1F80H-1FFFH not referenced by the code
-default_user		.ds 1		; 2000H User number at program start
-default_drive		.ds 1		; 2001H Drive (1 = A:) at program start
-saved_user		.ds 1		; 2002H User number to select (pair with work_fcb drive byte)
-work_fcb		.ds 36		; 2003H Work FCB / DU pair for the command line file spec
-stack_area		.ds 64		; 2027H Stack: grows down from aux_ring (SP is set to aux_ring at start)
-aux_ring		.ds 6		; 2067H AUX receive ring buffer control block: count, write index, read index; 512 data
-					; bytes follow (also initial stack top)
-aux_ring_data		.ds 512		; 206DH Data area of the AUX receive ring (512 bytes)
-entry_user		.ds 1		; 226DH User number of the current file list entry
-send_fcb		.ds 36		; 226EH FCB of the file being sent
-send_fcb_name		.equ send_fcb+1	; 226FH Name field of send_fcb
-	.ds 1				; 2292H not referenced by the code
-ltoa_value		.ds 4		; 2293H ltoa32: working copy of the value being converted
-ltoa_temp		.ds 4		; 2297H ltoa32: temporary subtraction result
-crc32_value		.ds 4		; 229BH Running CRC-32 accumulator (4 bytes)
-crc32_table		.ds 1024	; 229FH CRC-32 lookup table, 256 x 4 bytes (229FH-269EH)
-error_count		.ds 1		; 269FH Consecutive error/retry counter
-rx_header_data		.ds 4		; 26A0H Four argument bytes of the last received header
-pos_display		.ds 4		; 26A4H Copy of the file position shown on the console
-rx_crc_mode		.ds 1		; 26A8H CRC type of the last received header (10H = CRC-16, 20H = CRC-32)
-tx_crc_mode		.ds 1		; 26A9H CRC type used for sending: 20H = CRC-32, 10H = CRC-16 (XMODEM CRC)
-tx_header_data		.ds 4		; 26AAH Four argument bytes for the next header to send
-xm_first_flag		.ds 1		; 26AEH FFH until the first block has been acknowledged
-zack_pos		.ds 4		; 26AFH Position from the last ZACK
-rx_pos_arg		.ds 4		; 26B3H Position argument of the last ZRPOS/ZACK from the receiver
-tx_position		.ds 4		; 26B7H Position in the file of the next byte to send (32 bits)
-last_sync_pos		.ds 4		; 26BBH Position at the last synchronisation point (ZCRCW)
-last_zrpos_pos		.ds 4		; 26BFH Position of the last ZRPOS request
-file_read_pos		.ds 4		; 26C3H Position of the next byte to be read from the disk file
-pos_scratch		.ds 4		; 26C7H Scratch 32-bit result for position arithmetic
-rx_window_size		.ds 2		; 26CBH Receiver buffer length from ZRINIT ZP0/ZP1 (0 = nonstop I/O) [Rxbuflen]
-window_remaining	.ds 2		; 26CDH Bytes left before the receiver must acknowledge
-subpacket_size		.ds 2		; 26CFH Current data subpacket size (starts at 1024, reduced after errors)
-	.ds 2				; 26D1H-26D2H not referenced by the code
-same_zrpos_count	.ds 1		; 26D3H Number of times in a row ZRPOS asked for the same position
-zrinit_zf0		.ds 1		; 26D4H ZF0 from the receiver's ZRINIT: CANFDX 1, CANOVIO 2, CANBRK 4, CANCRY 8,
+			.ds 128+6	; not referenced by the code
+default_user		.ds 1		; User number at program start
+default_drive		.ds 1		; Drive (1 = A:) at program start
+saved_user		.ds 1		; User number to select (pair with work_fcb drive byte)
+work_fcb		.ds 33		; Work FCB / DU pair for the command line file spec (FCB offsets 0-32)
+work_fcb_r0		.ds 3		; Random record number r0-r2 of work_fcb (FCB offsets 33-35)
+stack			.ds 64		; Stack: grows down from stack_top
+; Initial stack pointer: the stack grows down from here (same address as aux_ring)
+stack_top:
+aux_ring		.ds 6		; AUX receive ring buffer control block: count, write index, read index; 512 data
+					; bytes follow
+aux_ring_data		.ds 512		; Data area of the AUX receive ring (512 bytes)
+entry_user		.ds 1		; User number of the current file list entry
+send_fcb		.ds 36		; FCB of the file being sent
+send_fcb_name		.equ send_fcb+1	; Name field of send_fcb
+			.ds 1		; not referenced by the code
+ltoa_value		.ds 4		; ltoa32: working copy of the value being converted
+ltoa_temp		.ds 4		; ltoa32: temporary subtraction result
+crc32_value		.ds 4		; Running CRC-32 accumulator (4 bytes)
+crc32_table		.ds 1024	; CRC-32 lookup table, 256 x 4 bytes
+error_count		.ds 1		; Consecutive error/retry counter
+rx_header_data		.ds 4		; Four argument bytes of the last received header
+pos_display		.ds 4		; Copy of the file position shown on the console
+rx_crc_mode		.ds 1		; CRC type of the last received header (10H = CRC-16, 20H = CRC-32)
+tx_crc_mode		.ds 1		; CRC type used for sending: 20H = CRC-32, 10H = CRC-16 (XMODEM CRC)
+tx_header_data		.ds 4		; Four argument bytes for the next header to send
+xm_first_flag		.ds 1		; FFH until the first block has been acknowledged
+zack_pos		.ds 4		; Position from the last ZACK
+rx_pos_arg		.ds 4		; Position argument of the last ZRPOS/ZACK from the receiver
+tx_position		.ds 4		; Position in the file of the next byte to send (32 bits)
+last_sync_pos		.ds 4		; Position at the last synchronisation point (ZCRCW)
+last_zrpos_pos		.ds 4		; Position of the last ZRPOS request
+file_read_pos		.ds 4		; Position of the next byte to be read from the disk file
+pos_scratch		.ds 4		; Scratch 32-bit result for position arithmetic
+rx_window_size		.ds 2		; Receiver buffer length from ZRINIT ZP0/ZP1 (0 = nonstop I/O) [Rxbuflen]
+window_remaining	.ds 2		; Bytes left before the receiver must acknowledge
+subpacket_size		.ds 2		; Current data subpacket size (starts at 1024, reduced after errors)
+			.ds 2		; not referenced by the code
+same_zrpos_count	.ds 1		; Number of times in a row ZRPOS asked for the same position
+zrinit_zf0		.ds 1		; ZF0 from the receiver's ZRINIT: CANFDX 1, CANOVIO 2, CANBRK 4, CANCRY 8,
 					; CANFC32 20H, ESCCTL 40H
-escape_ctl_flag		.ds 1		; 26D5H Nonzero (40H) if all control characters must be escaped
-eof_pending		.ds 1		; 26D6H FFH when the end of the file has been read into the buffer
-eof_flag		.ds 1		; 26D7H FFH when the disk file is at end of file
-subpkt_term		.ds 1		; 26D8H Terminator for the next data subpacket (68H ZCRCE, 69H ZCRCG, 6BH ZCRCW)
-files_sent_count	.ds 1		; 26D9H Number of files sent so far
-buffer_mask		.ds 2		; 26DAH File buffer size mask (power of two minus one)
-buffer_start_pos	.ds 4		; 26DCH File position corresponding to the start of the ring buffer
-last_rx_char		.ds 1		; 26E0H Last character received from the modem
-xmodem_block_no		.ds 1		; 26E1H Current XMODEM block number
-prev_rx_char		.ds 1		; 26E2H Previous received character
-file_size		.ds 2		; 26E3H Size of the current file in bytes (32 bits)
-file_size_hi		.ds 2		; 26E5H High word of file_size (the 32-bit size is built in two halves)
-block_len		.ds 2		; 26E7H Length of the current block / subpacket
-	.ds 2				; 26E9H-26EAH not referenced by the code
-opt_protect_flag	.ds 1		; 26EBH FFH if -p (protect) was given
-opt_append_flag		.ds 1		; 26ECH FFH if -a (append) was given
-opt_convert_flag	.ds 1		; 26EDH FFH if -c (convert to local line feeds) was given
-opt_binary_flag		.ds 1		; 26EEH FFH if -b (binary) was given
-file_buffer_base	.ds 2		; 26EFH Start of the file data ring buffer
-unused_26F1		.ds 2		; 26F1H Cleared at startup, never read
-file_buffer_size	.ds 2		; 26F3H Size of the file data ring buffer
-unused_26F5		.ds 2		; 26F5H Cleared at startup, never read
-file_count		.ds 1		; 26F7H Number of files in the list to send
-zrqinit_retries		.ds 1		; 26F8H Remaining attempts to get ZRINIT
-resp_junk_count		.ds 1		; 26F9H Garbage characters seen while streaming
-zrpos_target		.ds 4		; 26FAH Position requested by ZRPOS
-reposition_temp		.ds 4		; 26FEH Temporary position used while repositioning the file
-chunk_len		.ds 4		; 2702H Number of bytes in the current chunk
-data_terminator		.ds 1		; 2706H Terminator byte of the data subpacket being sent
-out_frame_type		.ds 1		; 2707H Frame type of the header being sent
-hdr_junk_limit		.ds 2		; 2708H get_header: remaining number of junk characters tolerated
-hdr_can_count		.ds 1		; 270AH get_header: remaining CAN characters before abort
-rx_frame_type		.ds 1		; 270BH Frame type of the last header received
-parse_mode		.ds 1		; 270CH parse_filespec argument (nonzero: try DU form / named directory)
-parse_next_char		.ds 1		; 270DH Character following the parsed name
-wildcard_count		.ds 1		; 270EH Number of wildcard characters in the file name
-parsed_drive		.ds 1		; 270FH Drive from the file spec (0 = default)
-parsed_user		.ds 1		; 2710H User number from the file spec
-z3env_ptr		.ds 2		; 2711H Address of the ZCPR3 environment descriptor (0 if none)
-sort_key_flag		.ds 1		; 2713H Sort key: 0 = name then extension, 1 = extension first
-dir_search_fcb		.ds 36		; 2714H Wildcard FCB used for BDOS search first/next
-dir_dup_mode		.ds 1		; 2738H File seen in several extents: 0 = keep the highest extent, nonzero = keep the
+escape_ctl_flag		.ds 1		; Nonzero (40H) if all control characters must be escaped
+eof_pending		.ds 1		; FFH when the end of the file has been read into the buffer
+eof_flag		.ds 1		; FFH when the disk file is at end of file
+subpkt_term		.ds 1		; Terminator for the next data subpacket (68H ZCRCE, 69H ZCRCG, 6BH ZCRCW)
+files_sent_count	.ds 1		; Number of files sent so far
+buffer_mask		.ds 2		; File buffer size mask (power of two minus one)
+buffer_start_pos	.ds 4		; File position corresponding to the start of the ring buffer
+last_rx_char		.ds 1		; Last character received from the modem
+xmodem_block_no		.ds 1		; Current XMODEM block number
+prev_rx_char		.ds 1		; Previous received character
+file_size		.ds 2		; Low word of the 32-bit size of the current file in bytes
+file_size_hi		.ds 2		; High word of file_size (the 32-bit size is built in two halves)
+block_len		.ds 2		; Length of the current block / subpacket
+			.ds 2		; not referenced by the code
+opt_protect_flag	.ds 1		; FFH if -p (protect) was given
+opt_append_flag		.ds 1		; FFH if -a (append) was given
+opt_convert_flag	.ds 1		; FFH if -c (convert to local line feeds) was given
+opt_binary_flag		.ds 1		; FFH if -b (binary) was given
+file_buffer_base	.ds 2		; Start of the file data ring buffer
+file_buffer_base_hi	.ds 2		; High word of file_buffer_base: cleared at startup, never read
+file_buffer_size	.ds 2		; Size of the file data ring buffer
+file_buffer_size_hi	.ds 2		; High word of file_buffer_size: cleared at startup, never read
+file_count		.ds 1		; Number of files in the list to send
+zrqinit_retries		.ds 1		; Remaining attempts to get ZRINIT
+resp_junk_count		.ds 1		; Garbage characters seen while streaming
+zrpos_target		.ds 4		; Position requested by ZRPOS
+reposition_temp		.ds 4		; Temporary position used while repositioning the file
+chunk_len		.ds 4		; Number of bytes in the current chunk
+data_terminator		.ds 1		; Terminator byte of the data subpacket being sent
+tx_frame_type		.ds 1		; Frame type of the header being sent
+hdr_junk_limit		.ds 2		; get_header: remaining number of junk characters tolerated
+hdr_can_count		.ds 1		; get_header: remaining CAN characters before abort
+rx_frame_type		.ds 1		; Frame type of the last header received
+parse_mode		.ds 1		; parse_filespec argument (nonzero: try DU form / named directory)
+parse_next_char		.ds 1		; Character following the parsed name
+wildcard_count		.ds 1		; Number of wildcard characters in the file name
+parsed_drive		.ds 1		; Drive from the file spec (0 = default)
+parsed_user		.ds 1		; User number from the file spec
+z3env_ptr		.ds 2		; Address of the ZCPR3 environment descriptor (0 if none)
+sort_key_flag		.ds 1		; Sort key: 0 = name then extension, 1 = extension first
+dir_search_fcb		.ds 36		; Wildcard FCB used for BDOS search first/next
+dir_dup_mode		.ds 1		; File seen in several extents: 0 = keep the highest extent, nonzero = keep the
 					; lowest
-dir_table_start		.ds 2		; 2739H Start of the directory entry table (16 bytes per entry)
-dir_entry_count		.ds 2		; 273BH Number of directory entries collected
-dir_marked_count	.ds 2		; 273DH Number of entries marked / kept
-dir_table_ptr		.ds 2		; 273FH Pointer into the directory table (also sort block base)
-sort_count		.ds 2		; 2741H Sort control block: element count
-sort_elem_size		.ds 2		; 2743H Sort control block: element size (16)
-sort_compare_fn		.ds 2		; 2745H Sort control block: compare routine address
-sort_aux		.ds 2		; 2747H Sort control block: auxiliary pointer
-sort_limit		.ds 2		; 2749H Sort control block: limit (00FFH)
-dpb_bsh			.ds 3		; 274BH Disk parameter block: BSH, BLM, EXM
-disk_blocks		.ds 2		; 274EH Number of allocation blocks on the disk
-dir_entries		.ds 2		; 2750H Number of directory entries on the disk
-dir_attr_mask		.ds 1		; 2752H Selection mask: bit 7 include DIR files, bit 6 include SYS files, bit 5 any
+dir_table_start		.ds 2		; Start of the directory entry table (16 bytes per entry)
+dir_entry_count		.ds 2		; Number of directory entries collected
+dir_marked_count	.ds 2		; Number of entries marked / kept
+dir_table_ptr		.ds 2		; Pointer into the directory table (also sort block base)
+sort_count		.ds 2		; Sort control block: element count
+sort_elem_size		.ds 2		; Sort control block: element size (16)
+sort_compare_fn		.ds 2		; Sort control block: compare routine address
+sort_aux		.ds 2		; Sort control block: auxiliary pointer
+sort_limit		.ds 2		; Sort control block: limit (00FFH)
+dpb_bsh			.ds 3		; Disk parameter block: BSH, BLM, EXM
+disk_blocks		.ds 2		; Number of allocation blocks on the disk
+dir_entries		.ds 2		; Number of directory entries on the disk
+dir_attr_mask		.ds 1		; Selection mask: bit 7 include DIR files, bit 6 include SYS files, bit 5 any
 					; user number, bits 0-4 user number
-sort_blk_ptr		.ds 2		; 2753H Pointer to the caller's sort control block
-sort_blk_base		.ds 2		; 2755H Working copy of sort block: base address
-sort_blk_count		.ds 2		; 2757H ... element count
-sort_blk_size		.ds 2		; 2759H ... element size
-sort_blk_cmp		.ds 2		; 275BH ... compare function
-sort_index_ptr		.ds 2		; 275DH Pointer to the sort index array
-sort_blk_flag		.ds 1		; 275FH Sort block flag (indirect elements)
-sort_blk_flag2		.ds 1		; 2760H Sort block second flag
-sort_i			.ds 2		; 2761H Sort loop index i
-sort_j			.ds 2		; 2763H Sort loop index j
-in_file			.ds CIO_SIZE	; 2765H Input file object: open flag, count, pointer, 36-byte FCB, 128-byte buffer (168
+sort_blk_ptr		.ds 2		; Pointer to the caller's sort control block
+sort_blk_base		.ds 2		; Working copy of sort block: base address
+sort_blk_count		.ds 2		; ... element count
+sort_blk_size		.ds 2		; ... element size
+sort_blk_cmp		.ds 2		; ... compare function
+sort_index_ptr		.ds 2		; Pointer to the sort index array
+sort_blk_flag		.ds 1		; Sort block flag (indirect elements)
+sort_blk_flag2		.ds 1		; Sort block second flag
+sort_i			.ds 2		; Sort loop index i
+sort_j			.ds 2		; Sort loop index j
+in_file			.ds CIO_SIZE	; Input file object: open flag, count, pointer, 36-byte FCB, 128-byte buffer (168
 					; bytes)
-out_file		.ds CIO_SIZE	; 280DH Output file object (same layout as in_file)
-cur_file_ptr		.ds 2		; 28B5H Pointer to the file object being operated on
-file_io_char		.ds 1		; 28B7H Character passed through file get/put
-fcb_copy		.ds 36		; 28B8H Scratch copy of a 36-byte FCB
+out_file		.ds CIO_SIZE	; Output file object (same layout as in_file)
+cur_file_ptr		.ds 2		; Pointer to the file object being operated on
+file_io_char		.ds 1		; Character passed through file get/put
+fcb_copy		.ds 36		; Scratch copy of a 36-byte FCB
+arg_table		.ds 6		; Argument pointers table built by tokenize_args: maximum count, count found, two
+					; token pointers; the file list starts here and overwrites it later
 	.end
