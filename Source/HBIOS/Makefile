@@ -63,7 +63,8 @@ DIST_ROMS := \
 ifndef ROM
     ROMFILE := rom.mk
 
-    REAL_GOALS := $(filter-out clean,$(MAKECMDGOALS))
+    # config, showconfig and checkconfig (hbconfig) need no ROM identifier
+    REAL_GOALS := $(filter-out clean config showconfig checkconfig,$(MAKECMDGOALS))
     ifeq ($(MAKECMDGOALS),)
         REAL_GOALS := all
     endif
@@ -218,3 +219,21 @@ UNA_%.rom: UNA_%.hbios_env.sh UNA_%.rom1.bin
 
 %.upd: %.hbios_rom.bin %.rom1.bin %.rom2.bin %.rom3.bin
 	@cat $(*F).hbios_rom.bin $(*F).rom1.bin $(*F).rom2.bin $(*F).rom3.bin >$@
+
+# hbconfig, the menu-driven config editor, see Tools/hbconfig/ReadMe.txt.
+# A ROM_PLATFORM or ROM_CONFIG left out is asked for.
+# "config" needs .PHONY: on a case-insensitive file system it would
+# otherwise match the Config directory and never run
+.PHONY: config showconfig checkconfig
+
+PYTHON ?= python3
+HBCONFIG = $(PYTHON) $(TOOLS)/hbconfig/hbconfig.py
+
+config:
+	@$(HBCONFIG) $(ROM_PLATFORM) $(ROM_CONFIG)
+
+showconfig:
+	@$(HBCONFIG) -show $(ROM_PLATFORM) $(ROM_CONFIG)
+
+checkconfig:
+	@$(HBCONFIG) -check $(ROM_PLATFORM) $(ROM_CONFIG)

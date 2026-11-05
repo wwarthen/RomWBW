@@ -1,4 +1,4 @@
-.PHONY: tools source clean clobber diff transpile-c-code dist distlog
+.PHONY: tools source clean clobber diff transpile-c-code dist distlog config showconfig checkconfig
 
 .SHELLFLAGS = -ce
 
@@ -20,6 +20,15 @@ clobber: clean
 
 diff:
 	$(MAKE) --directory Source diff
+
+config:
+	$(MAKE) --directory Source/HBIOS config
+
+showconfig:
+	$(MAKE) --directory Source/HBIOS showconfig
+
+checkconfig:
+	$(MAKE) --directory Source/HBIOS checkconfig
 
 # Convert c code to assembly code
 transpile-c-code:
