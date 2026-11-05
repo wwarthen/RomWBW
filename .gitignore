@@ -209,3 +209,7 @@ Source/ZPM3/setz3.com
 Tools/unix/OpenSpin/build/
 Tools/unix/zxcc/config.h
 Tools/unix/zxcc/zxcc
+
+# hbconfig: private Python that Config.cmd downloads on Windows
+Tools/python/
+Tools/python.new/
