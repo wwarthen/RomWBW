@@ -2137,10 +2137,11 @@ support most of the hardware variations included with RomWBW.
 
 `RZ` and `SZ` are a pair of applications that receive and send files
 using the XModem, YModem and ZModem protocols.  They work like the
-well-known Unix `rz` and `sz` tools.  They run **only** under CP/M 3
-(including Z3PLUS) and communicate through the CP/M `AUX` device, so a
-modem (or a null-modem cable to your host computer) must be connected
-to the serial port that is assigned to `AUX`.
+well-known Unix `rz` and `sz` tools.  They run under CP/M 2.2 and
+compatible operating systems on RomWBW, and transfer data through a
+RomWBW HBIOS character unit (serial port).  By default this is the
+console port, so a transfer can be run from the same terminal program
+that you use as the console.
 
 #### Syntax
 
@@ -2159,15 +2160,15 @@ The `RZ` options are:
 | ----------- | ------------------------------------------------------ |
 | `?`         | displays a short description of the options.           |
 | `p`         | protects an existing file: it is not overwritten (ZModem). |
-| `b`         | stores the received data exactly as it arrives (binary). |
-| `c`         | converts line ends to the local CP/M convention (not if the sender asks for a binary file). |
 | `r`         | resumes an interrupted transfer (ZModem).              |
 | `x`,`y`,`z` | selects the XModem, YModem or ZModem protocol.         |
+| `0`-`9`     | selects the HBIOS character unit to use for the transfer. |
 
-The `p`, `b` and `r` options override the corresponding requests made
-by the sending program.  Because XModem does not carry file names, giving
-a *\<filespec\>* selects XModem; `-y` skips the ZModem attempt and goes
-straight to YModem.
+The `p` and `r` options override the corresponding requests made by the
+sending program.  Because XModem does not carry file names, giving a
+*\<filespec\>* selects XModem, and XModem requires one: `RZ -x` without a
+*\<filespec\>* displays `Missing filename parameter`.  `-y` skips the
+ZModem attempt and goes straight to YModem.
 
 The `SZ` options are:
 
@@ -2176,10 +2177,13 @@ The `SZ` options are:
 | `?`         | displays a short description of the options.           |
 | `p`         | asks the receiver to protect an existing file (ZModem). |
 | `a`         | asks the receiver to append to an existing file (ZModem). |
-| `b`         | sends the file as a binary file.                       |
-| `c`         | asks the receiver to convert line ends to its local convention. |
 | `x`         | forces XModem.                                         |
 | `y`,`z`     | have the same effect as giving no protocol letter: ZModem or YModem is chosen from the receiver's answer. |
+| `0`-`9`     | selects the HBIOS character unit to use for the transfer. |
+
+All transfers are binary: files are stored and sent exactly as they
+are, with no conversion of line ends.  For compatibility, both
+applications accept a `b` option, which has no effect.
 
 *\<filespec\>* for `RZ` is the name to give to the received file.
 Specifying a name selects XModem because XModem does not transmit file
@@ -2189,7 +2193,8 @@ names.  With YModem and ZModem the sender supplies the file names, so no
 *\<filespec\>* for `SZ` is the file to send.  It may contain the
 wildcard characters `*` and `?` to send several files in one session
 (ZModem and YModem), and it may start with a drive/user prefix
-(`du:`).  When running under Z3PLUS, named directories can be used.
+(`du:`).  When a ZCPR3 environment is present, named directories can be
+used.
 
 For example, the following command will receive a file using XModem
 and will name the received file `MYFILE.TXT`.
@@ -2197,9 +2202,14 @@ and will name the received file `MYFILE.TXT`.
 `RZ MYFILE.TXT`
 
 The following command will send all of the `.COM` files in the current
-drive and user area as binary files using ZModem.
+drive and user area using ZModem.
 
-`SZ -b *.COM`
+`SZ *.COM`
+
+The following command will receive files using ZModem through HBIOS
+character unit 1 (COM1) instead of the console port.
+
+`RZ -1`
 
 #### Usage
 
@@ -2208,8 +2218,9 @@ the following:
 
 1. Enter an `RZ` command.  For ZModem enter `RZ` alone, for YModem enter
 `RZ -y`, and for XModem enter `RZ` followed by the name you want to give
-to the received file.  `RZ` will ask you to start your local sending
-program.
+to the received file.  Add a unit number (for example `RZ -1`) to use a
+port other than the console.  `RZ` will show the port it is using and
+ask you to start your local sending program.
 
 2. On your host computer select the file to send and initiate the
 corresponding send operation (ZModem, YModem or XModem).
@@ -2218,9 +2229,10 @@ To transfer a file from your RomWBW computer to your host computer, do
 the following:
 
 1. Enter an `SZ` command specifying the file or files to be sent (add
-`-x` if the receiving program uses XModem).
-`SZ` will report the number of files found and will ask you to start your
-local receiving program.
+`-x` if the receiving program uses XModem, and a unit number to use a
+port other than the console).  `SZ` will report the number of files
+found, show the port it is using and ask you to start your local
+receiving program.
 
 2. On your host computer initiate the corresponding receive operation
 (ZModem, YModem or XModem).  For XModem you must also specify the name
@@ -2230,26 +2242,32 @@ Please refer to the documentation of your host computer's terminal
 emulation software for specific instructions on how to use these
 protocols.
 
-To abort a transfer, press the `Esc` key.  The program may take a few
-seconds to terminate.  A transfer can also be aborted from the other
-end using the method defined by the protocol in use.
+To abort a transfer that uses a separate port, press the `Esc` key at
+the console.  The applications check for it while waiting for data,
+about every tenth of a second, and display `Transfer aborted!`.  A
+transfer can also be aborted from the other end using the method defined
+by the protocol in use; when the transfer runs on the console port,
+this is the only way to abort it.
 
 #### Notes
 
-`RZ` and `SZ` require CP/M 3.  If you run them under another operating
-system, they will display `sorry, CP/M 3 Tool` and exit.
+`RZ` and `SZ` require RomWBW.  They talk to the HBIOS serial driver
+directly and use only CP/M 2.2 BDOS functions for files.  If RomWBW is
+not found they display `HBIOS initialization error!` and exit.
 
-Unlike `XM`, `RZ` and `SZ` do not yet use the RomWBW HBIOS character unit
-selection.  They transfer data only through the CP/M 3 `AUX` device and 
-use nothing but standard CP/M 3 BDOS calls.  You must ensure that `AUX` 
-is assigned to the serial port that is connected to the other computer, 
-and that this port is not also being used as the console.
+At start-up each application displays the port it will use, for example
+`Using HBIOS COM1 (block mode)`.  In block mode, characters are moved to
+and from the serial driver many at a time, which is considerably faster.
+With an older HBIOS that does not provide the block functions, the
+applications fall back to moving one character at a time and display
+`(byte mode)`.
 
-While a transfer is running, both applications remove the physical
-device(s) used for `AUX` output from the console input and output
-redirection vectors in the CP/M 3 System Control Block.  This keeps the
-console from using the transfer port.  The original assignments are
-restored when the application ends.
+When the transfer runs on the console port (the default), the
+applications display nothing while the transfer is in progress (no file
+name, position or error messages), and the `Esc` key is not checked,
+because the terminal program is busy with the transfer.  With a
+separate port, the file name and progress are displayed on the console
+as usual.
 
 `RZ` and `SZ` are dependent on a reliable communications channel.  You
 must ensure that the serial port can be serviced fast enough by either
@@ -2258,10 +2276,11 @@ control is fully functional (end to end).
 
 Both applications use the free memory of the TPA as a transfer buffer.
 `RZ` tells the sender the size of its buffer and writes the received
-data to disk each time a buffer has been filled, so the sender pauses
-for an acknowledgement at the end of every buffer rather than
-streaming continuously.  The more free memory there is, the fewer
-pauses occur.
+data to disk each time a buffer has been filled, so a sender that
+honors the buffer size pauses for an acknowledgement at the end of every
+buffer rather than streaming continuously.  The more free memory there
+is, the fewer pauses occur.  Some senders ignore the buffer size; `RZ`
+then writes its buffer to disk early, before it can overflow.
 
 Received files are created in the current drive and user area.  With
 ZModem, an existing file of the same name is replaced unless the
@@ -2273,8 +2292,14 @@ Time-outs are produced by software delay loops rather than a hardware
 timer.  The loops are tuned for a fast CPU, roughly the
 equivalent of a 12 MHz Z80.  On a slower CPU, such as a 4 MHz Z80,
 time-outs take proportionally longer (roughly three times as long at
-4 MHz), so a stalled transfer may take quite a while to give up.  This
-does not affect transfers that are going well.
+4 MHz), so a stalled transfer may take quite a while to give up.  On a
+faster CPU they are correspondingly shorter.  This does not affect
+transfers that are going well.
+
+Depending on how the applications were built, they may display transfer
+statistics (bytes, elapsed time, throughput and error counts) when a
+transfer ends.  Before doing so, they wait until the line has been
+quiet for about two seconds.
 
 #### Etymology
 
@@ -2283,13 +2308,18 @@ Wilfried Schmitten of Hamburg, Germany, and released in June 1992.
 Their names and behavior follow the well-known Unix `rz` and `sz`
 programs of Chuck Forsberg, which implement his ZModem protocol.
 
-The applications are not specific to RomWBW.  They are included here as
-originally released.
+The source code of the applications was lost.  The original binaries
+were disassembled by Claude AI, and the resulting source code
+(`rz_orig.asm` and `sz_orig.asm` in the RomWBW distribution) reassembles
+to binaries that are byte identical to the original versions.
 
-The source code of the applications were lost.  The source code in the
-RomWbW distribution is from a disassembly by Claude AI.  However, the
-resulting binaries are byte identical to the original versions.  The
-program internal documentation (rzsz.md) was created by Claude AI.
+The `RZ` and `SZ` applications in RomWBW were built from modified
+copies of that source (`rz.asm` and `sz.asm`).  They use the RomWBW
+HBIOS serial drivers instead of the CP/M 3 `AUX` device, no longer
+require CP/M 3, transfer data in blocks for speed, and fix several
+problems of the originals.  The program internal documentation
+(`rzsz.md`, created by Claude AI) describes the original programs, and
+its Appendix F describes the RomWBW changes.
 
 `\clearpage`{=latex}
 

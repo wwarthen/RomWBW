@@ -29,6 +29,8 @@ d_cpm22/u0/*.* 0:
 ../../Binary/Apps/tbasic.com 0:
 ../../Binary/Apps/timer.com 0:
 ../../Binary/Apps/tune.com 0:
+../../Binary/Apps/vgmplay.com 0:
+../../Binary/Apps/vgminfo.com 0:
 ../../Binary/Apps/xm.com 0:
 ../../Binary/Apps/zmp.com 0:
 ../../Binary/Apps/zmp.hlp 0:
@@ -40,8 +42,6 @@ d_cpm22/u0/*.* 0:
 ../../Binary/Apps/zminit.ovr 0:
 ../../Binary/Apps/zmconfig.ovr 0:
 ../../Binary/Apps/zmd.com 0:
-../../Binary/Apps/vgmplay.com 0:
-../../Binary/Apps/vgminfo.com 0:
 #
 # Add OS image
 #

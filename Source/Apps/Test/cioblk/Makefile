@@ -1,4 +1,4 @@
-OBJECTS = rz.com sz.com
+OBJECTS = cioblk.com
 DEST = ../../../../Binary/Apps/Test
 TOOLS =../../../../Tools
 

@@ -707,8 +707,10 @@ RomWBW Distribution.
 | `MODE.COM`     | RomWBW            | Change serial line characteristics (baud rate, etc.)          |  
 | `REBOOT.COM`   | MartinR           | Cold or Warm Boot the RomWBW System                           |  
 | `RTC.COM`      | Andrew Lynch      | Test real time clock hardware on your system                  |  
+| `RZ.COM`       | W. Schmitten      | X/Y/ZModem file receive application                           |  
 | `SURVEY.COM`   | RomWBW            | Display system resources summary                              |  
 | `SYSCOPY.COM`  | RomWBW            | Copy system tracks to disks (make bootable)                   |  
+| `SZ.COM`       | W. Schmitten      | X/Y/ZModem file send application                              |  
 | `TALK.COM`     | RomWBW            | Route console I/O to & from specified serial port             |  
 | `TIMER.COM`    | RomWBW            | Test and display system timer ticks                           |  
 | `TUNE.COM`     | RomWBW            | Play .PT2, .PT3, and .MYM audio files on supported hardware   |  
@@ -796,8 +798,6 @@ The following files are found in
 | `KERCPM3.COM`  | CPM3              | Kermit communication application                      |
 | `LBREXT.COM`   | Z                 | Extract file from .LBR libraries                      |
 | `LBREX36.CFG`  | Z                 | ZCNFG configuration file for LBREXT                   |
-| `RZ.COM`       | CPM3              | Receive files with X/Y/ZModem (experimental)          |
-| `RZSC.FOR`     | CPM3              | Description of RZ/SZ programs                         |
 | `SAINST.COM`   | Z3                | Install/configure SALIAS.                             |
 | `SALIAS.COM`   | Z3                | Screen oriented alias editor. (v1.6)                  |
 | `SAVENDR.COM`  | Z3                | Writes the named directory to disk.                   |
@@ -806,7 +806,6 @@ The following files are found in
 | `SCOPY10.CFG`  | Z3                | ZCNFG configuration file for SCOPY                    |  
 | `SCOPY.HLP`    | Z3                | Primary help file for SCOPY                           |  
 | `SCOPY10F.HLP` | Z3                | Secondary help file for SCOPY                         |  
-| `SZ.COM`       | CPM3              | Send files with X/Y/ZModem (experimental)             |
 | `TCAP.Z3T`     | Z3                | Terminal capabilities for ZCPR3 (VT100)               |  
 | `TCSELECT.COM` | Z3                | NZCOM Create terminal capability file (newer version) |
 | `TCVIEW.COM`   | Z3                | View zcpr3 terminal capabilities                      |  
@@ -970,10 +969,8 @@ The following files are found in
 | `PS2INFO.COM`       | PS/2 Keyboard/Mouse Information Utility                 |
 | `RAMTEST.COM`       | RAM_TEST_PROGRAM                                        |
 | `RTCDS7.COM`        | PCF8584/DS1307 I2C DATE AND TIME UTILITY (I2C)          |
-| `RZ.COM`            | Receive Zmodem disassembly of CP/M 3 binaries           |
 | `SOUND.COM`         | RomWBW HBIOS Sound Device Test Tool (SOUND)             |
 | `SROM.COM`          | I2C Serial ROM Read/Write Utility (I2C)                 |
-| `SZ.COM`            | Send Zmodem is a disassembly of CP/M 3 binaries         |
 | `TESTH8P.COM`       | H8 Panel Test                                           |
 | `TSTDSKNG.COM`      | DSKY NEXT GENERATION TEST APPLICATION                   |
 | `VDCONLY.COM`       | COLOR VDU TEST                                          |

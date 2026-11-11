@@ -2,7 +2,7 @@
 
 **RZ v1.04 (receive) and SZ v1.11 (send): X/Y/ZModem file transfer for CP/M 3**
 
-Written by Wilfried Schmitten, 1992.  This document describes how the two programs work internally.
+Written by Wilfried Schmitten, 1992.  This document describes how the two programs work internally.  Appendix F describes the versions adapted for RomWBW.
 
 ## Contents
 
@@ -68,6 +68,7 @@ Written by Wilfried Schmitten, 1992.  This document describes how the two progra
 * [Appendix C: RAM maps](#appendix-c-ram-maps)
 * [Appendix D: BDOS functions used](#appendix-d-bdos-functions-used)
 * [Appendix E: Shared routines](#appendix-e-shared-routines)
+* [Appendix F: RomWBW HBIOS versions of RZ and SZ](#appendix-f-romwbw-hbios-versions-of-rz-and-sz)
 
 ---
 
@@ -79,7 +80,7 @@ Written by Wilfried Schmitten, 1992.  This document describes how the two progra
 
 ### 0.2 How the information was obtained
 
-Neither program came with source code.  Everything here was derived by disassembling the two `.COM` files and tracing the code, then cross-checking against three references: the ZModem specification (rev. 05/14/86), the Unix `rz.c` and `sz.c` sources, and an independent disassembly of the same binaries.  The commented disassembly (`rz.asm`, `sz.asm`, TASM syntax, reassembling byte-for-byte to the originals) is the companion to this document, and routine and variable names used here are the labels in those files.
+Neither program came with source code.  Everything here was derived by disassembling the two `.COM` files and tracing the code, then cross-checking against three references: the ZModem specification (rev. 05/14/86), the Unix `rz.c` and `sz.c` sources, and an independent disassembly of the same binaries.  The commented disassembly (`rz_orig.asm`, `sz_orig.asm`, TASM syntax, reassembling byte-for-byte to the originals) is the companion to this document, and routine and variable names used here are the labels in those files.  `rz.asm` and `sz.asm` are the RomWBW versions described in Appendix F.
 
 Statements are of three kinds:
 
@@ -146,7 +147,7 @@ Each program is organized in layers.  The top layer is a protocol driver (receiv
 
 ### 1.3 Shared code
 
-Roughly two thirds of each program is shared.  Of the 159 named routines, entry points and tables that exist in both listings, 139 are identical line for line, including their labels and comments; they carry a `Common routine` or `Common data` note in `rz.asm` and `sz.asm`.  The remaining shared routines differ only in constants (for example the ring size), variable names or a few instructions.  The differences between the programs are the protocol drivers, the file layer (RZ writes through a single sector buffer; SZ has a general buffered file object and a directory scanner and sorter) and the sizes of the buffers.
+Roughly two thirds of each program is shared.  Of the 159 named routines, entry points and tables that exist in both listings, 139 are identical line for line, including their labels and comments; they carry a `Common routine` or `Common data` note in `rz_orig.asm` and `sz_orig.asm`.  The remaining shared routines differ only in constants (for example the ring size), variable names or a few instructions.  The differences between the programs are the protocol drivers, the file layer (RZ writes through a single sector buffer; SZ has a general buffered file object and a directory scanner and sorter) and the sizes of the buffers.
 
 ### 1.4 Conventions used in the code
 
@@ -352,6 +353,8 @@ The programs talk to the modem exclusively through four BDOS functions:
 | 3 `A_READ` | read one character |
 | 8 `A_STATOUT` | is the device ready for output? |
 | 4 `A_WRITE` | write one character (in `E`) |
+
+The RomWBW versions of RZ and SZ replace these four BDOS calls with HBIOS character I/O, including block transfers (Appendix F).  Everything else in this document describes the original programs.
 
 **Receiving.**  `aux_poll_input` drains the device: while the ring buffer is not full and `A_STATIN` reports a character, it reads the character with `A_READ` and stores it in a ring buffer (`ring_put`).  It returns "not zero" if anything is available to be read, counting characters queued in the ring and any pending characters described below.
 
@@ -2280,7 +2283,7 @@ Sizes are those of the `.ds` reservations in the listings.  Addresses between en
 
 ## Appendix E: Shared routines
 
-Routines present in both programs under the same name, with their addresses.  "Identical" means that the code, labels and comments are the same line for line in `rz.asm` and `sz.asm` (such routines carry a `Common routine` note in the listings).  Where the copies differ, the difference is in a constant or variable name (for example the ring size) or in a few instructions.
+Routines present in both programs under the same name, with their addresses.  "Identical" means that the code, labels and comments are the same line for line in `rz_orig.asm` and `sz_orig.asm` (such routines carry a `Common routine` note in the listings).  Where the copies differ, the difference is in a constant or variable name (for example the ring size) or in a few instructions.
 
 | Routine | RZ | SZ | Identical |
 |---|---|---|---|
@@ -2388,3 +2391,151 @@ Routines present in both programs under the same name, with their addresses.  "I
 | `memset_inner` | 178C | 1F09 | yes |
 | `to_upper` | 1793 | 1F3F | yes |
 
+
+---
+
+## Appendix F: RomWBW HBIOS versions of RZ and SZ
+
+This appendix describes the versions of RZ and SZ adapted for RomWBW.  They are modified copies of the disassembly: `rz.asm` and `sz.asm` are the RomWBW versions, while `rz_orig.asm` and `sz_orig.asm` remain the faithful listings of the original binaries described in the rest of this document.  Each modified source has a "Changes from the original" summary near the top.
+
+### F.1 Why it was done
+
+On RomWBW the original programs ran noticeably slower than `XM`, the RomWBW XModem program.  They use BDOS calls on the transfer path (section 4.2): console status (function 11) and the AUX device (functions 7, 8, 3 and 4), and each BDOS call goes through the BDOS, the BIOS and the serial driver.  They also needed CP/M 3.  The RomWBW versions talk to the HBIOS serial drivers directly, run on CP/M 2.2, and move data in blocks wherever they can.
+
+### F.2 Summary of changes
+
+| Area | Original | RomWBW versions |
+|---|---|---|
+| Serial port | CP/M 3 AUX device, BDOS 3, 4, 7 and 8 | an HBIOS character unit, through FastPath calls (F.4) |
+| Moving data | one BDOS call per byte and direction | HBIOS block input and output (`BF_CIOBLKIN`, `BF_CIOBLKOUT`), with per-byte calls as a fallback |
+| Choosing the port | the AUX assignment | a digit option `0`-`9`; the default is the console unit |
+| CP/M version | BDOS 12 check for CP/M 3 | CP/M 2.2 BDOS functions only |
+| Console vectors | changed with BDOS 49 (`scb_setup`) | not used |
+| Stack | inside the program's work area | top of the TPA, with the block I/O buffers below it (F.3) |
+| Text conversion | `-c` option, ZF0 conversion request | removed: all transfers are binary; `-b` is accepted but ignored |
+| RZ disk writes | one byte at a time through the sector buffer | whole records straight from the receive buffer (F.6) |
+| SZ disk reads | one `file_getc` call per byte | whole runs copied from the record buffer (F.7) |
+| CRC-32 | interleaved table, IX/IY indexing | four page-aligned table planes (F.8) |
+| Statistics | none | optional build with transfer statistics (F.9) |
+
+### F.3 Command line, ports and memory
+
+The option letters are those of the originals, less `-c`, plus a port digit:
+
+| Program | Options |
+|---|---|
+| RZ | `?` help, `p` protect, `r` resume, `x` `y` `z` protocol, `0`-`9` port, `b` ignored |
+| SZ | `?` help, `p` protect at destination, `a` append at destination, `x` `y` `z` protocol, `0`-`9` port, `b` ignored |
+
+At start-up each program prints the port and whether block mode is in use, for example `Using HBIOS COM1 (block mode)`.
+
+**Transfer on the console.**  When the transfer unit is the console unit (`con_xfer` is set), the programs print nothing during the transfer (file name, position and error messages are suppressed) and do not check the console for ESC.  With a separate transfer port both behave as usual.
+
+**Memory at the top of the TPA.**  Both programs reserve `TOPRSV` bytes below the BDOS:
+
+| From the top | Size | Use |
+|---|---|---|
+| `BDOSVEC` - 6 down | 128 bytes (`STKSIZE`) | stack |
+| below the stack | 256 bytes (`RXBUFSZ`) | block receive buffer |
+| below that | 256 bytes (`TXBUFSZ`) | block transmit buffer |
+
+The block functions require their buffers in common memory (8000H or above).  Block mode is therefore used only if the lowest of these buffers is at 8000H or above, the transfer unit is a real unit number (not the console code 80H), and the HBIOS provides both block functions.  Otherwise the programs use the per-byte calls ("byte mode").  The RZ receive buffer and the SZ file ring sit below this reserved area, and SZ's directory table is kept below it as well (`get_tpa_top`).
+
+### F.4 The HBIOS I/O layer
+
+The I/O layer is the same code in both programs, apart from the statistics hooks, and is meant to be kept that way.
+
+**FastPath.**  RomWBW's HBIOS can hand a program the address of a driver function and the driver's data area for a given unit.  The program then calls the driver through the HBIOS bank-call helper `HB_BNKCALL` (0FFF9H), skipping the HBIOS dispatcher.  `XM` uses the same mechanism.  At start-up:
+
+1. `SYSGET` bank info returns the BIOS bank id, saved in `bios_bid`.
+2. `SYSPEEK` of the HBIOS control block at 0112H returns the console unit, which becomes both `con_unit` and the default `xfer_unit`.
+3. `hb_init` checks the RomWBW marker at 0040H, then calls `hb_getfn` (`SYSGET CIOFN`) for each function and patches the returned address into the operand of the matching wrapper: `hb_cout`, `hb_cin`, `hb_cinst` and `hb_coutst` for byte mode, and `hb_fill` and `hb_flush` for the block functions.  The driver data address is kept in `hb_udat`.
+
+Each call loads `IY` with `hb_udat`, `A` with `bios_bid` and `IX` with the patched address, then calls `HB_BNKCALL`.  A FastPath call still costs several hundred T-states, so the number of calls per byte decides the speed.
+
+**Receiving.**  `aux_poll_input` moves received bytes into the ring buffer (`RINGSZ`: 4096 bytes in RZ, 512 in SZ).  In block mode it takes them from the block receive buffer and refills that buffer with at most one `BF_CIOBLKIN` call per `aux_poll_input` call.  Without that limit, each refill would always find another byte while the other side streams, and the loop would never end.  `aux_getc_timeout` has a fast path that serves bytes from the ring, then from the block buffer, then from the port, without the timeout and console-check overhead.  Only when nothing is waiting does it take the slow path.  There it sends anything waiting in the transmit buffer, then waits in steps of about 100 ms, checking for ESC on every step (`aux_chk_esc`).
+
+**Sending.**  In block mode `aux_putc_wait` only queues the byte in the transmit buffer.  `hb_flush` sends the queue with `BF_CIOBLKOUT`:
+
+* when 255 bytes are queued (the most one call can send);
+* at the end of every hex header (`send_hex_header`), so a ZACK, ZRPOS or ZRINIT goes out at once;
+* after the CAN string (`send_can_string`);
+* in the slow path of `aux_getc_timeout`, before any wait for input;
+* at program exit.
+
+`hb_flush` calls `BF_CIOBLKOUT` until the queue is empty.  Between calls it polls the input only when the device could take nothing, or on every 8th call.  Many serial devices hold only one or two bytes, so each call sends very little, and an input poll on every call would double the bank calls per byte sent.  In byte mode `aux_putc_wait` polls the input and waits for the output to be ready before each byte, as in the original.
+
+### F.5 Fixes to the original behavior
+
+| Program | Fix |
+|---|---|
+| RZ | BDOS errors from F_MAKE, F_OPEN, F_DELETE, F_SIZE and F_READRAND were never detected, because the common check (`bdos_check`) never set carry.  `bdos_dir` and `bdos_rec` now report them. |
+| RZ | The F_CLOSE result is handled correctly (0-3 means success), so ZModem transfers of files with more than one extent no longer abort at the end. |
+| RZ | Disk write errors are detected and reported. |
+| RZ | YModem: the empty block 0 that ends a batch no longer aborts the transfer. |
+| RZ | Timeout counts held in `B` survive the receive routines. |
+| RZ | The file name is printed once when an existing file is replaced, not twice. |
+| SZ | `-p` and `-a` now take effect.  The original cleared 80 bytes of protocol state at the start of the transfer, a range that included the option flags. |
+| Both | ESC is checked on every step of a wait, not only when a wait begins, so an abort takes effect within about 0.1 s. |
+
+### F.6 RZ: writing to disk
+
+`write_buf_file` first completes any partial record left in `file_sector_buf` from the previous call.  It then writes the whole records straight from the receive buffer, pointing the DMA address at each record in turn (`wbf_write`, one F_WRITE per record), and keeps any remainder of under 128 bytes for the next call.  No byte is copied, and only CP/M 2.2 functions 26 and 21 are used.
+
+**Early writes (`EARLYWR`).**  Some senders, for example lrzsz 0.12.20, ignore the receive buffer size that RZ advertises and keep sending ZCRCG subpackets.  The original then overflowed its buffer and forced a resend once per buffer's worth of data.  With `EARLYWR` (the default), RZ writes the buffer early whenever less than `EWTHRESH` (8192) bytes are free (`rx_early_write`).
+
+### F.7 SZ: reading the file and sending data
+
+`fill_file_buffer` copies whole runs from the input file object's 128-byte record buffer into the send ring with LDIR, about 25 T-states per byte against about 550 for a `file_getc` call per byte.  A byte's position in the ring is its file position modulo the ring size.  The ring size is a power of two of at least 256, so a run, which lies within one record, never wraps around the end of the ring.
+
+Sending each data byte was also made cheaper:
+
+* `put_zdle_char` sends any byte with bit 5 or 6 set at once.  Every byte that can need escaping has both bits clear, so three bytes in four skip the table search.
+* `sp_start` and `sp_next` step a pointer through the ring, wrapping at its end, instead of computing each byte's address with `ring_buffer_addr`.
+
+### F.8 CRC-32
+
+The 1 KB CRC-32 table is held as four page-aligned 256-byte planes, one for each byte of the table entries.  `crc32_update` reaches each entry byte through `BC` (B = plane page, C = index) instead of IX/IY indexing.  This takes about 220 T-states per byte against about 400.  `crc32_table_init` builds the standard reflected table (polynomial 0EDB88320H) directly in that layout.  The table and its update routine are shared by RZ and SZ.
+
+### F.9 Build settings and statistics
+
+The settings are TASM `-d` definitions, and each program prints the values in effect while it assembles:
+
+| Setting | Program | Default | Effect |
+|---|---|---|---|
+| `CFG_BLKIO` | both | 1 | 0 forces byte mode, for comparison |
+| `CFG_EARLYWR` | RZ | 1 | early buffer writes (F.6) |
+| `CFG_RXSTATS` | RZ | 0 | 1 prints receive statistics at the end |
+| `CFG_TXSTATS` | SZ | 0 | 1 prints send statistics at the end |
+
+**Receive statistics (RZ)** give the error counts by kind, the data framing (ZDATA headers and how each subpacket ended), early writes, the time spent sending ZACKs and waiting idle, the bytes received, the elapsed time and throughput, and the number and size distribution of block refills.
+
+**Send statistics (SZ)** give the data bytes sent (including resent data), the elapsed time and throughput, errors, ZRPOS requests, the final subpacket size and, in block mode, the number of `BF_CIOBLKOUT` calls, the calls that could send nothing, and the bytes sent on the line.
+
+Both reports first wait until the line has been quiet for 2 seconds, so that nothing is printed to a port the other side may still be sending to.  The times are in HBIOS timer ticks.
+
+### F.10 Measurements
+
+The figures below are bytes per second from the statistics builds, transferring a 106,496-byte file to or from a PC running Tera Term, at 115,200 baud with hardware flow control.
+
+| System | Port | RZ | SZ | SZ bytes per `BF_CIOBLKOUT` call |
+|---|---|---|---|---|
+| Z80, 7.4 MHz | SIO | 2,802 | 3,190 | about 2.0 |
+| Z180, 18 MHz | ASCI | 6,853 | 7,585 | 1.24 |
+| Z180, 18 MHz | 16C550C | 8,971 | 7,235 | 1.13 |
+
+On the Z80 system SZ went from 2,269 bytes/s in the first block version, to 2,783 with the input polls paced in `hb_flush`, to 3,190 with the faster send path and CRC-32.  RZ went from about 2,662 to 2,802 with the faster CRC-32 and block output.  At 38,400 baud on the ASCI port both programs were limited by the line, at 3,422 (RZ) and 3,283 (SZ) bytes/s, which is 85-89% of what the line can carry.
+
+Reading the statistics:
+
+* **The receive refill sizes show who is waiting.**  On the 16C550C, RZ's refills mostly carried 2-7 bytes and RZ was idle 12% of the time, so it kept up with the line.  On the ASCI they mostly carried 16-31 bytes, so data was waiting for RZ.
+* **Bytes per `BF_CIOBLKOUT` call show the transmit hardware.**  The SIO and ASCI hold only one or two bytes.  The 16C550C has a 16-byte FIFO, but the UART driver reports output ready only when the FIFO is empty, so the generic block routine sends one byte per call.  With no calls finding the device busy, SZ is paying a bank call per byte or two, and the line is idle much of the time.
+
+### F.11 Remaining limits and notes
+
+* **Transmit speed.**  On all three systems SZ is limited by the cost of a `BF_CIOBLKOUT` call per one or two bytes.  The remaining gains are in HBIOS and the drivers: a UART block output routine that fills the FIFO, interrupt-driven transmit buffers for the SIO and ASCI, driver-specific block input that copies straight from the driver's receive ring, and caching the setup work of the generic block routines.  None of these has been made.
+* **Timeouts.**  Timeouts are software delay loops (`delay_short`), so they scale with the CPU speed and are shorter than nominal on a fast CPU.
+* **Senders.**  Tera Term ends every subpacket with ZCRCQ, so RZ sends a ZACK for each one.  lrzsz streams with ZCRCG and ignores the advertised buffer size (handled by `EARLYWR`).
+* **SZ repositioning.**  After a ZRPOS that goes back before the data still in the ring, `file_rewind_skip` reopens the file and reads forward one byte at a time, which can take seconds on a large file.
+* **Progress display.**  SZ prints the file position after every subpacket when the transfer is not on the console.  This costs a few percent of the CPU time.
+* **Testing.**  The figures above come from three systems and one PC program.  Other drivers, CPUs and senders have not been measured.

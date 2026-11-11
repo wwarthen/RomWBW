@@ -265,6 +265,8 @@ ACIA_FNTBL:
         .DW     ACIA_INITDEV
         .DW     ACIA_QUERY
         .DW     ACIA_DEVICE
+        .DW     CIO_BLKIN
+        .DW     CIO_BLKOUT
 #IF (($ - ACIA_FNTBL) != (CIO_FNCNT * 2))
         .ECHO   "*** INVALID ACIA FUNCTION TABLE ***\n"
         !!!     ; FORCE AN ASSEMBLY ERROR

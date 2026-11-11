@@ -261,12 +261,19 @@ OUT ($01):
   Wait for device to be ready to send a character, then send the character specified in E.
 
 IST ($02):
-  BC=Function/Unit                      A=Result
-                                        *E=# Bytes Pending
+  BC=Function/Unit                      A=# Bytes Pending / Result
+
+  Return the number of characters waiting in the device's input buffer in A.
+  A device that has no input buffer, or cannot report its use, returns 0 (none)
+  or 1 (at least one).  Negative values (bit 7 set) are an HBIOS error code.
 
 OST ($03):
-  BC=Function/Unit                      A=Result
-                                        *E=# Buffer Bytes Available
+  BC=Function/Unit                      A=# Buffer Bytes Available / Result
+
+  Return the space free in the device's output buffer in A.  A device that has
+  no output buffer, or cannot report its use, returns 0 (none) or 1 (room for
+  at least one character).  Negative values (bit 7 set) are an HBIOS error
+  code.
 
 INIT ($04):
   BC=Function/Unit                      A=Result
@@ -299,6 +306,46 @@ DEVICE ($06):
     6: 1=Parallel Port
 
     If device is of type Terminal, bits 3-0 indicate attached Video Unit #
+
+BLKIN ($07):
+  BC=Function/Unit                      A=Result
+  E=Maximum Bytes (0-255)               D=Bytes Read
+  HL=Buffer Address                     E=Bytes Remaining (unused buffer positions)
+                                        HL=Next Buffer Address
+
+  Read the characters already waiting at the specified device into the buffer,
+  up to the maximum count.  Never waits: returns as soon as no more characters
+  are available or the maximum has been read.  D is 0 if nothing was waiting.
+  On return D + E equals the requested count and HL = buffer address + D, so a
+  caller can continue filling the buffer by calling again with E and HL.
+
+BLKOUT ($08):
+  BC=Function/Unit                      A=Result
+  E=Byte Count (0-255)                  D=Bytes Written
+  HL=Buffer Address                     E=Bytes Remaining (not yet written)
+                                        HL=Next Buffer Address
+
+  Send characters from the buffer while the device can accept them, up to the
+  byte count.  Never waits: returns as soon as the device cannot take another
+  character or all have been sent.  D is 0 if the device could not accept any.
+  On return D + E equals the requested count and HL points to the next
+  character to send, so a caller can send the rest by calling again with E and
+  HL until E is 0.
+
+  Notes for BLKIN and BLKOUT:
+    - The buffer must be in common memory ($8000 or above), otherwise A is
+      ERR_RANGE (-6) and nothing is transferred.  It must not extend into the
+      HBIOS proxy at the top of memory.
+    - On a driver error, A is the error code and D is the number of bytes
+      transferred before the error (E and HL are consistent with it).  For an
+      invalid unit, A is ERR_NOUNIT (-4) and D, E and HL are undefined.
+    - A count of 0 returns success without checking the unit or buffer.
+    - Drivers without an optimized version use the generic implementation
+      (CIO_BLKIN/CIO_BLKOUT in hbios.asm), which calls the driver's IST/IN or
+      OST/OUT entries once per character.
+    - When called via FastPath (address from SYSGET CIOFN), C must still hold
+      the actual unit number (not the console code $80) and IY the unit data
+      address.  BC is not preserved.
 
 ==============
 Disk Functions

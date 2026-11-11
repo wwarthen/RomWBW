@@ -12,7 +12,6 @@ call :build inttest || exit /b
 call :build ppidetst || exit /b
 call :build ramtest || exit /b
 call :build I2C || exit /b
-call :build rzsz || exit /b
 call :build vdctest || exit /b
 call :build kbdtest || exit /b
 call :build ps2info || exit /b
@@ -23,6 +22,7 @@ call :build portscan || exit /b
 call :build sound || exit /b
 call :build testh8p || exit /b
 call :build i2ceeprom || exit /b
+call :build cioblk || exit /b
 
 goto :eof
 

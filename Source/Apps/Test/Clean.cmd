@@ -13,7 +13,6 @@ pushd inttest && call Clean || exit /b 1 & popd
 pushd ppidetst && call Clean || exit /b 1 & popd
 pushd ramtest && call Clean || exit /b 1 & popd
 pushd I2C && call Clean || exit /b 1 & popd
-pushd rzsz && call Clean || exit /b 1 & popd
 pushd vdctest && call Clean || exit /b 1 & popd
 pushd kbdtest && call Clean || exit /b 1 & popd
 pushd ps2info && call Clean || exit /b 1 & popd
@@ -24,3 +23,4 @@ pushd portscan && call Clean || exit /b 1 & popd
 pushd sound && call Clean || exit /b 1 & popd
 pushd testh8p && call Clean || exit /b 1 & popd
 pushd i2ceeprom && call Clean || exit /b 1 & popd
+pushd cioblk && call Clean || exit /b 1 & popd

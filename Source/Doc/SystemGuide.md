@@ -862,6 +862,135 @@ operation of normal HBIOS function calls.  However, they are available
 to be used by OSes and applications.  These functions can only be 
 invoked by calling into a jump table in upper RAM.
 
+## FastPath Function Invocation
+
+Every normal HBIOS function call (`RST 08` or `CALL $FFF0`) passes
+through the HBIOS function dispatcher.  The dispatcher saves the
+caller's stack, switches to the HBIOS memory bank and stack, decodes
+the function group and unit number, validates them, looks up the
+driver function and unit data for the unit, calls the driver, and
+then restores the caller's bank and stack.  For most purposes this
+overhead is insignificant.  However, for operations that are repeated
+at a high rate, such as polling and transferring individual characters
+through a serial port, the overhead of the dispatcher can be a large
+part of the total time.
+
+FastPath is a technique that allows an application to bypass the
+dispatcher and call a device driver function directly.  The driver
+function address and unit data address are looked up once using the
+appropriate SYSGET subfunction.  After that, each call is made with
+the Bank Call (BNKCALL) proxy function, which simply selects the
+HBIOS bank, calls the driver function, and restores the original bank.
+
+FastPath is available for the driver functions of the following
+function groups:
+
+| **Function Group**          | **Lookup Function**                                 |
+|-----------------------------|-----------------------------------------------------|
+| Character I/O (CIO)         | [SYSGET Subfunction 0x01 -- Get Serial Unit Function (CIOFN)] |
+| Disk I/O (DIO)              | [SYSGET Subfunction 0x11 -- Get Disk Unit Function (DIOFN)]   |
+| Video Display (VDA)         | [SYSGET Subfunction 0x41 -- Get Video Unit Function (VDAFN)]  |
+| Sound (SND)                 | [SYSGET Subfunction 0x51 -- Get Sound Unit Function (SNDFN)]  |
+
+### Using FastPath
+
+The following steps are used to call a driver function via FastPath:
+
+1. Get the HBIOS Bank ID using [SYSGET Subfunction 0xF2 -- Get Bank
+   Information (BNKINFO)].  The BIOS Bank ID is returned in D.
+
+2. Look up the driver function using the SYSGET lookup subfunction for
+   the function group, passing the function number in D and the unit
+   number in E.  On return, HL contains the driver Function Address
+   and DE contains the Unit Data Address.  Save these values.  A
+   separate lookup is required for each function and unit to be used.
+
+3. For each call, load the registers required by the function exactly
+   as you would for a normal HBIOS call (including the function number
+   in B and the unit number in C).  Then load IY with the Unit Data
+   Address, IX with the Function Address, and A with the BIOS Bank ID,
+   and call BNKCALL (`HB_BNKCALL`, 0xFFF9).
+
+4. On return, the driver function's results are in the registers
+   documented for the function, just as for a normal HBIOS call.
+
+The following example looks up and then repeatedly calls the
+Character Input Status (CIOIST) function for character unit 1:
+
+```
+        ; one time setup
+        LD      BC,BC_SYSGET_BNKINFO    ; SYSGET, get bank info
+        RST     08                      ; D := BIOS bank id
+        LD      A,D
+        LD      (BIOSBID),A             ; save it
+        LD      B,BF_SYSGET             ; SYSGET
+        LD      C,BF_SYSGET_CIOFN       ; ... get CIO function
+        LD      D,BF_CIOIST             ; function
+        LD      E,1                     ; unit
+        RST     08                      ; HL := fn adr, DE := unit data
+        LD      (ISTFN),HL              ; save function address
+        LD      (UNITDAT),DE            ; save unit data address
+        ...
+        ; each call
+        LD      BC,BF_CIOIST << 8 | 1   ; function and unit
+        LD      IY,(UNITDAT)            ; unit data address
+        LD      IX,(ISTFN)              ; driver function address
+        LD      A,(BIOSBID)             ; HBIOS bank
+        CALL    HB_BNKCALL              ; A := chars pending
+```
+
+### FastPath Constraints
+
+Because the dispatcher is bypassed, the services it normally provides
+are not available.  The following constraints apply to all FastPath
+calls:
+
+* **No validation.**  The function and unit are validated only when
+  they are looked up.  Each FastPath call is made directly to the
+  driver function with whatever values are in the registers, so the
+  caller must supply correct values.
+
+* **Use real unit numbers.**  The special console unit code (0x80) is
+  resolved to the current console unit only by the dispatcher.  The
+  CIOFN lookup accepts 0x80 and returns the function and data
+  addresses of the current console unit, but each FastPath call must
+  then pass the actual unit number in C, never 0x80.  Some functions,
+  such as [Function 0x07 -- Character Block Input (CIOBLKIN)] and
+  [Function 0x08 -- Character Block Output (CIOBLKOUT)], use the unit
+  number in C.  The actual console unit number is available in the
+  HBIOS Configuration Block field HCB_CONDEV (offset 0x12), which can
+  be read with [Function 0xFA -- System Peek (SYSPEEK)].  Note also
+  that a looked up address stays bound to the unit it was looked up
+  for, even if the console is later switched to a different unit.
+
+* **Stack in upper memory.**  The driver function runs on the
+  caller's stack while the HBIOS bank is selected in the lower 32K.
+  The stack must therefore be located in the upper 32K of the CPU
+  address space and must have enough space for the driver function.
+  The calling code itself may be anywhere, since the original bank is
+  restored before BNKCALL returns.
+
+* **Buffers in upper memory.**  While the driver function is running,
+  the lower 32K of the CPU address space is the HBIOS bank.  Any memory
+  that the driver function reads or writes directly (such as a buffer
+  pointed to by HL) must be located in the upper 32K, unless the
+  function itself accepts a bank id for the buffer.
+
+* **No serialization.**  FastPath calls do not take the HBIOS mutex
+  that serializes calls when HBIOS is built for a multitasking
+  environment (`HBIOS_MUTEX`).  In such an environment, the caller must
+  ensure that FastPath calls cannot overlap other HBIOS calls.
+
+* **Addresses are valid only for the running HBIOS.**  Unit
+  assignments and driver addresses do not change after HBIOS
+  initialization, so they may be looked up once and reused.  However,
+  they may change if HBIOS is rebuilt or reloaded, so an application
+  should perform the lookups each time it starts rather than storing
+  them.
+
+Interrupts may remain enabled during FastPath calls, just as during
+normal HBIOS calls, since the HBIOS bank is prepared to handle them.
+
 ## Result Codes
 
 The following function result codes are defined generically for all 
@@ -892,6 +1021,20 @@ specified in register C. This is the logical device unit number
 assigned during the boot process that identifies all character 
 devices uniquely. A special value of 0x80 can be used for the Character 
 Unit to refer to the current console device.
+
+**FastPath:** Any CIO function may also be called directly in the
+driver, bypassing the HBIOS function dispatcher, after looking up its
+address with [SYSGET Subfunction 0x01 -- Get Serial Unit Function
+(CIOFN)].  See [FastPath Function Invocation] for how to do this and
+the constraints that apply.  In particular, when a CIO function is
+called this way:
+
+* C must contain the actual Character Unit number.  The special
+  console unit code (0x80) is resolved only by the normal HBIOS
+  function dispatcher, so it cannot be used.
+
+* IY must contain the Unit Data Address returned by SYSGET CIOFN, as
+  for any direct call to a driver function.
 
 All character units are assigned a Device Type ID which indicates
 the specific hardware device driver that handles the unit.  The table
@@ -1069,6 +1212,86 @@ indicates the starting port address of the hardware interface that is
 servicing the specified unit.  Both of these values are considered
 driver specific.  Refer to the associated hardware driver for the
 values used.
+
+### Function 0x07 -- Character Block Input (CIOBLKIN)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x07                                | A: Status                              |
+| C: Character Unit                      | D: Bytes Read                          |
+| E: Maximum Bytes (0-255)               | E: Bytes Remaining                     |
+| HL: Buffer Address                     | HL: Next Buffer Address                |
+
+Read the characters that are already waiting in the input buffer of the
+specified Character Unit (C) into the Buffer (HL), up to Maximum Bytes
+(E).  This function never waits: it returns as soon as no more
+characters are available or Maximum Bytes have been read.  The number of
+characters actually read is returned in Bytes Read (D), which is 0 if
+no characters were waiting.  Bytes Remaining (E) is the number of
+unused buffer positions (Maximum Bytes minus Bytes Read), and Next
+Buffer Address (HL) points to the buffer position following the last
+character read (Buffer Address plus Bytes Read).  A caller can
+therefore keep filling the same buffer by calling again with the
+returned E and HL.  The returned Status (A) is a standard HBIOS result
+code.
+
+This function performs the work of repeated CIOIST/CIOIN calls in a
+single HBIOS call, so the overhead of invoking HBIOS (including the
+memory bank switches) is incurred once per block instead of once per
+character.  It is most effective when characters have accumulated in
+the unit's input buffer, such as with interrupt driven receive.
+
+The Buffer (HL) must be located in common memory (0x8000 or above).  If
+it is not, the Status (A) is -6 (parameter out of range) and no
+characters are read.  The caller must ensure that the buffer does
+not extend into the HBIOS proxy area at the top of memory.
+
+If a driver error occurs, the Status (A) is the error code, Bytes
+Read (D) is the number of characters successfully read before the
+error, and Bytes Remaining (E) and Next Buffer Address (HL) are
+consistent with it.  If the Character Unit (C) is not valid, the
+Status (A) is -4 (invalid unit number) and the values of D, E and HL
+are undefined.
+
+### Function 0x08 -- Character Block Output (CIOBLKOUT)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x08                                | A: Status                              |
+| C: Character Unit                      | D: Bytes Written                       |
+| E: Byte Count (0-255)                  | E: Bytes Remaining                     |
+| HL: Buffer Address                     | HL: Next Buffer Address                |
+
+Send up to Byte Count (E) characters from the Buffer (HL) via the
+specified Character Unit (C).  This function never waits: characters
+are sent only while the unit reports that it can accept one, and the
+function returns as soon as it cannot, or when all characters have been
+sent.  The number of characters actually sent is returned in Bytes
+Written (D), which is 0 if the unit could not accept any.  Bytes
+Remaining (E) is the number of characters not yet sent (Byte Count
+minus Bytes Written), and Next Buffer Address (HL) points to the next
+character to send (Buffer Address plus Bytes Written).  To send the
+rest of the buffer, the caller can simply call again with the returned
+E and HL until Bytes Remaining is 0.  The returned Status (A) is a
+standard HBIOS result code.
+
+The unit's output status (as returned by CIOOST) is checked before
+every character.  A unit whose hardware or driver has an output buffer
+may therefore accept many characters in one call, while a unit that
+can hold only one character at a time will typically accept a single
+character per call.
+
+The Buffer (HL) must be located in common memory (0x8000 or above).  If
+it is not, the Status (A) is -6 (parameter out of range) and no
+characters are sent.  The caller must ensure that the buffer does
+not extend into the HBIOS proxy area at the top of memory.
+
+If a driver error occurs, the Status (A) is the error code, Bytes
+Written (D) is the number of characters successfully sent before the
+error, and Bytes Remaining (E) and Next Buffer Address (HL) are
+consistent with it, so HL points to the character that could not be
+sent.  If the Character Unit (C) is not valid, the Status (A) is -4
+(invalid unit number) and the values of D, E and HL are undefined.
 
 `\clearpage`{=latex}
 
@@ -3081,7 +3304,8 @@ This function can be used to speed up HBIOS calls by looking up the
 function and data address for a specific driver function.  After this,
 the caller can use interbank calls directly to the function in the
 driver which bypasses the overhead of the normal function invocation
-lookup.
+lookup.  See [FastPath Function Invocation] for how to make these calls
+and the constraints that apply.
 
 #### SYSGET Subfunction 0x10 -- Get Disk Device Unit Count (DIOCNT)
 

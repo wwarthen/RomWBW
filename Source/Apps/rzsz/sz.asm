@@ -1,15 +1,98 @@
-; SZ.COM  --  X/Y/ZMODEM send program for CP/M 3 (sz v1.11, W. Schmitten 1992)
-; SZ.COM v1.11
-; Derived from a byte-identical disassembly of the CP/M 3 ZMODEM/YMODEM/XMODEM program (Z80).
-; Source is in TASM syntax (dotted directives); assembled and verified with uz80as.
-; Modem is on the CP/M AUX device (BDOS 3/4/7/8). Option letters: ? P A B C X Y Z (A = append).
+; SZ.COM  --  X/Y/ZMODEM send program for RomWBW CP/M (sz v1.11)
+; Based on the CP/M 3 SZ.COM v1.11 (W. Schmitten 1992), from a disassembly
+; of the original Z80 binary (see sz_orig.asm).  Source is in TASM syntax.
+; Modem is on an HBIOS character unit.  Option letters: ? P A X Y Z, a digit
+; 0-9 selects the transfer port, and B is accepted but ignored.
 ; Tables: key bytes searched with CPIR, then N vectors in REVERSE key order, jumped to via the dispatch routine.
 ; Labels are descriptive; patched operand bytes are named with .equ <label>+n.
 ; Comments were cross-checked against an independent disassembly of the same binaries,
 ; the ZMODEM specification and the rz.c / sz.c sources.
+;
+; ----------------------------------------------------------------------
+; Changes from the original (sz_orig.asm)
+; ----------------------------------------------------------------------
+;
+; RomWBW HBIOS support:
+; - Serial I/O uses HBIOS character units via FastPath (SYSGET CIOFN +
+;   HB_BNKCALL) instead of the CP/M AUX device (BDOS 3/4/7/8).
+; - Transfer port selectable with a digit option (0-9); default is the
+;   console unit.  When the transfer runs on the console unit, console
+;   output (file name, position, errors) and the ESC check are
+;   suppressed.
+; - CP/M 3 no longer required: removed the BDOS version check and the
+;   SCB console redirection; only CP/M 2.2 BDOS functions are used.
+; - Stack placed at the top of the TPA, with the HBIOS block I/O buffers
+;   just below it (common RAM).
+;
+; Performance:
+; - Output uses HBIOS block output (BF_CIOBLKOUT): bytes are queued in a
+;   256-byte transmit buffer that is sent at the end of each hex header
+;   or CAN string, when it fills, and before any wait for input, with the
+;   input polled between calls while the device is busy.  Byte mode calls
+;   are used on an HBIOS without it.
+; - Input uses HBIOS block input (BF_CIOBLKIN) into a 256-byte buffer, at
+;   most one refill per aux_poll_input call, as in rz.
+; - Fast path in aux_getc_timeout reads waiting bytes without the
+;   timeout and console-check overhead.
+; - File data is copied into the send ring in whole runs (LDIR from the
+;   record buffer) instead of one file_getc call per byte
+;   (fill_file_buffer).
+;
+; Functionality:
+; - Options -p and -a now work: the protocol state cleared at the start
+;   of the transfer used to include the option flags.
+; - ESC at the console is checked on every ~100 ms step of a wait, not
+;   only when a wait starts.
+;
+; Other:
+; - All transfers are binary: the ZFILE conversion option is always
+;   ZCBIN; -c removed and -b accepted but ignored.
+; - Build settings CFG_BLKIO (default 1; 0 forces byte mode I/O) and
+;   CFG_TXSTATS (default 0) can be set on the TASM command line with
+;   -d<name>=<value>.  CFG_TXSTATS=1 prints data bytes, elapsed time,
+;   throughput, errors, ZRPOS requests and block output counts at the
+;   end of a transfer.
+; - Unused code removed (output file object, unreachable fragments).
+;
 
 ; ----------------------------------------------------------------------
-; CP/M 3 page zero locations
+; Configuration defaults
+; ----------------------------------------------------------------------
+;
+; The following settings can be overridden on the TASM command line with
+; -d<name>=<value> (e.g. -dCFG_BLKIO=0).  A #DEFINE here does not replace
+; a value given on the command line, so these are the defaults.  A
+; misspelled name on the command line is silently ignored, so the
+; effective values are printed during assembly (see below).
+
+; BLKIO: 1 = use HBIOS block I/O (BF_CIOBLKIN/BF_CIOBLKOUT) when
+; available; 0 = byte mode FastPath calls only (diagnostic).
+#DEFINE CFG_BLKIO 1
+
+; Enable recording and printing of detailed send statistics.
+#DEFINE CFG_TXSTATS 0
+
+; ----------------------------------------------------------------------
+; Application constants
+; ----------------------------------------------------------------------
+STKSIZE		.equ 128		; Stack size
+RXBUFSZ		.equ 256		; HBIOS block receive buffer size (just below the stack)
+TXBUFSZ		.equ 256		; HBIOS block transmit buffer size (below the receive buffer)
+TOPRSV		.equ STKSIZE + 6 + RXBUFSZ + TXBUFSZ	; reserved at the top of the TPA
+RINGSZ		.equ 512		; AUX receive ring size (multiple of 256)
+TXSTATS		.equ CFG_TXSTATS	; 1 = collect and print send statistics (diagnostic)
+BLKIO		.equ CFG_BLKIO		; 1 = use HBIOS CIO block reads and writes
+WBWSTAMP	.equ 0040H		; RomWBW stamp address (see hb_init)
+
+	; show the effective build settings during assembly
+	.ECHO	"SZ build settings: BLKIO="
+	.ECHO	BLKIO
+	.ECHO	", TXSTATS="
+	.ECHO	TXSTATS
+	.ECHO	"\n"
+
+; ----------------------------------------------------------------------
+; CP/M page zero locations
 ; ----------------------------------------------------------------------
 CPM			.equ 0000H	; Warm Boot Jump Vector (0000h: JP BIOS+3)
 IOBYTE			.equ 0004H	; Intel I/O Byte (CP/M 2.2) / Current Drive & User (CP/M 3)
@@ -20,19 +103,12 @@ DEFAULT_FCB2		.equ 006CH	; Default File Control Block 2 (FCB)
 DEFAULT_DMA		.equ 0080H	; Default DMA / Command Tail Buffer (128 bytes)
 
 ; ----------------------------------------------------------------------
-; CP/M 3 BDOS function numbers
+; CP/M BDOS function numbers (all CP/M 2.2)
 ; ----------------------------------------------------------------------
 C_READ			.equ 1		; Function 1: Console Input (waits for char)
 C_WRITE			.equ 2		; Function 2: Console Output (char in E)
-A_READ			.equ 3		; Function 3: Auxiliary / Reader Input
-A_WRITE			.equ 4		; Function 4: Auxiliary / Punch Output
-C_RAWIO			.equ 6		; Function 6: Direct Console I/O
-A_STATIN		.equ 7		; Function 7: Auxiliary Input Status (A=00h not ready, FFh ready)
-A_STATOUT		.equ 8		; Function 8: Auxiliary Output Status (A=00h not ready, FFh ready)
-A_STAT_OUT		.equ 8		; Compatibility alias for A_STATOUT
 C_WRITESTR		.equ 9		; Function 9: Write String to Console (DE points to string ending in '$')
 C_STAT			.equ 11		; Function 11: Console Status (A=00h not ready, FFh ready)
-S_BDOSVER		.equ 12		; Function 12: Return BDOS Version Number (A=30h for CP/M 3.0+)
 DRV_RESET		.equ 13		; Function 13: Reset Disk System
 DRV_SET			.equ 14		; Function 14: Select Active Disk Drive (E = drive 0=A, 1=B, ...)
 F_OPEN			.equ 15		; Function 15: Open File (DE points to FCB)
@@ -50,8 +126,6 @@ F_USERNUM		.equ 32		; Function 32: Get / Set User Number (E=FFh get, E=0-15 set)
 F_READRAND		.equ 33		; Function 33: Read Random Record
 F_SIZE			.equ 35		; Function 35: Compute File Size in 128-byte records (into FCB r0,r1,r2)
 F_RANDREC		.equ 36		; Function 36: Set Random Record Pointer from FCB sequential pointer
-F_MULTISEC		.equ 44		; Function 44: Set Multi-Sector Count (E = record count 1-128)
-S_SYSVAR		.equ 49		; Function 49: Get / Set System Control Block (SCB) Variables
 
 ; ----------------------------------------------------------------------
 ; File control block (FCB) size and field offsets
@@ -82,19 +156,34 @@ CIO_BUF_OFF		.equ 26H	; Offset from CIO_PTR (+2) to CIO_BUF (+28h)
 CIO_SIZE		.equ 0A8H	; Total channel control block size (168 bytes)
 
 ; ----------------------------------------------------------------------
-; System Control Block (SCB) offsets (read and written with BDOS S_SYSVAR)
-; ----------------------------------------------------------------------
-SCB_CIVEC		.equ 22H	; SCB offset 22H: console input redirection vector
-SCB_COVEC		.equ 24H	; SCB offset 24H: console output redirection vector
-SCB_AOVEC		.equ 28H	; SCB offset 28H: auxiliary (modem) output redirection vector
-
-; ----------------------------------------------------------------------
 ; ZCPR3 environment descriptor offsets
 ; ----------------------------------------------------------------------
 Z3_NDR_OFF		.equ 15H	; Named Directory table pointer offset (16-bit word)
 Z3_MDRV_OFF		.equ 2CH	; Maximum drive number offset (1 byte)
 Z3_MUSR_OFF		.equ 2DH	; Maximum user number offset (1 byte)
 Z3_DUOK_OFF		.equ 2EH	; ZCPR3 environment: "DU: form allowed" flag
+
+; ----------------------------------------------------------------------
+; RomWBW HBIOS
+; ----------------------------------------------------------------------
+BF_CIO			.equ 000H
+BF_CIOIN		.equ BF_CIO + 0		; character input
+BF_CIOOUT		.equ BF_CIO + 1		; character output
+BF_CIOIST		.equ BF_CIO + 2		; character input status
+BF_CIOOST		.equ BF_CIO + 3		; character output status
+BF_CIOBLKIN		.equ BF_CIO + 7		; block read (non-blocking)
+BF_CIOBLKOUT		.equ BF_CIO + 8		; block write (non-blocking)
+
+BF_SYS			.equ 0F0H
+BF_SYSGET		.equ BF_SYS + 8		; get hbios info
+BF_SYSPEEK		.equ BF_SYS + 10	; get a byte value from alt bank
+BF_SYSGET_BNKINFO	.equ 0F2H		; get bank assignment info
+BF_SYSGET_TIMER		.equ 0D0H		; get current timer tick count
+BC_SYSGET_BNKINFO	.equ BF_SYSGET * $100 + BF_SYSGET_BNKINFO
+BF_SYSGET_CIOFN		.equ 01H		; get CIO function FastPath address
+BC_SYSGET_CIOFN		.equ BF_SYSGET * $100 + BF_SYSGET_CIOFN
+
+HB_BNKCALL		.equ 0FFF9H		; HBIOS bank call (FastPath: A=bank, IX=function, IY=unit data)
 
 ; ----------------------------------------------------------------------
 ; ZMODEM framing characters
@@ -203,7 +292,7 @@ ZF2_ZTRLE		.equ 3		; Run Length Encoding (RLE)
 
 
 ; ----------------------------------------------------------------------
-; start: Program entry: check for CP/M 3, show banner, parse command line,
+; start: Program entry: show banner, parse command line, set up HBIOS,
 ; run the transfer, restore the default drive/user and exit.
 ; ----------------------------------------------------------------------
 start:
@@ -215,22 +304,40 @@ z3env_addr:
 	.db 00H
 
 ; ----------------------------------------------------------------------
-; main: Program entry (after the ZCPR3 header): check for CP/M 3, show
+; main: Program entry (after the ZCPR3 header): set up the stack, show
 ; banner, parse command line and file list, run the transfer, restore
 ; drive/user and exit.
 ; ----------------------------------------------------------------------
 main:
-	ld sp,stack_top			; the stack grows down from stack_top
+	; Setup stack at top of memory
+	ld hl,(BDOSVEC)			; Get BDOS vector loc
+	ld bc,6				; Less 6 for BDOS image start
+	or a				; Clear CF
+	sbc hl,bc			; Adjust BDOS vector to BDOS start
+	ld sp,hl			; Use as stack top
 	ld hl,(z3env_addr)		; pick up the ZCPR3 environment address patched in by Z3INS
 	call set_z3env			; store HL as the ZCPR3 environment pointer
-	ld c,S_BDOSVER			; this program needs CP/M 3 (BDOS 3.0)
-	call BDOS			; S_BDOSVER: get the BDOS version
-	cp 30H				; Verify running on CP/M 3.0 or higher
-	jp c,err_need_cpm3		; older CP/M: refuse to run
 	ld de,msg_banner		; point DE at banner text
 	ld c,C_WRITESTR			; BDOS function: C_WRITESTR
 	call BDOS			; show the banner
 	call get_default_du		; remember the current drive/user
+
+	; Get HBIOS bank id
+	ld bc,BC_SYSGET_BNKINFO		; HBIOS SYSGET, Bank Info
+	rst 08				; do it, no failure check
+	ld a,d				; BIOS bank id to A
+	ld (bios_bid),a			; save it
+
+	; Lookup current console to use as default for transfer
+	ld b,BF_SYSPEEK			; HBIOS PEEK
+	ld a,(bios_bid)			; get BIOS bank id
+	ld d,a				; ... and put in D
+	ld hl,100H + 12H		; HCB console unit address
+	rst 08				; E := value, no failure check
+	ld a,e				; put in A
+	ld (con_unit),a			; save as console unit
+	ld (xfer_unit),a		; save as default transfer unit
+
 	ld a,(DEFAULT_DMA)		; is there a command tail?
 	or a				; Are there any command-line arguments?
 	jp z,usage_exit			; no: show the usage text
@@ -314,20 +421,60 @@ main_3:
 	ex de,hl			; swap pointers
 	add hl,de			; HL = first free byte after the list
 	ld (file_buffer_base),hl	; the data buffer starts there ...
-	ld de,(BDOSVEC)			; ... and extends to the top of the TPA
-	ex de,hl			; swap pointers
-	or a				; test A (sets Z if A = 0)
-	sbc hl,de			; Calculate total free bytes available in TPA
+	ex de,hl			; DE := buffer start
+	ld hl,(BDOSVEC)			; ... and extends to the area reserved
+	ld bc,TOPRSV			; ... at the top of the TPA for the
+	or a				; ... HBIOS buffers and the stack
+	sbc hl,bc			; HL := end of the file buffer
+	or a				; clear carry
+	sbc hl,de			; Calculate total free bytes available
 	ld (file_buffer_size),hl	; save as size of the file data ring buffer
-	ld hl,0000H			; HL = 0000H
-	ld (file_buffer_base_hi),hl	; clear the high word of file_buffer_base
-	ld (file_buffer_size_hi),hl	; clear the high word of file_buffer_size
+
+	; Check for xfer on console
+	ld c,0FFH			; assume xfer on console unit
+	ld a,(con_unit)			; console unit to a
+	ld b,a				; put in b
+	ld a,(xfer_unit)		; xfer unit to a
+	cp b				; compare con unit to xfer unit
+	jr z,main_5			; if equal unit, assumed correctly
+	ld c,0				; clear flag if different units
+main_5:
+	ld a,c				; flag -> a
+	ld (con_xfer),a			; save flag
+
+	call hb_init			; initialize HBIOS FastPath, etc.
+	jp nz,err_hbinit		; handle error
+
+	ld a,(xfer_unit)		; get HBIOS xfer unit
+	add a,'0'			; convert to ASCII char
+	ld (msg_xfer_port),a		; insert in string
+	ld de,msg_xfer_cfg		; point to xfer cfg string
+	ld c,C_WRITESTR			; BDOS function: C_WRITESTR
+	call BDOS			; C_WRITESTR: display the $-terminated message
+	ld a,(hb_blkok)			; get block mode flag
+	ld de,msg_mode_byte		; assume byte mode
+	or a				; test flag
+	jr z,main_6			; if not set, print message
+	ld de,msg_mode_block		; switch to block mode message
+main_6:
+	ld c,C_WRITESTR			; BDOS function: C_WRITESTR
+	call BDOS			; C_WRITESTR: display the $-terminated message
 	ld de,msg_start_rx		; ask the user to start the receiving program
 	ld c,C_WRITESTR			; BDOS function: C_WRITESTR
 	call BDOS			; C_WRITESTR: display the $-terminated message
-	call scb_setup			; change console settings for the transfer
+
 	call send_main			; send the files
-	call scb_restore		; restore the console settings
+	push af				; save result (CF = failed or aborted)
+	call hb_flush			; send anything still buffered
+	pop af				; recover result
+	jr nc,main_7			; if all went well, no message
+	ld de,msg_abort			; load transfer abort message
+	ld c,C_WRITESTR			; BDOS function: C_WRITESTR
+	call BDOS			; C_WRITESTR: display the $-terminated message
+main_7:
+#IF TXSTATS
+	call st_report			; print send statistics
+#ENDIF
 main_4:
 	ld bc,0000H			; BC = original user/drive (patched at start)
 restore_du		.equ main_4+1	; default user/drive restored at exit (patched operand)
@@ -378,13 +525,13 @@ set_du:
 	jp BDOS				; DRV_SET: select the drive
 
 ; ----------------------------------------------------------------------
-; err_need_cpm3: Print "sorry, CP/M 3 Tool" and exit.
-; Common routine: identical in RZ and SZ.
+; err_hbinit: Print "HBIOS initialization error" and exit.
 ; ----------------------------------------------------------------------
-err_need_cpm3:
-	ld de,msg_need_cpm3		; point DE at "sorry, CP/M 3 Tool"
+err_hbinit:
+	ld de,msg_err_hbinit		; point DE at "HBIOS initialization error"
 	ld c,C_WRITESTR			; BDOS function: C_WRITESTR
 	call BDOS			; C_WRITESTR: display the $-terminated message
+	jp CPM				; warm boot: return to CP/M
 
 ; ----------------------------------------------------------------------
 ; usage_exit: Print the usage/help text and exit to CP/M.
@@ -397,26 +544,44 @@ usage_exit:
 	jp CPM				; warm boot: return to CP/M
 ; Banner text
 msg_banner:
-	.db "SZ for CP/M 3   V 1.11",0DH,0AH
+	.db "ZModem Send (SZ) for RomWBW CP/M   V 1.11",0DH,0AH
 	.db "(C) 92 wshbg",0DH,0AH
 	.db 0AH
 	.db 24H
-; "sorry, CP/M 3 Tool"
-; Common data: identical in RZ and SZ.
-msg_need_cpm3:
-	.db "sorry, CP/M 3 Tool",0DH,0AH
-	.db 24H
 ; Usage / help text
 msg_usage:
-	.db "usage: sz [-?pabcxyz] [du:]fn",0DH,0AH
+	.db "Usage: sz [-?paxyz] [du:]fn",0DH,0AH
 	.db 0AH
 	.db " options:",0DH,0AH
 	.db "            ?     this help",0DH,0AH
-	.db "            p     protect File at destination",0DH,0AH
-	.db "            a     append",0DH,0AH
-	.db "            b     receive binary",0DH,0AH
-	.db "            c     convert to local linefeed",0DH,0AH
-	.db "            x,y,z Protokoll",0DH,0AH
+	.db "            p     protect file at destination",0DH,0AH
+	.db "            a     append at destination",0DH,0AH
+	.db "            x,y,z protocol",0DH,0AH
+	.db "            0-9   port",0DH,0AH
+	.db 24H
+; Transfer configuration message
+msg_xfer_cfg:
+	.db "Using HBIOS COM"
+msg_xfer_port:
+	.db "?"
+	.db 24H
+; Mode text
+msg_mode_byte:
+	.db " (byte mode)"
+	.db 24H
+msg_mode_block:
+	.db " (block mode)"
+	.db 24H
+; HBIOS initialization error message
+msg_err_hbinit:
+	.db "HBIOS initialization error!",0DH,0AH
+	.db 0AH
+	.db 24H
+; Transfer aborted message
+msg_abort:
+	.db 0DH,0AH
+	.db "Transfer aborted!",0DH,0AH
+	.db 0AH
 	.db 24H
 ; "File(s) requested"
 msg_files_req:
@@ -425,13 +590,12 @@ msg_files_req:
 	.db 24H
 ; "start your local ... receive program"
 msg_start_rx:
-	.db "start your local X/Y/ZModem receive program",0DH,0AH
+	.db ", start X/Y/ZModem receive...",0DH,0AH
 	.db 24H
 
 ; ----------------------------------------------------------------------
 ; parse_options: Scan a "-xyz" option string; each letter is looked up in
 ; the option key table and its handler is run.
-; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 parse_options:
 	push hl				; preserve HL
@@ -442,21 +606,27 @@ parse_options_1:
 	or a				; Test for null terminator (end of string)
 	jr z,parse_options_2		; if result is zero goto parse_options_2
 	ld hl,opt_tab			; point HL at option letters and their handlers
-	ld bc,0008H			; 8 keys in the table
+	ld bc,0007H			; 7 keys in the table
 	cpir				; look A up in the key table
-	call z,dispatch			; if A is in the key list goto dispatch
-	jr parse_options_1		; loop back to parse_options_1
+	jr nz,parse_options_3		; if not in key list, look for comm port #
+	call dispatch			; otherwise goto dispatch
+	jr parse_options_1		; and loop back to parse_options_1
+parse_options_3:
+	sub '0'				; index based on character '0'
+	cp 9+1				; test for max value of 9
+	jp nc,usage_exit		; if out of range, display usage and exit
+	ld (xfer_unit),a		; save as xfer unit
+	jr parse_options_1		; and loop back to parse_options_1
 parse_options_2:
 	pop de				; restore DE
 	pop hl				; restore HL
 	ret				; return
 ; Option letters and their handlers (vectors are stored in reverse key order)
 opt_tab:
-	.db 3FH,50H,41H,42H,43H,58H,59H,5AH	; keys: ?PABCXYZ
+	.db 3FH,50H,41H,42H,58H,59H,5AH	; keys: ?PABXYZ
 	.dw opt_zmodem			; key 5AH 'Z'
 	.dw opt_ymodem			; key 59H 'Y'
 	.dw opt_xmodem			; key 58H 'X'
-	.dw opt_convert			; key 43H 'C'
 	.dw opt_binary			; key 42H 'B'
 	.dw opt_append			; key 41H 'A'
 	.dw opt_protect			; key 50H 'P'
@@ -508,148 +678,24 @@ opt_append:
 	ret				; return
 
 ; ----------------------------------------------------------------------
-; opt_binary: Option B: binary transfer.
-; Common routine: identical in RZ and SZ.
+; opt_binary: Option B: binary transfer.  All transfers are now binary, so
+; this is accepted only for compatibility and does nothing.
 ; ----------------------------------------------------------------------
 opt_binary:
-	ld a,0FFH			; set the -b flag (binary transfer)
-	ld (opt_binary_flag),a		; FFH if -b = FFH (set)
 	ret				; return
-
-; ----------------------------------------------------------------------
-; opt_convert: Option C: convert to local linefeed convention.
-; Common routine: identical in RZ and SZ.
-; ----------------------------------------------------------------------
-opt_convert:
-	ld a,0FFH			; set the -c flag (convert line ends)
-	ld (opt_convert_flag),a		; FFH if -c = FFH (set)
-	ret				; return
-
-; ----------------------------------------------------------------------
-; scb_setup: Detach the modem port from the console: read AOVEC (SCB 28H)
-; via BDOS 49 and clear its devices from COVEC (24H) and CIVEC (22H),
-; keeping the originals.
-; Common routine: identical in RZ and SZ.
-; ----------------------------------------------------------------------
-scb_setup:
-	xor a				; prepare "get" requests (set code 0) for the three SCB fields
-	ld (scb_aovec_code),a		; clear S_SCB set code for the AOVEC block
-	ld (scb_covec_code),a		; clear S_SCB set code for the COVEC block
-	ld c,S_SYSVAR			; BDOS 49 (S_SCB): get/set a System Control Block field
-	ld de,scb_pb_aovec		; point DE at S_SCB parameter block
-	call BDOS			; read AOVEC: the physical devices that serve as AUX (modem) output
-	ld a,h				; invert it: the mask keeps every device NOT used for AUX output
-	cpl				; invert A (one's complement)
-	ld h,a				; H = A
-	ld a,l				; A = L
-	cpl				; invert A (one's complement)
-	ld l,a				; L = A
-	ld (scb_aovec_mask),hl		; save as complement of AOVEC
-	ld c,S_SYSVAR			; BDOS function: S_SCB
-	ld de,scb_pb_covec		; point DE at S_SCB parameter block
-	call BDOS			; read COVEC: the devices that serve as console output
-	ld (scb_sv_covec),hl		; remember the original so it can be restored at exit
-	ld de,(scb_aovec_mask)		; get complement of AOVEC
-	ld a,h				; remove the AUX devices from the console output vector ...
-	and d				; A &= D
-	ld h,a				; H = A
-	ld a,l				; A = L
-	and e				; A &= E
-	ld l,a				; L = A
-	ld (scb_covec_val),hl		; ... and keep the result as the new COVEC value
-	ld c,S_SYSVAR			; BDOS function: S_SCB
-	ld de,scb_pb_civec		; point DE at S_SCB parameter block
-	call BDOS			; read CIVEC: the devices that serve as console input
-	ld (scb_sv_civec),hl		; remember the original so it can be restored at exit
-	ld de,(scb_aovec_mask)		; get complement of AOVEC
-	ld a,h				; remove the AUX devices from the console input vector too
-	and d				; A &= D
-	ld h,a				; H = A
-	ld a,l				; A = L
-	and e				; A &= E
-	ld l,a				; L = A
-	ld (scb_civec_val),hl		; new CIVEC value (console and modem no longer share a device)
-scb_setup_1:
-	ld a,0FEH			; set code FEH = write a word into the SCB
-	ld (scb_covec_code),a		; S_SCB set code for the COVEC block = FEH
-	ld de,scb_pb_covec		; point DE at S_SCB parameter block
-	ld c,S_SYSVAR			; BDOS function: S_SCB
-	call BDOS			; write the new COVEC
-	ld a,0FEH			; 0FEh = Set word in SCB parameter block
-	ld (scb_civec_code),a		; S_SCB set code for the CIVEC block = FEH
-	ld de,scb_pb_civec		; point DE at S_SCB parameter block
-	ld c,S_SYSVAR			; BDOS function: S_SCB
-	jp BDOS				; write the new CIVEC and return
-
-; ----------------------------------------------------------------------
-; scb_restore: Put the original console input/output redirection vectors
-; (CIVEC, COVEC) back into the System Control Block.
-; Common routine: identical in RZ and SZ.
-; ----------------------------------------------------------------------
-scb_restore:
-	ld hl,(scb_sv_covec)		; put the original COVEC and CIVEC back into the parameter blocks ...
-	ld (scb_covec_val),hl		; save as COVEC value word of its parameter block
-	ld hl,(scb_sv_civec)		; get original CIVEC value, restored at exit
-	ld (scb_civec_val),hl		; save as CIVEC value word of its parameter block
-	jr scb_setup_1			; ... and write them to the System Control Block
-; S_SCB parameter block: SCB offset 28H = AOVEC, the auxiliary (modem) output redirection vector
-; Common data: identical in RZ and SZ.
-scb_pb_aovec:
-	.db SCB_AOVEC
-; S_SCB set code for the AOVEC block (0 = get)
-; Common data: identical in RZ and SZ.
-scb_aovec_code:
-	.db 00H
-	.db 00H
-	.db 00H
-; S_SCB parameter block: SCB offset 24H = COVEC, the console output redirection vector
-; Common data: identical in RZ and SZ.
-scb_pb_covec:
-	.db SCB_COVEC
-; S_SCB set code for the COVEC block (0 = get, FEH = set word)
-; Common data: identical in RZ and SZ.
-scb_covec_code:
-	.db 00H
-; COVEC value word of its parameter block
-; Common data: identical in RZ and SZ.
-scb_covec_val:
-	.db 00H
-	.db 00H
-; S_SCB parameter block: SCB offset 22H = CIVEC, the console input redirection vector
-; Common data: identical in RZ and SZ.
-scb_pb_civec:
-	.db SCB_CIVEC
-; S_SCB set code for the CIVEC block (0 = get, FEH = set word)
-; Common data: identical in RZ and SZ.
-scb_civec_code:
-	.db 00H
-; CIVEC value word of its parameter block
-; Common data: identical in RZ and SZ.
-scb_civec_val:
-	.db 00H
-	.db 00H
-; Original COVEC value, restored at exit
-; Common data: identical in RZ and SZ.
-scb_sv_covec:
-	.db 00H
-	.db 00H
-; Original CIVEC value, restored at exit
-; Common data: identical in RZ and SZ.
-scb_sv_civec:
-	.db 00H
-	.db 00H
-; Complement of AOVEC: keeps the devices that are not used for AUX output
-; Common data: identical in RZ and SZ.
-scb_aovec_mask:
-	.db 00H
-	.db 00H
 
 ; ----------------------------------------------------------------------
 ; print_err_count: Print the current error count / retry message on the
 ; console.
-; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 print_err_count:
+#IF TXSTATS
+	ld hl,st_errs			; statistics: count it
+	call inc32			; ...
+#ENDIF
+	ld a,(con_xfer)			; transfer on console?
+	or a				; test for zero
+	ret nz				; abort print if set
 	ld a,(error_count)		; get consecutive error/retry counter
 	ld de,print_err_d1		; point DE at print_err_d1
 	call a_to_decimal		; convert A to up to three decimal digits at DE
@@ -671,6 +717,9 @@ print_err_d1:
 ; print_filename: Print the current file name (DU:NAME.EXT) and its size.
 ; ----------------------------------------------------------------------
 print_filename:
+	ld a,(con_xfer)			; transfer on console?
+	or a				; test for zero
+	ret nz				; abort print if set
 	ld de,send_fcb			; point DE at FCB of the file being sent
 	ld hl,print_filenam_d3		; point HL at print_filenam_d3
 	ld (hl),3AH			; store into print_filenam_d3
@@ -732,6 +781,9 @@ print_filenam_d4:
 ; the console.
 ; ----------------------------------------------------------------------
 print_position:
+	ld a,(con_xfer)			; transfer on console?
+	or a				; test for zero
+	ret nz				; abort print if set
 	ld hl,pos_display		; point HL at copy of the file position shown on the console
 	ld de,print_positio_d1		; point DE at print_positio_d1
 	call ltoa32			; convert pos_display to decimal text at print_positio_d1
@@ -748,7 +800,6 @@ print_positio_d1:
 
 ; ----------------------------------------------------------------------
 ; print_cant_open: Print "can't open any file".
-; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 print_cant_open:
 	ld de,msg_cant_open		; point DE at "can't open any file"
@@ -756,11 +807,13 @@ print_cant_open:
 
 ; ----------------------------------------------------------------------
 ; print_skipped: Print "File skipped".
-; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 print_skipped:
 	ld de,msg_file_skipped		; point DE at "File skipped"
 print_skipped_1:
+	ld a,(con_xfer)			; transfer on console?
+	or a				; test for zero
+	ret nz				; abort print if set
 	ld c,C_WRITESTR			; BDOS function: C_WRITESTR
 	jp BDOS				; C_WRITESTR: display the $-terminated message
 ; "File skipped"
@@ -769,7 +822,6 @@ msg_file_skipped:
 	.db "File skipped",0DH,0AH
 	.db 24H
 ; "can't open any file"
-; Common data: identical in RZ and SZ.
 msg_cant_open:
 	.db "can",27H,"t open any file",0DH,0AH
 	.db 24H
@@ -795,26 +847,51 @@ pending_count:
 	.db 00H
 
 ; ----------------------------------------------------------------------
-; aux_poll_input: Poll the AUX device (BDOS A_STATIN/A_READ) and move any
-; waiting characters into the receive ring buffer.
+; aux_poll_input: Poll the HBIOS transfer unit and move any waiting
+; characters into the receive ring buffer.
+;
+; With block receive, at most ONE refill (BF_CIOBLKIN) is done per call.
+; Bytes already in the block buffer are moved to the ring without any
+; HBIOS call.  Without this limit, a refill's fixed cost means the next
+; refill always finds another byte while the other side streams, so the
+; loop never ends: the whole stream is routed through the ring and
+; replies are delayed.  Anything not taken stays in the driver
+; buffer/FIFO and the other side is held off by flow control.  Byte mode
+; behaves as before.
 ; ----------------------------------------------------------------------
 aux_poll_input:
-	or a				; test A (sets Z if A = 0)
+	xor a				; init refill flag (no refill yet)
+	ld (aux_poll_fill),a
+aux_poll_input_1:
 	ld hl,(aux_ring)		; get AUX receive ring buffer control block
-	ld de,0200H			; DE = maximum receive ring buffer capacity
-	sbc hl,de			; Test if buffer is full
-	jr z,aux_poll_input_1		; If buffer is full, do not read; check available count
-	ld c,A_STATIN			; BDOS function: A_STATIN
-	call BDOS			; A_STATIN: is a character waiting at the AUX port?
+	ld de,RINGSZ			; DE = maximum receive ring buffer capacity
+	or a				; clear carry for sbc below
+	sbc hl,de			; buffer full?
+	jr z,aux_poll_input_5		; If buffer is full, do not read; check available count
+	ld a,(hb_rxcnt)			; bytes already in the block buffer?
+	or a
+	jr nz,aux_poll_input_4		; if so, move one to the ring, no HBIOS call
+	ld a,(hb_blkok)			; block receive in use?
+	or a
+	jr z,aux_poll_input_3		; if not, byte mode status call as before
+	ld a,(aux_poll_fill)		; block refilled already in this call?
+	or a
+	jr z,aux_poll_input_2		; if not, allow one refill
+	xor a				; if so, done: A := 0 (A was FFH) so
+	jr aux_poll_input_5		; ... aux_poll_input_5 reports nothing taken
+aux_poll_input_2:
+	dec a				; A := FFH
+	ld (aux_poll_fill),a		; note the refill
+aux_poll_input_3:
+	call hb_cinst			; input status (refills an empty block buffer)
 	or a				; test A (sets Z if A = 0)
-	jr z,aux_poll_input_1		; if result is zero goto aux_poll_input_1
-	ld c,A_READ			; BDOS function: A_READ
-	call BDOS			; A_READ: read a character from the AUX (modem) port
-	ld c,a				; C = received character byte
+	jr z,aux_poll_input_5		; if result is zero goto aux_poll_input_5
+aux_poll_input_4:
+	call hb_cin			; get the byte in C
 	ld hl,aux_ring			; point HL at AUX receive ring buffer control block
 	call ring_put			; insert byte C into the receive ring buffer
-	jr aux_poll_input		; loop back to aux_poll_input
-aux_poll_input_1:
+	jr aux_poll_input_1		; loop back to aux_poll_input_1
+aux_poll_input_5:
 	ld hl,pending_count		; point HL at number of times pending_char is still to be delivered
 	or (hl)				; Test if single-byte buffer holds a character
 	ret nz				; Return NZ if character ready
@@ -822,6 +899,9 @@ aux_poll_input_1:
 	ld a,h				; test whether HL is zero (first half)
 	or l				; A = H or L: zero only if HL = 0
 	ret				; return
+; aux_poll_input: FFH once a block refill has been done in this call
+aux_poll_fill:
+	.db 00H
 
 ; ----------------------------------------------------------------------
 ; aux_get_char: Fetch next input character: pending queued char first,
@@ -842,40 +922,35 @@ aux_get_char:
 	ret				; return
 
 ; ----------------------------------------------------------------------
-; aux_putc: Write the character in A to the AUX (modem) device.
-; Common routine: identical in RZ and SZ.
+; aux_putc: Send the character in A to the modem (HBIOS transfer unit).
 ; ----------------------------------------------------------------------
 aux_putc:
-	ld c,A_WRITE			; BDOS function: A_WRITE
-	ld e,a				; E = A
-	jp BDOS				; A_WRITE: send the character in E to the AUX (modem) port
+	jp hb_cout			; byte mode FastPath output
 
 ; ----------------------------------------------------------------------
-; aux_out_ready: Test whether the AUX output is ready (BDOS A_STATOUT).
-; Common routine: identical in RZ and SZ.
+; aux_out_ready: Test whether the modem output is ready (NZ if ready).
 ; ----------------------------------------------------------------------
 aux_out_ready:
-	ld c,A_STATOUT			; BDOS function: A_STATOUT
-	call BDOS			; A_STATOUT: is the AUX port ready for output?
-	or a				; Test status in A (0 = busy, FFh = ready)
+	call hb_coutst			; byte mode FastPath output status
+	or a				; set flags
 	ret				; return
 
 ; ----------------------------------------------------------------------
 ; aux_wait_input: Wait roughly 100 ms-steps for an input character;
-; returns it in A with NZ, Z on timeout.
-; Common routine: identical in RZ and SZ.
+; returns it in A with NZ, Z on timeout.  The wait is a software delay
+; loop, so it scales with CPU speed.
 ; ----------------------------------------------------------------------
 aux_wait_input:
 	push bc				; preserve BC
 	ld b,5FH			; repeat count = 95
 aux_wait_input_1:
 	push bc				; preserve BC
-	call aux_poll_input		; poll the AUX device
+	call aux_poll_input		; poll the modem input
 	pop bc				; restore BC
 	jr nz,aux_wait_input_2		; if input was waiting goto aux_wait_input_2
 	call delay_short		; short software delay loop
 	djnz aux_wait_input_1		; repeat until all B items are done
-	call aux_poll_input		; poll the AUX device
+	call aux_poll_input		; poll the modem input
 aux_wait_input_2:
 	call nz,aux_get_char		; If byte ready (NZ), fetch it into A
 	pop bc				; restore BC
@@ -925,7 +1000,7 @@ ring_get:
 	ld (hl),a			; store the new read index (low)
 	inc hl				; HL++
 	ld a,d				; High bits of ring buffer offset
-	and 01H				; Mask to ring buffer size (512 bytes / 1FFh)
+	and (RINGSZ - 1) >> 8		; Mask to ring buffer size (high byte)
 	ld (hl),a			; store the new read index (high)
 	pop hl				; HL -> the byte being removed
 	ld a,01H			; clear Z to show that a byte is returned
@@ -942,7 +1017,7 @@ ring_put:
 	ld e,(hl)			; DE = number of bytes in the ring
 	inc hl				; HL++
 	ld d,(hl)			; Load high byte of queued byte count
-	ld hl,0200H			; HL = ring capacity
+	ld hl,RINGSZ			; HL = ring capacity
 	sbc hl,de			; HL = capacity - count
 	pop hl				; restore the control block pointer
 	ret z				; ring full: return with Z set (byte not stored)
@@ -966,7 +1041,7 @@ ring_put:
 	ld (hl),a			; store the new write index (low)
 	inc hl				; HL++
 	ld a,d				; High byte of write offset
-	and 01H				; Mask to ring buffer size (512 bytes)
+	and (RINGSZ - 1) >> 8		; Mask to ring buffer size (high byte)
 	ld (hl),a			; store the new write index (high)
 	pop hl				; HL -> slot for the new byte
 	ld (hl),c			; store the byte (passed in C)
@@ -1046,7 +1121,6 @@ copy32_1:
 ; ----------------------------------------------------------------------
 ; cmp32_signed: Signed compare of 32-bit values (HL) and (DE); sets
 ; carry/zero.
-; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 cmp32_signed:
 	push hl				; preserve HL
@@ -1070,7 +1144,6 @@ cmp32_signed_2:
 
 ; ----------------------------------------------------------------------
 ; cmp32_unsigned: Unsigned compare of 32-bit values (HL) and (DE).
-; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 cmp32_unsigned:
 	push bc				; preserve BC
@@ -1221,7 +1294,6 @@ dec32_1:
 
 ; ----------------------------------------------------------------------
 ; and32: (BC) = (DE) AND (HL), 32-bit.
-; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 and32:
 	push bc				; preserve BC
@@ -1346,97 +1418,95 @@ crc32_residue:
 	.db 0E3H,20H,0BBH,0DEH
 
 ; ----------------------------------------------------------------------
-; crc32_update: Update the running CRC-32 with byte A.
+; crc32_update: Update the running CRC-32 with byte A.  AF and DE are
+; preserved; BC and HL are not.
+;
+; This routine has been updated to improve performance.  The table is
+; held as four page-aligned 256-byte planes (crc32_table + 0/256/512/768
+; hold bytes 0-3 of each entry), so each entry byte is reached with BC
+; (B = plane page, C = index) instead of IX/IY indexing.
 ; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 crc32_update:
 	push af				; preserve AF
-crc32_update_1:
-	ld iy,crc32_table		; point IY at CRC-32 lookup table, 256 x 4 bytes
-crc32_tab_ptr		.equ crc32_update_1+2	; address of the CRC-32 table (patched operand, 16 bits)
-	ld ix,crc32_value		; point IX at running CRC-32 accumulator
-	xor (ix+0)			; Index = input byte XOR lowest CRC byte
-	ld h,00H			; HL = table entry index * 4
-	ld l,a				; L = A
-	add hl,hl			; Multiply index by 2
-	add hl,hl			; Multiply index by 4
-	ld b,h				; BC = index * 4
-	ld c,l				; C = L
-	add iy,bc			; IY points to 4-byte CRC table entry
-	ld a,(iy+0)			; Byte 0: Table[0] XOR CRC[1]
-	xor (ix+1)			; A ^= (ix+1)
-	ld (ix+0),a			; set byte 0 of running CRC-32 accumulator
-	ld a,(iy+1)			; Byte 1: Table[1] XOR CRC[2]
-	xor (ix+2)			; A ^= (ix+2)
-	ld (ix+1),a			; set byte 1 of running CRC-32 accumulator
-	ld a,(iy+2)			; Byte 2: Table[2] XOR CRC[3]
-	xor (ix+3)			; A ^= (ix+3)
-	ld (ix+2),a			; set byte 2 of running CRC-32 accumulator
-	ld a,(iy+3)			; Byte 3: Table[3]
-	ld (ix+3),a			; set byte 3 of running CRC-32 accumulator
+	ld hl,crc32_value		; HL -> CRC byte 0
+	xor (hl)			; index := byte XOR CRC byte 0
+	ld c,a				; C := index
+	ld b,crc32_table >> 8		; B := plane 0 page
+	inc hl				; HL -> CRC byte 1
+	ld a,(bc)			; new byte 0 := T0[index] XOR CRC byte 1
+	xor (hl)			; ...
+	dec hl				; ...
+	ld (hl),a			; ...
+	inc hl				; HL -> CRC byte 2
+	inc hl				; ...
+	inc b				; plane 1
+	ld a,(bc)			; new byte 1 := T1[index] XOR CRC byte 2
+	xor (hl)			; ...
+	dec hl				; ...
+	ld (hl),a			; ...
+	inc hl				; HL -> CRC byte 3
+	inc hl				; ...
+	inc b				; plane 2
+	ld a,(bc)			; new byte 2 := T2[index] XOR CRC byte 3
+	xor (hl)			; ...
+	dec hl				; ...
+	ld (hl),a			; ...
+	inc hl				; HL -> CRC byte 3
+	inc b				; plane 3
+	ld a,(bc)			; new byte 3 := T3[index]
+	ld (hl),a			; ...
 	pop af				; restore AF
 	ret				; return
 
 ; ----------------------------------------------------------------------
-; crc32_table_init: Build the 256-entry CRC-32 lookup table.
+; crc32_table_init: Build the 256-entry CRC-32 lookup table (reflected
+; polynomial 0EDB88320H) as four 256-byte planes, one per entry byte (see
+; crc32_update).
 ; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 crc32_table_init:
 	push de				; preserve DE
 	push hl				; preserve HL
-	ld hl,(crc32_tab_ptr)		; HL = start of the CRC table
-	ld bc,03FFH			; table is 1024 bytes
-	add hl,bc			; HL -> last byte (table is built backwards)
-	push hl				; preserve HL
-	pop iy				; IY = write pointer
-	ld ix,crc32_poly		; IX -> the CRC-32 polynomial
-	xor a				; start with table index 0
+	ld c,00H			; C := table index
 crc32_table_1:
-	push af				; keep the index
-	ld hl,0FFFFH			; CRC register = FFFFFFFFH (HL:DE)
-	ld de,0FFFFH			; DE = 0FFFFH
-	xor e				; mix the index into the low byte
-	ld e,a				; E = A
+	ld e,c				; HLDE := index (E = low byte)
+	ld d,00H			; ...
+	ld hl,0000H			; ...
 	ld b,08H			; eight bit steps
 crc32_table_2:
-	scf				; shift in a 1 ...
-	rr h				; ... shifting the 32-bit register right
-	rr l				; rotate right through carry L
-	rr d				; rotate right through carry D
-	rr e				; rotate right through carry E
-	jr nc,crc32_table_3		; bit shifted out was 0: no polynomial
+	srl h				; shift the 32-bit value right ...
+	rr l				; ...
+	rr d				; ...
+	rr e				; ... CF := bit shifted out
+	jr nc,crc32_table_3		; bit was 0: no polynomial
 	ld a,e				; bit was 1: XOR in the polynomial
-	xor (ix+0)			; A ^= (ix+0)
-	ld e,a				; E = A
-	ld a,d				; XOR byte 1 with polynomial byte 1
-	xor (ix+1)			; A ^= (ix+1)
-	ld d,a				; D = A
-	ld a,l				; XOR byte 2 with polynomial byte 2
-	xor (ix+2)			; A ^= (ix+2)
-	ld l,a				; L = A
-	ld a,h				; XOR high byte with polynomial byte 3
-	xor (ix+3)			; A ^= (ix+3)
-	ld h,a				; H = A
+	xor 20H				; ...
+	ld e,a				; ...
+	ld a,d				; ...
+	xor 83H				; ...
+	ld d,a				; ...
+	ld a,l				; ...
+	xor 0B8H			; ...
+	ld l,a				; ...
+	ld a,h				; ...
+	xor 0EDH			; ...
+	ld h,a				; ...
 crc32_table_3:
 	djnz crc32_table_2		; next bit
-	ld a,h				; store the inverted result, high byte first (table is filled downwards)
-	cpl				; invert A (one's complement)
-	ld (iy+0),a			; Store high byte in table
-	dec iy				; Move down 1 byte
-	ld a,l				; One's complement byte 2
-	cpl				; invert A (one's complement)
-	ld (iy+0),a			; Store byte 2 in table
-	dec iy				; Move down 1 byte
-	ld a,d				; One's complement byte 1
-	cpl				; invert A (one's complement)
-	ld (iy+0),a			; Store byte 1 in table
-	dec iy				; Move down 1 byte
-	ld a,e				; One's complement low byte
-	cpl				; invert A (one's complement)
-	ld (iy+0),a			; Store low byte in table
-	dec iy				; Move down 1 byte
-	pop af				; recover the index
-	inc a				; next table entry
+	ld b,crc32_table >> 8		; store byte 0 in plane 0
+	ld a,e				; ...
+	ld (bc),a			; ...
+	inc b				; byte 1 in plane 1
+	ld a,d				; ...
+	ld (bc),a			; ...
+	inc b				; byte 2 in plane 2
+	ld a,l				; ...
+	ld (bc),a			; ...
+	inc b				; byte 3 in plane 3
+	ld a,h				; ...
+	ld (bc),a			; ...
+	inc c				; next table entry
 	jr nz,crc32_table_1		; repeat for all 256 entries
 	pop hl				; restore HL
 	pop de				; restore DE
@@ -1500,8 +1570,8 @@ send_main:
 	ld (protocol),a			; selected protocol = 03H (YMODEM)
 send_main_1:
 	xor a				; A = 0
-	ld hl,error_count		; point HL at consecutive error/retry counter
-	ld b,50H			; fill 80 bytes
+	ld hl,tx_state			; clear the protocol state area
+	ld b,tx_state_end - tx_state	; (but not the option flags after it)
 	call memset			; fill B bytes at HL with A
 	call clear_fcb			; zero the 37-byte FCB at HL
 	call crc32_table_init		; build the 256-entry CRC-32 lookup table
@@ -1911,6 +1981,9 @@ xmodem_snd_3:
 	call copy32			; copy tx_position to pos_display
 	call print_position		; print the current file position as a decimal number on
 	ld hl,(block_len)		; block length: 128 or 1024
+#IF TXSTATS
+	call st_add16			; statistics: count the data bytes
+#ENDIF
 	ld (blk_bytes_left),hl		; save as bytes still to send in the current block
 	ld a,l				; Check low byte of length
 	cp 80H				; 128 bytes?
@@ -2145,17 +2218,8 @@ zmodem_snd_zfile:
 	call zero32			; clear tx_position
 zmodem_snd_1:
 	ld ix,tx_header_data		; point IX at four argument bytes for the next header to send
-	ld a,(opt_binary_flag)		; get FFH if -b
-	cp 0FFH				; Is binary transfer active?
-	ld a,ZF0_ZCBIN			; ZF0 = 1 (ZCBIN: binary transfer)
-	jr z,zmodem_snd_2		; if A = FFH goto zmodem_snd_2
-	ld a,(opt_convert_flag)		; get FFH if -c
-	cp 0FFH				; Is text conversion active?
-	ld a,ZF0_ZCNL			; ZF0 = 2 (ZCNL: convert end-of-line)
-	jr z,zmodem_snd_2		; if A = FFH goto zmodem_snd_2
-	xor a				; Default ZF0 = 0 (standard transfer)
-zmodem_snd_2:
-	ld (ix+ZF0),a			; ZF0 conversion option: 1 = ZCBIN (-b), 2 = ZCNL (-c) [Lzconv]
+	ld a,ZF0_ZCBIN			; all transfers are binary
+	ld (ix+ZF0),a			; ZF0 conversion option: 1 = ZCBIN [Lzconv]
 	ld a,(opt_protect_flag)		; get FFH if -p
 	cp 0FFH				; compare A with 0FFH
 	ld a,ZF1_ZMPROT			; ZF1 = 7 (ZCRECOV: recover interrupted transfer)
@@ -2285,7 +2349,7 @@ zd_got_zack:
 ; zd_got_zrpos: ZRPOS received while streaming.
 ; ----------------------------------------------------------------------
 zd_got_zrpos:
-	call aux_poll_input		; poll the AUX device
+	call aux_poll_input		; poll the modem input
 	jr z,zmodem_stream		; if nothing waiting at the modem goto zmodem_stream
 	ld b,0AH			; wait up to 1.0 s
 	call aux_getc_timeout		; get a character from the modem with timeout
@@ -2399,7 +2463,7 @@ zs_got_pad:
 zs_got_pad_1:
 	ld hl,aux_ring			; point HL at AUX receive ring buffer control block
 	call ring_reset			; clear the 6-byte ring buffer control block at HL
-	call aux_poll_input		; poll the AUX device
+	call aux_poll_input		; poll the modem input
 	jr nz,zs_got_pad_1		; if input was waiting goto zs_got_pad_1
 	ld a,ZCRCE			; a ZPAD arrived from the receiver: send an empty ZCRCE data packet first [spec 9.1,
 					; sampling the reverse channel]
@@ -2518,6 +2582,10 @@ resp_mode_flag		.equ resp_zack_1+1	; FFH: wait for a ZACK at the current positio
 ; streaming. [sz.c getinsync (ZRPOS)]
 ; ----------------------------------------------------------------------
 zmodem_do_zrpos:
+#IF TXSTATS
+	ld hl,st_zrpos			; statistics: count the resend request
+	call inc32			; ...
+#ENDIF
 	ld hl,rx_pos_arg		; point HL at position argument of the last ZRPOS/ZACK from the
 	ld de,zrpos_target		; point DE at position requested by ZRPOS
 	call copy32			; copy rx_pos_arg to zrpos_target
@@ -2715,29 +2783,115 @@ get_next_chunk_2:
 ; ----------------------------------------------------------------------
 ; fill_file_buffer: Read BC bytes from the file into the ring buffer.
 ; [sz.c zfilbuf]
+;
+; This routine has been updated to improve performance.  Instead of one
+; file_getc call per byte, it copies whole runs out of the input file
+; object's 128-byte record buffer with LDIR, refilling that buffer with
+; the next record when it is used up (as file_getc does).  The ring
+; buffer index of a byte is its file position modulo the ring size, and
+; the ring size is a power of two of at least 256, so a run (which lies
+; within one record) never wraps around the end of the ring.
+;
+; Returns NC at the end of the file (eof_flag set), CF on an error.
 ; ----------------------------------------------------------------------
 fill_file_buffer:
+#IF TXSTATS
+	call st_start			; statistics: start timing at the first data read
+#ENDIF
 	ld de,0000H			; Initialize buffer write offset = 0
 fill_file_1:
-	call ring_buffer_addr		; compute the address of the ring-buffer byte at offset
-	call file_getc			; read the next byte from the input file
-	jr nz,fill_file_2		; if end of file or error goto fill_file_2
-	ld (hl),a			; Store byte into circular transmit buffer
-	ld hl,file_read_pos		; point HL at position of the next byte to be read from the disk file
-	call inc32			; add 1 to file_read_pos
-	inc de				; DE++
-	dec bc				; Decrement requested read byte count
-	ld a,b				; Check if all bytes read
-	or c				; A |= C
-	jr nz,fill_file_1		; Loop until entire block is loaded
-	ret				; return
+	ld a,b				; all requested bytes read?
+	or c				; ...
+	ret z				; if so, done
+	ld a,(in_file_active)		; input file open?
+	or a				; ...
+	jr z,fill_file_err		; if not, error
+	ld hl,(in_file+CIO_PTR)		; next byte in the record buffer
+	ld a,h				; none (end of file reached)?
+	or l				; ...
+	jr z,fill_file_eof		; if so, end of file
+	push bc				; save bytes still wanted
+	push hl				; save source
+	call ring_buffer_addr		; HL := ring address for offset DE
+	ex de,hl			; DE := destination, HL := offset
+	ex (sp),hl			; HL := source, (SP) := offset
+	ld a,(in_file+CIO_COUNT)	; bytes left in the record buffer (1-128)
+	inc b				; wanted >= 256?
+	dec b				; ...
+	jr nz,fill_file_2		; if so, take what the record has
+	cp c				; record has fewer than wanted?
+	jr c,fill_file_2		; if so, take what the record has
+	ld a,c				; else take what is wanted
 fill_file_2:
-	cp 04H				; CP/M EOF status (Ctrl-Z / status 4)?
+	ld (fill_run),a			; save run length
+	ld c,a				; BC := run length
+	ld b,0				; ...
+	ldir				; copy the run into the ring
+	ld (in_file+CIO_PTR),hl		; advance the record buffer pointer
+	ld hl,in_file+CIO_COUNT		; reduce the bytes left in it
+	ld a,(fill_run)			; ...
+	ld c,a				; ...
+	ld a,(hl)			; ...
+	sub c				; ...
+	ld (hl),a			; ...
+	call z,fill_file_rec		; if used up, read the next record
+	ld a,(fill_run)			; file_read_pos += run length
+	ld hl,file_read_pos		; ...
+	add a,(hl)			; ...
+	ld (hl),a			; ...
+	ld b,3				; carry through the upper bytes
+fill_file_3:
+	inc hl				; ...
+	ld a,(hl)			; ...
+	adc a,0				; ...
+	ld (hl),a			; ...
+	djnz fill_file_3		; ...
+	ld a,(fill_run)			; DE := offset + run length
+	ld e,a				; ...
+	ld d,0				; ...
+	pop hl				; offset
+	add hl,de			; ...
+	pop bc				; bytes still wanted
+	push hl				; save new offset
+	ld l,c				; BC := BC - run length
+	ld h,b				; ...
+	or a				; ...
+	sbc hl,de			; ...
+	ld b,h				; ...
+	ld c,l				; ...
+	pop de				; DE := new offset
+	jr fill_file_1			; next run
+fill_file_eof:
 	ld a,0FFH			; A = 0FFH
 	ld (eof_flag),a			; FFH when the disk file is at end of file = FFH (set)
-	ret z				; If normal EOF, return with NC
+	or a				; normal EOF: return with NC
+	ret				; return
+fill_file_err:
+	ld a,0FFH			; A = 0FFH
+	ld (eof_flag),a			; FFH when the disk file is at end of file = FFH (set)
 	scf				; flag failure to caller (carry set)
 	ret				; return
+
+; fill_file_rec: The record buffer of the input file object is used up
+; (HL -> its count): reset it and read the next record into it, as
+; file_getc_impl does.  At the end of the file (or on a read error) the
+; buffer pointer is cleared, which file_getc and fill_file_buffer report
+; as the end of the file.  Uses all registers.
+fill_file_rec:
+	ld (hl),80H			; Reset sector byte counter = 128
+	ld hl,in_file+CIO_BUF		; buffer pointer := start of the record buffer
+	ld (in_file+CIO_PTR),hl		; ...
+	ld hl,in_file			; file object to read
+	ld (cur_file_ptr),hl		; ...
+	call file_read_sector		; read the next 128-byte record into it
+	ret z				; if read OK, done
+	ld hl,0000H			; else no more data
+	ld (in_file+CIO_PTR),hl		; ...
+	ret				; return
+
+; Length of the run being copied by fill_file_buffer
+fill_run:
+	.db 00H
 
 ; ----------------------------------------------------------------------
 ; ring_buffer_addr: Compute the address of the ring-buffer byte at offset
@@ -2787,6 +2941,11 @@ send_zfin_oo:
 ; ----------------------------------------------------------------------
 send_subpacket:
 	ld (data_terminator),a		; A = terminator (ZCRCE/G/Q/W)
+#IF TXSTATS
+	ld l,c				; statistics: count the data bytes
+	ld h,b				; ...
+	call st_add16			; ... (all registers preserved)
+#ENDIF
 	push bc				; BC = number of data bytes
 	ld hl,tx_position		; update the progress display
 	ld de,pos_display		; point DE at copy of the file position shown on the console
@@ -2794,7 +2953,7 @@ send_subpacket:
 	call print_position		; print the current file position as a decimal number on
 	pop bc				; restore BC
 	call crc_init			; reset CRC-16 to 0 and CRC-32 to 0FFFFFFFFH
-	ld de,0000H			; DE = offset into the ring buffer
+	call sp_start			; point sp_next at the first data byte
 	ld a,(tx_crc_mode)		; CRC-32 in use?
 	and CANFC32			; test the CRC-32 flag bit
 	jr nz,send_subpacket_3		; yes
@@ -2803,14 +2962,10 @@ send_subpacket_1:
 	or c				; A |= C
 	jr z,send_subpacket_2		; if zero goto send_subpacket_2
 	push bc				; preserve BC
-	push de				; preserve DE
-	call ring_buffer_addr		; HL -> byte in the ring buffer
-	ld a,(hl)			; Load data byte
+	call sp_next			; A := next data byte
 	call crc16_update		; include it in the CRC
 	call put_zdle_char		; send it, escaped if necessary
-	pop de				; restore DE
 	pop bc				; restore BC
-	inc de				; Advance offset
 	dec bc				; Decrement remaining byte count
 	jr send_subpacket_1		; next byte
 send_subpacket_2:
@@ -2833,14 +2988,10 @@ send_subpacket_3:
 	or c				; A |= C
 	jr z,send_subpacket_4		; If done, send delimiter and CRC-32
 	push bc				; preserve BC
-	push de				; preserve DE
-	call ring_buffer_addr		; compute the address of the ring-buffer byte at offset
-	ld a,(hl)			; Load data byte
+	call sp_next			; A := next data byte
 	call crc32_update		; update the running CRC-32 with byte A
 	call put_zdle_char		; send A, escaping it with ZDLE if it is a control
-	pop de				; restore DE
 	pop bc				; restore BC
-	inc de				; Advance offset
 	dec bc				; Decrement remaining byte count
 	jr send_subpacket_3		; loop back to send_subpacket_3
 send_subpacket_4:
@@ -2861,6 +3012,48 @@ send_subpacket_5:
 	pop hl				; restore HL
 	pop bc				; restore BC
 	djnz send_subpacket_5		; repeat until all B items are done
+	ret				; return
+
+; ----------------------------------------------------------------------
+; sp_start: Prepare sp_next to fetch the data of a subpacket: the first
+; byte is at ring offset 0 (see ring_buffer_addr), and the fetch pointer
+; wraps from the end of the ring back to its start.  BC preserved.
+; ----------------------------------------------------------------------
+sp_start:
+	ld de,0000H			; first byte: ring offset 0
+	call ring_buffer_addr		; HL -> first data byte
+	ld (sp_ptr),hl			; fetch pointer
+	ld hl,(file_buffer_base)	; end of the ring := base + size
+	ld de,(file_buffer_size)	; ...
+	add hl,de			; ...
+	ld a,h				; patch the end address into sp_next
+	ld (sp_end_hi),a		; ...
+	ld a,l				; ...
+	ld (sp_end_lo),a		; ...
+	ret				; return
+
+; ----------------------------------------------------------------------
+; sp_next: Fetch the next subpacket data byte from the ring into A,
+; advancing the fetch pointer (and wrapping it at the end of the ring).
+; Uses A, E, HL.
+; ----------------------------------------------------------------------
+sp_next:
+	ld hl,0000H			; fetch pointer (patched)
+sp_ptr		.equ $-2		; fetch pointer (patched operand)
+	ld e,(hl)			; E := data byte
+	inc hl				; advance
+	ld a,h				; at the end of the ring?
+	cp 00H				; end address high byte (patched)
+sp_end_hi	.equ $-1		; ...
+	jr nz,sp_next_1			; if not, done
+	ld a,l				; ...
+	cp 00H				; end address low byte (patched)
+sp_end_lo	.equ $-1		; ...
+	jr nz,sp_next_1			; if not, done
+	ld hl,(file_buffer_base)	; wrap to the start of the ring
+sp_next_1:
+	ld (sp_ptr),hl			; save the fetch pointer
+	ld a,e				; A := data byte
 	ret				; return
 
 ; ----------------------------------------------------------------------
@@ -2965,9 +3158,11 @@ send_hex_1:
 	call aux_putc_wait		; send A to the modem, waiting until the output is ready
 	ld a,(tx_frame_type)		; get frame type of the header being sent
 	cp ZFIN				; is it ZFIN?
-	ret z				; return: A is ZFIN
+	jr z,send_hex_2			; ZFIN: no XON
 	ld a,11H			; A = 11H (XON)
-	jp aux_putc_wait		; continue at aux_putc_wait
+	call aux_putc_wait		; send it
+send_hex_2:
+	jp hb_flush			; send the whole header now
 ; ZPAD ZPAD ZDLE ZHEX, introduces a hex header
 ; Common data: identical in RZ and SZ.
 hex_hdr_prefix:
@@ -3006,9 +3201,16 @@ put_hex_byte:
 ; ----------------------------------------------------------------------
 ; put_zdle_char: Send A, escaping it with ZDLE if it is a control
 ; character. [zm.c zsendline]
-; Common routine: identical in RZ and SZ.
+;
+; Every byte that can need escaping has bits 5 and 6 clear, so any other
+; byte (3 of every 4 data bytes on average) is sent at once without the
+; key table search.
 ; ----------------------------------------------------------------------
 put_zdle_char:
+	ld e,a				; save the character
+	and 60H				; bits 5-6 clear (control character range)?
+	ld a,e				; restore it
+	jp nz,aux_putc_wait		; if not, never escaped: just send it
 	ld (zdl_char),a			; save as character to send after a ZDLE
 	ld bc,0009H			; nine characters get special treatment: ZDLE, DLE, XON, XOFF and CR (each also with
 					; bit 7 set)
@@ -3021,7 +3223,6 @@ put_zdle_char:
 	or a				; test A (sets Z if A = 0)
 	jr z,zdl_escape_1		; if nonzero is zero/clear goto zdl_escape_1
 ; Send ZDLE followed by the character XOR 40H, then fall through to send it.
-; Common routine: identical in RZ and SZ.
 zdl_escape:
 	ld hl,zdl_char			; point HL at character to send after a ZDLE
 	set 6,(hl)			; escape: send ZDLE followed by the byte with bit 6 flipped
@@ -3032,21 +3233,38 @@ zdl_escape_1:
 zdl_char		.equ zdl_escape_1+1	; character to send after a ZDLE (patched operand)
 
 ; ----------------------------------------------------------------------
-; aux_putc_wait: Send A to the modem, waiting until the output is ready.
-; Common routine: identical in RZ and SZ.
+; aux_putc_wait: Send A to the modem.  In block mode the byte is queued
+; in the transmit buffer, which is sent with BF_CIOBLKOUT when it fills,
+; at the end of each hex header or CAN string, and before any wait for
+; input (hb_flush).  In byte mode, input is polled while waiting for the
+; output to be ready, then the byte is sent.
 ; ----------------------------------------------------------------------
 aux_putc_wait:
-	ld (aux_out_char),a		; save as character waiting to be sent to the modem
+	ld (aux_out_char),a		; save as last character sent to the modem
+	ld e,a				; E := character
+	ld a,(hb_blkok)			; block output in use?
+	or a				; ...
+	jr z,aux_putc_wait_1		; if not, byte mode
+	ld hl,(hb_txptr)		; append to the transmit buffer
+	ld (hl),e			; ...
+	inc hl				; ...
+	ld (hb_txptr),hl		; ...
+	ld hl,hb_txcnt			; one more byte queued
+	inc (hl)			; ...
+	ld a,(hl)			; buffer full?
+	cp TXBUFSZ - 1			; ... (BF_CIOBLKOUT sends at most 255)
+	ret c				; if not, done
+	jp hb_flush			; full: send it now
 aux_putc_wait_1:
-	call aux_poll_input		; poll the AUX device
-	call aux_out_ready		; test whether the AUX output is ready
+	call aux_poll_input		; poll the modem input
+	call aux_out_ready		; test whether the modem output is ready
 	jr z,aux_putc_wait_1		; if modem not ready for output goto aux_putc_wait_1
-aux_putc_wait_2:
-	ld a,00H			; Load character
-aux_out_char		.equ aux_putc_wait_2+1	; character waiting to be sent to the modem (patched operand)
-	jp aux_putc			; loop back to aux_putc
+	ld a,(aux_out_char)		; character to send
+	jp aux_putc			; send it
+; Last character sent to the modem
+aux_out_char:
+	.db 00H
 ; CR is escaped only if the previous character sent was "@".
-; Common routine: identical in RZ and SZ.
 zdl_cr_rule:
 	ld a,(aux_out_char)		; CR rule: the previous character sent ...
 	and 7FH				; strip the parity bit (7-bit ASCII)
@@ -3054,7 +3272,6 @@ zdl_cr_rule:
 	jr nz,zdl_escape_1		; if A != 40H goto zdl_escape_1
 	jr zdl_escape			; loop back to zdl_escape
 ; Characters that must be sent escaped with ZDLE, and the routine that decides
-; Common data: identical in RZ and SZ.
 esc_set_tab:
 	.db ZDLE,0DH,8DH,10H,90H,11H,91H,13H,93H	; keys: .........
 	.dw zdl_escape			; key 93H XOFF with bit 7
@@ -3560,6 +3777,8 @@ cancel_string:
 ; ----------------------------------------------------------------------
 send_can_string:
 	ld hl,cancel_string		; point HL at ten CAN
+	call send_string		; send them
+	jp hb_flush			; ... now
 
 ; ----------------------------------------------------------------------
 ; send_string: Send the zero-terminated string at HL to the modem. [rz.c
@@ -3578,29 +3797,83 @@ send_string:
 
 ; ----------------------------------------------------------------------
 ; aux_getc_timeout: Get a character from the modem with timeout (B =
-; tenths of a second). Carry set on timeout; checks ESC at console.
-; [readline]
-; Common routine: identical in RZ and SZ.
+; tenths of a second, approximate: see aux_wait_input). Carry set on
+; timeout; checks ESC at console.  Anything waiting in the transmit
+; buffer is sent before waiting. [readline]
 ; ----------------------------------------------------------------------
 aux_getc_timeout:
-	push bc				; preserve BC
-	call console_status		; console input status
-	call nz,console_read		; if a key was pressed: call console_read
-	cp 1BH				; Was ESC pressed (1Bh)?
-	ld a,18H			; A = 18H (ZDLE/CAN)
-	ld c,0AH			; C = 0AH
-	call z,set_pending_char		; if A = 1BH: call set_pending_char
-	pop bc				; restore BC
+	; performance optimization: avoid ring buffer overhead if possible
+	ld a,(pending_count)		; injected ESC/CAN characters waiting?
+	or a
+	jr nz,aux_getc_slow		; yes: normal path
+	ld hl,(aux_ring)		; bytes queued in the ring?
+	ld a,h
+	or l
+	jr z,aux_getc_direct		; no: read the port directly
+	ld hl,aux_ring			; yes: take the next byte from the ring,
+	call ring_get			; without polling the port (lets the ring drain)
+	or a				; test A, carry clear
+	ret
+aux_getc_direct:
+	ld a,(hb_rxcnt)			; byte in the block receive buffer?
+	or a
+	jr z,aux_getc_port		; no: ask the port
+	dec a				; yes: take it here (as hb_cin does)
+	ld (hb_rxcnt),a
+	ld hl,(hb_rxptr)
+	ld a,(hl)
+	inc hl
+	ld (hb_rxptr),hl
+	or a				; carry clear
+	ret
+aux_getc_port:
+	call hb_cinst			; status (refills an empty block buffer)
+	or a
+	jr z,aux_getc_slow		; nothing waiting: normal path (timeout, console check)
+	call hb_cin			; read the byte (returned in E and C)
+	ld a,e
+	or a				; carry clear
+	ret
+aux_getc_slow:
+	ld a,(hb_txcnt)			; anything waiting to be sent?
+	or a				; ...
+	jr z,aux_getc_1			; if not, go wait
+	push bc				; preserve timeout count
+	call hb_flush			; send it before waiting for a reply
+	pop bc				; ...
 aux_getc_1:
-	call aux_wait_input		; wait roughly 100 ms-steps for an input character
-	jr nz,aux_getc_2		; if a character arrived goto aux_getc_2
-	djnz aux_getc_1			; repeat until all B items are done
+	call aux_chk_esc		; ESC at console? queue CANs
+	call aux_wait_input		; wait one ~100 ms step
+	jr nz,aux_getc_2		; input (or queued CANs) ready
+	djnz aux_getc_1			; next step
 	ld a,0FEH			; Timeout status code (0FEh)
 	scf				; flag failure to caller (carry set)
 	ret				; return
 aux_getc_2:
 	or a				; test A (sets Z if A = 0)
 	ret				; return
+
+; ----------------------------------------------------------------------
+; aux_chk_esc: if ESC was typed at the console, queue CANs to abort.
+; Skipped when the transfer runs on the console.  BC preserved.
+; ----------------------------------------------------------------------
+aux_chk_esc:
+	ld a,(con_xfer)			; transfer on console?
+	or a
+	ret nz				; yes: no console check
+	ld hl,(aux_ring)		; input already waiting?
+	ld a,h
+	or l
+	ret nz				; yes: skip the check
+	push bc
+	call console_status
+	call nz,console_read
+	cp 1BH				; ESC?
+	ld a,18H			; CAN
+	ld c,0AH			; ten of them
+	call z,set_pending_char
+	pop bc
+	ret
 
 ; ----------------------------------------------------------------------
 ; parse_filespec: Parse a [DU:|DIR:]filename into an FCB (Z3PLUS named
@@ -4050,7 +4323,6 @@ z3env_ndr_ptr_3:
 
 ; ----------------------------------------------------------------------
 ; set_z3env: Store HL as the ZCPR3 environment pointer.
-; Common routine: identical in RZ and SZ.
 ; ----------------------------------------------------------------------
 set_z3env:
 	ld (z3env_ptr),hl		; save as address of the ZCPR3 environment descriptor
@@ -4070,15 +4342,6 @@ build_file_list:
 	call dir_collect_ff		; scan the directory with BDOS Search First/Next and
 	jp build_flist_1		; continue at build_flist_1
 
-; ----------------------------------------------------------------------
-; build_flist_alt: Same as build_file_list, but a file listed in
-; several extents keeps its HIGHEST extent (dir_dup_mode = 0).
-; ----------------------------------------------------------------------
-build_flist_alt:
-	push de				; preserve DE
-	ld (dir_attr_mask),a		; save as selection mask
-	call dir_table_init		; prepare the directory table at HL
-	call dir_collect_00		; collect matching directory entries
 build_flist_1:
 	pop de				; restore DE
 	ret z				; return if zero
@@ -4177,13 +4440,10 @@ dir_compare_3:
 ; ----------------------------------------------------------------------
 ; dir_collect_ff: Scan the directory with BDOS Search First/Next and
 ; insert every file entry into the table. A file that appears in several
-; extents keeps its LOWEST extent when entered here (dir_dup_mode
-; nonzero); the second entry point (xor a) keeps the highest.
+; extents keeps its LOWEST extent (dir_dup_mode nonzero).
 ; ----------------------------------------------------------------------
 dir_collect_ff:
-	or 0AFH				; Opcode F6 AF (or 0AFh); at $+1 it executes xor a
-dir_collect_00		.equ dir_collect_ff+1	; alternate entry point inside the instruction above (overlapping decode: xor
-					; a)
+	ld a,0FFH			; keep the lowest extent of a file
 	ld (dir_dup_mode),a		; save as file seen in several extents
 	push hl				; preserve HL
 	push de				; preserve DE
@@ -4701,9 +4961,6 @@ sort_swap:
 sort_copy_ents:
 	ld bc,(sort_blk_size)		; get ... element size
 	jr sort_copy_ents_2		; continue at sort_copy_ents_2
-	pop de				; restore DE
-	pop hl				; restore HL
-	ret				; return
 sort_copy_ents_1:
 	call sort_index_addr		; HL = address of index entry HL
 	ex de,hl			; swap pointers
@@ -4891,15 +5148,6 @@ file_open_input:
 	ld (in_file_active),a		; save as flag byte
 	cpl				; Restore original A (0)
 	ret				; return
-	push hl				; preserve HL
-	call sel_out_handle		; select the output file control block
-	call file_opwr_impl		; create
-	pop hl				; restore HL
-	ret nz				; Return error if read failed
-	cpl				; Invert status byte
-	ld (out_file_active),a		; save as flag byte
-	cpl				; Restore original A (0)
-	ret				; return
 
 ; ----------------------------------------------------------------------
 ; file_getc: Read the next byte from the input file (A, Z/NZ status).
@@ -4908,11 +5156,6 @@ file_getc:
 	push hl				; preserve HL
 	call sel_in_handle		; select the input file control block
 	jp file_getc_impl		; continue at file_getc_impl
-	push hl				; preserve HL
-	push af				; preserve AF
-	call sel_out_handle		; select the output file control block
-	pop af				; restore AF
-	jp file_putc_impl		; continue at file_putc_impl
 
 ; ----------------------------------------------------------------------
 ; file_close_input: Close the input file.
@@ -4925,13 +5168,6 @@ file_close_input:
 	ret nz				; Return error if open failed
 	ld (in_file_active),a		; save as flag byte
 	ret				; return
-	push hl				; preserve HL
-	call sel_out_handle		; select the output file control block
-	call nz,file_clswr_impl		; If previously open, flush and reopen
-	pop hl				; restore HL
-	ret nz				; Return error if open failed
-	ld (out_file_active),a		; save as flag byte
-	ret				; return
 
 ; ----------------------------------------------------------------------
 ; sel_in_handle: Select the input file control block.
@@ -4943,20 +5179,8 @@ sel_in_handle:
 	or a				; Test sector count
 	ret				; return
 
-; ----------------------------------------------------------------------
-; sel_out_handle: Select the output file control block.
-; ----------------------------------------------------------------------
-sel_out_handle:
-	ld hl,out_file			; point HL at output file object
-	ld a,(out_file_active)		; get flag byte
-	ld (hl),a			; store into output file object
-	or a				; Test sector count
-	ret				; return
 ; Flag byte: input file object in use
 in_file_active:
-	.db 00H
-; Flag byte: output file object in use
-out_file_active:
 	.db 00H
 
 ; ----------------------------------------------------------------------
@@ -4989,7 +5213,6 @@ file_oprd_impl:
 	call file_read_sector		; read the next 128-byte record of the current file
 	ld a,04H			; Error code 4 (read failed)
 	jr nz,file_oprd_impl_2		; If read failed, exit
-file_oprd_impl_1:
 	ld hl,(cur_file_ptr)		; get pointer to the file object being operated on
 	ld (hl),0FFH			; Mark buffer as active/open
 	inc hl				; HL++
@@ -5004,34 +5227,7 @@ file_oprd_impl_1:
 	ld (hl),d			; Store data pointer high byte
 	xor a				; Return success (A = 0)
 file_oprd_impl_2:
-	jp file_clswr_3			; continue at file_clswr_3
-
-; ----------------------------------------------------------------------
-; file_opwr_impl: Create (BDOS F_MAKE) the file of the file object
-; at HL for writing and give it an empty buffer. Error 5 = create failed.
-; ----------------------------------------------------------------------
-file_opwr_impl:
-	push bc				; preserve BC
-	push de				; preserve DE
-	ld a,(hl)			; A = (HL)
-	or a				; test A (sets Z if A = 0)
-	ld a,07H			; Error code 7 (already open)
-	jr nz,file_oprd_impl_2		; if result is nonzero goto file_oprd_impl_2
-	ld (cur_file_ptr),hl		; save as pointer to the file object being operated on
-	inc hl				; HL++
-	inc hl				; HL++
-	inc hl				; HL++
-	inc hl				; HL++
-	push hl				; preserve HL
-	ld bc,FCB_SIZE			; BC = 0024H
-	ex de,hl			; swap pointers
-	ldir				; copy the block
-	pop de				; restore DE
-	call fcb_clear_tail		; clear the extent/record part of the FCB
-	call fcb_open_or_make		; open the file, or create it if it does not exist
-	jr z,file_oprd_impl_1		; if file ready goto file_oprd_impl_1
-	ld a,05H			; Error code 5 (create failed)
-	jr file_oprd_impl_2		; loop back to file_oprd_impl_2
+	jp file_clsrd_3			; continue at file_clsrd_3
 
 ; ----------------------------------------------------------------------
 ; file_getc_impl: Return the next byte of an input file object (byte in A
@@ -5044,7 +5240,7 @@ file_getc_impl:
 	ld a,(hl)			; Check if file is open
 	or a				; test A (sets Z if A = 0)
 	ld a,01H			; Error 1 (file not open)
-	jr z,file_putc_impl_1		; if result is zero goto file_putc_impl_1
+	jr z,file_getc_impl_2		; if result is zero goto file_getc_impl_2
 	ld (cur_file_ptr),hl		; save as pointer to the file object being operated on
 	inc hl				; Advance to buffer data pointer (+2)
 	inc hl				; HL++
@@ -5054,7 +5250,7 @@ file_getc_impl:
 	ld a,d				; Pointer null?
 	or e				; A |= E
 	ld a,04H			; Error 4 (buffer empty / EOF)
-	jr z,file_putc_impl_1		; Exit if null
+	jr z,file_getc_impl_2		; Exit if null
 	ld a,(de)			; Fetch byte from buffer
 	ld (file_io_char),a		; save as character passed through file get/put
 	inc de				; Advance buffer pointer
@@ -5084,57 +5280,11 @@ file_getc_impl:
 file_getc_impl_1:
 	ld a,(file_io_char)		; get character passed through file get/put
 	cp a				; compare A with A
-	jr file_putc_impl_2		; continue at file_putc_impl_2
+	jr file_getc_impl_3		; continue at file_getc_impl_3
 
-; ----------------------------------------------------------------------
-; file_putc_a: Put byte A to the output file.
-; ----------------------------------------------------------------------
-file_putc_a:
-	push hl				; preserve HL
-	ld hl,(cur_file_ptr)		; get pointer to the file object being operated on
-
-; ----------------------------------------------------------------------
-; file_putc_impl: Append byte A to an output file object; a full 128-byte
-; buffer is written to disk. Error 2 = write error (disk full).
-; ----------------------------------------------------------------------
-file_putc_impl:
-	push bc				; preserve BC
-	push de				; preserve DE
-	ld (file_io_char),a		; save as character passed through file get/put
-	ld a,(hl)			; Check if file is open
+file_getc_impl_2:
 	or a				; test A (sets Z if A = 0)
-	ld a,01H			; Error 1 (file not open)
-	jr z,file_putc_impl_1		; if result is zero goto file_putc_impl_1
-	ld (cur_file_ptr),hl		; save as pointer to the file object being operated on
-	inc hl				; Advance to buffer data pointer (+2)
-	inc hl				; HL++
-	ld e,(hl)			; DE = current buffer write pointer
-	inc hl				; HL++
-	ld d,(hl)			; D = (HL)
-	ld a,(file_io_char)		; get character passed through file get/put
-	ld (de),a			; Write byte into buffer
-	inc de				; Advance buffer pointer
-	ld (hl),d			; Save updated write pointer
-	dec hl				; HL--
-	ld (hl),e			; (HL) = E
-	dec hl				; Point to sector byte counter
-	dec (hl)			; Decrement remaining bytes in sector
-	jr nz,file_getc_impl_1		; If sector not full, return success
-	ld (hl),80H			; Reset sector byte counter = 128
-	inc hl				; HL++
-	ex de,hl			; swap pointers
-	ld hl,CIO_BUF_OFF		; HL = 0026H
-	add hl,de			; HL += DE
-	ex de,hl			; swap pointers
-	ld (hl),e			; (HL) = E
-	inc hl				; HL++
-	ld (hl),d			; (HL) = D
-	call file_wr_sector		; write the buffer out as a sector
-	jr z,file_getc_impl_1		; If written successfully, continue
-	ld a,02H			; Error 2 (write error / disk full)
-file_putc_impl_1:
-	or a				; test A (sets Z if A = 0)
-file_putc_impl_2:
+file_getc_impl_3:
 	pop de				; restore DE
 	pop bc				; restore BC
 	pop hl				; restore HL
@@ -5149,36 +5299,10 @@ file_clsrd_impl:
 	push de				; preserve DE
 	ld a,(hl)			; Check if file is open
 	or a				; test A (sets Z if A = 0)
-	jr z,file_clswr_3		; if result is zero goto file_clswr_3
+	jr z,file_clsrd_3		; if result is zero goto file_clsrd_3
 	ld (cur_file_ptr),hl		; save as pointer to the file object being operated on
-	jr file_clswr_2			; continue at file_clswr_2
-
-; ----------------------------------------------------------------------
-; file_clswr_impl: Finish an output file object: pad the last sector
-; with ^Z (1AH) and zeros, write it, close the file and mark the object
-; unused.
-; ----------------------------------------------------------------------
-file_clswr_impl:
-	push bc				; preserve BC
-	push de				; preserve DE
-	ld a,(hl)			; Check if file is open
-	or a				; test A (sets Z if A = 0)
-	jr z,file_clswr_3		; if result is zero goto file_clswr_3
-	ld (cur_file_ptr),hl		; save as pointer to the file object being operated on
-	inc hl				; Check sector byte count
-	ld a,(hl)			; A = (HL)
-	cp 80H				; Is sector buffer empty (count == 128)?
-	jr z,file_clswr_2		; if A = 80H goto file_clswr_2
-	ld a,1AH			; Pad with CP/M EOF character (Ctrl-Z = 1Ah)
-	call file_putc_a		; put byte A to the output file
-file_clswr_1:
-	ld a,(hl)			; Check sector byte count
-	cp 80H				; Reached sector boundary?
-	jr z,file_clswr_2		; if A = 80H goto file_clswr_2
-	xor a				; Pad remainder of sector with 00h
-	call file_putc_a		; put byte A to the output file
-	jr file_clswr_1			; loop back to file_clswr_1
-file_clswr_2:
+	; fall through to file_clsrd_2
+file_clsrd_2:
 	ld hl,(cur_file_ptr)		; get pointer to the file object being operated on
 	ld (hl),00H			; Mark buffer as closed
 	inc hl				; HL++
@@ -5188,9 +5312,9 @@ file_clswr_2:
 	ex de,hl			; swap pointers
 	call fcb_close			; close the file
 	ld a,06H			; Error code 6 (close failed)
-	jr nz,file_clswr_3		; if close failed goto file_clswr_3
+	jr nz,file_clsrd_3		; if close failed goto file_clsrd_3
 	xor a				; Return success (A = 0)
-file_clswr_3:
+file_clsrd_3:
 	pop de				; restore DE
 	pop bc				; restore BC
 	or a				; Set flags based on status code
@@ -5211,23 +5335,8 @@ file_read_sector:
 	inc de				; DE++
 	inc de				; DE++
 	call fcb_read_sector		; read a sector
-	jr file_wr_sector_1		; continue at file_wr_sector_1
-
-; ----------------------------------------------------------------------
-; file_wr_sector: Write the buffer out as a sector.
-; ----------------------------------------------------------------------
-file_wr_sector:
-	ld hl,(cur_file_ptr)		; get pointer to the file object being operated on
-	ld de,CIO_BUF			; Offset to sector data buffer (+40)
-	add hl,de			; HL points to sector DMA buffer
-	call set_dma			; set the DMA address to DE
-	ld de,(cur_file_ptr)		; get pointer to the file object being operated on
-	inc de				; DE++
-	inc de				; DE++
-	inc de				; DE++
-	inc de				; DE++
-	call fcb_write_sector		; write a sector
-file_wr_sector_1:
+	; fall through
+file_read_sector_1:
 	push af				; preserve AF
 	ld hl,0080H			; Restore default DMA buffer address (0080h)
 	call set_dma			; set the DMA address to DE
@@ -5264,12 +5373,6 @@ get_file_size:
 	ld a,F_SIZE			; BDOS function 35 (F_SIZE): compute the file size in records
 	jr get_rand_1			; continue at get_rand_1
 
-; ----------------------------------------------------------------------
-; get_rand_record: Get the random record number (BDOS F_RANDREC).
-; ----------------------------------------------------------------------
-get_rand_record:
-	ld a,F_RANDREC			; BDOS function 36 (F_RANDREC): set the random record number from the sequential
-					; position
 get_rand_1:
 	push de				; preserve DE
 	push bc				; preserve BC
@@ -5294,15 +5397,6 @@ get_rand_1:
 	pop de				; restore DE
 	or a				; Set flags
 	ret				; return
-
-; ----------------------------------------------------------------------
-; fcb_open_or_make: Open the file, or create it if it does not exist.
-; ----------------------------------------------------------------------
-fcb_open_or_make:
-	call fcb_open			; open the file
-	ret z				; return: open succeeded
-	ld a,F_MAKE			; BDOS Function 22: Make File (F_MAKE)
-	jp fcb_bdos_check		; continue at fcb_bdos_check
 
 ; ----------------------------------------------------------------------
 ; fcb_close: Close the file (BDOS F_CLOSE).
@@ -5331,13 +5425,6 @@ fcb_bdos_check:
 ; ----------------------------------------------------------------------
 fcb_read_sector:
 	ld a,F_READ			; BDOS Function 20: Read Sequential (F_READ)
-	jp bdos_call_a			; continue at bdos_call_a
-
-; ----------------------------------------------------------------------
-; fcb_write_sector: Write a sector (BDOS F_WRITE).
-; ----------------------------------------------------------------------
-fcb_write_sector:
-	ld a,F_WRITE			; BDOS Function 21: Write Sequential (F_WRITE)
 	jp bdos_call_a			; continue at bdos_call_a
 
 ; ----------------------------------------------------------------------
@@ -5464,8 +5551,6 @@ a_to_decimal:
 	push bc				; preserve BC
 	ld b,00H			; B = 00H
 	jp a_to_decimal_1		; continue at a_to_decimal_1
-	push bc				; preserve BC
-	ld b,0FFH			; B = 0FFH
 a_to_decimal_1:
 	push hl				; preserve HL
 	push af				; preserve AF
@@ -5532,7 +5617,6 @@ upcase_string_2:
 	pop hl				; restore HL
 	pop af				; restore AF
 	ret				; return
-	push af				; preserve AF
 
 ; ----------------------------------------------------------------------
 ; skip_blanks_str: Skip blank characters in the string at HL.
@@ -5735,6 +5819,9 @@ to_upper:
 ; ----------------------------------------------------------------------
 get_tpa_top:
 	ld hl,(BDOSVEC)			; get BDOSVEC
+	ld bc,TOPRSV			; stay below the stack and HBIOS buffers
+	or a				; ...
+	sbc hl,bc			; ...
 	ld l,00H			; Page-align to 256-byte boundary
 	ld a,(0002H)			; get 0002H
 	sub 16H				; Safety margin below BIOS
@@ -5778,6 +5865,636 @@ compare_mem:
 	djnz compare_mem		; repeat until all B items are done
 	ret				; return
 
+; ----------------------------------------------------------------------
+; hb_init: Verify RomWBW is running and patch the FastPath function and
+; unit data addresses into the hb_* routines for the transfer unit.
+; Block I/O (BF_CIOBLKIN and BF_CIOBLKOUT) is enabled if this HBIOS
+; supports it.  Returns Z on success, NZ (A = FFH) on error.
+; ----------------------------------------------------------------------
+
+hb_init:
+	; Verify we are running under RomWBW
+	ld hl,WBWSTAMP		; HL := adr of RomWBW zero page stamp
+	ld a,(hl)		; get first byte of RomWBW marker
+	cp 'W'			; match?
+	jr nz,hb_init_err	; handle error
+	inc hl			; next byte (marker byte 2)
+	ld a,(hl)		; load it
+	cp ~'W'			; match?
+	jr nz,hb_init_err	; handle error
+
+	; Patch the byte mode routines w/ FastPath addresses
+	ld d,BF_CIOOUT		; hb_cout
+	call hb_getfn		; HL := func adr, DE := unit data adr
+	jr nz,hb_init_err	; handle API error
+	ld (hb_udat),de		; Plug in data adr
+	ld (hb_outfn),hl	; Plug in func adr
+	ld d,BF_CIOIN		; hb_cin
+	call hb_getfn		; ...
+	jr nz,hb_init_err	; ...
+	ld (hb_infn),hl		; ...
+	ld d,BF_CIOIST		; hb_cinst
+	call hb_getfn		; ...
+	jr nz,hb_init_err	; ...
+	ld (hb_istfn),hl	; ...
+	ld d,BF_CIOOST		; hb_coutst
+	call hb_getfn		; ...
+	jr nz,hb_init_err	; ...
+	ld (hb_ostfn),hl	; ...
+
+	; The receive buffer sits just below the stack, and the transmit
+	; buffer just below that.  Both must be in common RAM (8000h or
+	; above) as the block functions require.
+	ld hl,(BDOSVEC)		; top of TPA
+	ld bc,STKSIZE + 6 + RXBUFSZ	; less BDOS start, stack, buffer
+	or a			; clear CF
+	sbc hl,bc		; HL := receive buffer address
+	ld (hb_rxbuf),hl	; save it
+	ld bc,TXBUFSZ		; transmit buffer below it
+	or a			; ...
+	sbc hl,bc		; HL := transmit buffer address
+	ld (hb_txbuf),hl	; save it
+	ld (hb_txptr),hl	; transmit buffer empty
+	xor a			; ...
+	ld (hb_txcnt),a		; ...
+
+	; Enable block I/O if this HBIOS supports it.  Otherwise, the
+	; hb_* routines fall back to byte mode FastPath calls.
+	ld (hb_blkok),a		; assume not available
+	ld (hb_rxcnt),a		; receive buffer empty
+#IF (!BLKIO)
+	jr hb_init_ok		; diagnostic: force the original byte mode path
+#ENDIF
+	bit 7,h			; lowest buffer in common RAM?
+	jr z,hb_init_ok		; if not, no block I/O
+
+	; The generic HBIOS block functions are called with the unit in C
+	; and cannot resolve the special console unit code, so require a
+	; real unit number.
+	ld a,(xfer_unit)	; desired char unit
+	bit 7,a			; special unit code?
+	jr nz,hb_init_ok	; if so, no block I/O
+
+	; Get FastPath addresses of BF_CIOBLKIN and BF_CIOBLKOUT.  An
+	; HBIOS without block functions rejects the function numbers here.
+	ld d,BF_CIOBLKIN	; Func=CIO BLKIN
+	call hb_getfn		; HL := func adr
+	jr nz,hb_init_ok	; not supported, no block I/O
+	ld (hb_blkinfn),hl	; Plug in func adr
+	ld d,BF_CIOBLKOUT	; Func=CIO BLKOUT
+	call hb_getfn		; HL := func adr
+	jr nz,hb_init_ok	; not supported, no block I/O
+	ld (hb_blkoutfn),hl	; Plug in func adr
+	ld a,0FFH		; enable
+	ld (hb_blkok),a		; ... block I/O
+
+hb_init_ok:
+	xor	a
+	ret
+
+hb_init_err:
+	or	0FFH
+	ret
+
+; ----------------------------------------------------------------------
+; hb_getfn: Get the FastPath address of CIO function D for the transfer
+; unit (SYSGET CIOFN).  Returns HL := function address, DE := unit data
+; address, NZ on error.
+; ----------------------------------------------------------------------
+
+hb_getfn:
+	ld bc,BC_SYSGET_CIOFN	; SYSGET CIOFN
+	ld a,(xfer_unit)	; transfer unit
+	ld e,a			; ... in E
+	rst 08			; call HBIOS
+	ret
+
+hb_udat		.dw	0	; unit instance data address
+
+hb_blkok	.db	0	; FFH if block I/O (BF_CIOBLKIN/BF_CIOBLKOUT) is in use
+hb_rxcnt	.db	0	; bytes remaining in block receive buffer
+hb_rxptr	.dw	0	; next byte in block receive buffer
+hb_rxbuf	.dw	0	; block receive buffer address (common RAM)
+hb_txcnt	.db	0	; bytes waiting in the transmit buffer
+hb_txptr	.dw	0	; next free byte in the transmit buffer
+hb_txbuf	.dw	0	; transmit buffer address (common RAM)
+hb_txpoll	.db	0	; hb_flush call counter (input poll pacing)
+
+; ----------------------------------------------------------------------
+; hb_cin: Wait for and return the next received byte in E and C.
+; Taken from the block receive buffer when in use, refilling it with a
+; single BF_CIOBLKIN call when empty.
+; ----------------------------------------------------------------------
+
+hb_cin:
+	ld a,(hb_rxcnt)		; bytes buffered?
+	or a
+	jr nz,hb_cin_buf	; yes: take the next one
+	ld a,(hb_blkok)		; block receive in use?
+	or a
+	jr z,hb_cin_fp		; no: byte mode FastPath call
+hb_cin_wait:
+	call hb_fill		; refill buffer, A := bytes read
+	or a
+	jr z,hb_cin_wait	; wait until something arrives
+hb_cin_buf:
+	dec a			; one byte fewer
+	ld (hb_rxcnt),a		; ...
+	push hl			; preserve HL
+	ld hl,(hb_rxptr)	; next byte
+	ld e,(hl)		; ... to E
+	inc hl			; advance pointer
+	ld (hb_rxptr),hl	; ...
+	pop hl			; restore HL
+	ld c,e			; also return in C
+	xor a			; success status
+	ret
+
+hb_cin_fp:
+	ld iy,(hb_udat)
+	ld a,(bios_bid)
+	ld ix,0000H
+hb_infn	.equ	$-2
+	call HB_BNKCALL
+	ld c,e
+	ret
+
+; ----------------------------------------------------------------------
+; hb_fill: Refill the empty block receive buffer with whatever bytes
+; are waiting (up to RXBUFSZ - 1) using one BF_CIOBLKIN FastPath call.
+; Returns A := number of bytes now buffered (0 if none or on error).
+;
+; BC, DE and HL are preserved.  Callers rely on this: aux_getc_timeout
+; holds its timeout count in B across hb_cinst, and the byte mode driver
+; status routines used before did not disturb these registers.
+; ----------------------------------------------------------------------
+
+hb_fill:
+	push bc			; preserve registers
+	push de			; ...
+	push hl			; ...
+	ld hl,(hb_rxbuf)	; buffer
+	ld (hb_rxptr),hl	; reset read pointer
+	ld iy,(hb_udat)		; unit instance data
+	ld a,(xfer_unit)	; unit, required in C
+	ld c,a			; ...
+	ld e,RXBUFSZ - 1	; max bytes
+	ld a,(bios_bid)		; HBIOS bank
+	ld ix,0000H		; BF_CIOBLKIN function address
+hb_blkinfn	.equ	$-2
+	call HB_BNKCALL		; do it, D := bytes read
+	or a			; error?
+	ld a,d			; bytes read
+	jr z,hb_fill1		; if no error, use count
+	xor a			; on error, nothing buffered
+hb_fill1:
+	ld (hb_rxcnt),a		; save count
+	pop hl			; restore registers
+	pop de			; ...
+	pop bc			; ...
+	ret
+
+; ----------------------------------------------------------------------
+; hb_flush: Send everything in the transmit buffer with BF_CIOBLKOUT.
+; Returns when the buffer is empty (on a driver error the rest is
+; discarded).  Does nothing if the buffer is empty, as it always is in
+; byte mode.  Uses all registers.
+;
+; Until all bytes are sent, the input is polled between calls so that
+; data from the other side keeps flowing into the ring, but only when
+; the device could take nothing (the wait is spent on input) or on every
+; 8th call.  A device that holds only a byte or two (such as an SIO)
+; takes a few bytes per call, and an input poll on every call would
+; double the bank calls per byte sent.
+; ----------------------------------------------------------------------
+
+hb_flush:
+	ld a,(hb_txcnt)		; bytes waiting
+	or a			; any?
+	ret z			; if not, done
+	ld e,a			; E := bytes to send
+	ld hl,(hb_txbuf)	; HL := first byte
+hb_flush1:
+	ld a,(xfer_unit)	; unit, required in C
+	ld c,a			; ...
+	ld iy,(hb_udat)		; unit instance data
+	ld a,(bios_bid)		; HBIOS bank
+	ld ix,0000H		; BF_CIOBLKOUT function address
+hb_blkoutfn	.equ	$-2
+	call HB_BNKCALL		; D := sent, E := remaining, HL := next
+#IF TXSTATS
+	call st_txrec		; count this call (all registers preserved)
+#ENDIF
+	or a			; error?
+	jr nz,hb_flush2		; if so, discard the rest
+	ld a,e			; anything left?
+	or a			; ...
+	jr z,hb_flush2		; if not, done
+	ld a,d			; device busy (nothing sent)?
+	or a			; ...
+	jr z,hb_flush3		; if so, poll input while waiting
+	ld a,(hb_txpoll)	; else poll only on every 8th call
+	inc a			; ...
+	ld (hb_txpoll),a	; ...
+	and 07H			; ...
+	jr nz,hb_flush1		; not this time: send the rest
+hb_flush3:
+	push de			; save remaining count
+	push hl			; save next byte pointer
+	call aux_poll_input	; keep receiving while the device is busy
+	pop hl			; restore
+	pop de			; ...
+	jr hb_flush1		; send the rest
+hb_flush2:
+	xor a			; transmit buffer is empty again
+	ld (hb_txcnt),a		; ...
+	ld hl,(hb_txbuf)	; ...
+	ld (hb_txptr),hl	; ...
+	ret
+
+; ----------------------------------------------------------------------
+; hb_cout: Send byte A (byte mode).
+; ----------------------------------------------------------------------
+
+hb_cout:
+	ld e,a
+	ld iy,(hb_udat)
+	ld a,(bios_bid)
+	ld ix,0000H
+hb_outfn	.equ	$-2
+	jp HB_BNKCALL
+
+; ----------------------------------------------------------------------
+; hb_cinst: Input status.  A := nonzero if a received byte is ready.
+; With block receive in use, an empty buffer is refilled first.
+; ----------------------------------------------------------------------
+
+hb_cinst:
+	ld a,(hb_rxcnt)		; bytes buffered?
+	or a
+	ret nz			; yes: ready (A = count)
+	ld a,(hb_blkok)		; block receive in use?
+	or a
+	jp nz,hb_fill		; yes: refill, A := bytes now buffered
+
+hb_cinst_fp:
+	ld iy,(hb_udat)
+	ld a,(bios_bid)
+	ld ix,0000H
+hb_istfn	.equ	$-2
+	jp HB_BNKCALL
+
+; ----------------------------------------------------------------------
+; hb_coutst: Output status.  A := nonzero if the transmitter can accept
+; a byte.
+; ----------------------------------------------------------------------
+
+hb_coutst:
+	ld iy,(hb_udat)
+	ld a,(bios_bid)
+	ld ix,0000H
+hb_ostfn	.equ	$-2
+	jp HB_BNKCALL
+
+#IF TXSTATS
+; ----------------------------------------------------------------------
+; Send statistics (diagnostic, TXSTATS = 1).
+;
+; Data bytes are counted as each data subpacket or XMODEM block is sent,
+; so resent data is included.  Elapsed time runs from the first file
+; data read to the report and is in HBIOS timer ticks.  In block mode,
+; every BF_CIOBLKOUT call is counted, along with how many could not
+; send anything (device busy) and the bytes sent on the line, which
+; include headers, ZDLE escapes and CRCs.
+; ----------------------------------------------------------------------
+
+; st_start: Record the start time (first data read).  BC, DE, HL
+; preserved.
+st_start:
+	ld a,(st_t0ok)		; already started?
+	or a			; ...
+	ret nz			; if so, done
+	push bc			; preserve registers
+	push de			; ...
+	push hl			; ...
+	ld hl,st_t0		; destination
+	call st_gettime		; read timer
+	ld a,0FFH		; mark
+	ld (st_t0ok),a		; ... start time taken
+	pop hl			; restore registers
+	pop de			; ...
+	pop bc			; ...
+	ret
+
+; st_gettime: Store the current 32-bit HBIOS tick count at (HL) and
+; the tick frequency at st_freq.
+st_gettime:
+	push hl			; save destination
+	ld b,BF_SYSGET		; HBIOS SysGet
+	ld c,BF_SYSGET_TIMER	; ... timer
+	rst 08			; DE:HL := ticks, C := frequency
+	ld a,c			; save frequency
+	ld (st_freq),a		; ...
+	ex de,hl		; HL := high word, DE := low word
+	ex (sp),hl		; HL := destination, (SP) := high word
+	ld (hl),e		; store low word
+	inc hl			; ...
+	ld (hl),d		; ...
+	inc hl			; ...
+	pop de			; high word
+	ld (hl),e		; store high word
+	inc hl			; ...
+	ld (hl),d		; ...
+	ret
+
+; st_add16: st_bytes += HL.  All registers preserved.
+st_add16:
+	push af			; preserve registers
+	push de			; ...
+	push hl			; ...
+	ex de,hl		; DE := value
+	ld hl,st_bytes		; low byte
+	ld a,(hl)		; ...
+	add a,e			; ...
+	ld (hl),a		; ...
+	inc hl			; ...
+	ld a,(hl)		; ...
+	adc a,d			; ...
+	ld (hl),a		; ...
+	inc hl			; ...
+	ld a,(hl)		; ...
+	adc a,0			; ...
+	ld (hl),a		; ...
+	inc hl			; ...
+	ld a,(hl)		; ...
+	adc a,0			; ...
+	ld (hl),a		; ...
+	pop hl			; restore registers
+	pop de			; ...
+	pop af			; ...
+	ret
+
+; st_txrec: Count one BF_CIOBLKOUT call.  D = bytes sent.  All
+; registers preserved.
+st_txrec:
+	push af			; preserve registers
+	push bc			; ...
+	push de			; ...
+	push hl			; ...
+	ld hl,st_ocalls		; count the call
+	call inc32		; ...
+	ld a,d			; anything sent?
+	or a			; ...
+	jr nz,st_txrec1		; if so, add it up
+	ld hl,st_obusy		; else count a busy call
+	call inc32		; ...
+	jr st_txrec2		; done
+st_txrec1:
+	ld hl,st_obytes		; bytes sent += D
+	add a,(hl)		; ...
+	ld (hl),a		; ...
+	ld b,3			; carry through the upper bytes
+st_txrec3:
+	inc hl			; ...
+	ld a,(hl)		; ...
+	adc a,0			; ...
+	ld (hl),a		; ...
+	djnz st_txrec3		; ...
+st_txrec2:
+	pop hl			; restore registers
+	pop de			; ...
+	pop bc			; ...
+	pop af			; ...
+	ret
+
+; st_report: Print the statistics.
+st_report:
+	ld a,(st_t0ok)		; any data at all?
+	or a			; ...
+	jr z,st_report0		; if not, no elapsed time
+	ld hl,st_t1		; end time
+	call st_gettime		; ...
+	ld hl,st_t1		; elapsed := end - start
+	ld de,st_t0		; ...
+	ld bc,st_t1		; ...
+	call sub32		; ...
+st_report0:
+	; The console is often the transfer port.  If the transfer ended
+	; early, the receiver may still be sending, and anything printed
+	; now would go to it instead of the screen.  So first wait until
+	; the line has been quiet for 2 seconds, discarding any input.
+	ld b,20			; 2.0 s with nothing received
+	call aux_getc_timeout	; ...
+	jr nc,st_report0	; something arrived: keep waiting
+;
+	ld de,st_msg_hdr	; heading
+	call st_puts		; ...
+	ld de,st_msg_bytes	; data bytes sent
+	call st_puts		; ...
+	ld hl,st_bytes		; ...
+	call st_put32		; ...
+	call st_rep_time	; elapsed time
+	call st_rep_rate	; throughput
+	ld hl,st_tab		; errors, resend requests, subpacket size
+	ld b,2			; ...
+	call st_prtab		; ...
+	ld de,st_msg_sub	; final subpacket size
+	call st_puts		; ...
+	ld hl,subpacket_size	; ...
+	call st_put16		; ...
+	ld a,(hb_blkok)		; block output in use?
+	or a			; ...
+	jr nz,st_report1	; if so, show its counts
+	ld de,st_msg_off	; else say so
+	call st_puts		; ...
+	jr st_report2		; done
+st_report1:
+	ld hl,st_btab		; block output counts
+	ld b,3			; ...
+	call st_prtab		; ...
+st_report2:
+	ld de,st_msg_crlf	; end line
+	jp st_puts		; ...
+
+; st_rep_time: Print elapsed ticks (computed at the start of the report).
+st_rep_time:
+	ld a,(st_t0ok)		; any data at all?
+	or a			; ...
+	ret z			; if not, no elapsed time
+	ld de,st_msg_time	; elapsed
+	call st_puts
+	ld hl,st_t1
+	call st_put32
+	ld de,st_msg_at		; " ticks at "
+	call st_puts
+	ld hl,st_tmp		; frequency as 32-bit
+	call zero32		; ...
+	ld a,(st_freq)		; ...
+	ld (st_tmp),a		; ...
+	call st_put32		; ...
+	ld de,st_msg_hz		; " Hz"
+	jp st_puts		; print and return
+
+; st_prtab: Print B (label, counter) pairs from the table at HL.  Each
+; entry is two words: address of a '$' terminated label, address of a
+; 32-bit counter.
+st_prtab:
+	push bc			; save count
+	ld e,(hl)		; DE := label
+	inc hl			; ...
+	ld d,(hl)		; ...
+	inc hl			; ...
+	ld c,(hl)		; BC := counter
+	inc hl			; ...
+	ld b,(hl)		; ...
+	inc hl			; ...
+	push hl			; save table pointer
+	push bc			; save counter pointer
+	call st_puts		; print label
+	pop hl			; counter pointer
+	call st_put32		; print counter
+	pop hl			; table pointer
+	pop bc			; restore count
+	djnz st_prtab		; loop
+	ret
+
+; st_rep_rate: Print throughput = data bytes sent * tick frequency /
+; elapsed ticks (bytes per second over the whole transfer, including
+; any resent data).  Skipped if there is no elapsed time.
+st_rep_rate:
+	ld a,(st_t0ok)		; any data at all?
+	or a			; ...
+	ret z			; if not, nothing to print
+	ld hl,st_t1		; elapsed ticks zero?
+	ld a,(hl)		; ...
+	inc hl			; ...
+	or (hl)			; ...
+	inc hl			; ...
+	or (hl)			; ...
+	inc hl			; ...
+	or (hl)			; ...
+	ret z			; if so, cannot divide
+	ld a,(st_freq)		; ticks per second
+	or a			; ...
+	ret z			; unknown: skip
+	ld b,a			; dividend := bytes * frequency
+	ld hl,st_dvd		; ... (by repeated addition)
+	call zero32		; ...
+st_rep_rate1:
+	push bc			; save count
+	ld de,st_bytes		; dividend := bytes + dividend
+	ld hl,st_dvd		; ...
+	ld bc,st_dvd		; ...
+	call add32		; ...
+	pop bc			; restore count
+	djnz st_rep_rate1	; loop
+	ld hl,st_t1		; divisor := elapsed ticks
+	ld de,st_dvs		; ...
+	call copy32		; ...
+	call st_div32		; st_dvd := st_dvd / st_dvs
+	ld de,st_msg_rate	; print it
+	call st_puts		; ...
+	ld hl,st_dvd		; ...
+	call st_put32		; ...
+	ld de,st_msg_bps	; " bytes/s"
+	jp st_puts		; ...
+
+; st_div32: Unsigned 32-bit divide, st_dvd := st_dvd / st_dvs (the
+; remainder is left in st_rem).  Shift-and-subtract over the 64-bit
+; value st_rem:st_dvd, which must be contiguous (st_dvd first).
+st_div32:
+	ld hl,st_rem		; remainder := 0
+	call zero32		; ...
+	ld b,32			; 32 quotient bits
+st_div32_1:
+	push bc			; save bit count
+	ld hl,st_dvd		; shift st_rem:st_dvd left one bit
+	or a			; ... shifting in 0
+	ld b,8			; ... 8 bytes, low byte first
+st_div32_2:
+	rl (hl)			; ...
+	inc hl			; ...
+	djnz st_div32_2		; ...
+	ld hl,st_rem		; trial := remainder - divisor
+	ld de,st_dvs		; ...
+	ld bc,st_dtmp		; ...
+	call sub32		; ... CF set on borrow
+	jr c,st_div32_3		; divisor too big: quotient bit stays 0
+	ld hl,st_dtmp		; remainder := trial
+	ld de,st_rem		; ...
+	call copy32		; ...
+	ld hl,st_dvd		; quotient bit := 1
+	set 0,(hl)		; ...
+st_div32_3:
+	pop bc			; restore bit count
+	djnz st_div32_1		; loop
+	ret
+
+; st_put16: Print the 16-bit value at (HL) in decimal.
+st_put16:
+	ld e,(hl)		; DE := value
+	inc hl			; ...
+	ld d,(hl)		; ...
+	ld hl,st_tmp		; widen to 32 bits
+	call zero32		; ... (HL, DE preserved)
+	ld (hl),e		; ...
+	inc hl			; ...
+	ld (hl),d		; ...
+	dec hl			; ...
+	; fall through
+
+; st_put32: Print the 32-bit value at (HL) in decimal.
+st_put32:
+	ld de,st_numbuf		; text buffer
+	call ltoa32		; convert, HL := end of text
+	ld (hl),24H		; '$' terminator
+	ld de,st_numbuf		; print it
+	; fall through
+
+; st_puts: Print the '$' terminated string at DE.
+st_puts:
+	ld c,C_WRITESTR		; BDOS function: C_WRITESTR
+	jp BDOS			; display it
+
+st_t0ok		.db	0	; FFH once start time is taken
+st_bytes	.db	0,0,0,0	; data bytes sent (including resent data)
+st_errs		.db	0,0,0,0	; errors / retries (print_err_count calls)
+st_zrpos	.db	0,0,0,0	; ZRPOS (resend) requests from the receiver
+st_ocalls	.db	0,0,0,0	; BF_CIOBLKOUT calls
+st_obusy	.db	0,0,0,0	; BF_CIOBLKOUT calls that sent nothing
+st_obytes	.db	0,0,0,0	; bytes sent on the line via BF_CIOBLKOUT
+st_tab		.dw	st_msg_errs,st_errs
+		.dw	st_msg_zrpos,st_zrpos
+st_btab		.dw	st_msg_ocalls,st_ocalls
+		.dw	st_msg_obusy,st_obusy
+		.dw	st_msg_obytes,st_obytes
+st_freq		.db	0	; timer tick frequency (Hz)
+st_t0		.db	0,0,0,0	; start time (ticks)
+st_t1		.db	0,0,0,0	; end time, then elapsed (ticks)
+st_tmp		.db	0,0,0,0	; scratch 32-bit value
+st_dvd		.db	0,0,0,0	; st_div32 dividend / quotient (must precede st_rem)
+st_rem		.db	0,0,0,0	; st_div32 remainder
+st_dvs		.db	0,0,0,0	; st_div32 divisor
+st_dtmp		.db	0,0,0,0	; st_div32 trial subtraction
+st_numbuf	.fill	12,0	; decimal text
+
+st_msg_hdr	.db	0DH,0AH,"Send statistics:",24H
+st_msg_bytes	.db	0DH,0AH,"  Data bytes sent:   ",24H
+st_msg_time	.db	0DH,0AH,"  Elapsed:           ",24H
+st_msg_at	.db	" ticks at ",24H
+st_msg_hz	.db	" Hz",24H
+st_msg_rate	.db	0DH,0AH,"  Throughput:        ",24H
+st_msg_bps	.db	" bytes/s",24H
+st_msg_errs	.db	0DH,0AH,"  Errors/retries:    ",24H
+st_msg_zrpos	.db	0DH,0AH,"  ZRPOS (resend):    ",24H
+st_msg_sub	.db	0DH,0AH,"  Subpacket size:    ",24H
+st_msg_off	.db	0DH,0AH,"  Block output not in use (byte mode calls)",24H
+st_msg_ocalls	.db	0DH,0AH,"  BLKOUT calls:      ",24H
+st_msg_obusy	.db	0DH,0AH,"  BLKOUT sent none:  ",24H
+st_msg_obytes	.db	0DH,0AH,"  Line bytes sent:   ",24H
+st_msg_crlf	.db	0DH,0AH,24H
+#ENDIF
+
 ; Address of arg_table, the start of the free memory (initialised in the image)
 arg_table_ptr:
 	.dw arg_table
@@ -5790,12 +6507,9 @@ default_drive		.ds 1		; Drive (1 = A:) at program start
 saved_user		.ds 1		; User number to select (pair with work_fcb drive byte)
 work_fcb		.ds 33		; Work FCB / DU pair for the command line file spec (FCB offsets 0-32)
 work_fcb_r0		.ds 3		; Random record number r0-r2 of work_fcb (FCB offsets 33-35)
-stack			.ds 64		; Stack: grows down from stack_top
-; Initial stack pointer: the stack grows down from here (same address as aux_ring)
-stack_top:
 aux_ring		.ds 6		; AUX receive ring buffer control block: count, write index, read index; 512 data
 					; bytes follow
-aux_ring_data		.ds 512		; Data area of the AUX receive ring (512 bytes)
+aux_ring_data		.ds RINGSZ	; Data area of the AUX receive ring (RINGSZ bytes)
 entry_user		.ds 1		; User number of the current file list entry
 send_fcb		.ds 36		; FCB of the file being sent
 send_fcb_name		.equ send_fcb+1	; Name field of send_fcb
@@ -5803,7 +6517,10 @@ send_fcb_name		.equ send_fcb+1	; Name field of send_fcb
 ltoa_value		.ds 4		; ltoa32: working copy of the value being converted
 ltoa_temp		.ds 4		; ltoa32: temporary subtraction result
 crc32_value		.ds 4		; Running CRC-32 accumulator (4 bytes)
-crc32_table		.ds 1024	; CRC-32 lookup table, 256 x 4 bytes
+			.ds (0 - $) & 0FFH	; page-align the CRC-32 table
+crc32_table		.ds 1024	; CRC-32 lookup table: four 256-byte planes (see crc32_update)
+; Protocol state area: cleared by send_main (tx_state..tx_state_end)
+tx_state:
 error_count		.ds 1		; Consecutive error/retry counter
 rx_header_data		.ds 4		; Four argument bytes of the last received header
 pos_display		.ds 4		; Copy of the file position shown on the console
@@ -5839,14 +6556,11 @@ file_size		.ds 2		; Low word of the 32-bit size of the current file in bytes
 file_size_hi		.ds 2		; High word of file_size (the 32-bit size is built in two halves)
 block_len		.ds 2		; Length of the current block / subpacket
 			.ds 2		; not referenced by the code
+tx_state_end:				; end of the state area cleared by send_main
 opt_protect_flag	.ds 1		; FFH if -p (protect) was given
 opt_append_flag		.ds 1		; FFH if -a (append) was given
-opt_convert_flag	.ds 1		; FFH if -c (convert to local line feeds) was given
-opt_binary_flag		.ds 1		; FFH if -b (binary) was given
 file_buffer_base	.ds 2		; Start of the file data ring buffer
-file_buffer_base_hi	.ds 2		; High word of file_buffer_base: cleared at startup, never read
 file_buffer_size	.ds 2		; Size of the file data ring buffer
-file_buffer_size_hi	.ds 2		; High word of file_buffer_size: cleared at startup, never read
 file_count		.ds 1		; Number of files in the list to send
 zrqinit_retries		.ds 1		; Remaining attempts to get ZRINIT
 resp_junk_count		.ds 1		; Garbage characters seen while streaming
@@ -5894,10 +6608,13 @@ sort_i			.ds 2		; Sort loop index i
 sort_j			.ds 2		; Sort loop index j
 in_file			.ds CIO_SIZE	; Input file object: open flag, count, pointer, 36-byte FCB, 128-byte buffer (168
 					; bytes)
-out_file		.ds CIO_SIZE	; Output file object (same layout as in_file)
 cur_file_ptr		.ds 2		; Pointer to the file object being operated on
 file_io_char		.ds 1		; Character passed through file get/put
 fcb_copy		.ds 36		; Scratch copy of a 36-byte FCB
+bios_bid		.ds 1		; HBIOS BIOS bank id
+xfer_unit		.ds 1		; HBIOS file transfer char unit number
+con_unit		.ds 1		; HBIOS console unit number
+con_xfer		.ds 1		; non-zero indicates xfer on console unit
 arg_table		.ds 6		; Argument pointers table built by tokenize_args: maximum count, count found, two
 					; token pointers; the file list starts here and overwrites it later
 	.end

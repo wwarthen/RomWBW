@@ -23,13 +23,13 @@ d_cpm22/ReadMe.txt 0:
 ../../Binary/Apps/mode.com 0:
 ../../Binary/Apps/reboot.com 0:
 ../../Binary/Apps/rtc.com 0:
-#../../Binary/Apps/rz.com 0:
+../../Binary/Apps/rz.com 0:
 ../../Binary/Apps/slabel.com 0:
 ../../Binary/Apps/survey.com 0:
 ../../Binary/Apps/sysconf.com 0:
 ../../Binary/Apps/syscopy.com 0:
 ../../Binary/Apps/sysgen.com 0:
-#../../Binary/Apps/sz.com 0:
+../../Binary/Apps/sz.com 0:
 ../../Binary/Apps/talk.com 0:
 ../../Binary/Apps/tbasic.com 0:
 ../../Binary/Apps/timer.com 0:
