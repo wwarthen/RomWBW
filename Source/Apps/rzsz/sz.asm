@@ -1,12 +1,18 @@
 ; SZ.COM  --  X/Y/ZMODEM send program for RomWBW CP/M (sz v1.11)
 ; Based on the CP/M 3 SZ.COM v1.11 (W. Schmitten 1992), from a disassembly
 ; of the original Z80 binary (see sz_orig.asm).  Source is in TASM syntax.
-; Modem is on an HBIOS character unit.  Option letters: ? P A X Y Z, a digit
+;
+; Modem is on an HBIOS character unit.  Option letters: ? P A X Y Z, a digits
 ; 0-9 selects the transfer port, and B is accepted but ignored.
-; Tables: key bytes searched with CPIR, then N vectors in REVERSE key order, jumped to via the dispatch routine.
-; Labels are descriptive; patched operand bytes are named with .equ <label>+n.
-; Comments were cross-checked against an independent disassembly of the same binaries,
-; the ZMODEM specification and the rz.c / sz.c sources.
+;
+; Tables: key bytes searched with CPIR, then N vectors in REVERSE key
+; order, jumped to via the dispatch routine.
+;
+; Labels are descriptive; patched operand bytes are named with
+; .equ <label>+n.
+;
+; Comments were cross-checked against an independent disassembly of the
+; same binaries, the ZMODEM specification and the rz.c / sz.c sources.
 ;
 ; ----------------------------------------------------------------------
 ; Changes from the original (sz_orig.asm)
