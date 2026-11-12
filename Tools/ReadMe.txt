@@ -35,6 +35,12 @@ are used to construct CP/M file system images included with the
 RomWBW distribution including the ROM disk image, floppy images, 
 and hard disk images.
 
+hbconfig:
+
+Menu-driven editor for the board configs in Source/HBIOS/Config.  
+Optional, the build does not use it.  Written with Claude (AI), 
+see hbconfig/ReadMe.txt.
+
 rawwritewin:
 
 Program which can be used to write a floppy disk image to an 

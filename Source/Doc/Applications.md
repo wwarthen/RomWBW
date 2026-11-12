@@ -21,7 +21,7 @@ documentation for these generic applications.  The documentation for
 some of these generic applications is included in the Doc folder of
 the RomWBW distribution.
 
-The applications described in this document fall into two general
+The applications described in this document fall into three general
 categories.
 
 1. **ROM Applications** are software applications that are loaded
@@ -30,6 +30,11 @@ categories.
 2. **CP/M Applications** are software applications that are loaded
    from disk using a previously loaded CP/M (or CP/M like) operating
    system using its command line.
+
+3. **Build Host Applications** are software applications that run on
+   the computer you use to build RomWBW (Linux, macOS or Windows), not
+   on a RomWBW system.  They are optional, the normal build never runs
+   or needs them.
 
 Note that some applications are available in both forms.  For example,
 Microsoft BASIC is available as a ROM application and as an application
@@ -3364,3 +3369,99 @@ Hortensius updated the source to compile with the latest version
 of Hi-Tech C and implemented a few enhancements.
 
 The RomWBW overlay was developed by Phil Summers.
+
+`\clearpage`{=latex}
+
+# Build Host Applications
+
+These applications run on the computer used to build RomWBW, not on a
+RomWBW system.  They are optional.  The normal build never runs them
+or needs them, and everything they do can also be done by editing the
+files by hand.
+
+`\clearpage`{=latex}
+
+## HBCONFIG (HBIOS Config Editor)
+
+| HBCONFIG            |   |
+| --------------------|---|
+| ROM-based           |No |
+| Disk-based          |No |
+| Build host          |Yes|
+
+A menu-driven editor for the board configuration files in
+`Source/HBIOS/Config`.  It works like the menuconfig of the Linux
+kernel: it shows the settings of `cfg_MASTER.asm` in a text menu with
+help for each one, and writes what you change back into your config
+file as `.SET` lines.  Hand-written config files keep working exactly
+as before, and the tool only writes the config file you name.
+
+#### Syntax
+
+On Linux and macOS, from the RomWBW root:
+
+- `make config ROM_PLATFORM=<platform> ROM_CONFIG=<config>`
+- `make showconfig ROM_PLATFORM=<platform> ROM_CONFIG=<config>`
+- `make checkconfig ROM_PLATFORM=<platform> ROM_CONFIG=<config>`
+
+On Windows, from the RomWBW root:
+
+- `Config <platform> <config>`
+- `Config -show <platform> <config>`
+- `Config -check <platform> <config>`
+- `Config -install`
+
+A platform or config left out is asked for.  If the config does not
+exist yet, the tool offers to create it from one of the platform's
+standard configs.
+
+#### Usage
+
+The config is read the way the assembler reads it: `cfg_MASTER.asm`,
+then the platform file, then the standard config, then the lines of
+the config itself.  The menu shows the current value of each setting
+and marks the ones your config changes.  The help of a setting also
+shows the value it inherits and the file that value comes from.
+
+- The menu normally shows only the groups of settings that matter for
+  the config.  The `A` key switches to showing all of them and back.
+- Use the arrow keys and `Enter` or `Space` as in menuconfig.  `?`
+  shows the help of a setting, `/` searches, `S` saves and `Q` quits.
+  Quitting without saving changes nothing.
+- Some settings depend on others, for example a driver that needs an
+  I2C bus master.  These rules are written as `;@DEPENDS` lines in
+  `cfg_MASTER.asm`.  A config that breaks one is not saved, the menu
+  lists the broken rules and takes you back to fix them.
+- `showconfig` lists the settings a config changes compared with
+  `cfg_MASTER.asm`.  `checkconfig` checks every rule without opening
+  the menu and fails when one is broken, so it can be run over many
+  configs.
+- On a save the tool lists what it changed.  Only the changed lines are
+  touched, the file keeps its line endings and comments, and it is
+  swapped in as a whole so a failure never leaves a half-written file.
+
+#### Notes
+
+- The tool needs Python 3 with the curses module.  On Linux and macOS
+  the system Python is used (`PYTHON=` in the make command selects
+  another one).  On Windows, `Config` uses a Python of its own in
+  `Tools\python` and never the system one.  The first time, it asks and
+  then downloads the python.org embeddable Python and the
+  `windows-curses` package into that folder (about 15 MB, each download
+  is checked against a SHA-256 sum).  Nothing outside the RomWBW folder
+  is changed, and deleting `Tools\python` removes it again.
+  `Config -install` does it again.
+- Rules for writing settings in `cfg_MASTER.asm` so the menu picks them
+  up are in `Tools/hbconfig/RULES.md`, what the tool does is in
+  `Tools/hbconfig/SPEC.md`.
+
+#### Etymology
+
+`HBCONFIG` was written with Claude, an AI (LLM) by Anthropic.  Claude
+wrote the code in `hbconfig.py`, `Config.cmd` and `install-python.ps1`, and the
+changes marked "RomWBW:" in `menuconfig.py`.  Willy De la Court
+directed the work, reviewed every change and tested it on real configs.
+The tool falls under the applications exception in CONTRIBUTING.md.  It also says so in its
+start-up banner.  `kconfiglib.py` and `menuconfig.py` are Kconfiglib
+14.1.0 by Ulf Magnusson (ISC license), with small RomWBW patches in
+`menuconfig.py`.
