@@ -74,28 +74,29 @@ l_chscsi_init_00103:
 ;source-doc/scsi-drv/scsi-init.c:15: const uint8_t dev_index = find_storage_dev(); // index == -1 (no more left) should never happen
 	call	_find_storage_dev
 ;source-doc/scsi-drv/scsi-init.c:17: hbios_usbstore_devs[dev_index].drive_index = dev_index + 1;
-	ld	a, l
-	ld	c,$00
-	add	a, a
-	rl	c
-	add	a, +((_hbios_usbstore_devs) & $FF)
-	ld	e, a
+	ld	c,l
+	ld	b,$00
+	ld	h, b
+	add	hl, hl
+	add	hl, hl
+	add	hl, hl
+	add	hl, bc
+	add	hl, hl
+	ld	de,_hbios_usbstore_devs
+	add	hl,de
+	ex	de,hl
+	ld	hl,$0010
+	add	hl, de
 	ld	a, c
-	adc	a, +((_hbios_usbstore_devs) / 256)
-	ld	d, a
-	ld	c, e
-	ld	b, d
-	ld	a, l
 	inc	a
-	ld	(bc), a
+	ld	(hl), a
 ;source-doc/scsi-drv/scsi-init.c:18: hbios_usbstore_devs[dev_index].usb_device  = index;
-	ld	c, e
-	ld	b, d
-	inc	bc
+	ld	hl,$0011
+	add	hl, de
 	ld	a,(ix-1)
-	ld	(bc), a
+	ld	(hl), a
 ;source-doc/scsi-drv/scsi-init.c:20: print_string("\r\nUSB: MASS STORAGE @ $");
-	push	hl
+	push	bc
 	push	de
 	ld	hl,scsi_init_str_0
 	call	_print_string
@@ -107,10 +108,11 @@ l_chscsi_init_00103:
 	ld	hl,scsi_init_str_1
 	call	_print_string
 	pop	de
-	pop	hl
+	pop	bc
 ;source-doc/scsi-drv/scsi-init.c:23: print_uint16(dev_index);
 	ld	h,$00
 	push	de
+	ld	l, c
 	call	_print_uint16
 ;source-doc/scsi-drv/scsi-init.c:24: print_string(" $");
 	ld	hl,scsi_init_str_2

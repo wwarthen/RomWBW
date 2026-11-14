@@ -31,7 +31,7 @@
 ; .area _INITIALIZED removed by z88dk
 	
 _hbios_usbstore_devs:
-	DEFS 12
+	DEFS 108
 	
 #ENDIF
 	
@@ -53,17 +53,24 @@ _hbios_usbstore_devs:
 ; ---------------------------------
 _find_storage_dev:
 ;source-doc/base-drv/hbios-driver-storage.c:6: for (uint8_t i = 0; i < MAX_NUMBER_OF_DEVICES; i++)
-	ld	c,$00
-	ld	de,_hbios_usbstore_devs+0
-	ld	b,c
+	ld	bc,$0000
 l_find_storage_dev_00105:
 	ld	a, b
 	sub	$06
 	jr	NC,l_find_storage_dev_00103
 ;source-doc/base-drv/hbios-driver-storage.c:7: if (hbios_usbstore_devs[i].drive_index == 0)
-	ld	l, b
-	ld	h,$00
+	ld	e, b
+	ld	d,$00
+	ld	l, e
+	ld	h, d
 	add	hl, hl
+	add	hl, hl
+	add	hl, hl
+	add	hl, de
+	add	hl, hl
+	ld	de,_hbios_usbstore_devs
+	add	hl, de
+	ld	de,$0010
 	add	hl, de
 	ld	a, (hl)
 	or	a
@@ -84,7 +91,103 @@ l_find_storage_dev_00107:
 	ret
 _hbios_usbstore_devs:
 	DEFB +$00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
 	DEFB +$00
+	DEFB +$00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
+	DEFB $00
 	DEFB $00
 	DEFB $00
 	DEFB $00

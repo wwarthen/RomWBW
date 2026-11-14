@@ -58,62 +58,70 @@ _chufi_init:
 	ld	(ix-1),$01
 l_chufi_init_00103:
 ;source-doc/ufi-drv/ufi-init.c:12: usb_device_type t = usb_get_device_type(index);
-	ld	e,(ix-1)
-	ld	d,$00
-	push	de
-	push	de
+	ld	c,(ix-1)
+	ld	b,$00
+	push	bc
+	push	bc
 	call	_usb_get_device_type
 	pop	af
-	pop	de
+	pop	bc
 ;source-doc/ufi-drv/ufi-init.c:14: if (t == USB_IS_FLOPPY) {
 	dec	l
 	jr	NZ,l_chufi_init_00104
 ;source-doc/ufi-drv/ufi-init.c:15: const uint8_t dev_index = find_storage_dev(); // dev_index == -1 (no more left) should never happen
-	push	de
+	push	bc
 	call	_find_storage_dev
 	ld	(ix-2),l
-	pop	de
+	pop	bc
 ;source-doc/ufi-drv/ufi-init.c:17: hbios_usbstore_devs[dev_index].drive_index = dev_index + 1;
-	ld	l,(ix-2)
-	ld	h,$00
+	ld	e,(ix-2)
+	ld	d,$00
+	ld	l, e
+	ld	h, d
 	add	hl, hl
-	ld	bc,_hbios_usbstore_devs
-	add	hl, bc
+	add	hl, hl
+	add	hl, hl
+	add	hl, de
+	add	hl, hl
+	ld	de,_hbios_usbstore_devs
+	add	hl,de
+	ex	de,hl
+	ld	hl,$0010
+	add	hl, de
 	ld	a,(ix-2)
 	inc	a
-	ld	(hl),a
+	ld	(hl), a
 ;source-doc/ufi-drv/ufi-init.c:18: hbios_usbstore_devs[dev_index].usb_device  = index;
-	inc	hl
+	ld	hl,$0011
+	add	hl, de
 	ld	a,(ix-1)
-	ld	(hl),a
-	dec	hl
+	ld	(hl), a
 ;source-doc/ufi-drv/ufi-init.c:20: print_string("\r\nUSB: FLOPPY @ $");
-	push	hl
+	push	bc
 	push	de
 	ld	hl,ufi_init_str_0
 	call	_print_string
 	pop	de
-	pop	hl
+	pop	bc
 ;source-doc/ufi-drv/ufi-init.c:21: print_uint16(index);
-	push	hl
-	ex	de, hl
+	push	de
+	ld	l, c
+	ld	h, b
 	call	_print_uint16
 ;source-doc/ufi-drv/ufi-init.c:22: print_string(":$");
 	ld	hl,ufi_init_str_1
 	call	_print_string
-	pop	hl
+	pop	de
 ;source-doc/ufi-drv/ufi-init.c:23: print_uint16(dev_index);
-	ld	e,(ix-2)
-	ld	d,$00
-	push	hl
-	ex	de, hl
+	ld	l,(ix-2)
+	ld	h,$00
+	push	de
 	call	_print_uint16
 ;source-doc/ufi-drv/ufi-init.c:24: print_string(" $");
 	ld	hl,ufi_init_str_2
 	call	_print_string
-	pop	hl
+	pop	de
 ;source-doc/ufi-drv/ufi-init.c:25: dio_add_entry(ch_ufi_fntbl, &hbios_usbstore_devs[dev_index]);
-	ex	de, hl
 	ld	hl,_ch_ufi_fntbl
 	call	_dio_add_entry
 l_chufi_init_00104:
