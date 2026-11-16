@@ -1,10 +1,12 @@
 ;=======================================================================
 ;
-; XMHB.Z80 - XMODEM12 PATCH FILE FOR ROMWBW HBIOS
+; XMHB2.Z80 - XMODEM12 PATCH FILE FOR ROMWBW HBIOS (BLOCK I/O)
 ;
 ;   Wayne Warthen - wwarthen@gmail.com
 ;
 ; 2020-05-23 WBW Rewrite for HBIOS FastPath(tm)
+; 2026-11-15 WBW HBIOS block I/O (BF_CIOBLKIN/BF_CIOBLKOUT) with byte
+;                mode fallback; HBIOS direct UART and USB-FIFO removed
 ;
 ;=======================================================================
 ;
@@ -105,28 +107,8 @@ MINIT_HB:
 	LD	(UNIT),A	; replace UNIT with console UNIT
 ;
 MINIT_HB1:
-	; Get HBIOS device type
-	LD	B,06H		; HBIOS DEVICE function 0x06
-	LD	A,(UNIT)	; Get xfer unit
-	LD	C,A		; Put in C
-	RST	08		; Do it, D=device type
-	LD	A,D		; Put result in A
-	CP	00H		; UART?
-	JP	Z,MINIT_HB2	; If so, do UART H/W init
-	CP	80H		; USB-FIFO?
-	JP	Z,UF_INIT	; If so, do USB-FIFO H/W init
-	JP	HB_INIT		; Otherwise, use BIOS I/O
-;
-MINIT_HB2:
-	; Handle UART driver special.  If receive interrupts active,
-	; we must use BIOS I/O.  Otherwise, direct UART I/O is best
-	LD	B,06H		; Serial device function
-	LD	A,(UNIT)	; Get xfer unit
-	LD	C,A		; Put in C
-	RST	08		; Do it, H = UART TYPE
-	BIT	7,H		; Check for interrupt driven receive
-	JP	Z,UA_INIT	; If not, do direct UART I/O
-	JP	HB_INIT		; else use BIOS I/O
+	; All HBIOS units use the HBIOS interface (block I/O if available)
+	JP	HB_INIT		; HBIOS init
 ;
 MINIT_UB:
 	; Display UNA notification string
@@ -201,6 +183,9 @@ UNINIT:
 	RET			; Just return
 ;
 HUNINIT:
+	; HBIOS: Send anything still queued
+	CALL	HB_FLUSH	; send the transmit queue
+;
 	; HBIOS: Reset character device 0
 	LD	B,04H		; HBIOS CIOINIT function 0x04
 	LD	A,(UNIT)	; HBIOS serial unit number
@@ -294,12 +279,11 @@ RCVSCL	DW	6600		; RECV loop timeout scalar
 UNIT	DB	0FFH		; BIOS serial device unit number
 BIOSBID	DB	00H		; BIOS bank id
 ;
-TAG	DB	"RomWBW, 30-May-2020$"
+TAG	DB	"RomWBW, 15-Nov-2026$"
 ;
-HB_LBL	DB	", HBIOS FastPath$"
+HB_LBL	DB	", HBIOS FastPath (byte mode)$"
+HBB_LBL	DB	", HBIOS FastPath (block mode)$"
 UB_LBL	DB	", UNA UBIOS$"
-UA_LBL	DB	", UART$"
-UF_LBL	DB	", USB-FIFO$"
 COM_LBL	DB	" on COM$"
 ;
 UB_TAG	DB	" [UNA]$"
@@ -316,8 +300,42 @@ ERR_API	DB	13, 10, 13, 10, "++ BIOS API Error ++", 13, 10, "$"
 ;
 ; RomWBW HBIOS Interface
 ;
+; All HBIOS character units are accessed through HBIOS FastPath.  If
+; the HBIOS provides the block functions BF_CIOBLKIN/BF_CIOBLKOUT (and
+; BLKIO is set), data is moved in blocks using HBIOS CIO BLK functions:
+;
+;   - Received characters are read into HB_RXBUF with one BF_CIOBLKIN
+;     call and then handed out one at a time by MDIN.  RCVRDY first
+;     makes the normal per-byte status call and only calls
+;     BF_CIOBLKIN when something is waiting, so an idle poll costs the
+;     same as in byte mode and the XMODEM receive timeout scalar
+;     (RCVSCL) is valid.
+;
+;   - Characters to send are queued in HB_TXBUF by SENDR and sent with
+;     BF_CIOBLKOUT when the queue fills, before any poll for input
+;     (RCVRDY), and at exit (UNINIT).  XMODEM is half duplex: the other
+;     side does not send while a block is being sent, so the input is
+;     not polled while the queue is sent.
+;
+; Otherwise each character is moved with its own FastPath call ("byte
+; mode").
+;
 ;=======================================================================
 ;=======================================================================
+;
+BLKIO	EQU	1		; 1 = use HBIOS block I/O when available
+;
+; Buffers and stack must reside in common memory (above 0x8000).  The
+; XM buffer is located just above the program, the buffer locations
+; below will not interfere with it.
+;
+; This is kind of stupid.  The XM stack and the buffers below should
+; really be aligned to just below the start of BDOS.  Maybe someday...
+;
+HB_RXBUF EQU	0B100H		; block receive buffer (256 bytes)
+HB_TXBUF EQU	0B200H		; block transmit buffer (256 bytes)
+HB_BUFEND EQU	0B300H		; end of the buffers
+HB_BUFSZ EQU	256		; size of each buffer (one call moves 255)
 ;
 ; Following jump table is dynamically patched over initial jump
 ; table at program startup.  See MINIT above.  Note that only a
@@ -340,46 +358,73 @@ HB_INIT:
 	LD	HL,2150		; Smaller receive loop timeout scalar
 	LD	(RCVSCL),HL	; ... to compensate for BIOS overhead
 ;
-	; Patch SENDR w/ FastPath addresses
-	LD	BC,0F801H	; Get CIO func/data adr
+	; Patch byte mode routines w/ FastPath addresses
 	LD	D,01H		; Func=CIO OUT
-	LD	A,(UNIT)	; get desired char unit
-	LD	E,A		; and put in E
-	RST	08
+	CALL	HB_GETFN	; HL := func adr, DE := data adr
 	JP	NZ,APIERR	; handle API error
 	LD	(HB_UDAT),DE	; Plug in data adr
 	LD	(HB_SCFN),HL	; Plug in func adr
 ;
-	; Patch GETCHR/MDIN w/ FastPath addresses
-	LD	BC,0F801H	; Get CIO func/data adr
 	LD	D,00H		; Func=CIO IN
-	LD	A,(UNIT)	; get desired char unit
-	LD	E,A		; and put in E
-	RST	08
-	JP	NZ,APIERR	; handle API error
-	LD	(HB_GCFN),HL	; Plug in func adr
+	CALL	HB_GETFN	; ...
+	JP	NZ,APIERR	; ...
+	LD	(HB_GCFN),HL	; ...
 ;
-	; Patch RCVRDY w/ FastPath addresses
-	LD	BC,0F801H	; Get CIO func/data adr
 	LD	D,02H		; Func=CIO IST
-	LD	A,(UNIT)	; get desired char unit
-	LD	E,A		; and put in E
-	RST	08
-	JP	NZ,APIERR	; handle API error
-	LD	(HB_RRFN),HL	; Plug in func adr
+	CALL	HB_GETFN	; ...
+	JP	NZ,APIERR	; ...
+	LD	(HB_RRFN),HL	; ...
 ;
-	; Patch SNDRDY w/ FastPath addresses
-	LD	BC,0F801H	; Get CIO func/data adr
 	LD	D,03H		; Func=CIO OST
+	CALL	HB_GETFN	; ...
+	JP	NZ,APIERR	; ...
+	LD	(HB_SRFN),HL	; ...
+;
+	; Assume byte mode, init buffers
+	XOR	A
+	LD	(HB_BLKOK),A	; block I/O not in use
+	LD	(HB_RXCNT),A	; receive buffer empty
+	LD	(HB_TXCNT),A	; transmit queue empty
+	LD	HL,HB_TXBUF
+	LD	(HB_TXPTR),HL
+	LD	DE,HB_LBL	; byte mode label
+;
+	IF	BLKIO
+;
+	; Get FastPath addresses of BF_CIOBLKIN and BF_CIOBLKOUT.  An
+	; HBIOS without block functions rejects the function numbers.
+	PUSH	DE
+	LD	D,07H		; Func=CIO BLKIN
+	CALL	HB_GETFN	; HL := func adr
+	JR	NZ,HB_INIT0	; not available, byte mode
+	LD	(HB_BIFN),HL	; plug in func adr
+	LD	D,08H		; Func=CIO BLKOUT
+	CALL	HB_GETFN	; HL := func adr
+	JR	NZ,HB_INIT0	; not available, byte mode
+	LD	(HB_BOFN),HL	; plug in func adr
+	POP	DE
+	LD	A,0FFH		; block I/O in use
+	LD	(HB_BLKOK),A
+	LD	DE,HBB_LBL	; block mode label
+	JR	HB_INIT1
+HB_INIT0:
+	POP	DE		; byte mode label
+;
+	ENDIF
+;
+HB_INIT1:
+	LD	HL,HB_JPTBL
+	JP	MINIT_RET
+;
+; Get FastPath function address for CIO function D on UNIT.
+; Returns HL := function address, DE := unit data address, NZ on error.
+;
+HB_GETFN:
+	LD	BC,0F801H	; SYSGET, CIOFN
 	LD	A,(UNIT)	; get desired char unit
 	LD	E,A		; and put in E
-	RST	08
-	JP	NZ,APIERR	; handle API error
-	LD	(HB_SRFN),HL	; Plug in func adr
-;
-	LD	HL,HB_JPTBL
-	LD	DE,HB_LBL
-	JP	MINIT_RET
+	RST	08		; do it
+	RET
 ;
 ;-----------------------------------------------------------------------
 ;
@@ -387,18 +432,65 @@ HB_INIT:
 ;
 HB_SENDR:
 	POP	AF		; get character to send from stack
-	PUSH	BC
+	PUSH	BC		; save all other registers
 	PUSH	DE
 	PUSH	HL
 	LD	E,A		; character to E
+	LD	A,(HB_BLKOK)	; block mode?
+	OR	A
+	JR	Z,HB_SENDR1	; if not, send it solo
+	LD	HL,(HB_TXPTR)	; queue it
+	LD	(HL),E
+	INC	HL
+	LD	(HB_TXPTR),HL
+	LD	HL,HB_TXCNT	; one more queued
+	INC	(HL)
+	LD	A,(HL)		; queue full?
+	CP	HB_BUFSZ - 1	; ... (one call sends at most 255)
+	CALL	NC,HB_FLUSH	; if so, send it
+	JR	HB_SENDR2
+HB_SENDR1:
 	LD	IY,(HB_UDAT)
 	LD	A,(BIOSBID)	; call into HBIOS bank
 	LD	IX,0000H
 HB_SCFN	EQU	$-2
 	CALL	0FFF9H		; HBIOS bank call
-	POP	HL
+HB_SENDR2:
+	POP	HL		; restore registers
 	POP	DE
 	POP	BC
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Send the transmit queue with BF_CIOBLKOUT, waiting until all of it
+; has been accepted.  Abort on error.  No action if queue empty.
+; Uses AF, BC, DE, HL, IX, IY.
+;
+HB_FLUSH:
+	LD	A,(HB_TXCNT)	; bytes queued
+	OR	A		; any?
+	RET	Z		; if not, done
+	LD	E,A		; E := bytes to send
+	LD	HL,HB_TXBUF	; HL := first byte
+HB_FLUSH1:
+	LD	A,(UNIT)	; unit, required in C
+	LD	C,A
+	LD	IY,(HB_UDAT)
+	LD	A,(BIOSBID)	; call into HBIOS bank
+	LD	IX,0000H
+HB_BOFN	EQU	$-2
+	CALL	0FFF9H		; D := sent, E := left, HL := next
+	OR	A		; driver error?
+	JR	NZ,HB_FLUSH2	; if so, discard the rest
+	LD	A,E		; anything left?
+	OR	A
+	JR	NZ,HB_FLUSH1	; if so, send the rest
+HB_FLUSH2:
+	XOR	A		; queue is empty again
+	LD	(HB_TXCNT),A
+	LD	HL,HB_TXBUF
+	LD	(HB_TXPTR),HL
 	RET
 ;
 ;-----------------------------------------------------------------------
@@ -423,16 +515,36 @@ HB_GETCHR:
 ; MDIN can assume a character is ready
 ;
 HB_MDIN:
-	PUSH	BC
+	PUSH	BC		; save all regs
 	PUSH	DE
 	PUSH	HL
-	LD	IY,(HB_UDAT)
+	LD	A,(HB_RXCNT)	; characters buffered?
+	OR	A
+	JR	NZ,HB_MDIN2	; if so, take the next one
+	LD	A,(HB_BLKOK)	; block mode?
+	OR	A
+	JR	Z,HB_MDIN3	; if not, read a byte immediate
+HB_MDIN1:
+	CALL	HB_FILL		; refill, A := characters read
+	OR	A		; got something?
+	JR	Z,HB_MDIN1	; wait until something arrives
+HB_MDIN2:
+	DEC	A		; one less in buffer
+	LD	(HB_RXCNT),A	; save it
+	LD	HL,(HB_RXPTR)	; point to next character
+	LD	A,(HL)		; get it to A
+	INC	HL		; bump pointer
+	LD	(HB_RXPTR),HL	; and save it
+	JR	HB_MDIN4	; return
+HB_MDIN3:
+	LD	IY,(HB_UDAT)	; data
 	LD	A,(BIOSBID)	; call into HBIOS bank
 	LD	IX,0000H
 HB_GCFN	EQU	$-2
 	CALL	0FFF9H		; HBIOS bank call
 	LD	A,E		; byte received to A
-	POP	HL
+HB_MDIN4:
+	POP	HL		; restore all regs
 	POP	DE
 	POP	BC
 	RET
@@ -443,33 +555,85 @@ HB_GCFN	EQU	$-2
 ; Error code returned in A register
 ; *** Error code does not seem to be used ***
 ;
+; Anything queued for sending is sent first, since XMODEM polls for
+; input when it waits for the other side's reply.
+;
 HB_RCVRDY:
-	PUSH	BC
+	PUSH	BC		; save all regs
 	PUSH	DE
 	PUSH	HL
-	LD	IY,(HB_UDAT)
+	LD	A,(HB_TXCNT)	; anything queued to send?
+	OR	A
+	CALL	NZ,HB_FLUSH	; if so, send it first
+	LD	A,(HB_RXCNT)	; characters buffered?
+	OR	A		; test it
+	JR	NZ,HB_RCVRDY1	; if so, ready
+	LD	IY,(HB_UDAT)	; per-byte input status
 	LD	A,(BIOSBID)	; call into HBIOS bank
 	LD	IX,0000H
 HB_RRFN	EQU	$-2
-	CALL	0FFF9H		; HBIOS bank call
-	SUB	1		; CF set IFF zero
-	RL	A		; CF to bit 0 of A
-	AND	01H		; set Z flag as needed
-	LD	A,0		; report no line errors
-	POP	HL
+	CALL	0FFF9H		; A := characters waiting
+	OR	A
+	JR	Z,HB_RCVRDY2	; if none, not ready
+	LD	A,(HB_BLKOK)	; block mode?
+	OR	A
+	JR	Z,HB_RCVRDY1	; if not, ready
+	CALL	HB_FILL		; read what is waiting
+	OR	A
+	JR	Z,HB_RCVRDY2	; if nothing, not ready
+HB_RCVRDY1:
+	XOR	A		; Z = ready, no line errors
+	JR	HB_RCVRDY3
+HB_RCVRDY2:
+	OR	1		; NZ = not ready
+	LD	A,0		; no line errors
+HB_RCVRDY3:
+	POP	HL		; restore all regs
 	POP	DE
 	POP	BC
+	RET
+;
+; Refill the empty receive buffer with one BF_CIOBLKIN call.
+; Returns A := characters now buffered (0 if none or on error).
+; Uses AF, BC, DE, HL, IX, IY.
+;
+HB_FILL:
+	LD	HL,HB_RXBUF	; buffer
+	LD	(HB_RXPTR),HL	; reset read pointer
+	LD	A,(UNIT)	; unit, required in C
+	LD	C,A
+	LD	E,HB_BUFSZ - 1	; max characters
+	LD	IY,(HB_UDAT)
+	LD	A,(BIOSBID)	; call into HBIOS bank
+	LD	IX,0000H
+HB_BIFN	EQU	$-2
+	CALL	0FFF9H		; D := characters read
+	OR	A		; error?
+	LD	A,D		; characters read
+	JR	Z,HB_FILL1	; if no error, use count
+	XOR	A		; on error, nothing buffered
+HB_FILL1:
+	LD	(HB_RXCNT),A	; save count
 	RET
 ;
 ;-----------------------------------------------------------------------
 ;
 ; Test for ready to send a character, Z = ready
 ;
+; In block mode, SENDR can always queue a character (it sends the
+; queue when it fills), so this always reports ready.
+;
 HB_SNDRDY:
-	PUSH	BC
+	LD	A,(HB_BLKOK)	; block mode?
+	OR	A
+	JR	Z,HB_SNDRDY1	; if not, ask the driver
+	XOR	A		; Z = ready
+	RET
+HB_SNDRDY1:
+	PUSH	BC		; save all
 	PUSH	DE
 	PUSH	HL
-	LD	IY,(HB_UDAT)
+	LD	IY,(HB_UDAT)	; data
 	LD	A,(BIOSBID)	; call into HBIOS bank
 	LD	IX,0000H
 HB_SRFN	EQU	$-2
@@ -477,7 +641,7 @@ HB_SRFN	EQU	$-2
 	SUB	1		; CF set IFF zero
 	RL	A		; CF to bit 0 of A
 	AND	01H		; set Z flag as needed
-	POP	HL
+	POP	HL		; restore all
 	POP	DE
 	POP	BC
 	RET
@@ -492,7 +656,12 @@ HB_SPEED:
 ;
 ;
 ;
-HB_UDAT	DW	0000H		; Unit data address
+HB_UDAT		DW	0000H		; Unit data address
+HB_BLKOK	DB	0		; 0FFH if block I/O is in use
+HB_RXCNT	DB	0		; characters left in receive buffer
+HB_RXPTR	DW	HB_RXBUF	; next character in receive buffer
+HB_TXCNT	DB	0		; characters queued to send
+HB_TXPTR	DW	HB_TXBUF	; next free position in transmit queue
 ;
 ;
 ;=======================================================================
@@ -637,250 +806,6 @@ UB_SNDRDY:
 ; Report baud rate (index into SPTBL returned in register A)
 ;
 UB_SPEED:
-	LD	A,8		; arbitrarily return 9600 baud
-	RET
-;
-;=======================================================================
-;=======================================================================
-;
-; 8250-like UART
-;
-;=======================================================================
-;=======================================================================
-;
-; UART constants
-;
-UA_SNDB	EQU	20H		; bit to test for send ready
-UA_SNDR	EQU	20H		; value when ready to send
-UA_RCVB	EQU	01H		; bit to test for receive ready
-UA_RCVR	EQU	01H		; value when ready to receive
-UA_PARE	EQU	04H		; bit for parity error
-UA_OVRE	EQU	02H		; bit for overrun error
-UA_FRME	EQU	08H		; bit for framing error
-UA_ERRS	EQU	UA_FRME | UA_OVRE | UA_PARE
-;
-; Following jump table is dynamically patched into real jump
-; table at program startup.  See MINIT above.  Note that only a
-; subset of the jump table is overlaid (SENDR to SPEED).
-;
-UA_JPTBL:
-	JP	UA_SENDR	; send character (via pop psw)
-	JP	UA_CAROK	; test for carrier
-	JP	UA_MDIN		; receive data byte
-	JP	UA_GETCHR	; get character from modem
-	JP	UA_RCVRDY	; check receive ready
-	JP	UA_SNDRDY	; check send ready
-	JP	UA_SPEED	; get speed value for file transfer time
-;
-;-----------------------------------------------------------------------
-;
-; UART initialization
-;
-UA_INIT:
-	LD	DE,13000	; receive loop timeout scalar
-	LD	(RCVSCL),DE	; ... for UART RCVRDY timing
-;
-	LD	A,L		; get base I/O port address
-	LD	(UA_SCP),A	; set port value in SENDR
-	LD	(UA_GCP),A	; set port value in GETCHR
-	ADD	A,5		; UART control port is 5 higher
-	LD	(UA_RRP),A	; set port value in RCVRDY
-	LD	(UA_SRP),A	; set port value in SNDRDY
-;
-	LD	HL,UA_JPTBL
-	LD	DE,UA_LBL
-	JP	MINIT_RET
-;
-;-----------------------------------------------------------------------
-;
-; Send character on top of stack
-;
-UA_SENDR:
-	POP	AF		; get character to send from stack
-	OUT	(0FFH),A	; send to port
-UA_SCP	EQU	$-1		; port value
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Test and report carrier status, Z set if carrier present
-;
-UA_CAROK:
-	XOR	A		; not used, always indicate present
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Get a character
-;
-; GETCHR must not block
-;
-UA_GETCHR:
-	CALL	UA_RCVRDY
-	RET	NZ
-	; Fall thru if char ready
-;
-; MDIN can assume a character is ready
-;
-UA_MDIN:
-	IN	A,(0FFH)	; read character from port
-UA_GCP	EQU	$-1		; port value
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Test for character ready to receive, Z = ready
-; Error code returned in A register
-; *** Error code does not seem to be used ***
-;
-UA_RCVRDY:
-	IN	A,(0FFH)	; get modem status
-UA_RRP	EQU	$-1		; port value
-	AND	UA_RCVB		; isolate ready bit
-	CP	UA_RCVR		; test it (set flags)
-	LD	A,0		; report no line errors
-;
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Test for ready to send a character, Z = ready
-;
-UA_SNDRDY:
-	IN	A,(0FFH)	; get status
-UA_SRP	EQU	$-1		; port value
-	AND	UA_SNDB		; isolate transmit ready bit
-	CP	UA_SNDR		; test for ready value
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Report baud rate (index into SPTBL returned in register A)
-;
-UA_SPEED:
-	LD	A,8		; arbitrarily return 9600 baud
-	RET
-;
-;
-;
-UA_BASE	DB	00H		; UART base port I/O address
-UA_CTLP	DB	00H		; UART control port I/O address
-;
-;
-;=======================================================================
-;=======================================================================
-;
-; WILL SOWERBUTTS ECB USB-FIFO
-;
-;=======================================================================
-;=======================================================================
-;
-UF_BASE		EQU	0CH
-UF_DATA		EQU	(UF_BASE+0)
-UF_STATUS	EQU	(UF_BASE+1)
-UF_SEND_IMM	EQU	(UF_BASE+2)
-;
-; Following jump table is dynamically patched over initial jump
-; table at program startup.  See MINIT above.  Note that only a
-; subset of the jump table is overlaid (SENDR to SPEED).
-;
-UF_JPTBL:
-	JP	UF_SENDR	; send character (via pop psw)
-	JP	UF_CAROK	; test for carrier
-	JP	UF_MDIN		; receive data byte
-	JP	UF_GETCHR	; get character from modem
-	JP	UF_RCVRDY	; check receive ready
-	JP	UF_SNDRDY	; check send ready
-	JP	UF_SPEED	; get speed value for file transfer time
-;
-;-----------------------------------------------------------------------
-;
-; USB-FIFO initialization
-;
-UF_INIT:
-	LD	DE,12000	; receive loop timeout scalar
-	LD	(RCVSCL),DE	; ... for UART RCVRDY timing
-;
-	LD	A,L		; get base I/O port address (data port)
-	LD	(UF_SCDP),A	; set data port in SENDR
-	LD	(UF_GCDP),A	; set data port in GETCHR/MDIN
-	INC	A		; bump to status port
-	LD	(UF_RRSP),A	; set status port in RCVRDY
-	LD	(UF_SRSP),A	; set status port in SNDRDY
-	INC	A		; bump to send immediate port
-	LD	(UF_SCIP),A	; set send immed port in SENDR
-;
-	LD	HL,UF_JPTBL
-	LD	DE,UF_LBL
-	JP	MINIT_RET
-;
-;-----------------------------------------------------------------------
-;
-; Send character on top of stack
-;
-UF_SENDR:
-	POP	AF		; get character to send from stack
-	OUT	(0FFH),A	; write to fifo
-UF_SCDP	EQU	$-1		; data port
-	OUT	(0FFH),A	; send immediate
-UF_SCIP	EQU	$-1		; send immediate port
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Test and report carrier status, Z set if carrier present
-;
-UF_CAROK:
-	XOR	A		; not used, always indicate present
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Get a character (assume character ready has already been tested)
-;
-; GETCHR must not block
-;
-UF_GETCHR:
-	CALL	UF_RCVRDY	; check for char ready
-	RET	NZ		; return if not
-	; Fall thru if char ready
-;
-; MDIN can assume a character is ready
-;
-UF_MDIN:
-	IN	A,(0FFH)	; get char
-UF_GCDP	EQU	$-1		; data port
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Test for character ready to receive, Z = ready
-; Error code returned in A register
-; *** Error code does not seem to be used ***
-;
-UF_RCVRDY:
-	IN	A,(0FFH)	; bit 7 = 0 if char avail, = 1 if no char.
-UF_RRSP	EQU	$-1		; status port
-	RLCA			; bit 0 = 0 if char avail, = 1 if no char.
-	AND	00000001B	; A = 0, ZF = 1 if no char, A = 1, ZF = 0 if char avail.
-	LD	A,0		; no errors
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Test for ready to send a character, Z = ready
-;
-UF_SNDRDY:
-	IN	A,(0FFH)	; bit 0 = 0 if space avail, = 1 if full
-UF_SRSP	EQU	$-1		; status port
-	AND	00000001B	; A = 0, ZF = 1 if space avail, A = 1, ZF = 0 if full.
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Report baud rate (index into SPTBL returned in register A)
-;
-UF_SPEED:
 	LD	A,8		; arbitrarily return 9600 baud
 	RET
 ;
