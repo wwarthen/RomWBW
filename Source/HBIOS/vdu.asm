@@ -139,14 +139,13 @@ VDU_INIT1:
 	CALL	PPK_INIT		; INITIALIZE KEYBOARD DRIVER
 ;
 	; ADD OURSELVES TO VDA DISPATCH TABLE
-	LD	BC,VDU_FNTBL		; BC := FUNCTION TABLE ADDRESS
 	LD	DE,VDU_IDAT		; DE := VDU INSTANCE DATA PTR
 	CALL	VDA_ADDENT		; ADD ENTRY, A := UNIT ASSIGNED
+	LD	(IY+CFG_UNIT),A		; RECORD HBIOS UNIT NUMBER ASSIGNED
 ;
 	; INITIALIZE EMULATION
 	LD	C,A			; ASSIGNED VIDEO UNIT IN C
 	LD	DE,VDU_FNTBL		; DE := FUNCTION TABLE ADDRESS
-	LD	HL,VDU_IDAT		; HL := VDU INSTANCE DATA PTR
 	CALL	TERM_ATTACH		; DO IT
 
 	XOR	A			; SIGNAL SUCCESS
@@ -746,11 +745,20 @@ VDU_INIT6845:
 ;
 #ENDIF
 ;
-;;==================================================================================================
+VDU_STR_TAG	.TEXT	"VDU$"
+;
+;==================================================================================================
 ;   VDU DRIVER - INSTANCE DATA
 ;==================================================================================================
 ;
 VDU_IDAT:
+	.DW	VDU_FNTBL		; DRIVER FUNCTION TABLE ADDRESS
+	.DB	'V'			; DRIVER TYPE
+	.DB	0			; HBIOS UNIT NUMBER (FILLED DYNAMICALLY)
+	.DB	0			; DRIVER UNIT NUMBER (ONLY ONE UNIT POSSIBLE)
+	.DB	ERR_NONE		; DEVICE STATUS (HBIOS STATUS)
+	.DW	VDU_STR_TAG		; DRIVER TAG STRING PTR
+;
 	.DB	VDU_PPIA
 	.DB	VDU_PPIB
 	.DB	VDU_PPIC
