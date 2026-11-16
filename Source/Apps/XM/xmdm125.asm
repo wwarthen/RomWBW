@@ -2555,6 +2555,8 @@ GETACK:	MVI	B,10		; Wait 10 seconds max
 	JC	ACKERR		; Timed out
 	CPI	ACK		; Was it an 'ACK' character?
 	RZ			; Yes, return
+	CPI	CAN		; [WBW] CANcel from the receiver?
+	JZ	ACKCAN		; [WBW] If so, look for CAN CAN
 ;
 	 IF	RETRY
 	CPI	NAK		; Was it an authentic 'NAK'?
@@ -2577,6 +2579,21 @@ ACKERR:	LDA	ERRCT		; Get count
 ;
 	CALL	ERXIT
 	DB	'++ Send file cancelled ++$'
+;
+; [WBW] BEGIN: A CAN received while waiting for the ACK.  A second CAN
+; within 1 second means the receiver has cancelled the transfer, so
+; abort at once instead of resending the record until the error limit
+; is reached.  Anything else is counted as an ordinary error, since a
+; single CAN may be line noise.
+;
+ACKCAN:	MVI	B,1		; Wait up to 1 second
+	CALL	RECV		; ... for a second character
+	JC	ACKERR		; None, count as an error
+	CPI	CAN		; Second CAN?
+	JNZ	ACKERR		; No, count as an error
+	CALL	ERXIT
+	DB	'++ Send cancelled by receiver ++$'
+; [WBW] END
 ;
 CHKERR:	LDA	KFLAG
 	ORA	A		; Check to see if in 1024 mode
