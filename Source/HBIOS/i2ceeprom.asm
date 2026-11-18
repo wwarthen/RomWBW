@@ -67,7 +67,7 @@ I2CEEPROM_INITPHASE:
 #DEFINE I2CEEPROM_SLOT(ADR,EN,SHIFT,BLKCNT) \
 #defcont \	.DW	I2CEEPROM_FNTBL \
 #defcont \	.DB	'D' \
-#defcont \	.DB	0 \
+#defcont \	.DB	$FF \
 #defcont \	.DB	0 \
 #defcont \	.DB	ERR_NONE \
 #defcont \	.DW	I2CEEPROM_STR_TAG \

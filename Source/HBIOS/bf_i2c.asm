@@ -73,8 +73,7 @@ I2C_IDAT:
 #ENDIF
 ;
 #IF (($ - I2C_IDAT) != I2C_DAT_SIZ)
-	.ECHO	"*** INVALID I2C INSTANCE DATA ***
-"
+	.ECHO	"*** INVALID I2C INSTANCE DATA ***\n"
 	!!!!!
 #ENDIF
 ;

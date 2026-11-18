@@ -733,7 +733,7 @@ ACIA0_CFG:
         ; ACIA MODULE A CONFIG
         .DW     ACIA_FNTBL              ; DRIVER FUNCTION TABLE ADDRESS
         .DB     'C'                     ; DRIVER TYPE
-        .DB     0                       ; HBIOS UNIT NUMBER (FILLED DYNAMICALLY)
+        .DB     $FF                     ; HBIOS UNIT NUMBER (FILLED DYNAMICALLY, $FF=NONE)
         .DB     0                       ; DRIVER UNIT NUMBER (SET DURING INIT)
         .DB     ERR_NONE                ; DEVICE STATUS (HBIOS STATUS)
         .DW     ACIA_STR_TAG            ; DRIVER TAG STRING PTR
@@ -758,7 +758,7 @@ ACIA1_CFG:
         ; ACIA MODULE B CONFIG
         .DW     ACIA_FNTBL              ; DRIVER FUNCTION TABLE ADDRESS
         .DB     'C'                     ; DRIVER TYPE
-        .DB     0                       ; HBIOS UNIT NUMBER (FILLED DYNAMICALLY)
+        .DB     $FF                     ; HBIOS UNIT NUMBER (FILLED DYNAMICALLY, $FF=NONE)
         .DB     0                       ; DRIVER UNIT NUMBER (SET DURING INIT)
         .DB     ERR_NONE                ; DEVICE STATUS (HBIOS STATUS)
         .DW     ACIA_STR_TAG            ; DRIVER TAG STRING PTR
