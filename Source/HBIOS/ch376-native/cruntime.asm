@@ -63,7 +63,7 @@ zero_n:
 	pop	hl
 	ret
 
-.if 0
+#if 0
 ; required if --optimise-for-size is targetted
 ; but there appears to be a regression that stop the driver from working
 ; if optimised for size is selected
@@ -130,4 +130,4 @@ ____sdcc_store_debc_mhl:
 	inc	hl
 	ld	(hl), d
 	ret
-.endif
+#endif
